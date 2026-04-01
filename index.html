@@ -25,9 +25,13 @@
 .nav-tabs-bar {
   background: #1a237e;
   display: flex;
-  gap: 4px;
-  padding: 0 24px;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 0 12px;
   border-bottom: 3px solid #283593;
+}
+.nav-tab-btn {
+  white-space: nowrap;
 }
 .nav-tab-btn {
   padding: 12px 24px;
@@ -57,6 +61,7 @@
 #tab-vhf { display: none; }
 #tab-aki { display: none; }
 #tab-mbd { display: none; }
+#tab-tah { display: none; }
 .aki-stage-row { display:flex; align-items:center; gap:14px; padding:12px; border-radius:10px; border-width:2px; border-style:solid; margin-bottom:14px; }
 .aki-stage-circle { width:64px; height:64px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 .aki-etio-box { padding:10px 12px; background:#f5f5f5; border-radius:8px; border-left-width:4px; border-left-style:solid; margin-bottom:12px; }
@@ -1342,6 +1347,7 @@ label .lip-optional {
   <button class="nav-tab-btn" data-tab="diabetes" onclick="switchToolTab('diabetes')">🩺 Diabetes</button>
   <button class="nav-tab-btn" data-tab="htn" onclick="switchToolTab('htn')">❤️‍🩹 Hypertonie</button>
   <button class="nav-tab-btn" data-tab="vhf" onclick="switchToolTab('vhf')">💜 Vorhofflimmern</button>
+  <button class="nav-tab-btn" data-tab="tah" onclick="switchToolTab('tah')">🔴 Antiaggregation</button>
   <button class="nav-tab-btn" data-tab="aki" onclick="switchToolTab('aki')">🚨 AKI</button>
 </div>
 
@@ -1528,7 +1534,7 @@ label .lip-optional {
           <table class="matrix-table">
             <thead>
               <tr>
-                <th colspan="2" rowspan="2" style="background:white;border:none;"></th>
+                <th colspan="3" rowspan="2" style="background:white;border:none;"></th>
                 <th colspan="5" class="header-acr">Albuminurie-Stadien (ACR mg/g)</th>
               </tr>
               <tr>
@@ -1537,7 +1543,7 @@ label .lip-optional {
                 <th colspan="2" class="header-alb">A3</th>
               </tr>
               <tr>
-                <th colspan="2" style="background:white;border:none;"></th>
+                <th colspan="3" style="background:white;border:none;"></th>
                 <th class="header-alb">&lt;10</th>
                 <th class="header-alb">10–29</th>
                 <th class="header-alb">30–299</th>
@@ -3176,12 +3182,261 @@ label .lip-optional {
 </div><!-- end diab-container -->
 </div><!-- end tab-vhf -->
 
+<!-- ============================================================
+     TAH — THROMBOZYTENAGGREGATIONSHEMMER
+     ============================================================ -->
+<div id="tab-tah">
+<div class="diab-container">
+
+  <div id="tah-import-banner" style="display:none;" class="diab-import-banner">
+    <span style="font-size:1.1rem;">📥</span>
+    <span id="tah-import-text"></span>
+  </div>
+
+  <!-- Card 1: Patientenprofil -->
+  <div class="diab-card">
+    <h2>👤 Patientenprofil</h2>
+    <div style="font-size:.78rem;color:#c62828;margin-bottom:10px;padding:7px 11px;background:#ffebee;border-radius:6px;border-left:3px solid #c62828;">
+      ℹ️ Werte werden automatisch aus CKD- und VHF-Tab übernommen. Direkte Eingabe möglich.
+    </div>
+    <div class="diab-row">
+      <div class="diab-field">
+        <label>Alter</label>
+        <input type="number" id="tah-age" placeholder="z.B. 68" min="18" max="110" oninput="tahUpdateEgfr()">
+        <span class="diab-unit">Jahre</span>
+      </div>
+      <div class="diab-field">
+        <label>Geschlecht</label>
+        <div class="diab-toggle-group">
+          <input type="radio" name="tah-sex" id="tah-sex-male" value="male" onchange="tahUpdateEgfr()">
+          <label for="tah-sex-male">Männlich</label>
+          <input type="radio" name="tah-sex" id="tah-sex-female" value="female" onchange="tahUpdateEgfr()">
+          <label for="tah-sex-female">Weiblich</label>
+        </div>
+      </div>
+    </div>
+    <div class="diab-row">
+      <div class="diab-field">
+        <label>Körpergewicht</label>
+        <input type="number" id="tah-weight" placeholder="z.B. 78" min="20" max="300">
+        <span class="diab-unit">kg</span>
+      </div>
+      <div class="diab-field">
+        <label>Serum-Kreatinin</label>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <input type="number" id="tah-creat" placeholder="z.B. 1.3" min="0.1" max="30" step="0.01" style="flex:1;" oninput="tahUpdateEgfr()">
+          <div class="diab-toggle-group" style="margin-top:0;">
+            <input type="radio" name="tah-creat-unit" id="tah-creat-mgdl" value="mgdl" checked onchange="tahUpdateEgfr()">
+            <label for="tah-creat-mgdl">mg/dl</label>
+            <input type="radio" name="tah-creat-unit" id="tah-creat-umol" value="umol" onchange="tahUpdateEgfr()">
+            <label for="tah-creat-umol">µmol/l</label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="tah-egfr-display" style="display:none;margin-top:8px;padding:8px 12px;border-radius:6px;font-size:.85rem;border-left:3px solid #1565c0;background:#e3f2fd;"></div>
+  </div>
+
+  <!-- Card 2: Klinische Indikation -->
+  <style>
+    .tah-ind-tile { display:flex; align-items:center; gap:11px; padding:11px 13px; border-radius:10px; border:2px solid #e8eaf6; cursor:pointer; transition:border-color .15s, background .15s, box-shadow .15s; background:#fafafa; user-select:none; }
+    .tah-ind-tile:hover { border-color:#c62828; background:#fff5f5; box-shadow:0 2px 8px rgba(198,40,40,.1); }
+    .tah-ind-tile.tah-neuro:hover { border-color:#2e7d32; background:#f1f8f1; box-shadow:0 2px 8px rgba(46,125,50,.1); }
+    .tah-ind-tile.tah-active-cor { background:#ffebee; border-color:#c62828; box-shadow:0 2px 10px rgba(198,40,40,.18); }
+    .tah-ind-tile.tah-active-cor .tah-ind-title { color:#b71c1c; }
+    .tah-ind-tile.tah-active-neuro { background:#e8f5e9; border-color:#2e7d32; box-shadow:0 2px 10px rgba(46,125,50,.18); }
+    .tah-ind-tile.tah-active-neuro .tah-ind-title { color:#2e7d32; }
+    .tah-ind-icon { font-size:1.55rem; flex-shrink:0; line-height:1; width:32px; text-align:center; }
+    .tah-ind-title { font-weight:700; font-size:.88rem; color:#1a237e; display:block; line-height:1.3; }
+    .tah-ind-sub { font-size:.73rem; color:#90a4ae; display:block; margin-top:2px; line-height:1.4; }
+    .tah-cat-label { font-size:.73rem; font-weight:700; text-transform:uppercase; letter-spacing:.6px; display:flex; align-items:center; gap:7px; margin-bottom:8px; }
+    .tah-cat-bar { display:inline-block; width:3px; height:13px; border-radius:2px; flex-shrink:0; }
+  </style>
+
+  <!-- Hidden radio inputs -->
+  <input type="radio" name="tah-indication" id="tah-ind-acs-pci"    value="acs-pci"    style="display:none" onchange="tahToggleStentCard()">
+  <input type="radio" name="tah-indication" id="tah-ind-stable-pci" value="stable-pci" style="display:none" onchange="tahToggleStentCard()">
+  <input type="radio" name="tah-indication" id="tah-ind-acs-cons"   value="acs-cons"   style="display:none" onchange="tahToggleStentCard()">
+  <input type="radio" name="tah-indication" id="tah-ind-stable-cad" value="stable-cad" style="display:none" onchange="tahToggleStentCard()">
+  <input type="radio" name="tah-indication" id="tah-ind-stroke"     value="stroke"     style="display:none" onchange="tahToggleStentCard()">
+  <input type="radio" name="tah-indication" id="tah-ind-pad"        value="pad"        style="display:none" onchange="tahToggleStentCard()">
+
+  <div class="diab-card">
+    <h2>🫀 Klinische Indikation</h2>
+
+    <!-- Koronare Gruppe -->
+    <div class="tah-cat-label" style="color:#c62828;">
+      <span class="tah-cat-bar" style="background:#c62828;"></span>
+      Koronare Herzerkrankung &amp; ACS
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
+      <div class="tah-ind-tile" id="tah-tile-acs-pci" onclick="tahActivateTile('acs-pci')">
+        <span class="tah-ind-icon">🚨</span>
+        <span><span class="tah-ind-title">ACS + PCI</span><span class="tah-ind-sub">DES / BMS implantiert</span></span>
+      </div>
+      <div class="tah-ind-tile" id="tah-tile-stable-pci" onclick="tahActivateTile('stable-pci')">
+        <span class="tah-ind-icon">🔩</span>
+        <span><span class="tah-ind-title">Stabile KHK + PCI</span><span class="tah-ind-sub">Elektive Stentimplantation (DES / BMS)</span></span>
+      </div>
+      <div class="tah-ind-tile" id="tah-tile-acs-cons" onclick="tahActivateTile('acs-cons')">
+        <span class="tah-ind-icon">💊</span>
+        <span><span class="tah-ind-title">ACS ohne PCI</span><span class="tah-ind-sub">Konservativ / medikamentös oder CABG</span></span>
+      </div>
+      <div class="tah-ind-tile" id="tah-tile-stable-cad" onclick="tahActivateTile('stable-cad')">
+        <span class="tah-ind-icon">❤️</span>
+        <span><span class="tah-ind-title">Chronische KHK</span><span class="tah-ind-sub">Kein aktueller Stent · Sekundärprävention</span></span>
+      </div>
+    </div>
+
+    <!-- Zerebro-/ Periphere Gruppe -->
+    <div class="tah-cat-label" style="color:#2e7d32;">
+      <span class="tah-cat-bar" style="background:#2e7d32;"></span>
+      Zerebrovaskulär &amp; Peripher
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div class="tah-ind-tile tah-neuro" id="tah-tile-stroke" onclick="tahActivateTile('stroke')">
+        <span class="tah-ind-icon">🧠</span>
+        <span><span class="tah-ind-title">Schlaganfall / TIA</span><span class="tah-ind-sub">Nicht-kardioembolisch</span></span>
+      </div>
+      <div class="tah-ind-tile tah-neuro" id="tah-tile-pad" onclick="tahActivateTile('pad')">
+        <span class="tah-ind-icon">🦵</span>
+        <span><span class="tah-ind-title">pAVK / Revaskularisierung</span><span class="tah-ind-sub">Periphere arterielle Verschlusskrankheit</span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 3: Stent-Details (nur bei PCI) -->
+  <div class="diab-card" id="tah-stent-card" style="display:none;">
+    <h2>🔩 Stent / PCI-Details</h2>
+    <div class="diab-row">
+      <div class="diab-field">
+        <label>Stent-Typ</label>
+        <div class="diab-toggle-group">
+          <input type="radio" name="tah-stent-type" id="tah-stent-des" value="DES" checked>
+          <label for="tah-stent-des">Drug-Eluting Stent (DES)</label>
+          <input type="radio" name="tah-stent-type" id="tah-stent-bms" value="BMS">
+          <label for="tah-stent-bms">Bare-Metal Stent (BMS)</label>
+        </div>
+      </div>
+    </div>
+    <div class="diab-field" style="margin-top:12px;">
+      <label>Zeitpunkt der PCI (wie lange zurück?)</label>
+      <div class="diab-toggle-group" style="flex-wrap:wrap;gap:.4rem;margin-top:6px;">
+        <input type="radio" name="tah-stent-time" id="tah-st-1m" value="lt1m">
+        <label for="tah-st-1m">&lt; 1 Monat</label>
+        <input type="radio" name="tah-stent-time" id="tah-st-3m" value="1to3m">
+        <label for="tah-st-3m">1–3 Monate</label>
+        <input type="radio" name="tah-stent-time" id="tah-st-6m" value="3to6m">
+        <label for="tah-st-6m">3–6 Monate</label>
+        <input type="radio" name="tah-stent-time" id="tah-st-12m" value="6to12m">
+        <label for="tah-st-12m">6–12 Monate</label>
+        <input type="radio" name="tah-stent-time" id="tah-st-old" value="gt12m" checked>
+        <label for="tah-st-old">&gt; 12 Monate</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 4: OAK-Indikation -->
+  <div class="diab-card">
+    <h2>💊 Orale Antikoagulation (OAK)</h2>
+    <p style="font-size:.78rem;color:#607d8b;margin-bottom:10px;line-height:1.5;">
+      Eine gleichzeitige OAK-Indikation verändert das TAH-Regime grundlegend (Triple → Dual-Therapie-Strategie).
+      <span style="color:#6a1b9a;font-weight:600;"> Werte aus dem VHF-Tab werden automatisch übernommen.</span>
+    </p>
+    <div class="diab-row">
+      <div class="diab-field">
+        <label>OAK-Indikation</label>
+        <select id="tah-oak-ind" onchange="tahToggleOAC()">
+          <option value="none">Keine OAK-Indikation</option>
+          <option value="vhf">Vorhofflimmern</option>
+          <optgroup label="── Mechanische Klappenprothese (VKA zwingend)">
+            <option value="mech-mitral">Mechanische Mitralklappe</option>
+            <option value="mech-aorta">Mechanische Aortenklappe</option>
+          </optgroup>
+          <optgroup label="── Biologische Klappenprothese / TAVI">
+            <option value="bio-mitral">Biologische Mitralklappe (Bioprothese, offen-chir.)</option>
+            <option value="bio-aorta">Biologische Aortenklappe (Bioprothese, offen-chir.)</option>
+            <option value="tavi">TAVI / TAVR (Transkatheter-Aortenklappe)</option>
+          </optgroup>
+          <option value="vte">VTE (Tiefe Venenthrombose / Lungenembolie)</option>
+        </select>
+      </div>
+      <div class="diab-field" id="tah-oac-type-row" style="display:none;">
+        <label>Aktuelles Antikoagulans</label>
+        <select id="tah-oac-type">
+          <option value="doac">DOAC (Apixaban / Rivaroxaban / Dabigatran / Edoxaban)</option>
+          <option value="vka">VKA (Phenprocoumon / Marcumar)</option>
+        </select>
+      </div>
+    </div>
+    <!-- Mechanische Klappe: Risikofaktoren für INR-Zielbereich -->
+    <div id="tah-valve-rf-row" style="display:none;margin-top:12px;padding:10px 12px;background:#fff3e0;border-radius:8px;border-left:3px solid #e65100;">
+      <div style="font-size:.78rem;font-weight:700;color:#e65100;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">⬆️ Risikofaktoren → höheres INR-Ziel</div>
+      <p style="font-size:.75rem;color:#795548;margin-bottom:8px;line-height:1.5;">≥ 1 RF vorhanden → nächst höhere INR-Zielbereiche (ESC VHD 2021, Tabelle 11)</p>
+      <div class="diab-med-grid">
+        <div class="diab-check-item"><input type="checkbox" id="tah-vrf-af"><label for="tah-vrf-af"><strong>Vorhofflimmern</strong></label></div>
+        <div class="diab-check-item"><input type="checkbox" id="tah-vrf-te"><label for="tah-vrf-te"><strong>Z.n. Thromboembolie</strong> <small>unter VKA</small></label></div>
+        <div class="diab-check-item"><input type="checkbox" id="tah-vrf-lvef"><label for="tah-vrf-lvef"><strong>LVEF &lt; 35%</strong></label></div>
+        <div class="diab-check-item"><input type="checkbox" id="tah-vrf-oldvalve"><label for="tah-vrf-oldvalve"><strong>Ältere Klappengeneration</strong> <small>(Kugelkäfig / Single-Tilting-Disc)</small></label></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 5: Blutungsrisiko HBR -->
+  <div class="diab-card">
+    <h2>🩸 Blutungsrisiko (HBR-Kriterien)</h2>
+    <p style="font-size:.78rem;color:#607d8b;margin-bottom:10px;line-height:1.5;">
+      <strong>Hohes Blutungsrisiko (HBR):</strong> ≥ 1 Major-Kriterium <em>oder</em> ≥ 2 Minor-Kriterien → kürzere DAPT-Dauer
+      (ACADEMIC-2/ESC 2023, MASTER DAPT).
+    </p>
+    <div style="font-size:.78rem;font-weight:700;color:#c62828;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">Major-Kriterien</div>
+    <div class="diab-med-grid" style="margin-bottom:12px;">
+      <div class="diab-check-item"><input type="checkbox" id="tah-hbr-icb"><label for="tah-hbr-icb"><strong>Z.n. intrakranieller Blutung</strong> <small>(je)</small></label></div>
+      <div class="diab-check-item"><input type="checkbox" id="tah-hbr-gi12"><label for="tah-hbr-gi12"><strong>GI-Blutung</strong> <small>in letzten 12 Mo.</small></label></div>
+      <div class="diab-check-item"><input type="checkbox" id="tah-hbr-thrombo"><label for="tah-hbr-thrombo"><strong>Thrombozytopenie</strong> <small>(&lt; 100.000/µl)</small></label></div>
+      <div class="diab-check-item"><input type="checkbox" id="tah-hbr-liver"><label for="tah-hbr-liver"><strong>Schwere Leberzirrhose</strong></label></div>
+      <div class="diab-check-item"><input type="checkbox" id="tah-hbr-anemia"><label for="tah-hbr-anemia"><strong>Anämie / Hb &lt; 11 g/dl</strong></label></div>
+      <div class="diab-check-item"><input type="checkbox" id="tah-hbr-cancer"><label for="tah-hbr-cancer"><strong>Aktive Malignomerkrankung</strong></label></div>
+    </div>
+    <div style="font-size:.78rem;font-weight:700;color:#e65100;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">Minor-Kriterien</div>
+    <div class="diab-med-grid">
+      <div class="diab-check-item"><input type="checkbox" id="tah-hbr-age75"><label for="tah-hbr-age75"><strong>Alter ≥ 75 Jahre</strong></label></div>
+      <div class="diab-check-item"><input type="checkbox" id="tah-hbr-ckd3"><label for="tah-hbr-ckd3"><strong>CKD mäßig</strong> <small>(eGFR 30–59)</small></label></div>
+      <div class="diab-check-item"><input type="checkbox" id="tah-hbr-dm"><label for="tah-hbr-dm"><strong>Diabetes mellitus</strong></label></div>
+      <div class="diab-check-item"><input type="checkbox" id="tah-hbr-w60"><label for="tah-hbr-w60"><strong>Gewicht &lt; 60 kg</strong></label></div>
+    </div>
+  </div>
+
+  <!-- Card 6: Kontraindikationen -->
+  <div class="diab-card">
+    <h2>⚠️ Kontraindikationen &amp; besondere Faktoren</h2>
+    <div class="diab-med-grid">
+      <div class="diab-check-item"><input type="checkbox" id="tah-ci-stroke"><label for="tah-ci-stroke"><strong>Z.n. Schlaganfall / TIA</strong> <small>(Prasugrel absolut KI)</small></label></div>
+      <div class="diab-check-item"><input type="checkbox" id="tah-ci-dialysis"><label for="tah-ci-dialysis"><strong>Dialysepflicht</strong> <small>(HD / PD)</small></label></div>
+      <div class="diab-check-item"><input type="checkbox" id="tah-ci-dyspnea"><label for="tah-ci-dyspnea"><strong>Signifikante Dyspnoe</strong> <small>(Ticagrelor-NW)</small></label></div>
+      <div class="diab-check-item"><input type="checkbox" id="tah-ci-bradycardia"><label for="tah-ci-bradycardia"><strong>Bradykardie / AV-Block</strong> <small>(Ticagrelor relativ KI)</small></label></div>
+    </div>
+  </div>
+
+  <!-- Berechnen -->
+  <button class="diab-calc-btn" style="background:linear-gradient(135deg,#b71c1c,#c62828);box-shadow:0 3px 10px rgba(183,28,28,.3);" onclick="tahCalculate()">🔴 TAH-Empfehlung berechnen</button>
+
+  <div id="tah-results" style="margin-top:20px;"></div>
+
+  <div class="diab-disclaimer">
+    ⚕️ <strong>Hinweis:</strong> Empfehlungen basieren auf <strong>ESC NSTE-ACS/STEMI 2023</strong>, <strong>ACC/AHA Focused Update DAPT 2016</strong>, <strong>ESC Revaskularisation 2018</strong>, <strong>VOYAGER/COMPASS PAD (Bonaca JACC 2024)</strong>, <strong>AHA/ASA Stroke Prevention Guideline 2021 (Kleindorfer et al.)</strong>. Alle Angaben ohne Gewähr — kein Ersatz für klinisches Urteil.
+  </div>
+
+</div><!-- end diab-container -->
+</div><!-- end tab-tah -->
+
 <div class="shared-footer">
   ⚕️ Nur zur ärztlichen Unterstützung — kein Ersatz für klinisches Urteil &bull;
   CKD: KDIGO 2024 &bull; CKD-EPI 2021 &bull;
   Lipide: ACC/AHA 2026 Dyslipidemia Guideline &bull;
   Diabetes: ADA 2026 &bull; KDIGO 2026 &bull;
-  Hypertonie: ESC 2024
+  Hypertonie: ESC 2024 &bull;
+  Antiaggregation: ESC 2023 &bull; ACC/AHA 2016 &bull; AHA/ASA 2021 &bull; VOYAGER/COMPASS 2024
 </div>
 
 <!-- ============================================================
@@ -4788,6 +5043,10 @@ function switchToolTab(tabName) {
   document.getElementById('tab-vhf').style.display = tabName === 'vhf' ? 'block' : 'none';
   if (tabName === 'vhf' && window.vhfAutoImport) {
     window.vhfAutoImport();
+  }
+  document.getElementById('tab-tah').style.display = tabName === 'tah' ? 'block' : 'none';
+  if (tabName === 'tah' && window.tahAutoImport) {
+    window.tahAutoImport();
   }
   document.getElementById('tab-aki').style.display = tabName === 'aki' ? 'block' : 'none';
   if (tabName === 'aki' && window.akiAutoImport) {
@@ -8112,6 +8371,831 @@ function mbdClear() {
 window.mbdAutoImport = mbdAutoImport;
 window.mbdCalculate  = mbdCalculate;
 window.mbdClear      = mbdClear;
+
+})();
+</script>
+
+<!-- ============================================================
+     TAH — THROMBOZYTENAGGREGATIONSHEMMER JAVASCRIPT
+     ============================================================ -->
+<script>
+(function() {
+
+var TAH_NEURO_VALS = { stroke:1, pad:1 };
+
+function tahActivateTile(val) {
+  ['acs-pci','stable-pci','acs-cons','stable-cad','stroke','pad'].forEach(function(v) {
+    var t = document.getElementById('tah-tile-' + v);
+    if (t) { t.classList.remove('tah-active-cor'); t.classList.remove('tah-active-neuro'); }
+  });
+  var tile = document.getElementById('tah-tile-' + val);
+  if (tile) tile.classList.add(TAH_NEURO_VALS[val] ? 'tah-active-neuro' : 'tah-active-cor');
+  var radio = document.getElementById('tah-ind-' + val);
+  if (radio) { radio.checked = true; }
+  tahToggleStentCard();
+}
+
+function tahToggleStentCard() {
+  var ind = (document.querySelector('input[name="tah-indication"]:checked') || {}).value || '';
+  var isPCI = ind === 'acs-pci' || ind === 'stable-pci';
+  document.getElementById('tah-stent-card').style.display = isPCI ? 'block' : 'none';
+}
+
+function tahToggleOAC() {
+  var oak = document.getElementById('tah-oak-ind').value;
+  document.getElementById('tah-oac-type-row').style.display = oak !== 'none' ? 'block' : 'none';
+  var isMechV = (oak === 'mech-mitral' || oak === 'mech-aorta');
+  document.getElementById('tah-valve-rf-row').style.display = isMechV ? 'block' : 'none';
+  // Mechanische Klappe → VKA automatisch setzen
+  if (isMechV) document.getElementById('tah-oac-type').value = 'vka';
+  // Biologische Klappe / TAVI → DOAC vorausfüllen
+  var isBioV = (oak === 'bio-mitral' || oak === 'bio-aorta' || oak === 'tavi');
+  if (isBioV) document.getElementById('tah-oac-type').value = 'doac';
+}
+
+function tahUpdateEgfr() {
+  var age    = parseFloat(document.getElementById('tah-age').value) || null;
+  var sex    = (document.querySelector('input[name="tah-sex"]:checked') || {}).value || '';
+  var creatRaw = parseFloat(document.getElementById('tah-creat').value) || null;
+  var unit   = (document.querySelector('input[name="tah-creat-unit"]:checked') || {}).value || 'mgdl';
+  var el     = document.getElementById('tah-egfr-display');
+  if (!age || !sex || !creatRaw) { el.style.display = 'none'; return; }
+  var creatMg = unit === 'umol' ? creatRaw / 88.4 : creatRaw;
+  var egfr = egfrCreatinine(age, sex, creatMg);
+  if (!egfr) { el.style.display = 'none'; return; }
+  var col   = egfr >= 60 ? '#1565c0' : egfr >= 30 ? '#e65100' : '#b71c1c';
+  var stage = egfr >= 90 ? 'G1' : egfr >= 60 ? 'G2' : egfr >= 45 ? 'G3a' : egfr >= 30 ? 'G3b' : egfr >= 15 ? 'G4' : 'G5';
+  var bg    = egfr >= 60 ? '#e3f2fd' : egfr >= 30 ? '#fff3e0' : '#ffebee';
+  el.innerHTML = '<strong style="color:' + col + ';">eGFR (CKD-EPI): ' + egfr + '\u202Fml/min/1,73\u202Fm\u00B2 \u2014 Stadium ' + stage + '</strong>';
+  el.style.borderLeftColor = col;
+  el.style.background = bg;
+  el.style.display = 'block';
+  // Auto-set HBR minor for G3
+  if (egfr >= 30 && egfr < 60) {
+    document.getElementById('tah-hbr-ckd3').checked = true;
+  } else if (egfr < 30) {
+    document.getElementById('tah-hbr-ckd3').checked = false; // G4 = major HBR (handled in JS)
+  }
+}
+
+function tahAutoImport() {
+  var age    = document.getElementById('age')    ? document.getElementById('age').value    : '';
+  var sex    = getSex('sex');
+  var weight = document.getElementById('weight') ? document.getElementById('weight').value : '';
+  var creat  = document.getElementById('creatinine') ? document.getElementById('creatinine').value : '';
+  var imported = [];
+
+  if (age)    { document.getElementById('tah-age').value    = age;    imported.push('Alter\u202F' + age + '\u202FJ.'); }
+  if (sex)    { var r = document.getElementById(sex === 'male' ? 'tah-sex-male' : 'tah-sex-female'); if (r) r.checked = true; }
+  if (weight) { document.getElementById('tah-weight').value = weight; imported.push('Gew.\u202F' + weight + '\u202Fkg'); }
+  if (creat)  { document.getElementById('tah-creat').value  = creat;  document.getElementById('tah-creat-mgdl').checked = true; imported.push('Krea\u202F' + creat + '\u202Fmg/dl'); }
+
+  // OAK from VHF tab
+  var mechValve   = document.getElementById('vhf-mechvalve')    ? document.getElementById('vhf-mechvalve').checked   : false;
+  var vhfDialysis = document.getElementById('vhf-dialysis')      ? document.getElementById('vhf-dialysis').checked    : false;
+  var currentOAC  = document.getElementById('vhf-current-oac')  ? document.getElementById('vhf-current-oac').value   : 'none';
+
+  if (mechValve) {
+    document.getElementById('tah-oak-ind').value = 'mech-mitral';
+    tahToggleOAC();
+    document.getElementById('tah-oac-type').value = 'vka';
+    imported.push('OAK: Mech.\u202FKlappe (VHF-Tab)');
+  } else if (currentOAC && currentOAC !== 'none') {
+    document.getElementById('tah-oak-ind').value = 'vhf';
+    tahToggleOAC();
+    document.getElementById('tah-oac-type').value = currentOAC === 'vka' ? 'vka' : 'doac';
+    imported.push('OAK: VHF (VHF-Tab)');
+  }
+
+  // Dialysis
+  var dialDC = document.querySelector('#disease-checkboxes input[value="dialysis"]');
+  if (vhfDialysis || (dialDC && dialDC.checked)) {
+    document.getElementById('tah-ci-dialysis').checked = true;
+    imported.push('Dialyse');
+  }
+
+  // Prior stroke/TIA from VHF and HTN tabs
+  var htnStroke = document.getElementById('htn-stroke');
+  var vhfS2     = document.getElementById('vhf-cha-s2');
+  if ((htnStroke && htnStroke.checked) || (vhfS2 && vhfS2.checked)) {
+    document.getElementById('tah-ci-stroke').checked = true;
+    imported.push('Schlaganfall/TIA');
+  }
+
+  // DM
+  var dmCKD = document.querySelector('#disease-checkboxes input[value="diabetisch"]');
+  var dmHTN = document.getElementById('htn-dm');
+  if ((dmCKD && dmCKD.checked) || (dmHTN && dmHTN.checked)) {
+    document.getElementById('tah-hbr-dm').checked = true;
+  }
+
+  tahUpdateEgfr();
+
+  if (age && parseFloat(age) >= 75) document.getElementById('tah-hbr-age75').checked = true;
+  if (weight && parseFloat(weight) < 60) document.getElementById('tah-hbr-w60').checked = true;
+
+  if (imported.length > 0) {
+    document.getElementById('tah-import-text').textContent = 'Importiert: ' + imported.join(' \u00B7 ');
+    document.getElementById('tah-import-banner').style.display = 'flex';
+  }
+}
+
+// ── Hauptberechnung ─────────────────────────────────────────────
+function tahCalculate() {
+  var age      = parseFloat(document.getElementById('tah-age').value)    || null;
+  var sex      = (document.querySelector('input[name="tah-sex"]:checked') || {}).value || '';
+  var weight   = parseFloat(document.getElementById('tah-weight').value) || null;
+  var creatRaw = parseFloat(document.getElementById('tah-creat').value)  || null;
+  var unit     = (document.querySelector('input[name="tah-creat-unit"]:checked') || {}).value || 'mgdl';
+  var creatMg  = creatRaw ? (unit === 'umol' ? creatRaw / 88.4 : creatRaw) : null;
+  var egfr     = (age && sex && creatMg) ? egfrCreatinine(age, sex, creatMg) : null;
+
+  var indication = (document.querySelector('input[name="tah-indication"]:checked') || {}).value || '';
+  var stentType  = (document.querySelector('input[name="tah-stent-type"]:checked') || {}).value || 'DES';
+  var stentTime  = (document.querySelector('input[name="tah-stent-time"]:checked') || {}).value || 'gt12m';
+  var oakInd     = document.getElementById('tah-oak-ind').value;
+  var oacType    = document.getElementById('tah-oac-type').value;
+
+  // HBR
+  var hbrMajorList = [
+    document.getElementById('tah-hbr-icb').checked,
+    document.getElementById('tah-hbr-gi12').checked,
+    document.getElementById('tah-hbr-thrombo').checked,
+    document.getElementById('tah-hbr-liver').checked,
+    document.getElementById('tah-hbr-anemia').checked,
+    document.getElementById('tah-hbr-cancer').checked,
+    (egfr !== null && egfr < 30)
+  ];
+  var hbrMinorList = [
+    document.getElementById('tah-hbr-age75').checked,
+    document.getElementById('tah-hbr-ckd3').checked,
+    document.getElementById('tah-hbr-dm').checked,
+    document.getElementById('tah-hbr-w60').checked
+  ];
+  var hbrMajor = hbrMajorList.filter(Boolean).length;
+  var hbrMinor = hbrMinorList.filter(Boolean).length;
+  var isHBR    = hbrMajor >= 1 || hbrMinor >= 2;
+
+  var prevStroke     = document.getElementById('tah-ci-stroke').checked;
+  var isDialysis     = document.getElementById('tah-ci-dialysis').checked;
+  var hasDyspnea     = document.getElementById('tah-ci-dyspnea').checked;
+  var hasBradycardia = document.getElementById('tah-ci-bradycardia').checked;
+  var hasLiverCI     = document.getElementById('tah-hbr-liver').checked;
+  var hasOAK         = oakInd !== 'none';
+  var isMechValve    = oakInd === 'mech-mitral' || oakInd === 'mech-aorta';
+  var isBioValve     = oakInd === 'bio-mitral' || oakInd === 'bio-aorta' || oakInd === 'tavi';
+  var isVKA          = oacType === 'vka';
+  var ticaCI         = hasDyspnea || hasBradycardia || hasLiverCI;
+  var prasugelCI     = prevStroke;
+  var prasugelRelCI  = (age !== null && age > 75) || (weight !== null && weight < 60);
+
+  if (!indication) {
+    document.getElementById('tah-results').innerHTML = '<div class="diab-result-card" style="border-left:5px solid #e65100;background:#fff3e0;"><div style="color:#e65100;font-weight:700;">&#9888;&#65039; Bitte klinische Indikation ausw\u00e4hlen.</div></div>';
+    return;
+  }
+
+  renderTahResults({ age, sex, weight, egfr, indication, stentType, stentTime,
+    oakInd, oacType, hasOAK, isMechValve, isBioValve, isVKA, isHBR, hbrMajor, hbrMinor,
+    prevStroke, isDialysis, hasDyspnea, hasBradycardia, ticaCI, prasugelCI, prasugelRelCI });
+}
+
+// ── Render ───────────────────────────────────────────────────────
+function renderTahResults(p) {
+  var egfr = p.egfr, hasOAK = p.hasOAK, isMechValve = p.isMechValve, isVKA = p.isVKA;
+  var isHBR = p.isHBR, hbrMajor = p.hbrMajor, hbrMinor = p.hbrMinor;
+  var isDialysis = p.isDialysis, indication = p.indication;
+  var html = '';
+
+  // ── Übersichtskarte ──────────────────────────────────────────
+  var egfrCol  = !egfr ? '#9e9e9e' : egfr >= 60 ? '#43a047' : egfr >= 30 ? '#e65100' : '#c62828';
+  var egfrStg  = !egfr ? '—' : egfr >= 60 ? 'Normal (G1–G2)' : egfr >= 30 ? 'G3 (mäßig)' : egfr >= 15 ? 'G4 (schwer)' : 'G5 / Dialyse';
+  var hbrCol   = isHBR ? '#c62828' : '#2e7d32';
+  var oakLabels = { none:'Keine', vhf:'Vorhofflimmern',
+    'mech-mitral':'Mech. Mitralklappe', 'mech-aorta':'Mech. Aortenklappe',
+    'bio-mitral':'Bio. Mitralklappe', 'bio-aorta':'Bio. Aortenklappe',
+    'tavi':'TAVI / TAVR', vte:'VTE' };
+  var oakLbl   = oakLabels[p.oakInd] || 'Keine';
+
+  html += '<div class="diab-result-card" style="border-left:5px solid #b71c1c;">' +
+    '<div style="display:flex;align-items:flex-start;gap:24px;flex-wrap:wrap;">' +
+      '<div><div style="font-size:.72rem;color:#607d8b;text-transform:uppercase;letter-spacing:.5px;">eGFR (CKD-EPI)</div>' +
+        '<div style="font-size:1.8rem;font-weight:800;color:' + egfrCol + ';">' + (egfr ? egfr + '\u202Fml/min' : '—') + '</div>' +
+        '<div style="font-size:.78rem;color:' + egfrCol + ';font-weight:600;">' + egfrStg + '</div></div>' +
+      '<div><div style="font-size:.72rem;color:#607d8b;text-transform:uppercase;letter-spacing:.5px;">Blutungsrisiko</div>' +
+        '<div style="font-size:1rem;font-weight:800;color:' + hbrCol + ';margin-top:4px;">' + (isHBR ? 'HBR ✔ (' + hbrMajor + ' Major, ' + hbrMinor + ' Minor)' : 'Kein HBR') + '</div></div>' +
+      '<div><div style="font-size:.72rem;color:#607d8b;text-transform:uppercase;letter-spacing:.5px;">OAK-Indikation</div>' +
+        '<div style="font-size:1rem;font-weight:800;color:' + (hasOAK ? '#c62828' : '#2e7d32') + ';margin-top:4px;">' + oakLbl + (hasOAK ? ' (' + (isVKA ? 'VKA' : 'DOAC') + ')' : '') + '</div></div>' +
+    '</div></div>';
+
+  // ── Klappeninfo & INR-Ziele ──────────────────────────────────
+  if (p.isMechValve || p.isBioValve) html += tahValveInfoCard(p);
+
+  // ── CKD-Warnung ──────────────────────────────────────────────
+  if (egfr !== null && egfr < 60) html += tahCkdWarning(egfr, isDialysis);
+
+  // ── Hauptempfehlung ──────────────────────────────────────────
+  if (indication === 'acs-pci' || indication === 'stable-pci') {
+    html += tahPciRec(p);
+  } else if (indication === 'acs-cons') {
+    html += tahAcsConsRec(p);
+  } else if (indication === 'stroke') {
+    html += tahStrokeRec(p);
+  } else if (indication === 'pad') {
+    html += tahPadRec(p);
+  } else if (indication === 'stable-cad') {
+    html += tahStableCadRec(p);
+  }
+
+  // ── Substanztabelle ──────────────────────────────────────────
+  html += tahDrugTable(p);
+
+  // ── PPI ──────────────────────────────────────────────────────
+  html += '<div class="diab-result-card" style="border-left:5px solid #43a047;background:#f1f8f1;">' +
+    '<h3 style="color:#2e7d32;margin-bottom:8px;">💊 Magenschutz (PPI)</h3>' +
+    '<div style="font-size:.88rem;line-height:1.9;color:#455a64;">' +
+    (hasOAK || isHBR
+      ? '<strong>PPI empfohlen — obligat</strong> (COR\u202FI, LOE\u202FB — ESC 2023): Bei OAK + TAH oder HBR zwingend.'
+      : 'PPI empfohlen bei erhöhtem GI-Risiko: Alter &gt;65\u202FJ., NSAR/Steroide, Z.n. GI-Blutung, H.-pylori (COR\u202FI, LOE\u202FB — ACC/AHA 2016).') +
+    '<br><strong style="color:#e65100;">Cave: Omeprazol/Esomeprazol hemmt CYP2C19 &rarr; Clopidogrel-Wirksamkeit &darr;</strong> &rarr; bevorzugt <strong>Pantoprazol 40\u202Fmg/d</strong> verwenden.' +
+    '</div></div>';
+
+  document.getElementById('tah-results').innerHTML = html;
+  document.getElementById('tah-results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ── PCI ──────────────────────────────────────────────────────────
+function tahPciRec(p) {
+  var isACS = p.indication === 'acs-pci';
+  var stentType = p.stentType, stentTime = p.stentTime;
+  var hasOAK = p.hasOAK, isMechValve = p.isMechValve, isVKA = p.isVKA;
+  var isHBR = p.isHBR, egfr = p.egfr, isDialysis = p.isDialysis;
+  var prevStroke = p.prevStroke, ticaCI = p.ticaCI, prasugelCI = p.prasugelCI, prasugelRelCI = p.prasugelRelCI;
+  var html = '';
+  var stentLbls = { lt1m:'< 1 Monat', '1to3m':'1–3 Monate', '3to6m':'3–6 Monate', '6to12m':'6–12 Monate', gt12m:'> 12 Monate' };
+  var stentLbl = stentLbls[stentTime];
+
+  // ── MIT OAK ───────────────────────────────────────────────────
+  if (hasOAK) {
+    var oacLbl   = isVKA ? 'VKA (Phenprocoumon)' : 'DOAC';
+    var tripleT  = isHBR ? '1 Woche' : (isACS ? 'bis 1 Monat (bei hohem ischämischem Risiko)' : '1 Woche');
+    var dualEnd  = isACS ? '12 Monaten' : '6 Monaten';
+
+    html += '<div class="diab-result-card" style="border-left:5px solid #b71c1c;">' +
+      '<h3 style="color:#b71c1c;margin-bottom:10px;">🔴 ' + (isACS ? 'ACS' : 'Stabile KHK') + ' + PCI + OAK (' + oacLbl + ') — Triple/Dual-Strategie</h3>' +
+      '<p style="font-size:.82rem;color:#455a64;margin-bottom:12px;">Stent: <strong>' + stentType + '</strong> · PCI vor <strong>' + stentLbl + '</strong></p>' +
+      '<div style="display:flex;flex-direction:column;gap:8px;">' +
+        '<div style="padding:11px 13px;background:#ffebee;border-radius:8px;border-left:3px solid #c62828;">' +
+          '<div style="font-weight:700;font-size:.88rem;color:#b71c1c;">Phase 1 — Triple-Therapie: ' + tripleT + '</div>' +
+          '<div style="font-size:.84rem;color:#455a64;margin-top:4px;line-height:1.7;">' +
+            '<strong>' + oacLbl + '</strong> + <strong>ASS 100\u202Fmg/d</strong> + <strong>Clopidogrel 75\u202Fmg/d</strong><br>' +
+            '&#9888;&#65039; <em>Kein Ticagrelor / Prasugrel in Triple-Therapie</em> (signifikant erhöhtes Blutungsrisiko ohne Zusatznutzen — COR III, ESC 2023)<br>' +
+            'PPI obligat. ' + (!isVKA ? 'Bei DOAC: niedrigste Schlaganfallschutzdosis (Rivaroxaban 15\u202Fmg statt 20\u202Fmg erwägen).' : 'VKA: INR-Ziel beibehalten, sorgfältige Einstellung.') +
+          '</div>' +
+        '</div>' +
+        '<div style="padding:11px 13px;background:#fff8e1;border-radius:8px;border-left:3px solid #ffa000;">' +
+          '<div style="font-weight:700;font-size:.88rem;color:#e65100;">Phase 2 — Dual-Therapie: bis ' + dualEnd + ' ab PCI</div>' +
+          '<div style="font-size:.84rem;color:#455a64;margin-top:4px;line-height:1.7;">' +
+            '<strong>' + oacLbl + '</strong> + <strong>Clopidogrel 75\u202Fmg/d</strong> — ASS absetzen.<br>' +
+            (isHBR ? '<strong style="color:#c62828;">HBR: Ende bei 6 Monaten erwägen (statt 12\u202FMo.).</strong>' : 'OAK in voller Schlaganfallschutzdosis.') +
+          '</div>' +
+        '</div>' +
+        '<div style="padding:11px 13px;background:#e8f5e9;border-radius:8px;border-left:3px solid #43a047;">' +
+          '<div style="font-weight:700;font-size:.88rem;color:#2e7d32;">Phase 3 — OAK-Monotherapie: ab ' + dualEnd + '</div>' +
+          '<div style="font-size:.84rem;color:#455a64;margin-top:4px;line-height:1.7;">' +
+            '<strong>' + oacLbl + ' allein</strong> — kein TAH (Langzeittherapie).' +
+            (isMechValve ? '<br>&#9888;&#65039; <strong>Mechanische Klappe + Z.n. TE trotz VKA:</strong> ASS 75–100\u202Fmg/d zusätzlich erwägen (COR\u202FIIb — ESC Klappenrichtlinien 2021).' : '') +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div style="margin-top:10px;font-size:.78rem;color:#9e9e9e;">Quellen: WOEST · PIONEER AF-PCI · RE-DUAL PCI · AUGUSTUS · ENTRUST-AF PCI · ESC NSTE-ACS 2023 · ESC AF 2023</div>' +
+    '</div>';
+
+    if (stentTime === 'lt1m') {
+      html += '<div class="diab-result-card" style="border-left:5px solid #e65100;background:#fff3e0;">' +
+        '<h3 style="color:#e65100;margin-bottom:6px;">&#9201;&#65039; Frische PCI (&lt;\u202F1 Monat) — kritische Phase</h3>' +
+        '<div style="font-size:.86rem;color:#455a64;line-height:1.7;">Triple-Therapie <strong>keinesfalls unterbrechen</strong>. Stent-Thrombose-Risiko maximal in den ersten 4 Wochen. Elektive Eingriffe verschieben. Kardiologische Rücksprache obligat.</div>' +
+      '</div>';
+    }
+    if (stentTime === 'gt12m' && !isACS) {
+      html += '<div class="diab-result-card" style="border-left:5px solid #43a047;background:#f1f8f1;">' +
+        '<h3 style="color:#2e7d32;margin-bottom:6px;">&#10003; PCI &gt;\u202F12 Monate — Standard-Phase abgeschlossen</h3>' +
+        '<div style="font-size:.86rem;color:#455a64;line-height:1.7;">Stabile KHK + OAK: <strong>OAK-Monotherapie</strong> ist Standard. Kein routinemäßiges TAH erforderlich.</div>' +
+      '</div>';
+    }
+    return html;
+  }
+
+  // ── OHNE OAK ─────────────────────────────────────────────────
+  var p2y12 = '', p2y12Dose = '', p2y12Note = '';
+  if (isACS) {
+    if (!ticaCI && !isDialysis && !(egfr !== null && egfr < 15)) {
+      p2y12 = 'Ticagrelor'; p2y12Dose = '90\u202Fmg 2\u00D7/Tag (LD: 180\u202Fmg)';
+      p2y12Note = 'Bevorzugt bei ACS (PLATO: \u2193 Mortalität, \u2193 MACE ggü. Clopidogrel). COR\u202FI — ESC 2023.' + ((egfr !== null && egfr < 30) ? ' <strong style="color:#c62828;">eGFR &lt;30: Clopidogrel bevorzugen.</strong>' : '');
+    } else if (!prasugelCI) {
+      p2y12 = 'Prasugrel'; p2y12Dose = '10\u202Fmg/d (LD: 60\u202Fmg)' + (prasugelRelCI ? ' → <strong>5\u202Fmg/d</strong> (Alter &gt;75\u202FJ. / Gew. &lt;60\u202Fkg)' : '');
+      p2y12Note = 'Alternative zu Ticagrelor. COR\u202FI (nur wenn Koronaranatomie bekannt). KI: Z.n. Schlaganfall/TIA.';
+    } else {
+      p2y12 = 'Clopidogrel'; p2y12Dose = '75\u202Fmg/d (LD: 300–600\u202Fmg)';
+      p2y12Note = 'Bei KI gegen Ticagrelor/Prasugrel, bei Dialyse oder HBR-Strategie. COR\u202FI.';
+    }
+  } else {
+    p2y12 = 'Clopidogrel'; p2y12Dose = '75\u202Fmg/d (LD: 300–600\u202Fmg)';
+    p2y12Note = 'Standard P2Y12-Hemmer für stabile KHK + PCI. COR\u202FI — ESC 2018 / ACC-AHA 2016.';
+  }
+
+  var daptDur = isACS
+    ? (isHBR ? (hbrMajor >= 1 ? '3 Monate (sehr hohes HBR) bis 6 Monate' : '6 Monate (HBR)') : '12 Monate')
+    : (isHBR ? '1–3 Monate (HBR)' : (stentType === 'BMS' ? '1 Monat (BMS)' : '6 Monate (DES)'));
+
+  var timingNote = '';
+  if (stentTime === 'lt1m') {
+    timingNote = '<div style="padding:9px 12px;background:#ffebee;border-radius:7px;border-left:3px solid #c62828;font-size:.83rem;margin-top:8px;"><strong>Frische PCI (&lt;\u202F1 Mo.):</strong> DAPT darf keinesfalls unterbrochen werden! Elektiveingriffe auf ≥\u202F1\u202FMo. (BMS) bzw. ≥\u202F3–6\u202FMo. (DES) verschieben.</div>';
+  } else if (stentTime === 'gt12m') {
+    timingNote = '<div style="padding:9px 12px;background:#e8f5e9;border-radius:7px;border-left:3px solid #43a047;font-size:.83rem;margin-top:8px;"><strong>PCI &gt;\u202F12 Mo.:</strong> Standard-DAPT abgeschlossen. ' + (isACS ? 'Bei Z.n. ACS + niedrigem Blutungsrisiko: Ticagrelor 60\u202Fmg\u202F2\u00D7/d (PEGASUS-TIMI 54, COR\u202FIIb) als extended DAPT erwägen.' : 'ASS-Monotherapie ausreichend.') + '</div>';
+  }
+
+  html += '<div class="diab-result-card" style="border-left:5px solid #b71c1c;">' +
+    '<h3 style="color:#b71c1c;margin-bottom:10px;">🔴 DAPT-Empfehlung: ' + (isACS ? 'ACS' : 'Stabile KHK') + ' + PCI (' + stentType + ')</h3>' +
+    '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px;">' +
+      '<div style="padding:11px 13px;background:#ffebee;border-radius:8px;border-left:3px solid #c62828;">' +
+        '<div style="font-size:.72rem;font-weight:700;color:#b71c1c;text-transform:uppercase;margin-bottom:4px;">Substanz 1</div>' +
+        '<div style="font-weight:700;font-size:.95rem;">ASS 100\u202Fmg/d</div>' +
+        '<div style="font-size:.78rem;color:#607d8b;margin-top:2px;">Lebenslang fortführen</div>' +
+      '</div>' +
+      '<div style="padding:11px 13px;background:#ffebee;border-radius:8px;border-left:3px solid #c62828;">' +
+        '<div style="font-size:.72rem;font-weight:700;color:#b71c1c;text-transform:uppercase;margin-bottom:4px;">Substanz 2 — P2Y12-Hemmer</div>' +
+        '<div style="font-weight:700;font-size:.92rem;">' + p2y12 + ' ' + p2y12Dose + '</div>' +
+        '<div style="font-size:.78rem;color:#607d8b;margin-top:2px;line-height:1.5;">' + p2y12Note + '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div style="padding:10px 12px;background:#e3f2fd;border-radius:8px;border-left:3px solid #1565c0;margin-bottom:8px;">' +
+      '<strong style="color:#1565c0;">DAPT-Dauer: ' + daptDur + '</strong><br>' +
+      '<span style="font-size:.83rem;color:#455a64;">Danach: ASS 100\u202Fmg/d Monotherapie (lebenslang)</span>' +
+      (!isHBR && isACS ? '<br><span style="font-size:.78rem;color:#607d8b;">Extended DAPT (&gt;12\u202FMo.) bei sehr niedrigem Blutungsrisiko + hohem ischämischem Risiko erwägen: Ticagrelor 60\u202Fmg\u202F2\u00D7/d (PEGASUS, COR\u202FIIb).</span>' : '') +
+    '</div>' +
+    timingNote +
+    (isHBR ? '<div style="padding:8px 12px;background:#fff8e1;border-radius:7px;border-left:3px solid #ffa000;font-size:.82rem;margin-top:8px;"><strong>HBR-Strategie (MASTER DAPT):</strong> Nach ' + (isACS ? '3–6\u202FMo.' : '1–3\u202FMo.') + ' DAPT &rarr; Übergang auf <strong>P2Y12-Monotherapie</strong> (Clopidogrel bevorzugt) möglich. COR\u202FIIa.</div>' : '') +
+    '<div style="margin-top:10px;font-size:.78rem;color:#9e9e9e;">Quellen: ESC NSTE-ACS 2023 · ESC STEMI 2023 · ACC/AHA DAPT 2016 · MASTER DAPT 2021 · PLATO · TRITON-TIMI\u202F38 · PEGASUS-TIMI\u202F54</div>' +
+  '</div>';
+
+  if (prevStroke) {
+    html += '<div class="diab-result-card" style="border-left:5px solid #d32f2f;background:#ffebee;">' +
+      '<h3 style="color:#b71c1c;margin-bottom:6px;">🚫 Prasugrel: Absolute Kontraindikation</h3>' +
+      '<div style="font-size:.86rem;color:#455a64;line-height:1.7;">Z.n. Schlaganfall / TIA — Prasugrel absolut kontraindiziert (TRITON-TIMI 38: erhöhtes intrakranielles Blutungsrisiko). &rarr; Ticagrelor oder Clopidogrel verwenden.</div>' +
+    '</div>';
+  } else if (prasugelRelCI && !ticaCI) {
+    html += '<div class="diab-result-card" style="border-left:5px solid #ff9800;background:#fff8e1;">' +
+      '<h3 style="color:#e65100;margin-bottom:6px;">&#9888;&#65039; Prasugrel: Dosisreduktion</h3>' +
+      '<div style="font-size:.86rem;color:#455a64;line-height:1.7;">Alter &gt;75\u202FJ. und/oder Gewicht &lt;60\u202Fkg &rarr; Prasugrel <strong>5\u202Fmg/d</strong> (statt 10\u202Fmg). Ticagrelor als bevorzugte Alternative (keine Dosisanpassung nötig).</div>' +
+    '</div>';
+  }
+  return html;
+}
+
+// ── ACS konservativ ──────────────────────────────────────────────
+function tahAcsConsRec(p) {
+  var hasOAK = p.hasOAK, isVKA = p.isVKA, isMechValve = p.isMechValve;
+  var isHBR = p.isHBR, ticaCI = p.ticaCI, egfr = p.egfr, isDialysis = p.isDialysis;
+  var html = '';
+
+  if (hasOAK) {
+    html += '<div class="diab-result-card" style="border-left:5px solid #b71c1c;">' +
+      '<h3 style="color:#b71c1c;margin-bottom:10px;">🔴 ACS konservativ + OAK (' + (isVKA ? 'VKA' : 'DOAC') + ')</h3>' +
+      '<div style="font-size:.86rem;color:#455a64;line-height:1.9;">' +
+        '<strong>OAK allein oft ausreichend</strong> — bei VHF-OAK kein routinemäßiges zusätzliches TAH (Blutungsrisiko überwiegt ohne nachgewiesenen Zusatznutzen).<br>' +
+        'Bei sehr hohem ischämischem Risiko (refraktäre Angina, GRACE &gt;140, Mehrgefäßerkrankung): Zeitlich begrenztes <strong>Clopidogrel 75\u202Fmg/d</strong> (1–6\u202FMonate) + OAK unter individueller Abwägung möglich. PPI obligat.<br>' +
+        (isMechValve ? '<strong>Mechanische Klappe + ACS:</strong> VKA + ASS 100\u202Fmg/d für begrenzte Zeit vertretbar (COR\u202FIIb). Kardiologische Rücksprache dringend empfohlen.' : '') +
+      '</div>' +
+      '<div style="margin-top:8px;font-size:.77rem;color:#9e9e9e;">Quellen: ESC NSTE-ACS 2023 · ESC AF 2023 · AUGUSTUS</div>' +
+    '</div>';
+    return html;
+  }
+
+  var p2y12 = 'Ticagrelor', p2y12Dose = '90\u202Fmg 2\u00D7/Tag (LD: 180\u202Fmg)', p2y12Note = 'Bevorzugt ggü. Clopidogrel (PLATO). COR\u202FI — ESC 2023.';
+  if (ticaCI || isDialysis || (egfr !== null && egfr < 15)) {
+    p2y12 = 'Clopidogrel'; p2y12Dose = '75\u202Fmg/d (LD: 300–600\u202Fmg)';
+    p2y12Note = 'Bei KI gegen Ticagrelor, Dialyse oder eGFR &lt;15. COR\u202FI.';
+  }
+  var dur = isHBR ? '1\u202FMonat (HBR) bis 6\u202FMonate' : '12\u202FMonate';
+
+  html += '<div class="diab-result-card" style="border-left:5px solid #b71c1c;">' +
+    '<h3 style="color:#b71c1c;margin-bottom:10px;">🔴 ACS ohne PCI — DAPT-Empfehlung</h3>' +
+    '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:10px;">' +
+      '<div style="padding:11px 13px;background:#ffebee;border-radius:8px;border-left:3px solid #c62828;">' +
+        '<div style="font-size:.72rem;font-weight:700;color:#b71c1c;text-transform:uppercase;margin-bottom:4px;">Substanz 1</div>' +
+        '<div style="font-weight:700;">ASS 100\u202Fmg/d</div>' +
+        '<div style="font-size:.78rem;color:#607d8b;">Lebenslang</div>' +
+      '</div>' +
+      '<div style="padding:11px 13px;background:#ffebee;border-radius:8px;border-left:3px solid #c62828;">' +
+        '<div style="font-size:.72rem;font-weight:700;color:#b71c1c;text-transform:uppercase;margin-bottom:4px;">P2Y12-Hemmer</div>' +
+        '<div style="font-weight:700;">' + p2y12 + ' ' + p2y12Dose + '</div>' +
+        '<div style="font-size:.78rem;color:#607d8b;margin-top:2px;">' + p2y12Note + '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div style="padding:10px 12px;background:#e3f2fd;border-radius:8px;border-left:3px solid #1565c0;margin-bottom:8px;">' +
+      '<strong style="color:#1565c0;">DAPT-Dauer: ' + dur + '</strong><br>' +
+      '<span style="font-size:.83rem;color:#455a64;">Danach: ASS 100\u202Fmg/d Monotherapie (lebenslang)</span>' +
+    '</div>' +
+    (isHBR ? '<div style="padding:8px 12px;background:#fff8e1;border-radius:7px;border-left:3px solid #ffa000;font-size:.82rem;"><strong>HBR:</strong> Nach 1\u202FMonat DAPT &rarr; Monotherapie (Clopidogrel bevorzugt). COR\u202FIIa.</div>' : '') +
+    '<div style="margin-top:8px;font-size:.77rem;color:#9e9e9e;">Quellen: ESC NSTE-ACS 2023 · PLATO · TRITON-TIMI 38 · PEGASUS-TIMI 54</div>' +
+  '</div>';
+  return html;
+}
+
+// ── Schlaganfall / TIA ───────────────────────────────────────────
+function tahStrokeRec(p) {
+  var hasOAK = p.hasOAK, isMechValve = p.isMechValve, oakInd = p.oakInd;
+  var isHBR = p.isHBR, egfr = p.egfr;
+  var html = '';
+
+  if (hasOAK && oakInd === 'vhf') {
+    return '<div class="diab-result-card" style="border-left:5px solid #b71c1c;background:#fff8f8;">' +
+      '<h3 style="color:#b71c1c;margin-bottom:8px;">&#9888;&#65039; Kardioembolischer Schlaganfall bei VHF &rarr; OAK, kein TAH</h3>' +
+      '<div style="font-size:.88rem;line-height:1.9;color:#455a64;">' +
+        'Bei VHF-bedingtem ischämischem Schlaganfall: <strong>OAK (DOAC bevorzugt)</strong> ist die einzige belegte Sekundärprävention.<br>' +
+        'TAH bietet keinen zusätzlichen Schutz, erhöht aber das Blutungsrisiko erheblich &rarr; <strong>kein TAH</strong>.<br>' +
+        '&rarr; OAK-Dosierung: <strong>VHF-Tab</strong> dieses Tools verwenden.<br>' +
+        '<strong>OAK-Beginn nach Schlaganfall:</strong> 1–2\u202FTage nach TIA / kleinem Infarkt · 3–7\u202FTage nach mittelgroßem Infarkt · &gt;14\u202FTage nach großem Infarkt (ESC AF 2023).' +
+      '</div>' +
+    '</div>';
+  }
+
+  if (hasOAK && isMechValve) {
+    return '<div class="diab-result-card" style="border-left:5px solid #b71c1c;">' +
+      '<h3 style="color:#b71c1c;margin-bottom:8px;">🔩 Z.n. Schlaganfall + mechanische Klappe</h3>' +
+      '<div style="font-size:.88rem;line-height:1.9;color:#455a64;">' +
+        '<strong>VKA</strong> zwingend. DOAC kontraindiziert (RE-ALIGN, PROACT-Xa).<br>' +
+        '<strong>ASS 75–100\u202Fmg/d zus.</strong> bei Z.n. TE trotz optimaler VKA oder sehr hohem TE-Risiko vertretbar (COR\u202FIIb — ESC Klappenrichtlinien 2021). Blutungsrisiko gegenrechnen.' +
+      '</div>' +
+    '</div>';
+  }
+
+  html += '<div class="diab-result-card" style="border-left:5px solid #b71c1c;">' +
+    '<h3 style="color:#b71c1c;margin-bottom:10px;">🔴 Nicht-kardioembolischer ischämischer Schlaganfall / TIA</h3>' +
+    '<div style="padding:11px 13px;background:#ffebee;border-radius:8px;border-left:3px solid #c62828;margin-bottom:8px;">' +
+      '<div style="font-weight:700;font-size:.9rem;color:#b71c1c;">Akutphase (&#8804;\u202F72 h): Kurz-DAPT</div>' +
+      '<div style="font-size:.84rem;color:#455a64;margin-top:4px;line-height:1.7;">' +
+        '<strong>Option A (bevorzugt): ASS 100\u202Fmg/d + Clopidogrel 75\u202Fmg/d × 21 Tage</strong>, danach Monotherapie<br>' +
+        '(CHANCE / POINT: RRR 25–32% vs. ASS mono — COR\u202FI, AHA/ASA 2021)<br>' +
+        '<strong>Option B: ASS 100\u202Fmg/d + Ticagrelor 90\u202Fmg\u202F2\u00D7/d × 30 Tage</strong>, danach Monotherapie<br>' +
+        '(THALES: ARR 0,6%, NNT 167; erhöhtes Blutungsrisiko — COR\u202FI, AHA/ASA 2021)<br>' +
+        '<em style="font-size:.78rem;color:#607d8b;">Option A bevorzugt bei eGFR &lt;60 oder Dialyse. Clopidogrel + Ticagrelor nicht kombinieren.</em>' +
+      '</div>' +
+    '</div>' +
+    '<div style="padding:11px 13px;background:#e3f2fd;border-radius:8px;border-left:3px solid #1565c0;margin-bottom:8px;">' +
+      '<div style="font-weight:700;font-size:.9rem;color:#1565c0;">Langzeit-Sekundärprävention (ab Tag\u202F21/30)</div>' +
+      '<div style="font-size:.84rem;color:#455a64;margin-top:4px;line-height:1.7;">' +
+        '<strong>Clopidogrel 75\u202Fmg/d</strong> (bevorzugt) <em>oder</em> ASS 100\u202Fmg/d<br>' +
+        '(CAPRIE: Clopidogrel leicht superior ggü. ASS in Sekundärprävention — COR\u202FI)<br>' +
+        (egfr !== null && egfr < 30 ? '<strong style="color:#c62828;">eGFR &lt;30: Clopidogrel bevorzugen</strong> (Ticagrelor: unzureichende Daten bei schwerer CKD).<br>' : '') +
+        '<strong>Kein Langzeit-DAPT</strong> (MATCH, SPS3: erhöhtes Blutungsrisiko ohne Zusatznutzen).' +
+      '</div>' +
+    '</div>' +
+    '<div style="font-size:.77rem;color:#9e9e9e;">Quellen: AHA/ASA Stroke Prevention 2021 (Kleindorfer et al.) · CHANCE (2013) · POINT (2018) · THALES (2020) · CAPRIE · MATCH · SPS3</div>' +
+  '</div>';
+  return html;
+}
+
+// ── pAVK ─────────────────────────────────────────────────────────
+function tahPadRec(p) {
+  var hasOAK = p.hasOAK, isVKA = p.isVKA, isHBR = p.isHBR, egfr = p.egfr, isDialysis = p.isDialysis;
+  var ruxaContra = (egfr !== null && egfr < 15) || isDialysis;
+  var ruxaCaution = egfr !== null && egfr >= 15 && egfr < 30;
+  var html = '';
+
+  html += '<div class="diab-result-card" style="border-left:5px solid #b71c1c;">' +
+    '<h3 style="color:#b71c1c;margin-bottom:10px;">🔴 pAVK / Periphere Revaskularisierung</h3>' +
+    '<div style="display:flex;flex-direction:column;gap:8px;">' +
+
+      '<div style="padding:11px 13px;background:#ffebee;border-radius:8px;border-left:3px solid #c62828;">' +
+        '<div style="font-weight:700;font-size:.9rem;color:#b71c1c;">Nach peripherer Revaskularisierung (endovaskulär / offen)</div>' +
+        '<div style="font-size:.84rem;color:#455a64;margin-top:4px;line-height:1.7;">' +
+          (!ruxaContra ? '<strong>Bevorzugt: Rivaroxaban 2,5\u202Fmg\u202F2\u00D7/Tag + ASS 100\u202Fmg/d</strong> — indefinit<br>(VOYAGER PAD: &darr; MACE + &darr; MALE, ARR 2,6%/3\u202FJ. — COR\u202FI, Bonaca JACC 2024)<br>' : '<strong style="color:#c62828;">Rivaroxaban 2,5\u202Fmg + ASS: Kontraindiziert bei eGFR &lt;15 / Dialyse</strong><br>') +
+          (ruxaCaution ? '<em style="color:#e65100;">eGFR 15–29: Rivaroxaban 2,5\u202Fmg vorsichtig (COMPASS schloss eGFR &lt;30 aus) — individuelle Abwägung.</em><br>' : '') +
+          '<strong>Alternative:</strong> ASS 100\u202Fmg/d + Clopidogrel 75\u202Fmg/d (kurzfristig nach Intervention, dann Mono)' +
+        '</div>' +
+      '</div>' +
+
+      '<div style="padding:11px 13px;background:#e3f2fd;border-radius:8px;border-left:3px solid #1565c0;">' +
+        '<div style="font-weight:700;font-size:.9rem;color:#1565c0;">Chronisch symptomatische pAVK (kein akuter Eingriff)</div>' +
+        '<div style="font-size:.84rem;color:#455a64;margin-top:4px;line-height:1.7;">' +
+          (!ruxaContra ? '<strong>Rivaroxaban 2,5\u202Fmg\u202F2\u00D7/d + ASS 100\u202Fmg/d</strong> bei hohem MACE/MALE-Risiko (COMPASS: &darr; MACE + &darr; MALE — COR\u202FI, ESC PAD 2024)<br>' : '') +
+          '<strong>Alternative: Clopidogrel 75\u202Fmg/d</strong> (leicht superior vs. ASS in pAVK, CAPRIE) <em>oder</em> ASS 100\u202Fmg/d<br>' +
+          (ruxaContra ? '<strong style="color:#c62828;">eGFR &lt;15 / Dialyse: Clopidogrel 75\u202Fmg/d (oder ASS 100\u202Fmg/d) Monotherapie.</strong><br>' : '') +
+          '<strong>Langzeit-DAPT (ASS+Clopi):</strong> Kein Zusatznutzen gegenüber Mono, erhöhtes Blutungsrisiko (CHARISMA) &rarr; nur kurzfristig nach Intervention.' +
+        '</div>' +
+      '</div>' +
+
+    '</div>' +
+    (hasOAK ? '<div style="margin-top:8px;padding:9px 12px;background:#fff3e0;border-radius:7px;border-left:3px solid #ffa000;font-size:.83rem;"><strong>&#9888;&#65039; OAK + pAVK:</strong> Kombination deutlich erhöhtes Blutungsrisiko. OAK allein bevorzugen; nur bei sehr hohem Extremitätenrisiko (rezid. Verschluss, kritische Ischämie) TAH zus. erwägen — angiologisch/kardiologisch absprechen.</div>' : '') +
+    '<div style="margin-top:8px;font-size:.77rem;color:#9e9e9e;">Quellen: Bonaca et al. JACC 2024 (VOYAGER, COMPASS PAD) · ESC PAD Guideline 2024 · AHA/ACC PAD Guideline 2024 (Gornik et al.)</div>' +
+  '</div>';
+  return html;
+}
+
+// ── Chronische KHK ───────────────────────────────────────────────
+function tahStableCadRec(p) {
+  var hasOAK = p.hasOAK, isVKA = p.isVKA, isMechValve = p.isMechValve;
+  var egfr = p.egfr, isDialysis = p.isDialysis;
+  var ruxaContra = (egfr !== null && egfr < 15) || isDialysis;
+  var html = '';
+
+  html += '<div class="diab-result-card" style="border-left:5px solid #1565c0;">' +
+    '<h3 style="color:#1565c0;margin-bottom:10px;">💙 Chronische KHK (kein aktueller Stent / kein ACS)</h3>';
+
+  if (hasOAK) {
+    html += '<div style="padding:11px 13px;background:#e8f5e9;border-radius:8px;border-left:3px solid #43a047;margin-bottom:8px;">' +
+      '<div style="font-weight:700;font-size:.9rem;color:#2e7d32;">OAK-Indikation vorhanden &rarr; OAK-Monotherapie ausreichend</div>' +
+      '<div style="font-size:.84rem;color:#455a64;margin-top:3px;line-height:1.7;">' +
+        'Bei stabiler KHK + ' + (isMechValve ? 'mechanischer Klappe (VKA zwingend)' : 'VHF (DOAC bevorzugt)') + ': OAK allein ist ausreichend.<br>' +
+        'Kein routinemäßiges TAH (erhöhtes Blutungsrisiko ohne bewiesenen Zusatznutzen — CARPENTER, WOEST).<br>' +
+        'ASS nur bei frischer koronarer Intervention oder Z.n. ACS (zeitlich begrenzt).' +
+      '</div>' +
+    '</div>';
+  } else {
+    html += '<div style="padding:11px 13px;background:#e3f2fd;border-radius:8px;border-left:3px solid #1565c0;margin-bottom:8px;">' +
+      '<div style="font-weight:700;font-size:.9rem;color:#1565c0;">Standard: ASS-Monotherapie</div>' +
+      '<div style="font-size:.84rem;color:#455a64;margin-top:3px;line-height:1.7;">' +
+        '<strong>ASS 100\u202Fmg/d</strong> lebenslang (COR\u202FI).<br>' +
+        'Clopidogrel 75\u202Fmg/d bei ASS-Unverträglichkeit.' +
+      '</div>' +
+    '</div>';
+
+    // COMPASS box — always shown (with CKD-conditional content)
+    html += '<div style="padding:11px 13px;background:#fff8e1;border-radius:8px;border-left:3px solid #f57f17;margin-bottom:8px;">' +
+      '<div style="font-weight:700;font-size:.9rem;color:#e65100;">&#128203; COMPASS-Strategie: Rivaroxaban 2,5\u202Fmg\u202F2\u00D7/d + ASS 100\u202Fmg/d</div>' +
+      '<div style="font-size:.84rem;color:#455a64;margin-top:5px;line-height:1.7;">' +
+        '<strong>Indikation:</strong> Stabile KHK + sehr hohes ischämisches Risiko (z.\u202FB. gleichzeitig pAVK, Mehrgefäß-KHK, Diabetes + Endorganschaden, CKD)<br>' +
+        '<strong>Effekt:</strong> &darr;\u202FMACE ARR\u202F1,5\u202F%/Jahr, &darr;\u202FSchlaganfall ARR\u202F0,4\u202F%/Jahr — aber &uarr;\u202Fschwere Blutungen (ARR\u202F&minus;0,7\u202F%/Jahr)<br>' +
+        '<strong>Nettovorteil</strong> bei niedrigem Blutungsrisiko + hohem ischämischem Risiko (COR\u202FIIa, LOE\u202FB — ESC\u202FCCS 2019 / ESC PAD 2024)<br>' +
+        (ruxaContra
+          ? '<strong style="color:#c62828;">&#128683; eGFR &lt;15 / Dialyse: Kontraindiziert</strong> (COMPASS schloss eGFR &lt;15 aus; Dialyse: keine Daten)'
+          : (egfr !== null && egfr < 30
+            ? '<em style="color:#e65100;">&#9888;&#65039; eGFR 15–29: Nicht empfohlen (COMPASS schloss eGFR &lt;30 aus) — individuelle Abwägung mit Nephrologie</em>'
+            : (egfr !== null && egfr < 60
+              ? '<em style="color:#e65100;">&#9888;&#65039; eGFR 30–59 (COMPASS-Subgruppe): Einsetzbar, aber HBR-Status beachten — COMPASS zeigte auch in CKD-Subgruppe Nettovorteil bei hohem ischämischem Risiko</em>'
+              : '<em style="color:#2e7d32;">&#10003; Normales/leicht eingeschränktes Nierenfunktion: Standarddosierung, kein Anpassungsbedarf</em>'))) +
+      '</div>' +
+      '<div style="margin-top:6px;font-size:.77rem;color:#9e9e9e;">COMPASS Trial: Eikelboom et al. NEJM 2017 · n=27.395 · medianes Follow-up 23 Monate · Endpunkt: MACE (kardiovask. Tod + Schlaganfall + MI)</div>' +
+    '</div>';
+  }
+
+  html += '<div style="font-size:.77rem;color:#9e9e9e;">Quellen: ESC CCS 2019 · COMPASS (NEJM 2017) · ACC/AHA CCS 2023 · VOYAGER PAD (NEJM 2020)</div>' +
+  '</div>';
+  return html;
+}
+
+// ── Klappe: INR-Ziele & Therapieplan ─────────────────────────────
+function tahValveInfoCard(p) {
+  var oakInd = p.oakInd;
+  var hasAF      = document.getElementById('tah-vrf-af')       ? document.getElementById('tah-vrf-af').checked       : false;
+  var hasTE      = document.getElementById('tah-vrf-te')       ? document.getElementById('tah-vrf-te').checked       : false;
+  var hasLVEF    = document.getElementById('tah-vrf-lvef')     ? document.getElementById('tah-vrf-lvef').checked     : false;
+  var hasOldV    = document.getElementById('tah-vrf-oldvalve') ? document.getElementById('tah-vrf-oldvalve').checked : false;
+  var rfList     = [hasAF?'VHF':'', hasTE?'Z.n. TE unter VKA':'', hasLVEF?'LVEF &lt;35%':'', hasOldV?'Ältere Klappengeneration':''].filter(Boolean);
+  var rfCount    = rfList.length;
+  var highRisk   = rfCount >= 1;
+
+  // ── Mechanische Mitralklappe ──────────────────────────────────
+  if (oakInd === 'mech-mitral') {
+    var inrRange = highRisk ? '3,0 – 4,0' : '2,5 – 3,5';
+    var inrMid   = highRisk ? '3,5' : '3,0';
+    return '<div class="diab-result-card" style="border-left:5px solid #b71c1c;">' +
+      '<h3 style="color:#b71c1c;margin-bottom:10px;">🔩 Mechanische Mitralklappe — VKA &amp; INR-Ziel</h3>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">' +
+        '<div style="padding:12px;background:#ffebee;border-radius:8px;border-left:3px solid #c62828;text-align:center;">' +
+          '<div style="font-size:.7rem;font-weight:700;color:#b71c1c;text-transform:uppercase;letter-spacing:.4px;">INR-Zielbereich</div>' +
+          '<div style="font-size:2rem;font-weight:800;color:#b71c1c;line-height:1.2;">' + inrRange + '</div>' +
+          '<div style="font-size:.78rem;color:#607d8b;margin-top:2px;">Angestr. Mittelwert: <strong>' + inrMid + '</strong></div>' +
+        '</div>' +
+        '<div style="padding:12px;background:' + (highRisk?'#fff3e0':'#e8f5e9') + ';border-radius:8px;border-left:3px solid ' + (highRisk?'#ffa000':'#43a047') + ';">' +
+          '<div style="font-size:.7rem;font-weight:700;color:' + (highRisk?'#e65100':'#2e7d32') + ';text-transform:uppercase;letter-spacing:.4px;">Risikolage</div>' +
+          '<div style="font-size:.95rem;font-weight:700;color:' + (highRisk?'#c62828':'#2e7d32') + ';margin-top:4px;">' + (highRisk?'⚠️ Erhöhtes TE-Risiko':'✅ Normales TE-Risiko') + '</div>' +
+          (highRisk ? '<div style="font-size:.75rem;color:#795548;margin-top:3px;">' + rfList.join(', ') + '</div>' : '<div style="font-size:.75rem;color:#607d8b;margin-top:3px;">Keine zusätzlichen RF</div>') +
+        '</div>' +
+      '</div>' +
+      '<div style="font-size:.84rem;color:#455a64;line-height:1.9;padding:10px 12px;background:#fafafa;border-radius:7px;">' +
+        '🚫 <strong>DOAC kontraindiziert</strong> (RE-ALIGN: Dabigatran; PROACT-Xa: Rivaroxaban — beide inferior, COR\u202FIII)<br>' +
+        '✅ <strong>VKA (Phenprocoumon / Marcumar)</strong> — lebenslang<br>' +
+        '📋 <strong>Phenprocoumon:</strong> HWZ\u202F~100\u202Fh → 5–7 Tage vor geplanten Eingriffen absetzen; INR-Ziel vor OP &lt;\u202F1,5<br>' +
+        '🔬 INR-Kontrollen: mind. monatlich bei stabilem TTR; bei TTR\u202F&lt;\u202F65\u202F% Ursache suchen (Compliance, Interaktionen, Ernährung)' +
+      '</div>' +
+      '<div style="margin-top:8px;font-size:.77rem;color:#9e9e9e;">ESC Valvular Heart Disease Guidelines 2021 (Vahanian et al.) · Tabelle\u202F11 · ACC/AHA VHD 2021</div>' +
+    '</div>';
+  }
+
+  // ── Mechanische Aortenklappe ──────────────────────────────────
+  if (oakInd === 'mech-aorta') {
+    var inrRange = highRisk ? '2,5 – 3,5' : '2,0 – 3,0';
+    var inrMid   = highRisk ? '3,0' : '2,5';
+    return '<div class="diab-result-card" style="border-left:5px solid #1565c0;">' +
+      '<h3 style="color:#1565c0;margin-bottom:10px;">🔩 Mechanische Aortenklappe — VKA &amp; INR-Ziel</h3>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">' +
+        '<div style="padding:12px;background:#e3f2fd;border-radius:8px;border-left:3px solid #1565c0;text-align:center;">' +
+          '<div style="font-size:.7rem;font-weight:700;color:#1565c0;text-transform:uppercase;letter-spacing:.4px;">INR-Zielbereich</div>' +
+          '<div style="font-size:2rem;font-weight:800;color:#1565c0;line-height:1.2;">' + inrRange + '</div>' +
+          '<div style="font-size:.78rem;color:#607d8b;margin-top:2px;">Angestr. Mittelwert: <strong>' + inrMid + '</strong></div>' +
+        '</div>' +
+        '<div style="padding:12px;background:' + (highRisk?'#fff3e0':'#e8f5e9') + ';border-radius:8px;border-left:3px solid ' + (highRisk?'#ffa000':'#43a047') + ';">' +
+          '<div style="font-size:.7rem;font-weight:700;color:' + (highRisk?'#e65100':'#2e7d32') + ';text-transform:uppercase;letter-spacing:.4px;">Risikolage</div>' +
+          '<div style="font-size:.95rem;font-weight:700;color:' + (highRisk?'#c62828':'#2e7d32') + ';margin-top:4px;">' + (highRisk?'⚠️ Erhöhtes TE-Risiko':'✅ Normales TE-Risiko') + '</div>' +
+          (highRisk ? '<div style="font-size:.75rem;color:#795548;margin-top:3px;">' + rfList.join(', ') + '</div>' : '<div style="font-size:.75rem;color:#607d8b;margin-top:3px;">Keine zusätzlichen RF</div>') +
+        '</div>' +
+      '</div>' +
+      '<div style="font-size:.84rem;color:#455a64;line-height:1.9;padding:10px 12px;background:#fafafa;border-radius:7px;">' +
+        '🚫 <strong>DOAC kontraindiziert</strong> (RE-ALIGN, PROACT-Xa — COR\u202FIII)<br>' +
+        '✅ <strong>VKA (Phenprocoumon)</strong> — lebenslang<br>' +
+        '💡 <em>On-X Valve (niedrige Thrombogenität, Aortenposition, keine RF):</em> INR-Ziel 1,5–2,0 vertretbar ab ≥3\u202FMo. post-OP (COR\u202FIIa — PROACT-Xa 2023 / ESC 2021)<br>' +
+        '📋 <strong>Phenprocoumon:</strong> HWZ\u202F~100\u202Fh → 5–7 Tage vor geplanten Eingriffen absetzen; INR-Ziel vor OP &lt;\u202F1,5' +
+      '</div>' +
+      (highRisk ? '<div style="margin-top:8px;padding:8px 12px;background:#fff3e0;border-radius:7px;border-left:3px solid #ffa000;font-size:.82rem;"><strong>⬆️ Höheres INR-Ziel wegen:</strong> ' + rfList.join(' · ') + '</div>' : '') +
+      '<div style="margin-top:8px;font-size:.77rem;color:#9e9e9e;">ESC VHD 2021 · ACC/AHA VHD 2021 · PROACT-Xa (NEJM 2023) · On-X NAVIGATOR</div>' +
+    '</div>';
+  }
+
+  // ── Biologische Mitralklappe ──────────────────────────────────
+  if (oakInd === 'bio-mitral') {
+    return '<div class="diab-result-card" style="border-left:5px solid #43a047;">' +
+      '<h3 style="color:#2e7d32;margin-bottom:10px;">🫀 Biologische Mitralklappe (Bioprothese) — Therapieplan</h3>' +
+      '<div style="display:flex;flex-direction:column;gap:8px;">' +
+        '<div style="padding:11px 13px;background:#e8f5e9;border-radius:8px;border-left:3px solid #43a047;">' +
+          '<div style="font-weight:700;font-size:.88rem;color:#2e7d32;">Phase 1: Erste 3 Monate post-OP (Einheilungsphase)</div>' +
+          '<div style="font-size:.84rem;color:#455a64;margin-top:4px;line-height:1.7;">' +
+            '<strong>Option A:</strong> VKA — INR <strong>2,0–3,0</strong> (Ziel 2,5) — COR\u202FIIa<br>' +
+            '<strong>Option B:</strong> DOAC (Rivaroxaban / Apixaban) — COR\u202FIIa (RIVER: Rivaroxaban noninferior zu VKA; ENAVLE: Apixaban)<br>' +
+            '<strong>Option C:</strong> ASS 100\u202Fmg/d — COR\u202FIIb (nur bei sehr niedrigem TE-Risiko und Kontraindikation gegen OAK)' +
+          '</div>' +
+        '</div>' +
+        '<div style="padding:11px 13px;background:#f1f8e9;border-radius:8px;border-left:3px solid #7cb342;">' +
+          '<div style="font-weight:700;font-size:.88rem;color:#33691e;">Phase 2: Ab Monat 3 — Sinusrhythmus, keine weiteren OAK-Indikationen</div>' +
+          '<div style="font-size:.84rem;color:#455a64;margin-top:4px;line-height:1.7;">' +
+            '<strong>ASS 100\u202Fmg/d</strong> lebenslang — COR\u202FI<br>' +
+            'OAK kann nach 3\u202FMonaten beendet werden (biologische Klappe vollständig eingeheilt)' +
+          '</div>' +
+        '</div>' +
+        '<div style="padding:11px 13px;background:#fff3e0;border-radius:8px;border-left:3px solid #ffa000;">' +
+          '<div style="font-weight:700;font-size:.88rem;color:#e65100;">Bei gleichzeitigem Vorhofflimmern</div>' +
+          '<div style="font-size:.84rem;color:#455a64;margin-top:4px;line-height:1.7;">' +
+            '<strong>DOAC langfristig</strong> (bevorzugt) oder VKA (INR 2,0–3,0) — OAK-Indikation besteht durch VHF<br>' +
+            'Kein zusätzliches TAH (außer bei gleichzeitiger Koronar-Indikation — befristet)' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div style="margin-top:8px;font-size:.77rem;color:#9e9e9e;">ESC VHD 2021 · RIVER Trial (NEJM 2020) · ENAVLE · ACC/AHA VHD 2021</div>' +
+    '</div>';
+  }
+
+  // ── Biologische Aortenklappe ──────────────────────────────────
+  if (oakInd === 'bio-aorta') {
+    return '<div class="diab-result-card" style="border-left:5px solid #43a047;">' +
+      '<h3 style="color:#2e7d32;margin-bottom:10px;">🫀 Biologische Aortenklappe (Bioprothese) — Therapieplan</h3>' +
+      '<div style="display:flex;flex-direction:column;gap:8px;">' +
+        '<div style="padding:11px 13px;background:#e8f5e9;border-radius:8px;border-left:3px solid #43a047;">' +
+          '<div style="font-weight:700;font-size:.88rem;color:#2e7d32;">Phase 1: Erste 3 Monate post-OP</div>' +
+          '<div style="font-size:.84rem;color:#455a64;margin-top:4px;line-height:1.7;">' +
+            '<strong>Option A:</strong> VKA — INR <strong>2,0–3,0</strong> (Ziel 2,5) — COR\u202FIIa<br>' +
+            '<strong>Option B:</strong> DOAC — COR\u202FIIa (RIVER, ENAVLE)<br>' +
+            '<strong>Option C:</strong> ASS 100\u202Fmg/d — COR\u202FIIb' +
+          '</div>' +
+        '</div>' +
+        '<div style="padding:11px 13px;background:#f1f8e9;border-radius:8px;border-left:3px solid #7cb342;">' +
+          '<div style="font-weight:700;font-size:.88rem;color:#33691e;">Phase 2: Ab Monat 3 — Sinusrhythmus</div>' +
+          '<div style="font-size:.84rem;color:#455a64;margin-top:4px;line-height:1.7;">' +
+            '<strong>ASS 100\u202Fmg/d</strong> lebenslang — COR\u202FI<br>' +
+            'OAK nach 3\u202FMonaten beenden (wenn kein VHF oder andere OAK-Indikation)' +
+          '</div>' +
+        '</div>' +
+        '<div style="padding:11px 13px;background:#fff3e0;border-radius:8px;border-left:3px solid #ffa000;">' +
+          '<div style="font-weight:700;font-size:.88rem;color:#e65100;">Bei gleichzeitigem Vorhofflimmern</div>' +
+          '<div style="font-size:.84rem;color:#455a64;margin-top:4px;line-height:1.7;">' +
+            '<strong>DOAC langfristig</strong> bevorzugt (oder VKA) — analog VHF-OAK<br>' +
+            'Kein zusätzliches TAH außer bei gleichzeitiger koronarer Indikation (befristet)' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div style="margin-top:8px;font-size:.77rem;color:#9e9e9e;">ESC VHD 2021 · RIVER Trial (NEJM 2020) · ENAVLE · ACC/AHA VHD 2021</div>' +
+    '</div>';
+  }
+
+  // ── TAVI / TAVR ──────────────────────────────────────────────
+  if (oakInd === 'tavi') {
+    return '<div class="diab-result-card" style="border-left:5px solid #00897b;">' +
+      '<h3 style="color:#00695c;margin-bottom:10px;">🫀 TAVI / TAVR — Antithrombotische Therapie</h3>' +
+      '<div style="display:flex;flex-direction:column;gap:8px;">' +
+        '<div style="padding:11px 13px;background:#e0f2f1;border-radius:8px;border-left:3px solid #00897b;">' +
+          '<div style="font-weight:700;font-size:.88rem;color:#00695c;">Kein VHF / keine OAK-Indikation</div>' +
+          '<div style="font-size:.84rem;color:#455a64;margin-top:4px;line-height:1.7;">' +
+            '<strong>ASS 100\u202Fmg/d allein</strong> — bevorzugt, lebenslang (COR\u202FI)<br>' +
+            '<strong>Kein routinemäßiges DAPT</strong> (ASS + Clopidogrel) — kein Zusatznutzen, erhöhtes Blutungsrisiko (GALILEO-4D, POPular-TAVI Arm\u202FA)<br>' +
+            'Clopidogrel bei TAVI nur: frisch implantierter peripherer Stent oder gleichzeitige ACS-Indikation (zeitlich begrenzt)' +
+          '</div>' +
+        '</div>' +
+        '<div style="padding:11px 13px;background:#e0f2f1;border-radius:8px;border-left:3px solid #00897b;">' +
+          '<div style="font-weight:700;font-size:.88rem;color:#00695c;">Mit Vorhofflimmern (OAK-Indikation)</div>' +
+          '<div style="font-size:.84rem;color:#455a64;margin-top:4px;line-height:1.7;">' +
+            '<strong>DOAC allein</strong> (bevorzugt) — kein zusätzliches TAH (COR\u202FI)<br>' +
+            'POPular-TAVI Arm\u202FB: OAK-Monotherapie (DOAC) &darr;\u202FBlutungen ohne Ischämie-Nachteil ggü. OAK\u202F+\u202FClopidogrel<br>' +
+            '→ OAK-Dosierung &amp; DOAC-Auswahl: <strong>VHF-Tab</strong> dieses Tools verwenden' +
+          '</div>' +
+        '</div>' +
+        '<div style="padding:11px 13px;background:#fff8e1;border-radius:8px;border-left:3px solid #ffa000;">' +
+          '<div style="font-weight:700;font-size:.88rem;color:#e65100;">TAVI + gleichzeitige PCI / ACS</div>' +
+          '<div style="font-size:.84rem;color:#455a64;margin-top:4px;line-height:1.7;">' +
+            'Triple-Therapie (OAK\u202F+\u202FASS\u202F+\u202FClopidogrel) kurzfristig ≤\u202F1\u202FMonat, dann Dual-Therapie (OAK\u202F+\u202FClopidogrel) — gleiche Strategie wie VHF\u202F+\u202FPCI' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div style="margin-top:8px;font-size:.77rem;color:#9e9e9e;">GALILEO Trial (NEJM 2019) · GALILEO-4D · POPular-TAVI (NEJM 2020) · ESC VHD 2021 · ACC/AHA VHD 2021</div>' +
+    '</div>';
+  }
+
+  return '';
+}
+
+// ── CKD-Warnung ──────────────────────────────────────────────────
+function tahCkdWarning(egfr, isDialysis) {
+  var lines = [];
+  if (isDialysis || egfr < 15) {
+    lines.push('<strong>eGFR &lt;15 / Dialyse (G5):</strong>');
+    lines.push('&bull; Ticagrelor: Unzureichende Daten, erhöhtes Blutungsrisiko &rarr; <strong>Clopidogrel bevorzugen</strong>');
+    lines.push('&bull; Prasugrel: Nicht empfohlen');
+    lines.push('&bull; Rivaroxaban 2,5\u202Fmg + ASS (COMPASS/VOYAGER): <strong>Kontraindiziert</strong>');
+    lines.push('&bull; ASS 81–100\u202Fmg: Fortführen, erhöhtes GI-Blutungsrisiko &rarr; PPI obligat');
+    lines.push('&bull; DAPT-Dauer kürzen — gilt als HBR Major-Kriterium');
+  } else if (egfr < 30) {
+    lines.push('<strong>eGFR 15–29 (G4, schwere CKD):</strong>');
+    lines.push('&bull; Ticagrelor: Möglich, aber deutlich erhöhtes Blutungsrisiko &rarr; <strong>Clopidogrel bevorzugen</strong>');
+    lines.push('&bull; Prasugrel: Zurückhaltend einsetzen, erhöhtes Blutungsrisiko');
+    lines.push('&bull; Rivaroxaban 2,5\u202Fmg + ASS: Nicht empfohlen (COMPASS schloss eGFR &lt;30 aus)');
+    lines.push('&bull; HBR Major-Kriterium erfüllt &rarr; DAPT-Dauer verkürzen');
+  } else {
+    lines.push('<strong>eGFR 30–59 (G3, mäßige CKD):</strong>');
+    lines.push('&bull; Alle P2Y12-Hemmer ohne formale Dosisanpassung einsetzbar — erhöhtes Blutungsrisiko beachten');
+    lines.push('&bull; Bei G3b (eGFR 30–44): Clopidogrel gegenüber Ticagrelor/Prasugrel bevorzugen');
+    lines.push('&bull; Rivaroxaban 2,5\u202Fmg + ASS: Einsetzbar bei eGFR\u202F30–59 (COMPASS-Subgruppe)');
+    lines.push('&bull; HBR Minor-Kriterium erfüllt &rarr; kürzere DAPT-Dauer erwägen');
+  }
+  var col = (isDialysis || egfr < 15) ? '#b71c1c' : egfr < 30 ? '#c62828' : '#e65100';
+  var bg  = egfr < 30 ? '#ffebee' : '#fff3e0';
+  return '<div class="diab-result-card" style="border-left:5px solid ' + col + ';background:' + bg + ';">' +
+    '<h3 style="color:' + col + ';margin-bottom:8px;">🫘 Niereninsuffizienz — Anpassung TAH-Therapie</h3>' +
+    '<div style="font-size:.84rem;line-height:1.9;color:#455a64;">' + lines.join('<br>') + '</div>' +
+  '</div>';
+}
+
+// ── Substanztabelle ──────────────────────────────────────────────
+function tahDrugTable(p) {
+  var egfr = p.egfr, isDialysis = p.isDialysis;
+  var g = egfr;
+  var rows = [
+    ['ASS', '81–100\u202Fmg/d', (!g ? 'k.A.' : g >= 30 ? 'Keine Anpassung' : 'Erhöhtes Blutungsrisiko, PPI'),
+     (!g ? '#9e9e9e' : g >= 30 ? '#2e7d32' : '#e65100'),
+     'NSAR-Effekt bei fortg. CKD beachten; bei Dialyse fortführen'],
+    ['Clopidogrel', '75\u202Fmg/d (LD\u202F300–600\u202Fmg)', (!g ? 'k.A.' : 'Keine Anpassung nötig'),
+     '#2e7d32',
+     'CYP2C19-Metabolisierung; Omeprazol-Interaktion \u2192 Pantoprazol verwenden'],
+    ['Ticagrelor', '90\u202Fmg\u202F2\u00D7/d (LD\u202F180\u202Fmg)\u202F/\u202F60\u202Fmg\u202F2\u00D7/d (Langzeit post-MI)',
+     (!g ? 'k.A.' : g >= 30 ? 'Keine Anpassung' : g >= 15 ? 'Vorsicht, HBR' : 'Keine ausreichenden Daten'),
+     (!g ? '#9e9e9e' : g >= 30 ? '#2e7d32' : g >= 15 ? '#e65100' : '#c62828'),
+     'NW: Dyspnoe (~14%), Bradykardie; reversibler Hemmer; KI: schwere Leberinsuff., ICB, Dialyse (unzureichende Daten)'],
+    ['Prasugrel', '10\u202Fmg/d (LD\u202F60\u202Fmg)\u202F/\u202F5\u202Fmg/d (&gt;75\u202FJ. od. &lt;60\u202Fkg)',
+     (!g ? 'k.A.' : g >= 30 ? 'Keine Anpassung' : 'Erhöhtes Blutungsrisiko'),
+     (!g ? '#9e9e9e' : g >= 30 ? '#43a047' : '#e65100'),
+     '<strong style="color:#c62828;">Absolut KI:</strong> Z.n. Schlaganfall/TIA &bull; <strong>Relativ KI:</strong> Alter &gt;75\u202FJ., Gew. &lt;60\u202Fkg \u2192 5\u202Fmg; nicht empfohlen bei Dialyse'],
+    ['Rivaroxaban 2,5\u202Fmg', '2,5\u202Fmg 2\u00D7/Tag + ASS 100\u202Fmg',
+     (!g ? 'k.A.' : g >= 30 ? 'Möglich' : g >= 15 ? 'Vorsicht (off-label)' : 'Kontraindiziert'),
+     (!g ? '#9e9e9e' : g >= 30 ? '#2e7d32' : g >= 15 ? '#e65100' : '#c62828'),
+     'COMPASS/VOYAGER-Indikation; eGFR &lt;15 / Dialyse: KI; kein TAH-Ersatz, sondern Vascular-Dosis OAK']
+  ];
+  var tbody = rows.map(function(r) {
+    return '<tr style="border-bottom:1px solid #eceff1;">' +
+      '<td style="padding:7px 10px;font-weight:700;">' + r[0] + '</td>' +
+      '<td style="padding:7px 10px;">' + r[1] + '</td>' +
+      '<td style="padding:7px 10px;color:' + r[3] + ';font-weight:600;">' + r[2] + '</td>' +
+      '<td style="padding:7px 10px;font-size:.78rem;color:#607d8b;">' + r[4] + '</td>' +
+    '</tr>';
+  }).join('');
+
+  return '<div class="diab-result-card" style="border-left:5px solid #607d8b;">' +
+    '<h3 style="color:#37474f;margin-bottom:10px;">📋 Substanzübersicht &amp; Dosierung</h3>' +
+    '<div style="overflow-x:auto;">' +
+    '<table style="width:100%;border-collapse:collapse;font-size:.8rem;">' +
+      '<thead><tr style="background:#eceff1;text-align:left;">' +
+        '<th style="padding:7px 10px;border-bottom:2px solid #b0bec5;">Substanz</th>' +
+        '<th style="padding:7px 10px;border-bottom:2px solid #b0bec5;">Standarddosis</th>' +
+        '<th style="padding:7px 10px;border-bottom:2px solid #b0bec5;">Nierenfunktion</th>' +
+        '<th style="padding:7px 10px;border-bottom:2px solid #b0bec5;">Besonderheiten / KI</th>' +
+      '</tr></thead>' +
+      '<tbody>' + tbody + '</tbody>' +
+    '</table></div></div>';
+}
+
+window.tahAutoImport       = tahAutoImport;
+window.tahCalculate        = tahCalculate;
+window.tahActivateTile     = tahActivateTile;
+window.tahToggleStentCard  = tahToggleStentCard;
+window.tahToggleOAC        = tahToggleOAC;
+window.tahUpdateEgfr       = tahUpdateEgfr;
 
 })();
 </script>
