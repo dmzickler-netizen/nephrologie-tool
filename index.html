@@ -64,6 +64,7 @@
 #tab-tah { display: none; }
 #tab-antikoag { display: none; }
 #tab-gicht { display: none; }
+#tab-tma { display: none; }
 .gicht-section { padding:10px 12px; border-radius:10px; margin-bottom:0; }
 .gicht-section-title { font-size:.75rem; font-weight:800; text-transform:uppercase; letter-spacing:.5px; color:#455a64; margin-bottom:8px; }
 .gicht-akut { background:#fff3e0; border:1.5px solid #ffb74d; }
@@ -1366,6 +1367,7 @@ label .lip-optional {
   <button class="nav-tab-btn" data-tab="antikoag" onclick="switchToolTab('antikoag')">💉 Antikoagulation</button>
   <button class="nav-tab-btn" data-tab="aki" onclick="switchToolTab('aki')">🚨 AKI</button>
   <button class="nav-tab-btn" data-tab="gicht" onclick="switchToolTab('gicht')">🦴 Gicht</button>
+  <button class="nav-tab-btn" data-tab="tma" onclick="switchToolTab('tma')">🩸 TTP / HUS / DIC</button>
 </div>
 
 <!-- ============================================================
@@ -4574,6 +4576,681 @@ window.gichtAutoImport = function() {
 
 </div><!-- end tab-gicht -->
 
+<!-- ============================================================
+     TMA / TTP / HUS / DIC / ITP
+     ============================================================ -->
+<div id="tab-tma">
+<style>
+#tab-tma .tma-container { max-width:920px; margin:0 auto; padding:16px; }
+#tab-tma .tma-subtabs { display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap; }
+#tab-tma .tma-stab-btn { background:#fff; border:2px solid #c62828; color:#c62828; border-radius:8px; padding:8px 18px; cursor:pointer; font-weight:700; font-size:.85rem; transition:.15s; }
+#tab-tma .tma-stab-btn.active, #tab-tma .tma-stab-btn:hover { background:#c62828; color:#fff; }
+#tab-tma .tma-tab { display:none; }
+#tab-tma .tma-tab.active { display:block; }
+#tab-tma .tma-card { background:#fff; border-radius:12px; padding:16px; box-shadow:0 2px 8px rgba(0,0,0,.08); margin-bottom:14px; }
+#tab-tma .tma-card-title { font-size:.78rem; font-weight:800; text-transform:uppercase; letter-spacing:.5px; color:#455a64; margin-bottom:12px; border-bottom:2px solid #f5f5f5; padding-bottom:6px; }
+#tab-tma .tma-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+#tab-tma .tma-field { display:flex; flex-direction:column; gap:4px; }
+#tab-tma .tma-label { font-size:.78rem; font-weight:600; color:#546e7a; }
+#tab-tma .tma-input { border:1.5px solid #cfd8dc; border-radius:6px; padding:6px 10px; font-size:.88rem; width:100%; box-sizing:border-box; }
+#tab-tma .tma-input:focus { border-color:#c62828; outline:none; }
+#tab-tma .tma-select { border:1.5px solid #cfd8dc; border-radius:6px; padding:6px 10px; font-size:.88rem; width:100%; box-sizing:border-box; background:#fff; }
+#tab-tma .tma-radio-group { display:flex; gap:12px; margin-top:2px; }
+#tab-tma .tma-radio-group label { font-size:.83rem; display:flex; align-items:center; gap:4px; cursor:pointer; }
+#tab-tma .tma-result-box { border-radius:10px; padding:12px 16px; margin-bottom:12px; }
+#tab-tma .tma-result-low { background:#e8f5e9; border:2px solid #43a047; }
+#tab-tma .tma-result-mid { background:#fff8e1; border:2px solid #fb8c00; }
+#tab-tma .tma-result-high { background:#fce4ec; border:2px solid #e53935; }
+#tab-tma .tma-result-title { font-weight:800; font-size:.93rem; margin-bottom:5px; }
+#tab-tma .tma-result-sub { font-size:.82rem; line-height:1.6; }
+#tab-tma .tma-score-row { display:flex; justify-content:space-between; align-items:center; font-size:.82rem; padding:4px 0; border-bottom:1px solid #f0f0f0; }
+#tab-tma .tma-score-row:last-child { border-bottom:none; }
+#tab-tma .tma-score-item { color:#546e7a; }
+#tab-tma .tma-score-val { font-weight:700; min-width:30px; text-align:right; }
+#tab-tma .tma-score-val.yes { color:#43a047; }
+#tab-tma .tma-score-val.no { color:#bdbdbd; }
+#tab-tma .tma-total { font-size:1.05rem; font-weight:800; text-align:center; padding:10px; border-radius:8px; margin-top:10px; background:#f5f5f5; }
+#tab-tma .tma-section-sep { margin:18px 0 10px; font-size:.75rem; font-weight:800; text-transform:uppercase; letter-spacing:.5px; color:#78909c; border-bottom:2px solid #eceff1; padding-bottom:5px; }
+#tab-tma .tma-ent-line { font-size:.82rem; line-height:1.65; padding:4px 0; border-bottom:1px solid #f5f5f5; }
+#tab-tma .tma-ent-line:last-child { border-bottom:none; }
+#tab-tma .tma-ent-key { font-weight:700; color:#37474f; }
+#tab-tma .tma-warn { background:#fff3e0; border:1.5px solid #ff6f00; border-radius:8px; padding:8px 12px; font-size:.81rem; margin:8px 0; line-height:1.6; }
+#tab-tma .tma-danger { background:#fce4ec; border:1.5px solid #c62828; border-radius:8px; padding:8px 12px; font-size:.81rem; margin:8px 0; line-height:1.6; }
+#tab-tma .tma-ok { background:#e8f5e9; border:1.5px solid #43a047; border-radius:8px; padding:8px 12px; font-size:.81rem; margin:8px 0; line-height:1.6; }
+#tab-tma .tma-dose-table { width:100%; border-collapse:collapse; font-size:.82rem; margin:8px 0; }
+#tab-tma .tma-dose-table th { background:#f5f5f5; padding:5px 8px; text-align:left; font-size:.78rem; font-weight:700; }
+#tab-tma .tma-dose-table td { padding:5px 8px; border-bottom:1px solid #f5f5f5; vertical-align:top; }
+@media (max-width:620px) {
+  #tab-tma .tma-grid { grid-template-columns:1fr; }
+}
+</style>
+
+<div class="tma-container">
+  <h2 style="margin:0 0 3px;font-size:1.1rem;color:#c62828;">🩸 TMA · TTP · HUS · DIC · ITP</h2>
+  <p style="margin:0 0 14px;font-size:.8rem;color:#78909c;">Thrombotische Mikroangiopathien — Differentialdiagnose, Scores &amp; Therapiealgorithmen</p>
+
+  <div class="tma-subtabs">
+    <button class="tma-stab-btn active" onclick="tmaShowTab('diag',this)">🔍 Diagnostik &amp; Scores</button>
+    <button class="tma-stab-btn" onclick="tmaShowTab('therapie',this)">💊 Therapiealgorithmen</button>
+    <button class="tma-stab-btn" onclick="tmaShowTab('info',this)">ℹ️ Leitlinien &amp; Info</button>
+  </div>
+
+  <!-- ===== DIAGNOSTIK ===== -->
+  <div id="tma-diag" class="tma-tab active">
+
+    <div class="tma-card">
+      <div class="tma-card-title">🧪 Laborparameter</div>
+      <div class="tma-grid">
+        <div class="tma-field">
+          <label class="tma-label">Thrombozyten (×10⁹/L)</label>
+          <input class="tma-input" id="tma-plt" type="number" min="0" max="999" placeholder="z.B. 18" oninput="tmaCalc()">
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">Kreatinin (mg/dl)</label>
+          <input class="tma-input" id="tma-krea" type="number" min="0" step="0.1" placeholder="z.B. 1.8" oninput="tmaCalc()">
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">LDH (U/L) <span style="font-weight:400;color:#999">— Norm ≤250 U/L</span></label>
+          <input class="tma-input" id="tma-ldh" type="number" min="0" placeholder="z.B. 820" oninput="tmaCalc()">
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">Haptoglobin</label>
+          <select class="tma-select" id="tma-hapto" onchange="tmaCalc()">
+            <option value="">— bitte wählen —</option>
+            <option value="normal">Normal</option>
+            <option value="niedrig">Erniedrigt</option>
+            <option value="null">Nicht nachweisbar</option>
+          </select>
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">Schistozyten im Blutausstrich</label>
+          <select class="tma-select" id="tma-schisto" onchange="tmaCalc()">
+            <option value="">— bitte wählen —</option>
+            <option value="keine">Keine / &lt;0,1%</option>
+            <option value="low">&lt;1%</option>
+            <option value="mid">1–2%</option>
+            <option value="high">&gt;2%</option>
+          </select>
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">Coombs-Test (DAT)</label>
+          <select class="tma-select" id="tma-coombs" onchange="tmaCalc()">
+            <option value="">— bitte wählen —</option>
+            <option value="neg">Negativ</option>
+            <option value="pos">Positiv</option>
+          </select>
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">INR</label>
+          <input class="tma-input" id="tma-inr" type="number" min="0" step="0.1" placeholder="z.B. 1.1" oninput="tmaCalc()">
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">MCV (fl)</label>
+          <input class="tma-input" id="tma-mcv" type="number" min="50" max="130" placeholder="z.B. 87" oninput="tmaCalc()">
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">Fibrinogen (g/L)</label>
+          <input class="tma-input" id="tma-fibrin" type="number" min="0" step="0.1" placeholder="z.B. 0.8" oninput="tmaCalc()">
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">D-Dimere / Fibrinspaltprodukte</label>
+          <select class="tma-select" id="tma-ddimer" onchange="tmaCalc()">
+            <option value="">— bitte wählen —</option>
+            <option value="normal">Normal</option>
+            <option value="moderat">Moderat erhöht (&lt;5× ULN)</option>
+            <option value="stark">Stark erhöht (≥5× ULN)</option>
+          </select>
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">PT-Verlängerung (Sekunden über Norm)</label>
+          <input class="tma-input" id="tma-pt" type="number" min="0" step="0.5" placeholder="z.B. 4" oninput="tmaCalc()">
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">Aktive Krebserkrankung</label>
+          <div class="tma-radio-group">
+            <label><input type="radio" name="tma-cancer" value="ja" onchange="tmaCalc()"> Ja</label>
+            <label><input type="radio" name="tma-cancer" value="nein" onchange="tmaCalc()"> Nein</label>
+          </div>
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">Stammzelltransplantation in Anamnese</label>
+          <div class="tma-radio-group">
+            <label><input type="radio" name="tma-sct" value="ja" onchange="tmaCalc()"> Ja</label>
+            <label><input type="radio" name="tma-sct" value="nein" onchange="tmaCalc()"> Nein</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tma-card">
+      <div class="tma-card-title">🏥 Klinische Angaben</div>
+      <div class="tma-grid">
+        <div class="tma-field">
+          <label class="tma-label">Blutige Diarrhoe (akut)</label>
+          <div class="tma-radio-group">
+            <label><input type="radio" name="tma-diarrhoe" value="ja" onchange="tmaCalc()"> Ja</label>
+            <label><input type="radio" name="tma-diarrhoe" value="nein" onchange="tmaCalc()"> Nein</label>
+          </div>
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">Shiga-Toxin-Test (STEC)</label>
+          <select class="tma-select" id="tma-stec" onchange="tmaCalc()">
+            <option value="">— nicht getestet —</option>
+            <option value="neg">Negativ</option>
+            <option value="pos">Positiv</option>
+          </select>
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">Strep.-pneumoniae-Infektion bekannt</label>
+          <div class="tma-radio-group">
+            <label><input type="radio" name="tma-sp" value="ja" onchange="tmaCalc()"> Ja</label>
+            <label><input type="radio" name="tma-sp" value="nein" onchange="tmaCalc()"> Nein</label>
+          </div>
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">Solide Organtransplantation</label>
+          <div class="tma-radio-group">
+            <label><input type="radio" name="tma-tx" value="ja" onchange="tmaCalc()"> Ja</label>
+            <label><input type="radio" name="tma-tx" value="nein" onchange="tmaCalc()"> Nein</label>
+          </div>
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">Medikament (TMA-auslösend bekannt)</label>
+          <select class="tma-select" id="tma-drug" onchange="tmaCalc()">
+            <option value="">— keines bekannt —</option>
+            <option value="Chinin">Chinin</option>
+            <option value="Cyclosporin/Tacrolimus">Cyclosporin / Tacrolimus</option>
+            <option value="Gemcitabin">Gemcitabin</option>
+            <option value="Mitomycin C">Mitomycin C</option>
+            <option value="Clopidogrel/Ticlopidin">Clopidogrel / Ticlopidin</option>
+            <option value="Bevacizumab/VEGF-Inhibitor">Bevacizumab / VEGF-Inhibitor</option>
+            <option value="anderes (bekannt)">Anderes (bekannt)</option>
+          </select>
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">Schwangerschaft / post partum</label>
+          <div class="tma-radio-group">
+            <label><input type="radio" name="tma-preg" value="ja" onchange="tmaCalc()"> Ja</label>
+            <label><input type="radio" name="tma-preg" value="nein" onchange="tmaCalc()"> Nein</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ergebnis-Section -->
+    <div id="tma-results" style="display:none;">
+
+      <div id="tma-maha-box"></div>
+
+      <div class="tma-grid" style="margin-bottom:14px;align-items:start;">
+        <div class="tma-card" style="margin-bottom:0;">
+          <div class="tma-card-title">🎯 PLASMIC Score (iTTP-Wahrscheinlichkeit)</div>
+          <div id="tma-plasmic-rows"></div>
+          <div id="tma-plasmic-total" class="tma-total"></div>
+          <div id="tma-plasmic-interp" style="margin-top:8px;font-size:.81rem;line-height:1.5;"></div>
+        </div>
+        <div class="tma-card" style="margin-bottom:0;">
+          <div class="tma-card-title">🎯 French Score (iTTP-Wahrscheinlichkeit)</div>
+          <div id="tma-french-rows"></div>
+          <div id="tma-french-total" class="tma-total"></div>
+          <div id="tma-french-interp" style="margin-top:8px;font-size:.81rem;line-height:1.5;"></div>
+          <div class="tma-section-sep" style="margin-top:14px;">⚖️ ISTH DIC Score</div>
+          <div id="tma-dic-rows"></div>
+          <div id="tma-dic-total" class="tma-total"></div>
+          <div id="tma-dic-interp" style="margin-top:8px;font-size:.81rem;line-height:1.5;"></div>
+        </div>
+      </div>
+
+      <div class="tma-card">
+        <div class="tma-card-title">🔀 Differentialdiagnose TMA</div>
+        <div id="tma-diff-result"></div>
+      </div>
+    </div>
+
+    <div id="tma-empty-hint" style="text-align:center;color:#90a4ae;padding:40px 0;font-size:.88rem;">
+      ↑ Laborwerte eingeben — Scores werden automatisch berechnet
+    </div>
+
+  </div><!-- end tma-diag -->
+
+  <!-- ===== THERAPIEALGORITHMEN ===== -->
+  <div id="tma-therapie" class="tma-tab">
+
+    <div class="tma-danger">
+      ⚠️ <strong>Notfall:</strong> TMA ist ein medizinischer Notfall — Stunden entscheiden. Alle Therapieentscheidungen mit erfahrenem Spezialisten (Hämostaseologie / Nephrologie) abstimmen.
+    </div>
+
+    <!-- Sofortdiagnostik -->
+    <div class="tma-section-sep">⚡ Sofort-Diagnostik-Bundle (alle TMA-Verdachtsfälle)</div>
+    <div class="tma-card">
+      <div class="tma-grid">
+        <div>
+          <div class="tma-ent-line"><span class="tma-ent-key">Blut:</span> BB + Diff, Retikulozyten, LDH, Haptoglobin, Bilirubin (dir./indir.), DAT (Coombs), Kreatinin, LFP, Troponin, BNP, Urinstatus</div>
+          <div class="tma-ent-line"><span class="tma-ent-key">Gerinnung:</span> PT, aPTT, Fibrinogen, D-Dimere, Anti-Xa (wenn Heparin)</div>
+          <div class="tma-ent-line"><span class="tma-ent-key">Blutausstrich:</span> Schistozyten quantifizieren — Norm &lt;0,1%; ab 0,1–0,5% diagnostisch relevant</div>
+        </div>
+        <div>
+          <div class="tma-ent-line"><span class="tma-ent-key" style="color:#c62828;">ADAMTS13 SOFORT:</span> Aktivität + Inhibitor-Titer (Citratblut, auf Eis, sofort ins Labor!) — VOR jeder Therapie abnehmen!</div>
+          <div class="tma-ent-line"><span class="tma-ent-key">Stuhl:</span> Shiga-Toxin-PCR + Kultur (bei Diarrhoe)</div>
+          <div class="tma-ent-line"><span class="tma-ent-key">Komplement:</span> C3, C4, CH50, Anti-CFH-AK — bei Verdacht aHUS</div>
+          <div class="tma-ent-line"><span class="tma-ent-key">Genetik:</span> Komplementgene (CFH, CFI, MCP/CD46, CFB, C3, THBD) — bei aHUS-Verdacht</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- iTTP -->
+    <div class="tma-section-sep">🔴 Immunvermittelte TTP (iTTP) — ADAMTS13-Inhibitor</div>
+    <div class="tma-card">
+      <div class="tma-ent-line"><span class="tma-ent-key">Diagnosekriterium:</span> ADAMTS13-Aktivität &lt;10% + Nachweis Inhibitor → definitive iTTP. Therapie NICHT auf Ergebnis warten — empirisch bei PLASMIC ≥6!</div>
+
+      <div class="tma-section-sep" style="margin-top:12px;">Soforttherapie (innerhalb 4–8 h nach Diagnose)</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">Plasmapherese (TPE):</span> 1–1,5× Plasmavolumen täglich mit TK-armem Frischplasma (FFP) als Austauschflüssigkeit — täglich bis Remission (Plt &gt;150×10⁹/L an 2 aufeinanderfolgenden Tagen)</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">Kortikosteroide:</span> Methylprednisolon 1 g/d i.v. × 3 Tage (bei neurologischen Symptomen, Troponin↑ oder schwerem Verlauf), danach Prednison 1 mg/kg/d p.o.</div>
+
+      <div class="tma-section-sep" style="margin-top:12px;">Caplacizumab (Anti-vWF-Nanobody)</div>
+      <table class="tma-dose-table">
+        <tr><th>Zeitpunkt</th><th>Dosis / Route</th><th>Hinweis</th></tr>
+        <tr><td>VOR 1. TPE</td><td>10 mg i.v. Bolus</td><td>Einmalig, vor Beginn TPE</td></tr>
+        <tr><td>Täglich (nach TPE)</td><td>10 mg s.c.</td><td>Am TPE-Tag: nach TPE injizieren</td></tr>
+        <tr><td>Dauer</td><td colspan="2">Bis 30 Tage nach letzter TPE UND ADAMTS13 &gt;10% — nicht früher absetzen (Rebound!)</td></tr>
+      </table>
+
+      <div class="tma-section-sep" style="margin-top:12px;">Immunsuppression / Rituximab</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">Rituximab:</span> 375 mg/m² i.v. wöchentlich × 4 Wochen — bei schwerem Verlauf, Refraktärität, ADAMTS13 &lt;10% nach 5 TPE oder Rezidiv. Alternativ: 1.000 mg × 2 im Abstand von 2 Wochen</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">Tapering:</span> Nach Remission TPE über 3–5 Tage ausschleichen (nicht abrupt stoppen)</div>
+
+      <div class="tma-danger">
+        🚫 <strong>KEINE Thrombozytentransfusion</strong> — kann Mikrothrombosen aggravieren und tödlich sein. Ausnahme: lebensbedrohliche Blutung (ZNS, viszerale Hämorrhagie)
+      </div>
+      <div class="tma-warn">
+        ⚡ ADAMTS13 10–50%: Diagnose überdenken — aHUS, sek. TMA oder falscher Befund?
+      </div>
+    </div>
+
+    <!-- aHUS -->
+    <div class="tma-section-sep">🔵 Atypisches HUS (aHUS) — Komplementvermittelt</div>
+    <div class="tma-card">
+      <div class="tma-ent-line"><span class="tma-ent-key">Diagnose:</span> TMA nach Ausschluss iTTP (ADAMTS13 &gt;10%), STEC-HUS, Sp-HUS, drug-TMA. Oft ANV im Vordergrund, Thrombopenie geringer ausgeprägt als bei TTP</div>
+
+      <div class="tma-section-sep" style="margin-top:12px;">Eculizumab-Therapie (C5-Inhibitor)</div>
+      <table class="tma-dose-table">
+        <tr><th>Phase</th><th>Dosis</th><th>Intervall</th></tr>
+        <tr><td>Induktion</td><td>900 mg i.v.</td><td>Wöchentlich × 4 Wochen</td></tr>
+        <tr><td>Erhaltung</td><td>1.200 mg i.v.</td><td>Alle 2 Wochen (dauerhaft)</td></tr>
+      </table>
+      <div class="tma-ent-line" style="margin-top:8px;"><span class="tma-ent-key">Ravulizumab (Alternative):</span> Längere Wirkdauer — Dosierung gewichtsadaptiert, Infusion alle 8 Wochen</div>
+
+      <div class="tma-danger">
+        ⚠️ <strong>Meningokokken-Prophylaxe OBLIGAT vor Eculizumab:</strong><br>
+        • Impfung: MenACWY + MenB — idealerweise ≥2 Wochen VOR Eculizumab<br>
+        • Falls keine Zeit: <strong>sofort Penicillin V 500 mg 2×/d p.o.</strong> starten (mindestens bis 2 Wochen nach vollständiger Impfung wirksam)<br>
+        • Impfung auch im Verlauf nachholen wenn initial keine Zeit
+      </div>
+      <div class="tma-warn">
+        ℹ️ TPE hat keinen etablierten Stellenwert bei aHUS — nur überbrückend bis Eculizumab verfügbar. Therapieentscheidung mit Hämostaseologie/Nephrologie.
+      </div>
+      <div class="tma-ent-line"><span class="tma-ent-key">Genetische Testung:</span> CFH, CFI, CD46/MCP, CFB, C3, THBD, CFHR1–5 — beeinflusst Rezidivrisiko, Therapiedauer und Transplantationsentscheidung</div>
+    </div>
+
+    <!-- STEC-HUS -->
+    <div class="tma-section-sep">🟢 STEC-HUS (Shiga-Toxin-assoziiertes HUS)</div>
+    <div class="tma-card">
+      <div class="tma-ent-line"><span class="tma-ent-key">Typisch:</span> Kinder; blutige Diarrhoe (E. coli O157:H7, STEC) → 5–10 Tage später MAHA + ANV. Adulte: schwerere Verläufe</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">Diagnose:</span> Shiga-Toxin-PCR (Stuhl) positiv oder STEC-Kultur, Serologie</div>
+
+      <div class="tma-danger">
+        🚫 <strong>KEINE Antibiotika</strong> — erhöhen intraluminale Shiga-Toxin-Freisetzung und steigern HUS-Risiko signifikant<br>
+        🚫 <strong>KEINE Antiperistaltika</strong> (Loperamid o.ä.) — verlängern Toxin-Kontakt mit Darmschleimhaut<br>
+        🚫 <strong>KEINE Thrombozytentransfusion</strong> ohne vitale Indikation
+      </div>
+      <div class="tma-ok">
+        ✅ <strong>Supportive Therapie ist die Standardtherapie:</strong><br>
+        • Frühzeitiger, großzügiger Volumenersatz mit isotoner NaCl (0,9%) — reduziert ANV-Schwere nachweislich<br>
+        • Nierenersatztherapie (HD/CVVH) bei ANV-Indikation<br>
+        • Antihypertensiva bei hypertensiver Krise<br>
+        • EK-Gabe bei Anämie (kein Ziel-Hb definiert, symptomorientiert)
+      </div>
+      <div class="tma-warn">
+        ⚡ Eculizumab: Nur bei schwersten Verlaufsformen (ZNS-Beteiligung, prolongierte Anurie &gt;2 Wochen) als Einzelfallentscheidung erwägen
+      </div>
+    </div>
+
+    <!-- Sp-HUS -->
+    <div class="tma-section-sep">🟡 Streptococcus pneumoniae HUS (Sp-HUS)</div>
+    <div class="tma-card">
+      <div class="tma-ent-line"><span class="tma-ent-key">Mechanismus:</span> Neuraminidase legt Thomsen-Friedenreich (T)-Antigen frei → natürliche Anti-T-IgG binden → Hämolyse + TMA</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">Typisch:</span> Kleinkinder mit invasiver Pneumokokken-Infektion (Pneumonie, Meningitis, Sepsis) + TMA</div>
+
+      <div class="tma-ent-line" style="margin-top:8px;"><span class="tma-ent-key">Antibiotika:</span> Ceftriaxon 2 g/d i.v. (oder Cefotaxim 2 g alle 8h) + Vancomycin 15 mg/kg alle 6h i.v. bis Resistenztest vorliegt</div>
+
+      <div class="tma-danger">
+        🚫 <strong>KEIN FFP</strong> — enthält Anti-T-IgG → Agglutination + Verschlechterung der TMA!<br>
+        🚫 <strong>Keine Standard-Erythrozytenkonzentrate</strong> — nur <strong>gewaschene EK</strong> transfundieren (Entfernung von Anti-T-IgG aus dem Plasma)
+      </div>
+      <div class="tma-ok">
+        ✅ Prognose bei adäquater frühzeitiger Antibiotikatherapie und korrektem Bluttransfusionsmanagement in der Regel gut
+      </div>
+    </div>
+
+    <!-- DIC -->
+    <div class="tma-section-sep">⚫ DIC (Disseminierte Intravasale Koagulation)</div>
+    <div class="tma-card">
+      <div class="tma-ent-line"><span class="tma-ent-key">Auslöser:</span> Sepsis (häufigste Ursache), Trauma, Malignome, geburtshilfliche Komplikationen, schwere Hämolyse, Verbrennung</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">ISTH DIC Score ≥5:</span> Overt DIC — Soforttherapie. Score &lt;5: Wiederholen nach 24–48 h</div>
+
+      <div class="tma-ok" style="margin-top:8px;">
+        ✅ <strong>Grunderkrankung behandeln</strong> — dies ist der zentrale Pfeiler der DIC-Therapie
+      </div>
+
+      <div class="tma-section-sep" style="margin-top:12px;">Substitutionstherapie bei aktiver Blutung</div>
+      <table class="tma-dose-table">
+        <tr><th>Produkt</th><th>Ziel</th><th>Dosierung</th></tr>
+        <tr><td>FFP</td><td>PT/aPTT normalisieren</td><td>15–20 ml/kg i.v.</td></tr>
+        <tr><td>Fibrinogen-Konzentrat</td><td>Fibrinogen &gt;1,5 g/L</td><td>2–4 g i.v. (ggf. wiederholen)</td></tr>
+        <tr><td>Thrombozyten-Konzentrat</td><td>Plt &gt;50×10⁹/L bei Blutung</td><td>1 EK / 10 kg KG</td></tr>
+        <tr><td>PPSB (Prothrombinkomplex)</td><td>Alternativ zu FFP bei Volumenrestriktion</td><td>20–30 IE/kg i.v.</td></tr>
+      </table>
+      <div class="tma-warn">
+        ⚡ Heparin: nur bei thrombotisch dominierter DIC (Akrozyanose, Purpura fulminans) — immer Rücksprache Hämostaseologie
+      </div>
+      <div class="tma-danger">
+        🚫 <strong>KEINE Antifibrinolytika</strong> (Tranexamsäure) bei DIC — außer dokumentierter hyperfibrinolytischer Verlaufsform (Thrombelastographie!)
+      </div>
+    </div>
+
+    <!-- ITP -->
+    <div class="tma-section-sep">🟣 ITP (Immunthrombozytopenie) — Isolierte Thrombopenie</div>
+    <div class="tma-card">
+      <div class="tma-ent-line"><span class="tma-ent-key">Abgrenzung zur TMA:</span> <em>Keine</em> Schistozyten, kein LDH↑, kein Kreatinin↑, normales Fibrinogen, DAT negativ — isolierte Thrombopenie ohne MAHA</div>
+
+      <div class="tma-section-sep" style="margin-top:12px;">Erstlinientherapie</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">Prednison:</span> 0,5–1 mg/kg/d p.o. × 2–4 Wochen, dann langsam Tapering über 4–6 Wochen</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">Dexamethason:</span> 40 mg/d p.o. × 4 Tage (Puls) — alternativ zu Prednison, höhere initiale Ansprechrate</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">IVIG:</span> 1 g/kg/d i.v. × 1–2 Tage — bei aktiver Blutung oder Notfall (rascher Plt-Anstieg innerhalb 24–48 h)</div>
+
+      <div class="tma-section-sep" style="margin-top:12px;">Notfalltherapie (Plt &lt;10×10⁹/L + aktive Blutung)</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">Kombination:</span> IVIG 1 g/kg i.v. + Methylprednisolon 1 g i.v. + Thrombozytentransfusion (bei lebensbedrohlicher Blutung — ZNS, viszerale Hämorrhagie)</div>
+
+      <div class="tma-section-sep" style="margin-top:12px;">Zweitlinientherapie (chron. ITP / Versagen Erstlinie)</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">Rituximab:</span> 375 mg/m² i.v. wöchentlich × 4 (oder 1.000 mg × 2 im Abstand 2 Wochen)</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">TPO-Rezeptor-Agonisten:</span> Eltrombopag 25–75 mg/d p.o. oder Romiplostim 1–10 µg/kg s.c./Woche</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">Fostamatinib:</span> 100–150 mg 2×/d p.o. — Syk-Inhibitor, bei Versagen anderer Therapien</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">Splenektomie:</span> Bei Versagen medikamentöser Therapie — erst nach &gt;12 Monaten erwägen (Remissionsrate ~60–70%)</div>
+    </div>
+
+  </div><!-- end tma-therapie -->
+
+  <!-- ===== INFO ===== -->
+  <div id="tma-info" class="tma-tab">
+    <div class="tma-card">
+      <div class="tma-card-title">📚 Leitlinien &amp; Quellen</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">iTTP Leitlinie:</span> ISTH Guidelines for Treatment of TTP — Cuker et al., J Thromb Haemost 2021</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">Europäische Perspektive:</span> ERBP Endorsement der ISTH-Leitlinie — Guedeney et al., NDT 2022 (gfac034)</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">iTTP Review (aktuell):</span> Immune TTP — JAMA 2025</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">HUS:</span> Haemolytic uraemic syndrome — Lancet 2022</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">PLASMIC Score:</span> Bendapudi et al., Lancet Haematol 2017</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">French Score:</span> Coppo et al., Br J Haematol 2010</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">ISTH DIC Score:</span> Taylor et al., J Thromb Haemost 2001</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">Caplacizumab HERCULES:</span> Scully et al., N Engl J Med 2019</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">Eculizumab aHUS:</span> Legendre et al., N Engl J Med 2013; Fakhouri et al., J Am Soc Nephrol 2022</div>
+    </div>
+
+    <div class="tma-card">
+      <div class="tma-card-title">🔬 PLASMIC Score — Itemdefinitionen</div>
+      <table class="tma-dose-table">
+        <tr><th>Buchstabe</th><th>Kriterium</th><th>+1 Punkt wenn</th></tr>
+        <tr><td><strong>P</strong>latelet</td><td>Thrombozyten</td><td>&lt;30×10⁹/L</td></tr>
+        <tr><td><strong>L</strong>ysis</td><td>Hämolyse-Marker</td><td>LDH &gt;2× ULN <em>oder</em> Retikulozyten &gt;2,5% <em>oder</em> Haptoglobin n.n.</td></tr>
+        <tr><td><strong>A</strong>ctive cancer</td><td>Krebserkrankung</td><td>Keine aktive Krebserkrankung</td></tr>
+        <tr><td><strong>S</strong>CT</td><td>Stammzelltransplantation</td><td>Keine in der Anamnese</td></tr>
+        <tr><td><strong>M</strong>CV</td><td>MCV</td><td>&lt;90 fl</td></tr>
+        <tr><td><strong>I</strong>NR</td><td>INR</td><td>&lt;1,5</td></tr>
+        <tr><td><strong>C</strong>reatinine</td><td>Kreatinin</td><td>&lt;2,0 mg/dl (177 µmol/L)</td></tr>
+      </table>
+      <div style="margin-top:8px;font-size:.81rem;">
+        <strong>0–4 Pkt.:</strong> Niedrig (&lt;5%) | <strong>5 Pkt.:</strong> Intermediär (~6%) | <strong>6–7 Pkt.:</strong> Hoch (~72%) → Therapie!
+      </div>
+    </div>
+
+    <div class="tma-card">
+      <div class="tma-card-title">💊 Caplacizumab — Praktische Hinweise</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">Wirkmechanismus:</span> Anti-vWF-Nanobody — blockiert Bindung von vWF an GPIb-Rezeptor der Thrombozyten → verhindert Mikrothromben</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">Absetzen:</span> Frühes Absetzen (vor ADAMTS13-Normalisierung) führt zu Rebound → Plt-Abfall + klinische Verschlechterung</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">HERCULES-Studie:</span> Signifikante Reduktion TTP-bedingter Todesfälle, Rezidive und refraktärer TTP vs. Placebo</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">Blutungsrisiko:</span> Erhöhtes Blutungsrisiko (vWF-Hemmung) — ggf. 12h Pause vor invasiven Eingriffen</div>
+      <div class="tma-warn">⚡ Caplacizumab behandelt nicht die Grunderkrankung (ADAMTS13-Inhibitor) — Immunsuppression (Rituximab) bleibt essenziell</div>
+    </div>
+  </div><!-- end tma-info -->
+
+</div><!-- end tma-container -->
+
+<script>
+(function(){
+  'use strict';
+
+  window.tmaShowTab = function(id, btn) {
+    document.querySelectorAll('#tab-tma .tma-tab').forEach(function(t){ t.classList.remove('active'); });
+    document.querySelectorAll('#tab-tma .tma-stab-btn').forEach(function(b){ b.classList.remove('active'); });
+    document.getElementById('tma-'+id).classList.add('active');
+    if (btn) btn.classList.add('active');
+  };
+
+  function getRadio(name) {
+    var r = document.querySelector('input[name="'+name+'"]:checked');
+    return r ? r.value : null;
+  }
+
+  function numVal(id) {
+    var el = document.getElementById(id);
+    if (!el) return null;
+    var v = parseFloat(el.value);
+    return isNaN(v) ? null : v;
+  }
+
+  function selVal(id) {
+    var el = document.getElementById(id);
+    return el ? el.value : '';
+  }
+
+  window.tmaCalc = function() {
+    var plt    = numVal('tma-plt');
+    var krea   = numVal('tma-krea');
+    var ldh    = numVal('tma-ldh');
+    var hapto  = selVal('tma-hapto');
+    var schisto= selVal('tma-schisto');
+    var inr    = numVal('tma-inr');
+    var mcv    = numVal('tma-mcv');
+    var fibrin = numVal('tma-fibrin');
+    var ddimer = selVal('tma-ddimer');
+    var pt     = numVal('tma-pt');
+    var cancer = getRadio('tma-cancer');
+    var sct    = getRadio('tma-sct');
+    var diarrhoe = getRadio('tma-diarrhoe');
+    var stec   = selVal('tma-stec');
+    var sp     = getRadio('tma-sp');
+    var tx     = getRadio('tma-tx');
+    var drug   = selVal('tma-drug');
+    var preg   = getRadio('tma-preg');
+
+    var filledCount = [plt, krea, ldh,
+      hapto && hapto !== '' ? 1 : null,
+      schisto && schisto !== '' ? 1 : null
+    ].filter(function(x){ return x !== null; }).length;
+
+    var resultsEl = document.getElementById('tma-results');
+    var hintEl    = document.getElementById('tma-empty-hint');
+    if (filledCount < 2) {
+      resultsEl.style.display = 'none';
+      hintEl.style.display = 'block';
+      return;
+    }
+    resultsEl.style.display = 'block';
+    hintEl.style.display = 'none';
+
+    // ----- MAHA Assessment -----
+    var thrombopenia = (plt !== null && plt < 100);
+    var schistoPresent = (schisto && schisto !== 'keine' && schisto !== '');
+    var haemolysis = (ldh !== null && ldh > 500) || (hapto === 'null') || (hapto === 'niedrig' && ldh !== null && ldh > 300);
+    var maha = thrombopenia && schistoPresent && haemolysis;
+
+    var mahaHtml = '';
+    if (plt !== null && schisto) {
+      if (maha) {
+        mahaHtml = '<div class="tma-result-box tma-result-high"><div class="tma-result-title">⚠️ MAHA-Kriterien erfüllt — TMA-Abklärung dringend indiziert</div><div class="tma-result-sub">Thrombopenie + Schistozyten + Hämolysezeichen. Sofort ADAMTS13-Blut abnehmen und TMA-Differentialdiagnose abklären!</div></div>';
+      } else if (thrombopenia && schistoPresent) {
+        mahaHtml = '<div class="tma-result-box tma-result-mid"><div class="tma-result-title">⚡ Mögliche MAHA — vollständige Abklärung empfohlen</div><div class="tma-result-sub">Thrombopenie + Schistozyten ohne eindeutige Hämolyse-Marker. LDH, Haptoglobin und Blutausstrich vervollständigen.</div></div>';
+      } else if (!thrombopenia && !schistoPresent) {
+        mahaHtml = '<div class="tma-result-box tma-result-low"><div class="tma-result-title">✅ Kein Hinweis auf MAHA bei diesen Werten</div><div class="tma-result-sub">Keine typische thrombotische Mikroangiopathie. Andere Diagnose wahrscheinlich.</div></div>';
+      }
+    }
+    document.getElementById('tma-maha-box').innerHTML = mahaHtml;
+
+    // ----- PLASMIC Score -----
+    var plasmic = 0;
+    var pRows = '';
+
+    var p1 = (plt !== null && plt < 30);
+    if (p1) plasmic++;
+    pRows += '<div class="tma-score-row"><span class="tma-score-item">Thrombozyten &lt;30×10⁹/L'+(plt!==null?' ('+plt+')':'')+'</span><span class="tma-score-val '+(p1?'yes':'no')+'">'+(plt===null?'?':(p1?'+1':'0'))+'</span></div>';
+
+    var pHaemo = (ldh !== null && ldh > 500) || (hapto === 'null');
+    if (pHaemo) plasmic++;
+    pRows += '<div class="tma-score-row"><span class="tma-score-item">Hämolyse (LDH &gt;500 oder Hapto n.n.)</span><span class="tma-score-val '+(pHaemo?'yes':'no')+'">'+((ldh===null&&hapto==='') ? '?' : (pHaemo?'+1':'0'))+'</span></div>';
+
+    var p3 = (cancer === 'nein');
+    if (p3) plasmic++;
+    pRows += '<div class="tma-score-row"><span class="tma-score-item">Keine aktive Krebserkrankung</span><span class="tma-score-val '+(p3?'yes':'no')+'">'+(cancer===null?'?':(p3?'+1':'0'))+'</span></div>';
+
+    var p4 = (sct === 'nein');
+    if (p4) plasmic++;
+    pRows += '<div class="tma-score-row"><span class="tma-score-item">Keine Stammzelltransplantation</span><span class="tma-score-val '+(p4?'yes':'no')+'">'+(sct===null?'?':(p4?'+1':'0'))+'</span></div>';
+
+    var p5 = (mcv !== null && mcv < 90);
+    if (p5) plasmic++;
+    pRows += '<div class="tma-score-row"><span class="tma-score-item">MCV &lt;90 fl'+(mcv!==null?' ('+mcv+' fl)':'')+'</span><span class="tma-score-val '+(p5?'yes':'no')+'">'+(mcv===null?'?':(p5?'+1':'0'))+'</span></div>';
+
+    var p6 = (inr !== null && inr < 1.5);
+    if (p6) plasmic++;
+    pRows += '<div class="tma-score-row"><span class="tma-score-item">INR &lt;1,5'+(inr!==null?' ('+inr+')':'')+'</span><span class="tma-score-val '+(p6?'yes':'no')+'">'+(inr===null?'?':(p6?'+1':'0'))+'</span></div>';
+
+    var p7 = (krea !== null && krea < 2.0);
+    if (p7) plasmic++;
+    pRows += '<div class="tma-score-row"><span class="tma-score-item">Kreatinin &lt;2,0 mg/dl'+(krea!==null?' ('+krea+')'  :'')+'</span><span class="tma-score-val '+(p7?'yes':'no')+'">'+(krea===null?'?':(p7?'+1':'0'))+'</span></div>';
+
+    document.getElementById('tma-plasmic-rows').innerHTML = pRows;
+    var pColor = plasmic <= 4 ? '#2e7d32' : (plasmic === 5 ? '#e65100' : '#c62828');
+    document.getElementById('tma-plasmic-total').innerHTML = '<span style="color:'+pColor+';">PLASMIC-Score: '+plasmic+' / 7</span>';
+    document.getElementById('tma-plasmic-interp').innerHTML =
+      plasmic <= 4 ? '🟢 <strong>Niedrig</strong> — TTP unwahrscheinlich (&lt;5%). Alternative Diagnose suchen.' :
+      plasmic === 5 ? '🟡 <strong>Intermediär</strong> — ca. 6% TTP-Wahrscheinlichkeit. Klinischen Kontext beachten, ADAMTS13 abwarten wenn stabil.' :
+      '🔴 <strong>Hoch</strong> — ca. 72% TTP-Wahrscheinlichkeit. <strong>Empirische TPE + Caplacizumab sofort starten!</strong>';
+
+    // ----- French Score -----
+    var french = 0;
+    var fRows = '';
+    var f1 = (plt !== null && plt < 30);
+    if (f1) french++;
+    fRows += '<div class="tma-score-row"><span class="tma-score-item">Thrombozyten &lt;30×10⁹/L</span><span class="tma-score-val '+(f1?'yes':'no')+'">'+(plt===null?'?':(f1?'+1':'0'))+'</span></div>';
+    var f2 = (krea !== null && krea < 2.26);
+    if (f2) french++;
+    fRows += '<div class="tma-score-row"><span class="tma-score-item">Kreatinin &lt;2,26 mg/dl (&lt;200 µmol/L)</span><span class="tma-score-val '+(f2?'yes':'no')+'">'+(krea===null?'?':(f2?'+1':'0'))+'</span></div>';
+    document.getElementById('tma-french-rows').innerHTML = fRows;
+    var fColor = french === 0 ? '#2e7d32' : (french === 1 ? '#e65100' : '#c62828');
+    document.getElementById('tma-french-total').innerHTML = '<span style="color:'+fColor+';">French-Score: '+french+' / 2</span>';
+    document.getElementById('tma-french-interp').innerHTML =
+      french === 0 ? '🟢 Score 0 — TTP-Wahrscheinlichkeit ~2%' :
+      french === 1 ? '🟡 Score 1 — TTP-Wahrscheinlichkeit ~70%' :
+      '🔴 Score 2 — TTP-Wahrscheinlichkeit ~94% — <strong>Therapiebeginn!</strong>';
+
+    // ----- ISTH DIC Score -----
+    var dic = 0;
+    var dRows = '';
+
+    var dicPlt = plt !== null ? (plt < 50 ? 2 : (plt <= 100 ? 1 : 0)) : null;
+    if (dicPlt !== null) dic += dicPlt;
+    dRows += '<div class="tma-score-row"><span class="tma-score-item">Thrombozyten'+(plt!==null?' ('+plt+'×10⁹/L)':'')+'</span><span class="tma-score-val">'+(dicPlt===null?'?':dicPlt+' Pkt.')+'</span></div>';
+
+    var dicFdp = ddimer === 'stark' ? 3 : (ddimer === 'moderat' ? 2 : (ddimer === 'normal' ? 0 : null));
+    if (dicFdp !== null) dic += dicFdp;
+    dRows += '<div class="tma-score-row"><span class="tma-score-item">D-Dimere / FDP</span><span class="tma-score-val">'+(dicFdp===null?'?':dicFdp+' Pkt.')+'</span></div>';
+
+    var dicPt = pt !== null ? (pt > 6 ? 2 : (pt >= 3 ? 1 : 0)) : null;
+    if (dicPt !== null) dic += dicPt;
+    dRows += '<div class="tma-score-row"><span class="tma-score-item">PT-Verlängerung'+(pt!==null?' ('+pt+' s)':'')+'</span><span class="tma-score-val">'+(dicPt===null?'?':dicPt+' Pkt.')+'</span></div>';
+
+    var dicFib = fibrin !== null ? (fibrin < 1.0 ? 1 : 0) : null;
+    if (dicFib !== null) dic += dicFib;
+    dRows += '<div class="tma-score-row"><span class="tma-score-item">Fibrinogen'+(fibrin!==null?' ('+fibrin+' g/L)':'')+'</span><span class="tma-score-val">'+(dicFib===null?'?':dicFib+' Pkt.')+'</span></div>';
+
+    document.getElementById('tma-dic-rows').innerHTML = dRows;
+    var dColor = dic >= 5 ? '#c62828' : '#2e7d32';
+    document.getElementById('tma-dic-total').innerHTML = '<span style="color:'+dColor+';">ISTH DIC Score: '+dic+' Punkte</span>';
+    document.getElementById('tma-dic-interp').innerHTML =
+      dic >= 5 ? '🔴 <strong>Overt DIC</strong> (≥5 Punkte) — Grunderkrankung behandeln, Substitutionstherapie bei Blutung' :
+      '🟢 Score &lt;5 — Kein overt DIC. Bei klinischem Verdacht: Kontrolle nach 24–48 h';
+
+    // ----- Differentialdiagnose -----
+    var diagList = [];
+
+    if (dic >= 5) {
+      diagList.push({ color:'#37474f', icon:'⚫', label:'DIC (Disseminierte Intravasale Koagulation)',
+        text:'ISTH DIC Score ≥5. Grunderkrankung identifizieren und behandeln. Substitution bei aktiver Blutung.' });
+    }
+    if (stec === 'pos' || diarrhoe === 'ja') {
+      diagList.push({ color:'#2e7d32', icon:'🟢', label:'STEC-HUS (Shiga-Toxin-assoziiertes HUS)',
+        text:'Blutige Diarrhoe / STEC positiv. KEINE Antibiotika! KEINE Antiperistaltika. Supportive Therapie mit Volumen.' });
+    }
+    if (sp === 'ja') {
+      diagList.push({ color:'#e65100', icon:'🟡', label:'Streptococcus pneumoniae HUS (Sp-HUS)',
+        text:'Cephalosporin + Vancomycin. KEIN FFP! Nur gewaschene Erythrozytenkonzentrate transfundieren.' });
+    }
+    if (drug && drug !== '') {
+      diagList.push({ color:'#4527a0', icon:'💊', label:'Arzneimittel-induzierte TMA (DITMA) — '+drug,
+        text:'Sofortiges Absetzen des auslösenden Medikaments ist Therapie der ersten Wahl.' });
+    }
+    if (tx === 'ja') {
+      diagList.push({ color:'#1565c0', icon:'🔵', label:'Transplantations-assoziierte TMA (TA-TMA)',
+        text:'Calcineurin-Inhibitor reduzieren / wechseln. Eculizumab erwägen. Transplantationsmedizin einbinden.' });
+    }
+    if (preg === 'ja') {
+      diagList.push({ color:'#880e4f', icon:'🌸', label:'Schwangerschafts-assoziierte TMA (HELLP / TTP / aHUS)',
+        text:'Differenzierung HELLP / TTP / aHUS essenziell: HELLP → Entbindung; TTP → TPE; aHUS → Eculizumab. Geburtshilfe und Hämostaseologie einbinden.' });
+    }
+    if (plasmic >= 6 || (plasmic === 5 && maha)) {
+      diagList.push({ color:'#c62828', icon:'🔴', label:'Immunvermittelte TTP (iTTP) — wahrscheinlich',
+        text:'PLASMIC-Score '+plasmic+'/7. ADAMTS13 sichern. Empirische Therapie: TPE + Caplacizumab + Kortikosteroide JETZT starten!' });
+    } else if (plasmic <= 4 && maha && dic < 5 && stec !== 'pos' && diarrhoe !== 'ja' && sp !== 'ja' && (!drug || drug==='') && tx !== 'ja') {
+      diagList.push({ color:'#1565c0', icon:'🔵', label:'aHUS (Atypisches HUS) — komplementvermittelt möglich',
+        text:'PLASMIC niedrig + MAHA + keine anderen Ursachen identifiziert → aHUS erwägen. Eculizumab! Meningokokken-Prophylaxe sofort. Komplement- und Genetikdiagnostik.' });
+    }
+    if (!maha && plt !== null && plt < 100 && (!schisto || schisto === 'keine') && filledCount >= 3) {
+      diagList.push({ color:'#6a1b9a', icon:'🟣', label:'ITP (Immunthrombozytopenie) oder andere Thrombopenie-Ursache',
+        text:'Keine MAHA-Zeichen. ITP erwägen: isolierte Thrombopenie, normales LDH, keine Schistozyten, normales Kreatinin. DAT, Knochenmark bei Unklarheit.' });
+    }
+
+    var diffHtml = '';
+    if (diagList.length === 0) {
+      diffHtml = '<div style="color:#90a4ae;font-size:.85rem;padding:10px 0;">Keine eindeutige Zuordnung mit diesen Werten — weitere Angaben erforderlich</div>';
+    } else {
+      diagList.forEach(function(d) {
+        diffHtml += '<div style="border-left:4px solid '+d.color+';padding:8px 12px;margin-bottom:8px;background:#fafafa;border-radius:0 8px 8px 0;">';
+        diffHtml += '<div style="font-weight:800;font-size:.87rem;color:'+d.color+';margin-bottom:3px;">'+d.icon+' '+d.label+'</div>';
+        diffHtml += '<div style="font-size:.81rem;color:#546e7a;line-height:1.55;">'+d.text+'</div>';
+        diffHtml += '</div>';
+      });
+    }
+    document.getElementById('tma-diff-result').innerHTML = diffHtml;
+  };
+
+  window.tmaAutoImport = function() {
+    // Future: import eGFR from CKD tab if relevant
+  };
+
+})();
+</script>
+
+</div><!-- end tab-tma -->
+
 <div class="shared-footer">
   ⚕️ Nur zur ärztlichen Unterstützung — kein Ersatz für klinisches Urteil &bull;
   CKD: KDIGO 2024 &bull; CKD-EPI 2021 &bull;
@@ -4581,7 +5258,8 @@ window.gichtAutoImport = function() {
   Diabetes: ADA 2026 &bull; KDIGO 2026 &bull;
   Hypertonie: ESC 2024 &bull;
   Antiaggregation: ESC 2023 &bull; ACC/AHA 2016 &bull; AHA/ASA 2021 &bull; VOYAGER/COMPASS 2024 &bull;
-  Gicht: ACR 2020 &bull; KDIGO 2024
+  Gicht: ACR 2020 &bull; KDIGO 2024 &bull;
+  TTP/HUS: ISTH 2021 &bull; ERBP/NDT 2022 &bull; JAMA 2025 &bull; Lancet 2022
 </div>
 
 <!-- ============================================================
@@ -6297,6 +6975,10 @@ function switchToolTab(tabName) {
   document.getElementById('tab-gicht').style.display = tabName === 'gicht' ? 'block' : 'none';
   if (tabName === 'gicht' && window.gichtAutoImport) {
     window.gichtAutoImport();
+  }
+  document.getElementById('tab-tma').style.display = tabName === 'tma' ? 'block' : 'none';
+  if (tabName === 'tma' && window.tmaAutoImport) {
+    window.tmaAutoImport();
   }
   document.getElementById('tab-mbd').style.display = tabName === 'mbd' ? 'block' : 'none';
   if (tabName === 'mbd' && window.mbdAutoImport) {
