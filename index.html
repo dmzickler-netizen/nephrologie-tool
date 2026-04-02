@@ -63,6 +63,20 @@
 #tab-mbd { display: none; }
 #tab-tah { display: none; }
 #tab-antikoag { display: none; }
+#tab-gicht { display: none; }
+.gicht-section { padding:10px 12px; border-radius:10px; margin-bottom:0; }
+.gicht-section-title { font-size:.75rem; font-weight:800; text-transform:uppercase; letter-spacing:.5px; color:#455a64; margin-bottom:8px; }
+.gicht-akut { background:#fff3e0; border:1.5px solid #ffb74d; }
+.gicht-akut-row { display:flex; gap:10px; padding:6px 0; border-bottom:1px solid #ffe0b2; font-size:.82rem; line-height:1.5; align-items:flex-start; }
+.gicht-akut-row:last-of-type { border-bottom:none; }
+.gicht-akut-label { font-weight:700; color:#bf360c; min-width:70px; flex-shrink:0; }
+.gicht-med-row { display:flex; gap:12px; padding:8px 0; border-bottom:1px solid #e8eaf6; font-size:.82rem; line-height:1.5; align-items:flex-start; }
+.gicht-med-row:last-of-type { border-bottom:none; }
+.gicht-med-label { font-weight:700; color:#1a237e; min-width:82px; flex-shrink:0; font-size:.78rem; line-height:1.4; }
+.gicht-green { color:#2e7d32; font-weight:700; }
+.gicht-amber { color:#e65100; font-weight:700; }
+.gicht-red { color:#b71c1c; font-weight:700; }
+@media(max-width:700px){ .gicht-layout { grid-template-columns:1fr !important; } }
 .aki-stage-row { display:flex; align-items:center; gap:14px; padding:12px; border-radius:10px; border-width:2px; border-style:solid; margin-bottom:14px; }
 .aki-stage-circle { width:64px; height:64px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 .aki-etio-box { padding:10px 12px; background:#f5f5f5; border-radius:8px; border-left-width:4px; border-left-style:solid; margin-bottom:12px; }
@@ -1351,6 +1365,7 @@ label .lip-optional {
   <button class="nav-tab-btn" data-tab="tah" onclick="switchToolTab('tah')">🔴 Antiaggregation</button>
   <button class="nav-tab-btn" data-tab="antikoag" onclick="switchToolTab('antikoag')">💉 Antikoagulation</button>
   <button class="nav-tab-btn" data-tab="aki" onclick="switchToolTab('aki')">🚨 AKI</button>
+  <button class="nav-tab-btn" data-tab="gicht" onclick="switchToolTab('gicht')">🦴 Gicht</button>
 </div>
 
 <!-- ============================================================
@@ -4114,13 +4129,405 @@ window.akCalcHIT();
 
 </div><!-- end tab-antikoag -->
 
+<!-- ============================================================
+     GICHT / HARNSÄURE TAB
+     ============================================================ -->
+<div id="tab-gicht">
+<div class="diab-container">
+
+  <div id="gicht-import-banner" class="diab-import-banner" style="display:none;">
+    <span style="font-size:1.1rem;">📥</span>
+    <span id="gicht-import-text"></span>
+  </div>
+
+  <div class="gicht-layout" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+    <!-- ===== INPUT CARD ===== -->
+    <div class="diab-card">
+      <h2>🦴 Gicht-Assistent</h2>
+      <p style="font-size:.8rem;color:#607d8b;margin:-4px 0 14px;">Harnsäure-Management nach ACR 2020 &amp; KDIGO 2024</p>
+
+      <div class="diab-row">
+        <div class="diab-field">
+          <label>eGFR <span style="font-weight:400;color:#607d8b;">(auto)</span></label>
+          <input type="number" id="gicht-egfr" placeholder="z.B. 45" min="1" max="120" oninput="gichtCalc()">
+          <span class="diab-unit">ml/min/1,73 m²</span>
+        </div>
+        <div class="diab-field">
+          <label>Geschlecht</label>
+          <div class="diab-toggle-group">
+            <input type="radio" name="gicht-sex" id="gicht-sex-m" value="male" onchange="gichtCalc()">
+            <label for="gicht-sex-m">Männlich</label>
+            <input type="radio" name="gicht-sex" id="gicht-sex-f" value="female" onchange="gichtCalc()">
+            <label for="gicht-sex-f">Weiblich</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="diab-row">
+        <div class="diab-field">
+          <label>Harnsäure</label>
+          <input type="number" id="gicht-hs" placeholder="z.B. 8.5" step="0.1" min="0" max="25" oninput="gichtCalc()">
+          <span class="diab-unit">mg/dl</span>
+          <div id="gicht-hs-umol" style="font-size:.73rem;color:#78909c;margin-top:3px;"></div>
+        </div>
+        <div class="diab-field" style="align-self:flex-end;">
+          <div style="font-size:.72rem;color:#78909c;line-height:1.6;padding-bottom:4px;">
+            Normwert ♂ &lt;7,0 · ♀ &lt;6,0 mg/dl<br>
+            Sättigung ab 6,8 mg/dl (404 µmol/l)<br>
+            Therapieziel &lt;6,0 mg/dl (357 µmol/l)
+          </div>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid #e8eaf6;margin:12px 0;"></div>
+
+      <div class="diab-field" style="margin-bottom:12px;">
+        <label>Aktuell Gichtanfall?</label>
+        <div class="diab-toggle-group">
+          <input type="radio" name="gicht-anfall" id="gicht-anfall-ja" value="ja" onchange="gichtCalc()">
+          <label for="gicht-anfall-ja">Ja</label>
+          <input type="radio" name="gicht-anfall" id="gicht-anfall-nein" value="nein" onchange="gichtCalc()">
+          <label for="gicht-anfall-nein">Nein</label>
+        </div>
+      </div>
+
+      <div class="diab-field" style="margin-bottom:12px;">
+        <label>Gichtanfälle letzte 12 Monate</label>
+        <div class="diab-toggle-group">
+          <input type="radio" name="gicht-anfaelle" id="gicht-af-0" value="0" onchange="gichtCalc()">
+          <label for="gicht-af-0">Keiner</label>
+          <input type="radio" name="gicht-anfaelle" id="gicht-af-1" value="1" onchange="gichtCalc()">
+          <label for="gicht-af-1">1 ×</label>
+          <input type="radio" name="gicht-anfaelle" id="gicht-af-2" value="2plus" onchange="gichtCalc()">
+          <label for="gicht-af-2">≥ 2 ×</label>
+        </div>
+      </div>
+
+      <div class="diab-row">
+        <div class="diab-field">
+          <label>Tophi vorhanden?</label>
+          <div class="diab-toggle-group">
+            <input type="radio" name="gicht-tophi" id="gicht-tophi-ja" value="ja" onchange="gichtCalc()">
+            <label for="gicht-tophi-ja">Ja</label>
+            <input type="radio" name="gicht-tophi" id="gicht-tophi-nein" value="nein" onchange="gichtCalc()">
+            <label for="gicht-tophi-nein">Nein</label>
+          </div>
+        </div>
+        <div class="diab-field">
+          <label>Urolithiasis?</label>
+          <div class="diab-toggle-group">
+            <input type="radio" name="gicht-uro" id="gicht-uro-ja" value="ja" onchange="gichtCalc()">
+            <label for="gicht-uro-ja">Ja</label>
+            <input type="radio" name="gicht-uro" id="gicht-uro-nein" value="nein" onchange="gichtCalc()">
+            <label for="gicht-uro-nein">Nein</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="diab-field" style="margin-top:8px;">
+        <label>KHK / kardiovaskuläre Erkrankung?</label>
+        <div class="diab-toggle-group">
+          <input type="radio" name="gicht-cvd" id="gicht-cvd-ja" value="ja" onchange="gichtCalc()">
+          <label for="gicht-cvd-ja">Ja</label>
+          <input type="radio" name="gicht-cvd" id="gicht-cvd-nein" value="nein" onchange="gichtCalc()">
+          <label for="gicht-cvd-nein">Nein</label>
+        </div>
+        <div style="font-size:.7rem;color:#78909c;margin-top:3px;">Relevant für Febuxostat — FDA Blackbox (CARES-Studie)</div>
+      </div>
+    </div>
+
+    <!-- ===== RESULT CARD ===== -->
+    <div class="diab-card" id="gicht-result-card" style="display:none;">
+      <div id="gicht-result-inner"></div>
+    </div>
+
+  </div><!-- end grid -->
+
+  <!-- INFO CARD -->
+  <div class="diab-card" style="margin-top:0;">
+    <h2>ℹ️ Quellen &amp; Hintergrund</h2>
+    <div style="font-size:.78rem;color:#546e7a;line-height:1.8;display:grid;grid-template-columns:1fr 1fr;gap:0 24px;">
+      <div>
+        <b>ACR 2020</b> — FitzGerald et al., Arthritis &amp; Rheumatology 72(6):879–895<br>
+        <b>KDIGO 2024</b> — Kidney International 105(Suppl 4S):S117–S314<br>
+        <b>Sättigungsgrenze:</b> 6,8 mg/dl (404 µmol/l) — oberhalb kristallisiert Mononatriumurat<br>
+        <b>Therapieziel ULT:</b> &lt;6,0 mg/dl; bei Tophi &lt;5,0 mg/dl
+      </div>
+      <div>
+        <b>Colchicin:</b> CYP3A4- und P-gp-Substrat — WW mit Clarithromycin, Cyclosporin, starken CYP3A4-Hemmern<br>
+        <b>Febuxostat:</b> FDA Blackbox — erhöhte kardiovaskuläre Mortalität vs. Allopurinol (CARES); bei CVD Allopurinol bevorzugen<br>
+        <b>Allopurinol in CKD:</b> auch bei CKD ≥G3 bevorzugter ULT-Agent (ACR 2020: strong recommendation); Titration nach Ziel-HS möglich
+      </div>
+    </div>
+  </div>
+
+</div><!-- end diab-container -->
+
+<script>
+(function(){
+'use strict';
+
+function gichtCalc() {
+  var egfr     = parseFloat(document.getElementById('gicht-egfr').value) || null;
+  var hs       = parseFloat(document.getElementById('gicht-hs').value) || null;
+  var sex      = (document.querySelector('input[name="gicht-sex"]:checked') || {}).value;
+  var anfall   = (document.querySelector('input[name="gicht-anfall"]:checked') || {}).value;
+  var anfaelle = (document.querySelector('input[name="gicht-anfaelle"]:checked') || {}).value;
+  var tophi    = (document.querySelector('input[name="gicht-tophi"]:checked') || {}).value;
+  var uro      = (document.querySelector('input[name="gicht-uro"]:checked') || {}).value;
+  var cvd      = (document.querySelector('input[name="gicht-cvd"]:checked') || {}).value;
+
+  // Umrechnung anzeigen
+  var umolEl = document.getElementById('gicht-hs-umol');
+  if (hs) {
+    umolEl.textContent = '\u2259 ' + Math.round(hs * 59.48) + ' \u00b5mol/l';
+  } else {
+    umolEl.textContent = '';
+  }
+
+  var rc = document.getElementById('gicht-result-card');
+  if (!hs) { rc.style.display = 'none'; return; }
+  rc.style.display = 'block';
+
+  // Fehlende Pflichtfelder prüfen
+  var missing = [];
+  if (!anfall)   missing.push('Aktuell Gichtanfall');
+  if (!anfaelle) missing.push('Anfälle letzte 12 Monate');
+  if (!tophi)    missing.push('Tophi');
+  if (!uro)      missing.push('Urolithiasis');
+  if (!cvd)      missing.push('KHK / CVD');
+  if (missing.length > 0) {
+    document.getElementById('gicht-result-inner').innerHTML =
+      '<h2>🦴 Empfehlung</h2>' +
+      '<div style="padding:14px 16px;background:#fff8e1;border-radius:10px;border:1.5px solid #ffb74d;">' +
+        '<div style="font-size:.82rem;font-weight:700;color:#e65100;margin-bottom:8px;">⚠️ Bitte noch ausfüllen:</div>' +
+        '<ul style="margin:0;padding-left:18px;font-size:.82rem;color:#bf360c;line-height:2;">' +
+        missing.map(function(m){ return '<li>' + m + '</li>'; }).join('') +
+        '</ul>' +
+      '</div>';
+    return;
+  }
+
+  // eGFR-Kategorie
+  var ckdStufe;
+  if (!egfr)           ckdStufe = 'unbekannt';
+  else if (egfr >= 60) ckdStufe = 'G1\u2013G2';
+  else if (egfr >= 30) ckdStufe = 'G3';
+  else if (egfr >= 15) ckdStufe = 'G4';
+  else                  ckdStufe = 'G5\u2009/\u2009HD';
+  var ckdG3plus = egfr && egfr < 60;
+
+  // Harnsäure-Status
+  var hsColor, hsStatus;
+  if (hs < 6.0) {
+    hsColor = '#2e7d32';
+    hsStatus = 'Im Therapieziel (&lt;6,0 mg/dl)';
+  } else if (hs < 6.8) {
+    hsColor = '#e65100';
+    hsStatus = 'Erh\u00f6ht \u2014 unterhalb S\u00e4ttigungsgrenze';
+  } else {
+    hsColor = '#b71c1c';
+    hsStatus = 'Hyperurik\u00e4mie \u2265 6,8 mg/dl \u2014 Kristallisationsrisiko \u2191';
+  }
+
+  // ===== ULT-INDIKATION =====
+  var ultInd = null;
+  var ultGrund = '', ultDetails = '';
+
+  if (tophi === 'ja') {
+    ultInd = 'stark';
+    ultGrund = 'Tophi vorhanden';
+    ultDetails = 'ACR\u202F2020: starke Empfehlung \u2014 ULT bei Tophi unabh\u00e4ngig von Anfallsfrequenz';
+  } else if (anfaelle === '2plus') {
+    ultInd = 'stark';
+    ultGrund = '\u22652 Gichtanf\u00e4lle/Jahr';
+    ultDetails = 'ACR\u202F2020: starke Empfehlung \u2014 h\u00e4ufige Anf\u00e4lle (\u22652/Jahr)';
+  } else if (anfaelle === '1') {
+    var riskFactors = [];
+    if (ckdG3plus) riskFactors.push('CKD \u2265G3 (eGFR\u202F&lt;\u202F60)');
+    if (hs > 9.0)  riskFactors.push('Harns\u00e4ure\u202F&gt;\u202F9\u202Fmg/dl');
+    if (uro === 'ja') riskFactors.push('Urolithiasis');
+    if (riskFactors.length > 0) {
+      ultInd = 'konditional-ja';
+      ultGrund = riskFactors.join(' + ');
+      ultDetails = 'ACR\u202F2020: konditionale Empfehlung f\u00fcr ULT beim 1.\u202FAnfall mit Risikofaktoren';
+    } else {
+      ultInd = 'konditional-nein';
+      ultGrund = '1.\u202FAnfall ohne zus\u00e4tzliche Risikofaktoren';
+      ultDetails = 'ACR\u202F2020: konditional gegen ULT \u2014 Shared Decision Making mit Patient';
+    }
+  } else if (anfaelle === '0') {
+    ultInd = 'konditional-nein';
+    ultGrund = 'Asymptomatische Hyperurik\u00e4mie';
+    ultDetails = 'ACR\u202F2020: konditional gegen pharmakologische ULT bei asymptomatischer Hyperurik\u00e4mie';
+  }
+
+  // ===== AKUTTHERAPIE =====
+  var akutHTML = '';
+  if (anfall === 'ja') {
+    var colchiTxt, nsaidTxt, sterTxt;
+    if (!egfr || egfr >= 50) {
+      colchiTxt = '<span class="gicht-green">\u2713 1.\u202FWahl</span> 1\u202Fmg p.o. \u2192 nach 1h 0,5\u202Fmg; dann 0,5\u202Fmg 2\u2013 3\u00d7/d bis Abklingen (max.\u202F6\u202Fmg/Kur)';
+      nsaidTxt  = '<span class="gicht-amber">\u25d1 m\u00f6glich</span> z.B. Naproxen 500\u202Fmg 2\u00d7/d oder Indometacin 50\u202Fmg 3\u00d7/d \u00b7 PPI-Schutz \u00b7 max.\u202F5\u2013 7\u202FTage';
+      sterTxt   = '<span class="gicht-green">\u2713 Alternative</span> Prednisolon 30\u202F\u2013\u202F40\u202Fmg/d p.o. f\u00fcr 5\u2013 7\u202Fd \u00b7 oder i.a. Triamcinolon 10\u202F\u2013\u202F40\u202Fmg';
+    } else if (egfr >= 30) {
+      colchiTxt = '<span class="gicht-amber">\u26a0 reduziert</span> max.\u202F0,5\u202Fmg/d (keine Aufs\u00e4ttigungsdosis!) \u00b7 nur kurzfristig \u00b7 cave Kumulation bei CKD\u202FG3';
+      nsaidTxt  = '<span class="gicht-red">\u2717 meiden</span> nephrotoxisch bei eGFR\u202F30\u202F\u2013\u202F50 \u2014 nur Ausnahme kurzfristig + Magenschutz + Verlaufskontrolle Krea';
+      sterTxt   = '<span class="gicht-green">\u2713 1.\u202FWahl</span> Prednisolon 30\u202F\u2013\u202F40\u202Fmg/d p.o. f\u00fcr 5\u2013 7\u202Fd \u00b7 oder i.a. Triamcinolon wenn einzelnes Gelenk';
+    } else {
+      colchiTxt = '<span class="gicht-red">\u2717 KI</span> Colchicin kontraindiziert bei eGFR\u202F&lt;\u202F30\u202F/\u202FDialyse';
+      nsaidTxt  = '<span class="gicht-red">\u2717 KI</span> NSAR kontraindiziert bei eGFR\u202F&lt;\u202F30';
+      sterTxt   = '<span class="gicht-green">\u2713 1.\u202FWahl</span> Prednisolon 30\u202F\u2013\u202F40\u202Fmg/d p.o. f\u00fcr 5\u2013 7\u202Fd \u00b7 i.a. Triamcinolon wenn einzelnes Gelenk zug\u00e4nglich';
+    }
+    akutHTML =
+      '<div class="gicht-section gicht-akut" style="margin-bottom:10px;">' +
+        '<div class="gicht-section-title">\uD83D\uDD25 Akuttherapie Gichtanfall</div>' +
+        '<div class="gicht-akut-row"><span class="gicht-akut-label">Colchicin</span><span>' + colchiTxt + '</span></div>' +
+        '<div class="gicht-akut-row"><span class="gicht-akut-label">NSAR</span><span>' + nsaidTxt + '</span></div>' +
+        '<div class="gicht-akut-row"><span class="gicht-akut-label">Steroide</span><span>' + sterTxt + '</span></div>' +
+        '<div style="font-size:.71rem;color:#78909c;margin-top:8px;">Alle 3 gleichwertig wirksam \u00b7 Wahl nach Komorbidit\u00e4ten \u00b7 ULT kann auch w\u00e4hrend Anfall begonnen werden (ACR\u202F2020)</div>' +
+      '</div>';
+  }
+
+  // ===== ULT-MEDIKAMENT =====
+  var ultMedHTML = '';
+  if (ultInd && ultInd !== 'konditional-nein') {
+    // Allopurinol Dosis
+    var alloStart, alloNote;
+    if (!egfr || egfr >= 60) {
+      alloStart = '100\u202Fmg/d';
+      alloNote  = 'Titrieren alle 2\u202F\u2013\u202F4\u202FWo. um 100\u202Fmg \u00b7 max.\u202F800\u202Fmg/d \u00b7 Ziel: HS\u202F&lt;\u202F6\u202Fmg/dl';
+    } else if (egfr >= 30) {
+      alloStart = '50\u202Fmg/d';
+      alloNote  = 'CKD G3: alle 4\u202FWo. langsam auftitrieren \u00b7 Titration bis Ziel-HS fortf\u00fchren! (Zieldosis individuell)';
+    } else if (egfr >= 15) {
+      alloStart = '50\u202Fmg/d (oder jeden 2.\u202FTag)';
+      alloNote  = 'CKD G4: sehr langsam titrieren \u00b7 engmaschige Laborkontrolle \u00b7 niedrigste wirksame Dosis';
+    } else {
+      alloStart = '50\u202Fmg nach Dialyse (3\u00d7/Wo.)';
+      alloNote  = 'G5/HD: Gabe nach Dialysesitzung \u00b7 Harns\u00e4ure-Kontrolle vor n\u00e4chster Gabe';
+    }
+
+    var febuxTxt = (cvd === 'ja')
+      ? '<span class="gicht-red">\u26a0 Cave CVD-Anamnese</span> \u2014 FDA Blackbox: erh\u00f6hte kardiovaskul\u00e4re Mortalit\u00e4t (CARES) \u2192 <b>Allopurinol bevorzugen!</b>'
+      : 'Start 40\u202Fmg/d \u00b7 Titration auf 80\u202Fmg wenn Ziel nicht erreicht \u00b7 keine Dosisreduktion bei CKD (hepatische Elimination)';
+
+    var probenecidTxt = ckdG3plus
+      ? '<span class="gicht-red">\u2717 KI</span> bei CKD\u202F\u2265G3 (eGFR\u202F&lt;\u202F60) \u00b7 auch bei Urolithiasis kontraindiziert'
+      : 'Start 500\u202Fmg 1\u202F\u2013\u202F2\u00d7/d \u00b7 nur bei normaler Nierenfunktion und ohne Urolithiasis';
+
+    // Anfallsprophylaxe
+    var prophTxt;
+    if (!egfr || egfr >= 30) {
+      prophTxt = '<b>Colchicin 0,5\u202Fmg/d</b> f\u00fcr 3\u202F\u2013\u202F6 Monate nach ULT-Start';
+    } else {
+      prophTxt = '<b>Prednisolon 5\u202Fmg/d</b> f\u00fcr 3\u202F\u2013\u202F6 Monate (Colchicin KI bei eGFR\u202F&lt;\u202F30)';
+    }
+
+    var ziel = (tophi === 'ja')
+      ? '&lt;5,0\u202Fmg/dl (&lt;297\u202F\u00b5mol/l) <em style="color:#607d8b;">\u2014 verschiebt sich bei Tophi nach unten</em>'
+      : '&lt;6,0\u202Fmg/dl (&lt;357\u202F\u00b5mol/l)';
+
+    var hlaNote = (sex === 'female' || !sex)
+      ? 'HLA-B*58:01-Testung empfohlen bei Patienten aus S\u00fcdostasien / Nordafrika vor Allopurinolbeginn (Risiko AHS)'
+      : 'HLA-B*58:01-Testung empfohlen bei Patienten aus S\u00fcdostasien / Nordafrika vor Allopurinolbeginn (Risiko AHS)';
+
+    ultMedHTML =
+      '<div class="gicht-section" style="background:#e8eaf6;border:1.5px solid #9fa8da;margin-bottom:10px;">' +
+        '<div class="gicht-section-title" style="color:#283593;">\uD83D\uDC8A Harns\u00e4ure-senkende Therapie (ULT)</div>' +
+        '<div class="gicht-med-row"><div class="gicht-med-label">1.\u202FWahl<br><b>Allopurinol</b></div><div>Start: <b>' + alloStart + '</b><br><span style="font-size:.77rem;color:#546e7a;">' + alloNote + '</span></div></div>' +
+        '<div class="gicht-med-row"><div class="gicht-med-label">2.\u202FWahl<br><b>Febuxostat</b></div><div style="font-size:.82rem;">' + febuxTxt + '</div></div>' +
+        '<div class="gicht-med-row"><div class="gicht-med-label">3.\u202FWahl<br><b>Probenecid</b></div><div style="font-size:.82rem;">' + probenecidTxt + '</div></div>' +
+      '</div>' +
+      '<div class="gicht-section" style="background:#f3e5f5;border:1.5px solid #ce93d8;margin-bottom:10px;">' +
+        '<div class="gicht-section-title" style="color:#6a1b9a;">\uD83D\uDEE1 Anfallsprophylaxe bei ULT-Start</div>' +
+        '<div style="font-size:.85rem;">' + prophTxt + '</div>' +
+        '<div style="font-size:.71rem;color:#78909c;margin-top:6px;">Mindestens 3\u202F\u2013\u202F6 Monate \u00b7 bei anhaltenden Anf\u00e4llen verl\u00e4ngern \u00b7 Prophylaxe reduziert Anf\u00e4lle w\u00e4hrend ULT-Titration</div>' +
+      '</div>' +
+      '<div class="gicht-section" style="background:#e8f5e9;border:1.5px solid #a5d6a7;">' +
+        '<div class="gicht-section-title" style="color:#1b5e20;">\uD83C\uDFAF Therapieziel &amp; Monitoring</div>' +
+        '<div style="font-size:.88rem;">Harns\u00e4ure-Ziel: <b>' + ziel + '</b></div>' +
+        '<div style="font-size:.76rem;color:#2e7d32;margin-top:6px;line-height:1.7;">' +
+          'Harns\u00e4urekontrolle alle 2\u202F\u2013\u202F4 Wo. w\u00e4hrend Titration &bull; nach Ziel: alle 6 Monate<br>' +
+          'BB, Krea, GPT bei Allopurinol-Start und nach jeder Dosissteigerung<br>' +
+          hlaNote +
+        '</div>' +
+      '</div>';
+  } else if (ultInd === 'konditional-nein') {
+    ultMedHTML = '<div style="font-size:.82rem;color:#546e7a;margin-top:10px;padding:10px 12px;background:#f5f5f5;border-radius:8px;border-left:4px solid #90a4ae;">' +
+      '<b>Shared Decision Making</b> \u2014 Patientenpr\u00e4ferenzen, Symptomlast und Lebensqualit\u00e4t ber\u00fccksichtigen.<br>' +
+      'Falls ULT gew\u00fcnscht: Allopurinol wie oben angegeben (50\u202F\u2013\u202F100\u202Fmg Start, nach HS-Ziel titrieren).' +
+    '</div>';
+  }
+
+  // ===== ULT-INDIKATIONS-BADGE =====
+  var ultBadgeHTML = '';
+  if (ultInd) {
+    var bc, bt, bg;
+    if (ultInd === 'stark') {
+      bc = '#1b5e20'; bt = '\u2b06 STARK EMPFOHLEN'; bg = '#e8f5e9';
+    } else if (ultInd === 'konditional-ja') {
+      bc = '#e65100'; bt = '\u25d1 KONDITIONAL EMPFOHLEN'; bg = '#fff8e1';
+    } else {
+      bc = '#b71c1c'; bt = '\u2b07 KONDITIONAL GEGEN ULT'; bg = '#ffebee';
+    }
+    ultBadgeHTML =
+      '<div class="gicht-section" style="background:' + bg + ';border:2px solid ' + bc + '60;margin-bottom:10px;">' +
+        '<div style="font-size:.73rem;font-weight:800;color:' + bc + ';text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;">' + bt + '</div>' +
+        '<div style="font-size:.9rem;font-weight:700;color:#1a2332;">' + ultGrund + '</div>' +
+        '<div style="font-size:.75rem;color:#546e7a;margin-top:3px;">' + ultDetails + '</div>' +
+      '</div>';
+  }
+
+  // ===== HEADER =====
+  var egfrBadge = egfr
+    ? '<div style="text-align:right;"><div style="font-size:.7rem;color:#78909c;text-transform:uppercase;">eGFR</div><div style="font-size:1.5rem;font-weight:900;color:#1a237e;">' + egfr + '</div><div style="font-size:.7rem;color:#78909c;">ml/min/1,73\u202Fm\u00b2<br>CKD ' + ckdStufe + '</div></div>'
+    : '';
+  var headerHTML =
+    '<h2>\uD83E\uDDB4 Empfehlung</h2>' +
+    '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0 14px;border-bottom:1px solid #e8eaf6;margin-bottom:12px;">' +
+      '<div>' +
+        '<div style="font-size:.7rem;color:#78909c;text-transform:uppercase;letter-spacing:.5px;">Harns\u00e4ure</div>' +
+        '<div style="font-size:2.1rem;font-weight:900;color:' + hsColor + ';line-height:1.1;">' + hs.toFixed(1) + ' <span style="font-size:1rem;font-weight:600;">mg/dl</span></div>' +
+        '<div style="font-size:.78rem;color:' + hsColor + ';margin-top:2px;">' + hsStatus + '</div>' +
+        '<div style="font-size:.72rem;color:#90a4ae;">\u2259 ' + Math.round(hs * 59.48) + '\u202F\u00b5mol/l</div>' +
+      '</div>' +
+      egfrBadge +
+    '</div>';
+
+  document.getElementById('gicht-result-inner').innerHTML = headerHTML + akutHTML + ultBadgeHTML + ultMedHTML;
+}
+
+window.gichtCalc = gichtCalc;
+
+window.gichtAutoImport = function() {
+  var egfrEl = document.getElementById('egfr-result-val');
+  if (egfrEl) {
+    var val = parseFloat(egfrEl.textContent);
+    if (!isNaN(val) && val > 0) {
+      document.getElementById('gicht-egfr').value = val;
+      var banner = document.getElementById('gicht-import-banner');
+      document.getElementById('gicht-import-text').textContent = 'eGFR ' + val + '\u202Fml/min/1,73\u202Fm\u00b2 aus CKD-Tab \u00fcbernommen';
+      banner.style.display = 'flex';
+    }
+  }
+  gichtCalc();
+};
+
+})();
+</script>
+
+</div><!-- end tab-gicht -->
+
 <div class="shared-footer">
   ⚕️ Nur zur ärztlichen Unterstützung — kein Ersatz für klinisches Urteil &bull;
   CKD: KDIGO 2024 &bull; CKD-EPI 2021 &bull;
   Lipide: ACC/AHA 2026 Dyslipidemia Guideline &bull;
   Diabetes: ADA 2026 &bull; KDIGO 2026 &bull;
   Hypertonie: ESC 2024 &bull;
-  Antiaggregation: ESC 2023 &bull; ACC/AHA 2016 &bull; AHA/ASA 2021 &bull; VOYAGER/COMPASS 2024
+  Antiaggregation: ESC 2023 &bull; ACC/AHA 2016 &bull; AHA/ASA 2021 &bull; VOYAGER/COMPASS 2024 &bull;
+  Gicht: ACR 2020 &bull; KDIGO 2024
 </div>
 
 <!-- ============================================================
@@ -5739,6 +6146,10 @@ function switchToolTab(tabName) {
   document.getElementById('tab-aki').style.display = tabName === 'aki' ? 'block' : 'none';
   if (tabName === 'aki' && window.akiAutoImport) {
     window.akiAutoImport();
+  }
+  document.getElementById('tab-gicht').style.display = tabName === 'gicht' ? 'block' : 'none';
+  if (tabName === 'gicht' && window.gichtAutoImport) {
+    window.gichtAutoImport();
   }
   document.getElementById('tab-mbd').style.display = tabName === 'mbd' ? 'block' : 'none';
   if (tabName === 'mbd' && window.mbdAutoImport) {
