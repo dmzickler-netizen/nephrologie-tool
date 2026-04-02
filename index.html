@@ -1684,10 +1684,19 @@ label .lip-optional {
           <tbody id="verlauf-tbody"></tbody>
         </table>
 
+        <!-- Paste-Feld -->
+        <div style="margin-top:12px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+            <span style="font-size:.75rem;font-weight:700;color:#455a64;text-transform:uppercase;letter-spacing:.5px;">📋 Werte einfügen</span>
+            <button onclick="verlaufParsePaste()" style="padding:4px 12px;background:#1a237e;color:#fff;border:none;border-radius:6px;font-size:.78rem;font-weight:700;cursor:pointer;">Einlesen</button>
+          </div>
+          <textarea id="verlauf-paste" rows="4" placeholder="Beliebig einfügen, z.B.:&#10;15.06.2023  Krea 1.4  eGFR 48&#10;2024-01  1.6  44&#10;03/2024: GFR 41, Kreatinin 1.8&#10;2025  eGFR: 38" style="width:100%;padding:7px 10px;border:1.5px solid #cfd8dc;border-radius:8px;font-size:.78rem;font-family:monospace;resize:vertical;background:#fafafa;box-sizing:border-box;"></textarea>
+          <div id="verlauf-paste-feedback" style="font-size:.73rem;margin-top:4px;min-height:16px;"></div>
+        </div>
+
         <div style="margin-top:10px;padding:10px 12px;background:#f5f5f5;border-radius:8px;font-size:.75rem;color:#607d8b;line-height:1.7;">
-          💡 <b>Tipp:</b> Krea oder eGFR eingeben — das jeweils andere wird automatisch berechnet (Alter + Geschlecht aus CKD-Tab).
-          <br>Datum flexibel: <b>2023</b> · <b>06/2023</b> · <b>15.06.2023</b> — oder weglassen (dann Sequenz-Modus).
-          <br>Aktueller Wert aus CKD-Tab wird automatisch als letzter Punkt ergänzt.
+          💡 Krea oder eGFR eingeben — das jeweils andere wird automatisch berechnet.<br>
+          Datum flexibel: <b>2023</b> · <b>06/2023</b> · <b>15.06.2023</b> · oder weglassen.
         </div>
       </div>
 
@@ -6675,6 +6684,109 @@ function verlaufStats(pts, slope, dateMode) {
     '</div>';
 }
 
+function verlaufParsePaste() {
+  var raw = document.getElementById('verlauf-paste').value;
+  var fb  = document.getElementById('verlauf-paste-feedback');
+  if (!raw.trim()) { fb.textContent = ''; return; }
+
+  var lines = raw.split('\n').map(function(l){ return l.trim(); }).filter(function(l){ return l.length > 0; });
+  var parsed = [];
+
+  lines.forEach(function(line) {
+    // Trennzeichen normalisieren: Komma/Semikolon/Tab → Leerzeichen, Doppelpunkt nach Schlüsselwort entfernen
+    var l = line.replace(/[;,\t]/g, ' ').replace(/(\w)\s*:\s*/g, '$1 ').replace(/\s+/g, ' ');
+
+    var dateStr = '', krea = null, egfr = null;
+
+    // === Datum erkennen ===
+    // TT.MM.JJJJ oder TT.MM.JJ
+    var m;
+    m = l.match(/\b(\d{1,2})\.(\d{1,2})\.(\d{2,4})\b/);
+    if (m) { dateStr = m[1]+'.'+m[2]+'.'+m[3]; l = l.replace(m[0],''); }
+
+    if (!dateStr) {
+      // MM/JJJJ oder MM-JJJJ
+      m = l.match(/\b(\d{1,2})[\/\-](\d{4})\b/);
+      if (m) { dateStr = m[1]+'/'+m[2]; l = l.replace(m[0],''); }
+    }
+    if (!dateStr) {
+      // JJJJ-MM (ISO month)
+      m = l.match(/\b(\d{4})-(\d{2})\b/);
+      if (m) { dateStr = m[2]+'/'+m[1]; l = l.replace(m[0],''); }
+    }
+    if (!dateStr) {
+      // Nur Jahr
+      m = l.match(/\b(20\d{2})\b/);
+      if (m) { dateStr = m[1]; l = l.replace(m[0],''); }
+    }
+
+    l = l.replace(/\s+/g,' ').trim();
+
+    // === Schlüsselwort-basiert ===
+    // eGFR: suche nach "egfr", "gfr", "GFR" gefolgt von Zahl
+    var egfrM = l.match(/[Ee][Gg]?[Ff][Rr]\D{0,3}(\d+(?:[.,]\d+)?)/);
+    if (egfrM) { egfr = parseFloat(egfrM[1].replace(',','.')); l = l.replace(egfrM[0],''); }
+
+    // Krea: suche nach "krea", "creat", "cr" gefolgt von Zahl
+    var kreaM = l.match(/[Kk]rea(?:tinin)?\D{0,3}(\d+(?:[.,]\d+)?)|[Cc]reat(?:inine)?\D{0,3}(\d+(?:[.,]\d+)?)|(?:^|\s)[Cc][Rr]\D{0,2}(\d+(?:[.,]\d+)?)/);
+    if (kreaM) {
+      var kv = kreaM[1] || kreaM[2] || kreaM[3];
+      krea = parseFloat(kv.replace(',','.'));
+      l = l.replace(kreaM[0],'');
+    }
+
+    // === Positions-basiert: übrige Zahlen ===
+    // Wenn noch kein Wert gefunden — übrige Zahlen der Reihe nach zuweisen
+    var remaining = l.match(/\d+(?:[.,]\d+)?/g) || [];
+    remaining.forEach(function(numStr) {
+      var v = parseFloat(numStr.replace(',','.'));
+      if (isNaN(v)) return;
+      // Krea typisch 0.5–15, eGFR typisch 5–130
+      if (!krea && !egfr) {
+        if (v >= 0.4 && v <= 15)   krea = v;
+        else if (v >= 5 && v <= 130) egfr = v;
+      } else if (!egfr && v >= 5 && v <= 130 && v !== krea) {
+        egfr = v;
+      } else if (!krea && v >= 0.4 && v <= 15 && v !== egfr) {
+        krea = v;
+      }
+    });
+
+    if (krea || egfr) {
+      parsed.push({
+        date: dateStr,
+        krea: krea ? String(Math.round(krea*100)/100) : '',
+        egfr: egfr ? String(Math.round(egfr*10)/10) : ''
+      });
+    }
+  });
+
+  if (parsed.length === 0) {
+    fb.style.color = '#b71c1c';
+    fb.textContent = '⚠️ Keine Werte erkannt — bitte Format prüfen.';
+    return;
+  }
+
+  // Einfügen: leere Zeilen ersetzen, dann anhängen
+  var emptyIdx = verlaufRows.findIndex(function(r){ return !r.krea && !r.egfr; });
+  parsed.forEach(function(p) {
+    var ei = verlaufRows.findIndex(function(r){ return !r.krea && !r.egfr; });
+    if (ei >= 0) {
+      verlaufRows[ei] = p;
+    } else {
+      verlaufRows.push(p);
+    }
+  });
+
+  verlaufRenderTable();
+  verlaufDraw();
+  document.getElementById('verlauf-paste').value = '';
+  fb.style.color = '#2e7d32';
+  fb.textContent = '✓ ' + parsed.length + ' Wert' + (parsed.length > 1 ? 'e' : '') + ' eingelesen.';
+  setTimeout(function(){ fb.textContent = ''; }, 3000);
+}
+
+window.verlaufParsePaste = verlaufParsePaste;
 window.verlaufAddRow    = verlaufAddRow;
 window.verlaufClear     = verlaufClear;
 window.verlaufUpdate    = verlaufUpdate;
