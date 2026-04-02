@@ -1,8 +1,8 @@
-# CLAUDE.md — Nephro- & Kardiologie-Assistent
+# CLAUDE.md — Klinische Entscheidungstools
 
 ## Was dieses Projekt ist
 
-Klinisches Entscheidungstool für Nephrologie und Kardiologie. Zielgruppe: Stationsärzte, die schnell gewichtsadaptierte, eGFR-adjustierte Dosierungsempfehlungen und Risikoscores am Bett brauchen.
+Zwei klinische Entscheidungstools für den Stationsalltag. Zielgruppe: Stationsärzte, die schnell eGFR-adjustierte Dosierungsempfehlungen, Risikoscores und klinische Algorithmen am Bett brauchen.
 
 **Deployment:** GitHub Pages — `https://dmzickler-netizen.github.io/nephrologie-tool/`
 **Repository:** `https://github.com/dmzickler-netizen/nephrologie-tool.git`
@@ -27,10 +27,12 @@ Alle Berechnungen laufen clientseitig — kein Backend, kein Build-Schritt, kein
 ```
 /Users/dzickler/Dropbox/Claude/
 │
-├── index.html              ← HAUPTDATEI — alle 9 Tabs integriert (~530 KB)
-├── lae.html                ← Standalone LAE-Tool (Lungenarterienembolie)
-├── ckd-staging.html        ← Standalone CKD-Staging + Arztbrief-Generator
-├── antikoag.html           ← Standalone Antikoagulations-Tool (Referenz, nicht live)
+├── index.html              ← HAUPTDATEI 1 — Nephrologie/Kardiologie, 9 Tabs (~530 KB)
+├── crit-care.html          ← HAUPTDATEI 2 — Intensivmedizin, eigene Tabs (rot/crimson)
+│
+├── lae.html                ← Standalone LAE-Tool (Altbestand, aufgegangen in crit-care.html)
+├── ckd-staging.html        ← Standalone CKD-Staging (Altbestand)
+├── antikoag.html           ← Standalone Antikoagulations-Tool (Altbestand, ersetzt durch Tab in index.html)
 │
 ├── ckd-app/
 │   └── index.html          ← Ältere CKD-App (standalone, weitgehend in index.html aufgegangen)
@@ -49,11 +51,15 @@ Alle Berechnungen laufen clientseitig — kein Backend, kein Build-Schritt, kein
 └── KDIGO-*.pdf, Plan 2-*.pdf, *.pdf   ← Leitlinien direkt im Root
 ```
 
-**Die einzige Datei die im Einsatz ist: `index.html`** (enthält alle Tools). Die anderen `.html`-Dateien sind entweder Standalone-Prototypen oder experimentelle Tools.
+**Zwei aktive Hauptdateien:**
+- `index.html` — Nephrologie/Kardiologie (blaues Theme, 9 Tabs)
+- `crit-care.html` — Intensivmedizin (rotes/crimson Theme, eigene Tabs)
 
 ---
 
-## Die 9 Tabs in index.html
+## Tool 1: index.html — Nephrologie & Kardiologie
+
+### Die 9 Tabs
 
 | data-tab | Div-ID | Emoji | Inhalt |
 |---|---|---|---|
@@ -67,14 +73,12 @@ Alle Berechnungen laufen clientseitig — kein Backend, kein Build-Schritt, kein
 | `antikoag` | `tab-antikoag` | 💉 | NMH/UFH Antikoagulation: Prophylaxe, Therapie, UFH-Perfusor, HIT II |
 | `aki` | `tab-aki` | 🚨 | AKI-Staging, Ätiologie, Management |
 
-**Reihenfolge in der Navigationsleiste (Zeile ~1344):**
+**Reihenfolge in der Navigationsleiste:**
 CKD → Anämie/Ca-P → Lipid → Diabetes → Hypertonie → VHF → Antiaggregation → Antikoagulation → AKI
 
----
+### JavaScript-Architektur (index.html)
 
-## JavaScript-Architektur
-
-### Tab-Switching
+#### Tab-Switching
 
 ```javascript
 function switchToolTab(tabName) { ... }   // global, Zeile ~5698
@@ -82,7 +86,7 @@ function switchToolTab(tabName) { ... }   // global, Zeile ~5698
 
 Setzt alle Tab-Divs auf `display:none`, aktiviert den gewählten. Ruft beim Öffnen `window.XxxAutoImport()` auf, um Patientendaten (Gewicht, eGFR, Alter) aus anderen Tabs zu übernehmen.
 
-### IIFE-Muster (jedes Tool isoliert)
+#### IIFE-Muster (jedes Tool isoliert)
 
 Jedes Tool-Modul ist in einem IIFE (`(function(){ 'use strict'; ... })()`) gekapselt. Kein globaler Namespace-Konflikt. Benötigte Funktionen werden explizit als `window.xyz = function()` exponiert.
 
@@ -95,7 +99,7 @@ Jedes Tool-Modul ist in einem IIFE (`(function(){ 'use strict'; ... })()`) gekap
 })();
 ```
 
-### Auto-Import-Muster
+#### Auto-Import-Muster
 
 Wenn ein Tab geöffnet wird, wird `akAutoImport()` (oder `diabAutoImport()` etc.) aufgerufen und liest Werte aus anderen Tabs:
 
@@ -104,28 +108,14 @@ var ckdW = document.getElementById('weight');       // aus CKD-Tab
 var ckdEgfr = document.getElementById('egfr-result-val');
 ```
 
-### Berechnungen on-the-fly
+### CSS-Architektur (index.html)
 
-Alle Tools arbeiten `oninput`-getriggert — keine Submit-Buttons. Eingabe → sofortige Berechnung.
-
----
-
-## CSS-Architektur
-
-### Globale Shared-Klassen (für alle Tabs)
-
-```css
-.shared-header, .nav-tabs-bar, .nav-tab-btn, .nav-tab-btn.active
-```
-
-### Tool-spezifische CSS-Präfixe
-
-Jedes Tool hat eigene Präfixe, um Konflikte zu vermeiden:
+#### Tool-spezifische CSS-Präfixe
 
 | Präfix | Tool |
 |---|---|
 | `diab-` | Diabetes (und als Basis für TAH/HTN wiederverwendet) |
-| `ak-` | Antikoagulation (neu, vollständig in `#tab-antikoag` gescopert) |
+| `ak-` | Antikoagulation (gescopert in `#tab-antikoag`) |
 | `tah-` | Antiaggregation |
 | `vhf-` | Vorhofflimmern |
 | `aki-` | AKI |
@@ -134,25 +124,35 @@ Jedes Tool hat eigene Präfixe, um Konflikte zu vermeiden:
 
 **Wichtig:** Das Antikoagulations-CSS steht innerhalb des `<div id="tab-antikoag">` in einem `<style>`-Block, gescopert mit `#tab-antikoag .ak-*`. Alle anderen Tool-CSS stehen im `<head>`.
 
-### Tab-Sichtbarkeit via CSS + JS
+### Wie man einen neuen Tab in index.html hinzufügt
 
-```css
-/* Im <head> definiert: */
-#tab-ckd { display: block; }   /* Standard: sichtbar */
-#tab-lipid { display: none; }  /* alle anderen: versteckt */
+**Checkliste — 4 Stellen anpassen:**
+
+```html
+<!-- 1. CSS im <head> -->
+#tab-xyz { display: none; }
+
+<!-- 2. Nav-Button (in .nav-tabs-bar) -->
+<button class="nav-tab-btn" data-tab="xyz" onclick="switchToolTab('xyz')">🔴 Name</button>
+
+<!-- 3. Tab-Content (nach dem letzten Tab-Div) -->
+<div id="tab-xyz">
+  <style> /* scoped CSS mit xyz- Präfix */ </style>
+  <div class="diab-container">
+    <!-- Inhalt -->
+  </div>
+  <script>(function(){ 'use strict'; window.xyzAutoImport=function(){...}; })();</script>
+</div><!-- end tab-xyz -->
+
+<!-- 4. switchToolTab() Funktion -->
+document.getElementById('tab-xyz').style.display = tabName === 'xyz' ? 'block' : 'none';
+if (tabName === 'xyz' && window.xyzAutoImport) { window.xyzAutoImport(); }
 ```
 
-Tab wird per `element.style.display = 'block'/'none'` in `switchToolTab()` gesteuert.
+### Antikoagulations-Tab — Detail
 
----
-
-## Antikoagulations-Tab — Detail (zuletzt hinzugefügt)
-
-**Position in index.html:** nach `</div><!-- end tab-tah -->`, vor `</div><!-- end tab-aki -->`
 **Sub-Tabs:** Prophylaxe / Therapie NMH / UFH-Perfusor / HIT II / Info
 **Datenquelle:** Plan 2 – Version 18.2 (09/2024, KSchlieps)
-
-Sub-Tab-Switching intern über `akShowSub(id, btn)` — unabhängig von `switchToolTab`.
 
 **Funktionen (alle exponiert als window.ak*):**
 - `akSelectPInd(i)` — Prophylaxe-Indikation auswählen
@@ -162,28 +162,109 @@ Sub-Tab-Switching intern über `akShowSub(id, btn)` — unabhängig von `switchT
 - `akCalcHIT()` — HIT-II-Empfehlung + Argatra-Rechner
 - `akAutoImport()` — wird von `switchToolTab('antikoag')` aufgerufen
 
+### Wichtige Element-IDs (für Auto-Import aus CKD-Tab)
+
+| ID | Inhalt |
+|---|---|
+| `weight` | Körpergewicht (kg) |
+| `age` | Alter (Jahre) |
+| `egfr-result-val` | Berechneter eGFR-Wert (Text) |
+| `sex` | Geschlecht (radio: `male`/`female`) |
+
 ---
 
-## Konventionen im Code
+## Tool 2: crit-care.html — Intensivmedizin
+
+### Übersicht
+
+Eigenständiges Tool (keine Verbindung zu index.html). **Rotes/Crimson-Farbschema** (`#b71c1c`). Gleiche Vanilla-JS-Architektur, aber eigenes Tab-Switching-System.
+
+**Aktuell ein Tool aktiv:** 🫁 Lungenarterienembolie (LAE)
+**Geplant (auskommentiert):** Sepsis, ARDS
+
+### Tab-Switching (crit-care.html)
+
+```javascript
+window.switchTool = function(name) {
+  document.querySelectorAll('.nav-tab-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.querySelector('.nav-tab-btn[data-tool="'+name+'"]').classList.add('active');
+  document.getElementById('tool-lae').style.display = name === 'lae' ? 'block' : 'none';
+  // weitere tools: name === 'sepsis' etc.
+};
+```
+
+Nav-Buttons verwenden `data-tool` (nicht `data-tab` wie in index.html).
+
+### LAE-Tool (crit-care.html)
+
+**Tool-Container-ID:** `tool-lae`
+**Sub-Tabs:** 🔍 Diagnose / 📊 Risiko / 💊 Therapie / 🔄 Nachsorge
+
+**Sub-Tab-Switching:**
+```javascript
+window.laeShowTab = function(id, btn) {
+  document.querySelectorAll('.lae-tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.lae-tab-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.getElementById('lae-' + id).classList.add('active');
+  btn.classList.add('active');
+};
+```
+
+**CSS-Präfix:** `lae-` (z.B. `lae-card`, `lae-tab`, `lae-check`, `lae-result`, `lae-r-low/mid/high`)
+
+**JS-Funktionen (alle als `window.lae*` exponiert):**
+- `laeShowTab(id, btn)` — Sub-Tab wechseln
+- `laeCalcWells()` — Wells-Score für LAE
+- `laeCalcPERC()` — PERC-Regel
+- `laeCalcDDimer()` — D-Dimer-Schwellenwert-Berechnung
+- `laeCalcSPESI()` — sPESI-Score
+- `laeCalcRisk()` — ESC-Risikoklassifikation
+- `laeCalcHIT()` — 4T-Score (HIT)
+- `laeCalcCTEPH()` — CTEPH-Nachsorgerisiko
+- `laeCalcBLEED()` — Blutungsrisiko
+- `laeCalcNMH()` — Antikoagulationsdosis (NMH/DOAC)
+- `laeCalcHESTIA()` — HESTIA-Kriterien (ambulante Therapie)
+- `laeHaemoChange()` — Hämodynamik-Auswahl
+- `laeRenderScoreForm()` — Score-Formular neu rendern
+- `laeToggleAcc(id)` — Accordion ein-/ausklappen
+
+### Wie man ein neues Tool in crit-care.html hinzufügt
+
+```html
+<!-- 1. Nav-Button -->
+<button class="nav-tab-btn" data-tool="sepsis" onclick="switchTool('sepsis')">🔴 Sepsis</button>
+
+<!-- 2. Tool-Container -->
+<div id="tool-sepsis" style="display:none;">
+  <style> /* scoped CSS mit sepsis- Präfix */ </style>
+  <!-- Inhalt -->
+  <script>(function(){ 'use strict'; /* JS mit sepsis* Präfix */ })();</script>
+</div>
+
+<!-- 3. switchTool() erweitern -->
+document.getElementById('tool-sepsis').style.display = name === 'sepsis' ? 'block' : 'none';
+```
+
+---
+
+## Gemeinsame Konventionen (beide Tools)
 
 1. **Deutsche Sprache** — alle Labels, Hinweise, Warnungen auf Deutsch
 2. **Kein Framework** — jede Funktion vanilla JS
-3. **IDs mit Tab-Präfix** — `ak-p-weight`, `ak-t-egfr`, `tah-age`, `diab-weight`
+3. **IDs mit Tool-Präfix** — `ak-p-weight`, `lae-perc-age`, `tah-age`
 4. **eGFR-Stufen** — immer: >50 / 30–50 / 15–30 / <15 / HD
-5. **Warnboxen** — `ak-warn`-Klasse (orange), `ak-dose-ki`-Klasse (rot) für KI
-6. **Tags** — `ak-tag ak-tag-red/orange/green/blue` für inline eGFR-Badges
-7. **Auto-calc** — immer `oninput="calcXxx()"` — kein Submit-Button
-8. **Quellen** — jede medizinische Empfehlung im Info-Tab mit Leitlinienquelle
-9. **Klinische Sicherheit** — Disclaimer-Balken auf jeder Seite, KI-Felder rot markiert
+5. **Auto-calc** — immer `oninput="calcXxx()"` — kein Submit-Button
+6. **Quellen** — jede medizinische Empfehlung im Info-Tab mit Leitlinienquelle
+7. **Klinische Sicherheit** — Disclaimer-Balken auf jeder Seite, KI-Felder rot markiert
+8. **IIFE-Kapselung** — jedes Tool in eigenem IIFE, keine globalen Variablen außer window.xyz
 
 ---
 
 ## Aktueller Stand
 
-### Fertig und live
+### Fertig und live (index.html)
 
 - ✅ CKD-Staging + KDIGO Risikomatrix + eGFR-Berechnung
-- ✅ Medikamenten-Dosisrechner nach eGFR (CKD-Tab)
 - ✅ Anämie / Calcium-Phosphat (MBD-Tab)
 - ✅ Lipidtherapie 5-Schritt-Wizard (ACC/AHA 2026)
 - ✅ Diabetes-Management (KDIGO 2022/2026)
@@ -193,62 +274,34 @@ Sub-Tab-Switching intern über `akShowSub(id, btn)` — unabhängig von `switchT
 - ✅ Antikoagulation NMH/UFH (Prophylaxe, Therapie, Perfusor, HIT II)
 - ✅ AKI (Staging, Ätiologie, Management)
 - ✅ Cross-Tab Auto-Import (Gewicht/eGFR/Alter fließt zwischen Tabs)
-- ✅ GitHub Pages Deployment
 
-### Standalone-Dateien (Altbestand, nicht mehr primär)
+### Fertig und live (crit-care.html)
 
-- `ckd-staging.html` — eigenständig funktionsfähig, veraltet gegenüber index.html
-- `lae.html` — LAE-Entscheidungstool, **noch nicht in index.html integriert**
-- `antikoag.html` — Vorgänger-Standalone, ersetzt durch Tab in index.html
+- ✅ Lungenarterienembolie (LAE) — vollständiger klinischer Algorithmus
+  - Wells-Score, PERC-Regel, D-Dimer-Berechnung
+  - sPESI, ESC-Risikoklassifikation, Hämodynamik
+  - Therapie (NMH/DOAC nach Körpergewicht + eGFR)
+  - HESTIA (ambulante Eignung), 4T-Score (HIT)
+  - Nachsorge: CTEPH-Risiko, Rezidivprophylaxe, Blutungsrisiko
+
+### Standalone-Altbestand (nicht mehr primär)
+
+- `lae.html` — Vorgänger des LAE-Tools, jetzt in crit-care.html aufgegangen
+- `antikoag.html` — Vorgänger, ersetzt durch Tab in index.html
+- `ckd-staging.html` — veraltet gegenüber index.html
 - `ckd-app/index.html`, `lipid-tool/index.html` — alte Standalone-Versionen
 
-### Noch nicht integriert / offene TODOs
+### Offene TODOs
 
-- ⬜ **lae.html** in index.html als neuen Tab integrieren (LAE-Diagnostik, Wells-Score, PESI)
-- ⬜ **Glomerulonephritis / ANCA-Vaskulitis** — KDIGO 2021/2024 Leitlinie vorhanden (`KDIGO-2024-ANCA-Vasculitis-Guideline-Update.pdf`)
+- ⬜ **Sepsis-Tab** in crit-care.html (Platzhalter schon vorbereitet)
+- ⬜ **ARDS-Tab** in crit-care.html
+- ⬜ **Glomerulonephritis / ANCA-Vaskulitis** — KDIGO 2024 Leitlinie vorhanden
 - ⬜ **Druckansicht** verbessern (aktuell nur CKD-Arztbrief print-optimiert)
-- ⬜ Standalone-Dateien auf GitHub Pages sauber verlinken oder entfernen
-
----
-
-## Nächste sinnvolle Schritte
-
-1. **lae.html als Tab integrieren** — gleiche Methode wie alle bisherigen Tabs: neuen `data-tab="lae"` Button in Nav, `#tab-lae { display:none; }` in CSS, Tab-Content einbauen, in `switchToolTab()` ergänzen
-2. **ANCA/Vaskulitis-Tab** — Basis: `KDIGO-2024-ANCA-Vasculitis-Guideline-Update.pdf` im Root
-3. **Verlinkung der Standalone-Tools** — z.B. lae.html separat publizieren oder in index.html aufgehen lassen
-
----
-
-## Wie man einen neuen Tab hinzufügt
-
-**Checkliste — 4 Stellen in index.html anpassen:**
-
-```html
-<!-- 1. CSS im <head> -->
-#tab-xyz { display: none; }
-
-<!-- 2. Nav-Button (in .nav-tabs-bar, Zeile ~1344) -->
-<button class="nav-tab-btn" data-tab="xyz" onclick="switchToolTab('xyz')">🔴 Name</button>
-
-<!-- 3. Tab-Content (nach dem letzten </div><!-- end tab-xyz -->) -->
-<div id="tab-xyz">
-  <style> /* scoped CSS mit xyz- Präfix */ </style>
-  <div class="diab-container">
-    <!-- Inhalt mit diab-card, diab-row, diab-field etc. -->
-  </div>
-  <script>(function(){ 'use strict'; window.xyzAutoImport=function(){...}; })();</script>
-</div><!-- end tab-xyz -->
-
-<!-- 4. switchToolTab() Funktion (Zeile ~5698) -->
-document.getElementById('tab-xyz').style.display = tabName === 'xyz' ? 'block' : 'none';
-if (tabName === 'xyz' && window.xyzAutoImport) { window.xyzAutoImport(); }
-```
+- ⬜ Navigation/Links zwischen index.html und crit-care.html
 
 ---
 
 ## Medizinische Grundlagen / Leitlinien
-
-Die Empfehlungen basieren auf diesen Quellen (PDFs im Projekt):
 
 | Tool | Quelle |
 |---|---|
@@ -261,32 +314,18 @@ Die Empfehlungen basieren auf diesen Quellen (PDFs im Projekt):
 | AKI | KDIGO + UpToDate-basierte Artikel |
 | VHF | ESC + JAMA Reviews |
 | ANCA/Vaskulitis | KDIGO 2024 |
+| LAE | ESC 2019 LAE-Leitlinie + aktuelle Reviews |
 
 ---
 
 ## Deployment-Workflow
 
 ```bash
-# Änderung in index.html machen
-git add index.html
+# Änderungen machen, dann:
+git add index.html crit-care.html   # oder alle relevanten Dateien
 git commit -m "Kurze Beschreibung"
 git push origin main
 # → GitHub Pages publiziert automatisch (ca. 1–2 min)
 ```
 
 **Kein Build, kein npm install, kein CI** — nur push → live.
-
----
-
-## Wichtige Element-IDs im CKD-Tab (für Auto-Import)
-
-Andere Tools lesen aus diesen IDs:
-
-| ID | Inhalt |
-|---|---|
-| `weight` | Körpergewicht (kg) |
-| `age` | Alter (Jahre) |
-| `egfr-result-val` | Berechneter eGFR-Wert (Text) |
-| `sex` | Geschlecht (radio: `male`/`female`) |
-
-Die Antikoag-Funktionen lesen auch aus `tah-weight` (TAH-Tab) als Fallback.
