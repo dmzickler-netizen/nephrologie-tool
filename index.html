@@ -4864,6 +4864,72 @@ function diseaseLabel(d) {
   return map[d] || d;
 }
 
+function verlaufTextBlock() {
+  // Alle historischen Punkte + aktueller Wert als Text-Tabelle
+  var pts = [];
+  verlaufRows.forEach(function(row) {
+    var egfr = parseFloat(row.egfr);
+    var krea = parseFloat(row.krea);
+    if (!egfr && krea) egfr = verlaufEgfrFromKrea(krea);
+    if (!egfr && !krea) return;
+    var date = verlaufParseDate(row.date);
+    pts.push({ date: date, dateRaw: row.date, egfr: egfr || null, krea: krea || null });
+  });
+  // Aktuellen Wert anhängen
+  if (typeof currentEGFR !== 'undefined' && currentEGFR !== null) {
+    var today = new Date();
+    pts.push({ date: today, dateRaw: today.toLocaleDateString('de-DE', { month: '2-digit', year: 'numeric' }), egfr: currentEGFR, krea: null, current: true });
+  }
+  if (pts.length === 0) return '';
+
+  // Sortieren (mit Datum zuerst, ohne Datum am Ende)
+  pts.sort(function(a, b) {
+    if (a.date && b.date) return a.date - b.date;
+    if (a.date) return -1;
+    if (b.date) return 1;
+    return 0;
+  });
+
+  var colW = [14, 12, 10]; // Datum, eGFR, Krea
+  var lines = [];
+  var header = padR('Datum', colW[0]) + padR('eGFR (ml/min)', colW[1]+2) + 'Krea (mg/dl)';
+  var sep    = '-'.repeat(colW[0] + colW[1] + colW[2] + 6);
+  lines.push(header);
+  lines.push(sep);
+  pts.forEach(function(p) {
+    var dStr = p.dateRaw ? p.dateRaw : '—';
+    var eStr = p.egfr ? String(Math.round(p.egfr * 10) / 10) + (p.current ? ' ◄' : '') : '—';
+    var kStr = p.krea ? String(Math.round(p.krea * 100) / 100) : '—';
+    lines.push(padR(dStr, colW[0]) + padR(eStr, colW[1]+2) + kStr);
+  });
+
+  // Slope berechnen wenn alle datiert
+  var dated = pts.filter(function(p){ return p.date && p.egfr; });
+  var slopeStr = '';
+  if (dated.length >= 2) {
+    var n = dated.length;
+    var t0 = dated[0].date.getTime();
+    var xs = dated.map(function(p){ return (p.date.getTime()-t0)/(1000*60*60*24*365.25); });
+    var ys = dated.map(function(p){ return p.egfr; });
+    var xm = xs.reduce(function(a,b){return a+b;},0)/n;
+    var ym = ys.reduce(function(a,b){return a+b;},0)/n;
+    var num=0, den=0;
+    for(var i=0;i<n;i++){ num+=(xs[i]-xm)*(ys[i]-ym); den+=(xs[i]-xm)*(xs[i]-xm); }
+    var slope = den>0 ? Math.round(num/den*10)/10 : null;
+    if (slope !== null) {
+      var prog = slope < -5 ? 'Rapid progression' : slope < -3 ? 'Progression' : slope < 0 ? 'Stabil/langsam progredient' : 'Stabil';
+      slopeStr = '\nSlope: ' + (slope > 0 ? '+' : '') + slope + ' ml/min/Jahr  →  ' + prog + ' (KDIGO: Rapid progression >5 ml/min/Jahr)';
+    }
+  }
+
+  return '\neGFR-Verlauf:\n' + lines.join('\n') + slopeStr + '\n';
+}
+
+function padR(s, w) {
+  s = String(s);
+  return s + ' '.repeat(Math.max(0, w - s.length));
+}
+
 function generateTexts(age, sex, scr, cys, uacr, bpSys, bpDia, extraInfo,
   eGFR_cr, eGFR_cys, eGFR_comb, primaryEGFR, gfrStage, albStage, riskInfo, diseases, labs, vordiagnosen) {
   const { hb, ferritin, tsat, pth, bicarb, phosphat, calcium, kalium, ph } = labs || {};
@@ -4911,7 +4977,10 @@ function generateTexts(age, sex, scr, cys, uacr, bpSys, bpDia, extraInfo,
 
   let diagnoseText = '--- DIAGNOSEN ---\n\n';
   if (ckdLine) {
-    diagnoseText += `Aktuell:\n${ckdLine}\n\n`;
+    diagnoseText += `Aktuell:\n${ckdLine}\n`;
+    const vb = verlaufTextBlock();
+    if (vb) diagnoseText += vb;
+    diagnoseText += '\n';
   }
   diagnoseText += 'Diagnosen:\n';
   let dNum = 1;
@@ -4945,6 +5014,9 @@ function generateTexts(age, sex, scr, cys, uacr, bpSys, bpDia, extraInfo,
   if (phosphat) befundText += `- Phosphat: ${phosphat} mmol/l\n`;
   if (calcium)  befundText += `- Kalzium (gesamt): ${calcium} mmol/l\n`;
   if (extraInfo) befundText += `- Weitere Befunde: ${extraInfo}\n`;
+
+  const vBlock = verlaufTextBlock();
+  if (vBlock) befundText += vBlock;
 
   befundText += `\nNach KDIGO 2024 ergibt sich damit das Stadium ${gfrStage ? gfrStage.stage : '?'}${albStage ? albStage.stage : ''} `;
   befundText += `(GFR-Stadium ${gfrStage ? gfrStage.stage : '?'}: eGFR ${gfrStage ? gfrStage.sub : '?'} ml/min`;
