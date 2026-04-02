@@ -6100,6 +6100,9 @@ function updateDrugEGFR(egfr) {
   const disp = document.getElementById('current-egfr-display');
   if (disp) disp.textContent = egfr !== null ? `${egfr} ml/min` : '— ml/min';
   buildDrugTable();
+  // Verlaufsgraph aktualisieren
+  if (window.verlaufRenderTable) window.verlaufRenderTable();
+  if (window.verlaufDraw) window.verlaufDraw();
 }
 
 // Initial matrix render
@@ -6238,10 +6241,8 @@ function verlaufClear() {
 }
 
 function verlaufGetCurrentEgfr() {
-  var el = document.getElementById('egfr-result-val');
-  if (!el) return null;
-  var v = parseFloat(el.textContent);
-  return (!isNaN(v) && v > 0) ? v : null;
+  // currentEGFR wird von updateDrugEGFR() gesetzt (nach calculate())
+  return (typeof currentEGFR !== 'undefined' && currentEGFR !== null && currentEGFR > 0) ? currentEGFR : null;
 }
 
 function verlaufRenderTable() {
