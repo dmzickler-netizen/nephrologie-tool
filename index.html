@@ -4849,17 +4849,35 @@ function calculate() {
 
 // ===== TEXT GENERATION =====
 function diseaseLabel(d) {
+  // Nominativ — für Diagnoseliste
   const map = {
-    diabetisch: 'diabetische Nephropathie',
-    hypertensiv: 'hypertensive Nephropathie',
-    igan: 'IgA-Nephropathie',
-    fsgs: 'fokal-segmentale Glomerulosklerose (FSGS)',
-    mgn: 'membranöse Nephropathie',
-    adpkd: 'autosomal-dominante polyzystische Nierenerkrankung (ADPKD)',
-    lupus: 'Lupusnephritis',
-    vaskulitis: 'ANCA-assoziierte Vaskulitis',
-    transplantat: 'Nierentransplantat-Nephropathie',
-    andere: 'chronische Nierenerkrankung (Ätiologie in Klärung)',
+    diabetisch:  'Diabetische Nephropathie',
+    hypertensiv: 'Hypertensive Nephropathie',
+    igan:        'IgA-Nephropathie',
+    fsgs:        'Fokal-segmentale Glomerulosklerose (FSGS)',
+    mgn:         'Membranöse Nephropathie',
+    adpkd:       'Autosomal-dominante polyzystische Nierenerkrankung (ADPKD)',
+    lupus:       'Lupusnephritis',
+    vaskulitis:  'ANCA-assoziierte Vaskulitis',
+    transplantat:'Nierentransplantat-Nephropathie',
+    andere:      'Chronische Nierenerkrankung (Ätiologie in Klärung)',
+  };
+  return map[d] || d;
+}
+
+function diseaseLabelDativ(d) {
+  // Dativ — für "CKD bei ..." / "im Kontext einer ..."
+  const map = {
+    diabetisch:  'diabetischer Nephropathie',
+    hypertensiv: 'hypertensiver Nephropathie',
+    igan:        'IgA-Nephropathie',
+    fsgs:        'fokal-segmentaler Glomerulosklerose (FSGS)',
+    mgn:         'membranöser Nephropathie',
+    adpkd:       'autosomal-dominanter polyzystischer Nierenerkrankung (ADPKD)',
+    lupus:       'Lupusnephritis',
+    vaskulitis:  'ANCA-assoziierter Vaskulitis',
+    transplantat:'Nierentransplantat-Nephropathie',
+    andere:      'chronischer Nierenerkrankung (Ätiologie in Klärung)',
   };
   return map[d] || d;
 }
@@ -4938,14 +4956,14 @@ function generateTexts(age, sex, scr, cys, uacr, bpSys, bpDia, extraInfo,
   const pronoun = sex === 'female' ? 'Die Patientin' : 'Der Patient';
   const sexGenStr = sex === 'female' ? 'weiblich' : 'männlich';
 
-  // Build disease string
+  // Build disease string — Dativ für "im Kontext einer ..."
   let diseaseStr = '';
   if (diseases.length === 0) {
     diseaseStr = 'chronischer Nierenerkrankung (Ätiologie noch nicht abschließend geklärt)';
   } else if (diseases.length === 1) {
-    diseaseStr = diseaseLabel(diseases[0]);
+    diseaseStr = diseaseLabelDativ(diseases[0]);
   } else {
-    let parts = diseases.map(diseaseLabel);
+    let parts = diseases.map(diseaseLabelDativ);
     diseaseStr = parts.slice(0, -1).join(', ') + ' sowie ' + parts[parts.length - 1];
   }
 
@@ -4960,7 +4978,7 @@ function generateTexts(age, sex, scr, cys, uacr, bpSys, bpDia, extraInfo,
   if (gfrStage) {
     const stadiumStr = `${gfrStage.stage}${albStage ? albStage.stage : ''}`;
     const beiStr = diseases.length > 0
-      ? ' bei ' + diseases.map(diseaseLabel).join(', ')
+      ? ' bei ' + diseases.map(diseaseLabelDativ).join(', ')
       : '';
     ckdLine = `Chronische Nierenerkrankung (CKD), Stadium ${stadiumStr} nach KDIGO 2024${beiStr}`;
     nephroLines.push(ckdLine);
