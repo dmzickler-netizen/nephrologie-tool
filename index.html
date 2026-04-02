@@ -62,6 +62,7 @@
 #tab-aki { display: none; }
 #tab-mbd { display: none; }
 #tab-tah { display: none; }
+#tab-antikoag { display: none; }
 .aki-stage-row { display:flex; align-items:center; gap:14px; padding:12px; border-radius:10px; border-width:2px; border-style:solid; margin-bottom:14px; }
 .aki-stage-circle { width:64px; height:64px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 .aki-etio-box { padding:10px 12px; background:#f5f5f5; border-radius:8px; border-left-width:4px; border-left-style:solid; margin-bottom:12px; }
@@ -1348,6 +1349,7 @@ label .lip-optional {
   <button class="nav-tab-btn" data-tab="htn" onclick="switchToolTab('htn')">❤️‍🩹 Hypertonie</button>
   <button class="nav-tab-btn" data-tab="vhf" onclick="switchToolTab('vhf')">💜 Vorhofflimmern</button>
   <button class="nav-tab-btn" data-tab="tah" onclick="switchToolTab('tah')">🔴 Antiaggregation</button>
+  <button class="nav-tab-btn" data-tab="antikoag" onclick="switchToolTab('antikoag')">💉 Antikoagulation</button>
   <button class="nav-tab-btn" data-tab="aki" onclick="switchToolTab('aki')">🚨 AKI</button>
 </div>
 
@@ -3430,6 +3432,688 @@ label .lip-optional {
 </div><!-- end diab-container -->
 </div><!-- end tab-tah -->
 
+<!-- ============================================================
+     TAB: ANTIKOAGULATION (NMH / UFH)
+     ============================================================ -->
+<div id="tab-antikoag">
+<style>
+/* ── AK sub-tab nav ── */
+#tab-antikoag .ak-subnav{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:16px;border-bottom:2px solid #e8eaf6;padding-bottom:0;}
+#tab-antikoag .ak-subbtn{padding:9px 16px;border:none;background:none;font-size:.8rem;font-weight:600;color:#78909c;cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:color .15s,border-color .15s;font-family:inherit;}
+#tab-antikoag .ak-subbtn.active{color:#1a237e;border-bottom-color:#1a237e;}
+#tab-antikoag .ak-subbtn:hover:not(.active){color:#283593;border-bottom-color:#9fa8da;}
+#tab-antikoag .ak-subtab{display:none;}
+#tab-antikoag .ak-subtab.active{display:block;}
+/* ── Indikation tiles ── */
+#tab-antikoag .ak-ind-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px;}
+#tab-antikoag .ak-ind-btn{border:2px solid #e3eaf5;border-radius:10px;padding:10px 13px;font-size:.78rem;font-weight:600;color:#546e7a;cursor:pointer;background:#f8fafc;text-align:left;transition:all .15s;line-height:1.4;font-family:inherit;}
+#tab-antikoag .ak-ind-btn:hover{border-color:#9fa8da;color:#283593;background:#f0f4ff;}
+#tab-antikoag .ak-ind-btn.active{border-color:#1a237e;background:#e8eaf6;color:#1a237e;}
+#tab-antikoag .ak-ind-sub{font-size:.68rem;font-weight:400;color:#90a4ae;display:block;margin-top:2px;}
+@media(max-width:520px){#tab-antikoag .ak-ind-grid{grid-template-columns:1fr;}}
+/* ── Result box (gradient) ── */
+#tab-antikoag .ak-result-box{background:linear-gradient(135deg,#e8eaf6,#c5cae9);border-radius:12px;padding:14px 16px;margin:10px 0;}
+#tab-antikoag .ak-result-row{display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.5);}
+#tab-antikoag .ak-result-row:last-child{border-bottom:none;}
+#tab-antikoag .ak-result-label{font-size:.76rem;color:#3949ab;font-weight:600;}
+#tab-antikoag .ak-result-val{font-size:1.1rem;font-weight:900;color:#1a237e;}
+#tab-antikoag .ak-result-unit{font-size:.72rem;color:#5c6bc0;margin-left:3px;font-weight:400;}
+/* ── Dose table ── */
+#tab-antikoag .ak-dose-table{width:100%;border-collapse:collapse;font-size:.79rem;margin-top:8px;}
+#tab-antikoag .ak-dose-table th{background:#e8eaf6;color:#1a237e;font-weight:700;padding:8px 10px;text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.4px;}
+#tab-antikoag .ak-dose-table td{padding:8px 10px;border-bottom:1px solid #f0f4f8;vertical-align:middle;}
+#tab-antikoag .ak-dose-table tr:last-child td{border-bottom:none;}
+#tab-antikoag .ak-dose-table tr:hover td{background:#f8fafc;}
+#tab-antikoag .ak-dose-hl{font-weight:800;color:#1a237e;font-size:.9rem;}
+#tab-antikoag .ak-dose-ki{color:#c62828;font-weight:700;}
+/* ── Tags ── */
+#tab-antikoag .ak-tag{display:inline-block;padding:2px 7px;border-radius:8px;font-size:.65rem;font-weight:700;margin-left:4px;vertical-align:middle;}
+#tab-antikoag .ak-tag-red{background:#ffebee;color:#c62828;}
+#tab-antikoag .ak-tag-orange{background:#fff3e0;color:#e65100;}
+#tab-antikoag .ak-tag-green{background:#e8f5e9;color:#2e7d32;}
+#tab-antikoag .ak-tag-blue{background:#e3f2fd;color:#1565c0;}
+/* ── Warning box ── */
+#tab-antikoag .ak-warn{background:#fff8e1;border:1.5px solid #ffc107;border-radius:10px;padding:9px 13px;font-size:.75rem;color:#7c5700;margin-top:8px;display:flex;gap:8px;align-items:flex-start;}
+/* ── eGFR badge ── */
+#tab-antikoag .ak-egfr-badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:.7rem;font-weight:700;margin-left:8px;}
+#tab-antikoag .ak-egfr-ok{background:#e8f5e9;color:#2e7d32;}
+#tab-antikoag .ak-egfr-warn{background:#fff8e1;color:#e65100;}
+#tab-antikoag .ak-egfr-bad{background:#ffebee;color:#c62828;}
+/* ── PTT table ── */
+#tab-antikoag .ak-ptt-table{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:6px;}
+#tab-antikoag .ak-ptt-table th{background:#1a237e;color:#fff;font-weight:700;padding:8px 10px;text-align:center;font-size:.72rem;}
+#tab-antikoag .ak-ptt-table td{padding:7px 10px;border-bottom:1px solid #f0f4f8;text-align:center;}
+#tab-antikoag .ak-ptt-table tr:last-child td{border-bottom:none;}
+#tab-antikoag .ak-ptt-ok td{background:#e8f5e9;font-weight:700;color:#2e7d32;}
+#tab-antikoag .ak-ptt-low td{background:#e3f2fd;}
+#tab-antikoag .ak-ptt-high td{background:#fff3e0;}
+#tab-antikoag .ak-ptt-danger td{background:#ffebee;}
+/* ── Perfusor cards ── */
+#tab-antikoag .ak-perf-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;}
+#tab-antikoag .ak-perf-card{background:#fff;border-radius:10px;padding:10px;text-align:center;border:1.5px solid #e8eaf6;}
+#tab-antikoag .ak-perf-num{font-size:1.25rem;font-weight:900;color:#1a237e;}
+#tab-antikoag .ak-perf-label{font-size:.67rem;color:#78909c;margin-top:2px;line-height:1.3;}
+@media(max-width:480px){#tab-antikoag .ak-perf-grid{grid-template-columns:1fr 1fr;}}
+/* ── HIT grid ── */
+#tab-antikoag .ak-hit-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+@media(max-width:520px){#tab-antikoag .ak-hit-grid{grid-template-columns:1fr;}}
+#tab-antikoag .ak-hit-card{border-radius:12px;padding:12px 14px;border:2px solid;}
+#tab-antikoag .ak-hit-proph{background:#f3e5f5;border-color:#ab47bc;}
+#tab-antikoag .ak-hit-ther{background:#fce4ec;border-color:#e91e63;}
+#tab-antikoag .ak-hit-hd{background:#e8eaf6;border-color:#3949ab;}
+#tab-antikoag .ak-hit-dana{background:#e0f2f1;border-color:#00897b;}
+#tab-antikoag .ak-hit-title{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;}
+#tab-antikoag .ak-hit-dose{font-size:.85rem;font-weight:700;color:#1a2332;margin:3px 0;}
+#tab-antikoag .ak-hit-sub{font-size:.7rem;color:#607d8b;}
+/* ── Argatra result ── */
+#tab-antikoag .ak-arg-box{background:linear-gradient(135deg,#f3e5f5,#e1bee7);border-radius:10px;padding:12px 14px;margin-top:8px;}
+#tab-antikoag .ak-arg-row{display:flex;justify-content:space-between;padding:4px 0;font-size:.8rem;}
+#tab-antikoag .ak-arg-label{color:#6a1b9a;font-weight:600;}
+#tab-antikoag .ak-arg-val{font-weight:800;color:#4a148c;}
+/* ── Section note ── */
+#tab-antikoag .ak-section-note{font-size:.7rem;color:#78909c;padding:8px 12px;background:#f8fafc;border-radius:8px;margin-top:8px;line-height:1.5;}
+</style>
+
+<div class="diab-container">
+
+  <!-- Sub-tab nav -->
+  <div class="ak-subnav">
+    <button class="ak-subbtn active" onclick="akShowSub('proph',this)">🛡 Prophylaxe</button>
+    <button class="ak-subbtn" onclick="akShowSub('ther',this)">⚕ Therapie NMH</button>
+    <button class="ak-subbtn" onclick="akShowSub('ufh',this)">🔄 UFH-Perfusor</button>
+    <button class="ak-subbtn" onclick="akShowSub('hit',this)">🚨 HIT II</button>
+    <button class="ak-subbtn" onclick="akShowSub('info',this)">ℹ Info</button>
+  </div>
+
+  <!-- ── PROPHYLAXE ── -->
+  <div id="ak-sub-proph" class="ak-subtab active">
+
+    <div class="diab-card">
+      <h2>⚖️ Patientendaten</h2>
+      <div class="diab-row">
+        <div class="diab-field">
+          <label>Körpergewicht</label>
+          <input type="number" id="ak-p-weight" min="30" max="250" value="80" oninput="akCalcProphylaxe()">
+          <span class="diab-unit">kg</span>
+        </div>
+        <div class="diab-field">
+          <label>eGFR <span id="ak-p-egfr-badge" class="ak-egfr-badge ak-egfr-ok">normal</span></label>
+          <input type="number" id="ak-p-egfr" min="0" max="120" value="60" oninput="akCalcProphylaxe()">
+          <span class="diab-unit">ml/min</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="diab-card">
+      <h2>🎯 Indikation</h2>
+      <div class="ak-ind-grid">
+        <button class="ak-ind-btn active" id="ak-p-ind-0" onclick="akSelectPInd(0)">Perioperativ mäßiges Risiko<span class="ak-ind-sub">Kleine/mittlere Eingriffe</span></button>
+        <button class="ak-ind-btn" id="ak-p-ind-1" onclick="akSelectPInd(1)">Perioperativ hohes Risiko<span class="ak-ind-sub">Große Eingriffe, Tumorchirurgie</span></button>
+        <button class="ak-ind-btn" id="ak-p-ind-2" onclick="akSelectPInd(2)">Internistisch<span class="ak-ind-sub">Immobilisation, internistische Erkrankung</span></button>
+        <button class="ak-ind-btn" id="ak-p-ind-3" onclick="akSelectPInd(3)">Hüft-/Knie-TEP<span class="ak-ind-sub">Elektive Gelenkersatzoperation</span></button>
+      </div>
+    </div>
+
+    <div class="diab-card">
+      <h2>💊 Empfehlung</h2>
+      <div id="ak-p-result"></div>
+    </div>
+
+  </div><!-- end ak-sub-proph -->
+
+  <!-- ── THERAPIE NMH ── -->
+  <div id="ak-sub-ther" class="ak-subtab">
+
+    <div class="diab-card">
+      <h2>⚖️ Patientendaten</h2>
+      <div class="diab-row">
+        <div class="diab-field">
+          <label>Körpergewicht</label>
+          <input type="number" id="ak-t-weight" min="30" max="250" value="80" oninput="akCalcTherapie()">
+          <span class="diab-unit">kg</span>
+        </div>
+        <div class="diab-field">
+          <label>eGFR <span id="ak-t-egfr-badge" class="ak-egfr-badge ak-egfr-ok">normal</span></label>
+          <input type="number" id="ak-t-egfr" min="0" max="120" value="60" oninput="akCalcTherapie()">
+          <span class="diab-unit">ml/min</span>
+        </div>
+      </div>
+      <div class="diab-row">
+        <div class="diab-field">
+          <label>Alter ≥ 80 Jahre</label>
+          <div class="diab-toggle-group">
+            <input type="radio" name="ak-t-age" id="ak-t-age-no" value="no" checked onchange="akCalcTherapie()"><label for="ak-t-age-no">Nein</label>
+            <input type="radio" name="ak-t-age" id="ak-t-age-yes" value="yes" onchange="akCalcTherapie()"><label for="ak-t-age-yes">Ja</label>
+          </div>
+        </div>
+        <div class="diab-field">
+          <label>Indikation</label>
+          <div class="diab-toggle-group">
+            <input type="radio" name="ak-t-ind" id="ak-t-ind-tbvt" value="tbvt" checked onchange="akCalcTherapie()"><label for="ak-t-ind-tbvt">TBVT / LAE</label>
+            <input type="radio" name="ak-t-ind" id="ak-t-ind-acs" value="acs" onchange="akCalcTherapie()"><label for="ak-t-ind-acs">ACS</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="diab-card">
+      <h2>💊 Fragmin (Dalteparin) · Therapiedosis</h2>
+      <div id="ak-t-fragmin"></div>
+    </div>
+
+    <div class="diab-card">
+      <h2>💊 Clexane (Enoxaparin) · Therapiedosis</h2>
+      <div id="ak-t-clexane"></div>
+    </div>
+
+    <div class="diab-card">
+      <h2>🔬 Monitoring & Hinweise</h2>
+      <table class="ak-dose-table">
+        <tr><td style="width:40%;font-weight:700;">Faktor-Anti-Xa</td><td>Abnahme 3–4h nach s.c.-Gabe; obligat bei eGFR &lt;30, Alter &gt;80J., Adipositas</td></tr>
+        <tr><td style="font-weight:700;">Ziel therapeutisch</td><td>0,5–1,0 IE/ml (2×/d) · 1,0–2,0 IE/ml (1×/d)</td></tr>
+        <tr><td style="font-weight:700;">Ziel prophylaktisch</td><td>0,1–0,4 IE/ml</td></tr>
+        <tr><td style="font-weight:700;">Marcumar-Beginn</td><td>Erst ab Thrombozyten &gt;150.000 · Überlappung ≥5d bis INR stabil &gt;2</td></tr>
+        <tr><td style="font-weight:700;">Therapiedauer</td><td>TBVT/LAE: 2–3 Monate</td></tr>
+      </table>
+    </div>
+
+  </div><!-- end ak-sub-ther -->
+
+  <!-- ── UFH PERFUSOR ── -->
+  <div id="ak-sub-ufh" class="ak-subtab">
+
+    <div class="diab-card">
+      <h2>⚖️ Patientendaten & Perfusor</h2>
+      <div class="diab-row">
+        <div class="diab-field">
+          <label>Körpergewicht</label>
+          <input type="number" id="ak-u-weight" min="30" max="250" value="80" oninput="akCalcUFH()">
+          <span class="diab-unit">kg</span>
+        </div>
+        <div class="diab-field">
+          <label>eGFR <span id="ak-u-egfr-badge" class="ak-egfr-badge ak-egfr-warn">eingeschränkt</span></label>
+          <input type="number" id="ak-u-egfr" min="0" max="120" value="30" oninput="akCalcUFH()">
+          <span class="diab-unit">ml/min</span>
+        </div>
+      </div>
+      <div class="diab-field" style="margin-top:8px;">
+        <label>Heparin-Konzentration</label>
+        <select id="ak-u-conc" onchange="akCalcUFH()" style="max-width:340px;">
+          <option value="500">25.000 IE in 50 ml (= 500 IE/ml) · Standard</option>
+          <option value="250">12.500 IE in 50 ml (= 250 IE/ml)</option>
+          <option value="1000">50.000 IE in 50 ml (= 1000 IE/ml)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="diab-card">
+      <h2>🚀 Initialdosierung i.v. Perfusor</h2>
+      <div style="background:#f0f4ff;border-radius:12px;padding:14px 16px;">
+        <div style="font-size:.75rem;font-weight:800;color:#1a237e;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Berechnete Startdosierung (Bolus 70 IE/kg · Start 15 IE/kg/h)</div>
+        <div class="ak-perf-grid">
+          <div class="ak-perf-card"><div class="ak-perf-num" id="ak-u-bolus-ie">—</div><div class="ak-perf-label">Bolus IE i.v.</div></div>
+          <div class="ak-perf-card"><div class="ak-perf-num" id="ak-u-bolus-ml">—</div><div class="ak-perf-label">Bolus ml i.v.</div></div>
+          <div class="ak-perf-card"><div class="ak-perf-num" id="ak-u-rate-ieh">—</div><div class="ak-perf-label">Start-Rate IE/h</div></div>
+          <div class="ak-perf-card"><div class="ak-perf-num" id="ak-u-rate-ml">—</div><div class="ak-perf-label">Start-Rate ml/h</div></div>
+          <div class="ak-perf-card"><div class="ak-perf-num">50–70</div><div class="ak-perf-label">Ziel-PTT sec</div></div>
+          <div class="ak-perf-card"><div class="ak-perf-num">6h</div><div class="ak-perf-label">Erste PTT-Kontrolle</div></div>
+        </div>
+      </div>
+      <div id="ak-u-warn" style="display:none;" class="ak-warn" style="margin-top:10px;">⚠️ <span>Bei eGFR &lt;30 UFH gegenüber NMH bevorzugen. PTT engmaschig kontrollieren. Bei HD: Pausierung durch Dialysepersonal.</span></div>
+    </div>
+
+    <div class="diab-card">
+      <h2>📊 PTT-Anpassungsschema · Ziel-PTT 50–70 sec</h2>
+      <table class="ak-ptt-table">
+        <thead><tr><th>PTT (sec)</th><th>Bolus</th><th>Stopp</th><th>Ratenanpassung</th><th>Nächste Kontrolle</th></tr></thead>
+        <tbody>
+          <tr class="ak-ptt-low"><td><strong>&lt; 40</strong></td><td>2.500 IE i.v.</td><td>—</td><td><strong>+ 0,3 ml/h</strong></td><td>6 h</td></tr>
+          <tr class="ak-ptt-low"><td><strong>41–49</strong></td><td>—</td><td>—</td><td><strong>+ 0,2 ml/h</strong></td><td>6 h</td></tr>
+          <tr class="ak-ptt-ok"><td><strong>50–70 ✓</strong></td><td>—</td><td>—</td><td>keine Änderung</td><td>morgen</td></tr>
+          <tr class="ak-ptt-high"><td><strong>71–80</strong></td><td>—</td><td>—</td><td><strong>− 0,1 ml/h</strong></td><td>morgen</td></tr>
+          <tr class="ak-ptt-high"><td><strong>81–100</strong></td><td>—</td><td>30 min</td><td><strong>− 0,2 ml/h</strong></td><td>6 h</td></tr>
+          <tr class="ak-ptt-danger"><td><strong>&gt; 100</strong></td><td>—</td><td>60 min</td><td><strong>− 0,3 ml/h</strong></td><td>6 h</td></tr>
+          <tr class="ak-ptt-danger"><td><strong>&gt; 200</strong></td><td>—</td><td>180 min</td><td><strong>− 0,5 ml/h</strong></td><td>6 h</td></tr>
+        </tbody>
+      </table>
+      <div class="ak-section-note">Schema gilt für Konzentration 25.000 IE/50 ml. Bei abweichender Konzentration Ratenanpassungen proportional umrechnen.</div>
+    </div>
+
+    <div class="diab-card">
+      <h2>💉 Heparin s.c. (schlechte Venenverhältnisse)</h2>
+      <div id="ak-u-sc"></div>
+    </div>
+
+    <div class="diab-card">
+      <h2>🔄 Antagonisierung · Protamin</h2>
+      <table class="ak-dose-table">
+        <tr><td style="width:40%;font-weight:700;">Dosierung</td><td>1 IE Protamin antagonisiert 1 IE Heparin (HWZ ~90 min beachten)</td></tr>
+        <tr><td style="font-weight:700;">LMWH</td><td>Nur partielle Antagonisierung: Anti-Xa-Wirkung ~60% aufgehoben</td></tr>
+        <tr><td style="font-weight:700;">Cave</td><td>Blutdruckabfall unter Protamin · Überdosierung aktiviert Fibrinolyse</td></tr>
+      </table>
+    </div>
+
+  </div><!-- end ak-sub-ufh -->
+
+  <!-- ── HIT II ── -->
+  <div id="ak-sub-hit" class="ak-subtab">
+
+    <div class="diab-card">
+      <h2>⚖️ Patientendaten</h2>
+      <div class="diab-row">
+        <div class="diab-field">
+          <label>Körpergewicht</label>
+          <input type="number" id="ak-h-weight" min="30" max="250" value="80" oninput="akCalcHIT()">
+          <span class="diab-unit">kg</span>
+        </div>
+        <div class="diab-field">
+          <label>eGFR <span id="ak-h-egfr-badge" class="ak-egfr-badge ak-egfr-ok">normal</span></label>
+          <input type="number" id="ak-h-egfr" min="0" max="120" value="60" oninput="akCalcHIT()">
+          <span class="diab-unit">ml/min</span>
+        </div>
+      </div>
+      <div class="diab-field" style="margin-top:4px;">
+        <label>Hämodialyse</label>
+        <div class="diab-toggle-group">
+          <input type="radio" name="ak-h-hd" id="ak-h-hd-no" value="no" checked onchange="akCalcHIT()"><label for="ak-h-hd-no">Nein</label>
+          <input type="radio" name="ak-h-hd" id="ak-h-hd-yes" value="yes" onchange="akCalcHIT()"><label for="ak-h-hd-yes">HD</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="diab-card">
+      <h2>🛡 Prophylaxe & Therapie bei HIT II</h2>
+      <div id="ak-h-result"></div>
+      <div class="ak-section-note" style="margin-top:10px;">
+        <strong>Diagnostik:</strong> 4T-Score → PF4-Antikörper-ELISA → Funktionstest (HIPA/SRA).<br>
+        Bei V.a. HIT: Heparin (NMH + UFH) sofort stoppen. Thrombozyten täglich. Marcumar-Beginn erst wenn Thrombozyten &gt;150.000.
+      </div>
+    </div>
+
+    <div class="diab-card">
+      <h2>⚗️ Argatra (Argatroban) · Dosierungsrechner</h2>
+      <div class="diab-field" style="margin-bottom:10px;">
+        <label>Modus</label>
+        <div class="diab-toggle-group">
+          <input type="radio" name="ak-h-arg" id="ak-h-arg-std" value="std" checked onchange="akCalcHIT()"><label for="ak-h-arg-std">Standard (1,0 µg/kg/min)</label>
+          <input type="radio" name="ak-h-arg" id="ak-h-arg-icu" value="icu" onchange="akCalcHIT()"><label for="ak-h-arg-icu">Kritisch krank / Leber (0,5 µg/kg/min)</label>
+        </div>
+      </div>
+      <div id="ak-h-argatra"></div>
+      <div class="ak-section-note">Ziel-PTT: 55–100 sec · HWZ: ~1h · Konzentration: 50 mg/50 ml (1 mg/ml). Umstellung auf Marcumar: erst wenn INR &gt;4 unter Argatra → dann Argatra stoppen.</div>
+    </div>
+
+  </div><!-- end ak-sub-hit -->
+
+  <!-- ── INFO ── -->
+  <div id="ak-sub-info" class="ak-subtab">
+
+    <div class="diab-card">
+      <h2>📋 Periinterventionelles Management NMH</h2>
+      <table class="ak-dose-table">
+        <thead><tr><th></th><th>PDK</th><th>Endoskopie</th><th>Bauch-OP elektiv</th></tr></thead>
+        <tbody>
+          <tr><td style="font-weight:700;">LMWH low-dose</td><td>Stopp 12h prä</td><td>Stopp 12h prä</td><td>Stopp 12h prä</td></tr>
+          <tr><td style="font-weight:700;">LMWH high-dose</td><td>Stopp 24h prä</td><td>Stopp 24h prä</td><td>Stopp 24h prä</td></tr>
+          <tr><td style="font-weight:700;">UFH i.v.</td><td>Stopp 4h prä</td><td>Stopp 4h prä</td><td>Stopp 6h prä</td></tr>
+          <tr><td style="font-weight:700;">Restart NMH</td><td>Start 1h post</td><td>Start 1h post</td><td>Start &gt;12h post-OP</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="diab-card">
+      <h2>🩺 Marcumar-Bridging</h2>
+      <table class="ak-dose-table">
+        <thead><tr><th>Risiko</th><th>Beispiele</th><th>Vorgehen</th></tr></thead>
+        <tbody>
+          <tr>
+            <td style="font-weight:700;white-space:nowrap;">Mittleres Risiko</td>
+            <td style="font-size:.75rem;">VHF, TBVT/LAE &gt;3 Mo</td>
+            <td style="font-size:.77rem;">Stopp 5–7d prä-OP; INR-Ziel &lt;1,4; Fragmin 1×100 IE/kg morgens bis INR &gt;2; Start Marcumar 2d post-OP</td>
+          </tr>
+          <tr>
+            <td style="font-weight:700;white-space:nowrap;">Hohes Risiko</td>
+            <td style="font-size:.75rem;">Kunstklappe, CHADS-2 5–6, TIA/Apoplex &lt;6 Mo, TBVT/LAE &lt;3 Mo, sympt. Thrombophilie</td>
+            <td style="font-size:.77rem;">Fragmin 2×100 IE/kg; Tag-1 nur morgens, Tag 0 Pause, Tag+1 abends; oder iv-Vollheparinisierung (Stopp 6h vor, Start 6–12h nach OP)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="diab-card">
+      <h2>🩸 Hämostaseologie · Gerinnungsprodukte</h2>
+      <table class="ak-dose-table">
+        <thead><tr><th>Präparat</th><th>Indikation & Dosierung</th></tr></thead>
+        <tbody>
+          <tr><td style="font-weight:700;">Q-Plasma (FFP)</td><td>Ab 4 EK, Verhältnis ≥1:2; Faktor V/XI-Mangel, DIC mit Blutung; 1 ml/kg → Quick +1% (1 FFP ~ Quick +5–10%)</td></tr>
+          <tr><td style="font-weight:700;">PPSB (Beriplex)</td><td>Quick-Differenz × kg KG = IE; enthält Heparin → KI bei HIT (dann Cofact verwenden)</td></tr>
+          <tr><td style="font-weight:700;">Desmopressin</td><td>Urämische Blutung, ASS: 0,3 µg/kg in 50 ml NaCl i.v.; Wirkmaximum 1–4h</td></tr>
+          <tr><td style="font-weight:700;">Tranexamsäure</td><td>Hyperfibrinolyse: Bolus 10–30 mg/kg, Perfusor 1–2 mg/kg/h</td></tr>
+          <tr><td style="font-weight:700;">Fibrinogen</td><td>Blutung bei Fibrinogen &lt;150 mg/dl: 3–5 g i.v.</td></tr>
+          <tr><td style="font-weight:700;">Antithrombin III</td><td>DIC (nach Blutstillung): 1.500 IE</td></tr>
+          <tr><td style="font-weight:700;">Faktor XIII</td><td>1–2 × 1.250 IE (FXIII-Mangel im Routinelabor nicht erkennbar)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="diab-card">
+      <h2>📖 Quelle</h2>
+      <div class="ak-section-note">Plan 2 – Version 18.2 (09/2024, KSchlieps). Nur zur klinischen Entscheidungsunterstützung. Individuelle Faktoren, aktuelle Laborwerte und Kontraindikationen stets berücksichtigen.</div>
+    </div>
+
+  </div><!-- end ak-sub-info -->
+
+</div><!-- end diab-container -->
+
+<script>
+(function(){
+'use strict';
+
+function akEgfrLabel(v){
+  if(v>=60) return ['normal','ak-egfr-ok'];
+  if(v>=30) return ['30–60 ml/min','ak-egfr-warn'];
+  if(v>=15) return ['15–30 ml/min','ak-egfr-warn'];
+  if(v>0)   return ['<15 ml/min','ak-egfr-bad'];
+  return ['HD','ak-egfr-bad'];
+}
+function akSetBadge(id,egfr){
+  var el=document.getElementById(id);
+  if(!el) return;
+  var r=akEgfrLabel(egfr);
+  el.textContent=r[0]; el.className='ak-egfr-badge '+r[1];
+}
+function rd(v,d){return+(+v).toFixed(d||0);}
+
+window.akShowSub=function(id,btn){
+  document.querySelectorAll('#tab-antikoag .ak-subtab').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('#tab-antikoag .ak-subbtn').forEach(function(b){b.classList.remove('active');});
+  document.getElementById('ak-sub-'+id).classList.add('active');
+  btn.classList.add('active');
+};
+
+// ── PROPHYLAXE ──────────────────────────────────────────────
+var akPInd=0;
+window.akSelectPInd=function(i){
+  [0,1,2,3].forEach(function(j){
+    var b=document.getElementById('ak-p-ind-'+j);
+    if(b) b.classList.toggle('active',i===j);
+  });
+  akPInd=i;
+  window.akCalcProphylaxe();
+};
+
+window.akCalcProphylaxe=function(){
+  var w=+(document.getElementById('ak-p-weight')||{value:80}).value||80;
+  var egfr=+(document.getElementById('ak-p-egfr')||{value:60}).value||0;
+  akSetBadge('ak-p-egfr-badge',egfr);
+  var hd=egfr<5, g50=egfr>50, g30=egfr>=30, g15=egfr>=15;
+  var html='';
+
+  if(akPInd===0){
+    html='<table class="ak-dose-table"><thead><tr><th>Medikament</th><th>Dosis</th><th>Schema</th><th>Hinweis</th></tr></thead><tbody>';
+    if(g30){
+      html+='<tr><td class="ak-dose-hl">Fragmin (Dalteparin)</td><td class="ak-dose-hl">2.500 IE s.c.</td><td>1× tgl.</td><td>Beginn 2h vor OP, dann täglich 20 Uhr</td></tr>';
+    } else if(g15){
+      html+='<tr><td class="ak-dose-hl">Fragmin (Dalteparin)</td><td class="ak-dose-hl">2.500 IE s.c.</td><td>1× tgl.</td><td><span class="ak-tag ak-tag-orange">eGFR 15–30</span> Anti-Xa-Kontrolle</td></tr>';
+    } else {
+      html+='<tr><td class="ak-dose-hl">UFH bevorzugen</td><td>→ UFH-Perfusor-Tab</td><td>—</td><td><span class="ak-tag ak-tag-red">eGFR &lt;15 / HD</span> NMH vermeiden</td></tr>';
+    }
+    html+='</tbody></table>';
+
+  } else if(akPInd===1){
+    html='<table class="ak-dose-table"><thead><tr><th>Medikament</th><th>Dosis</th><th>Schema</th><th>Hinweis</th></tr></thead><tbody>';
+    if(g30){
+      html+='<tr><td class="ak-dose-hl">Fragmin (Dalteparin)</td><td class="ak-dose-hl">5.000 IE s.c.</td><td>1× tgl.</td><td>Beginn Vorabend 20 Uhr</td></tr>';
+    } else if(g15){
+      html+='<tr><td class="ak-dose-hl">Fragmin (Dalteparin)</td><td class="ak-dose-hl">5.000 IE s.c.</td><td>1× tgl.</td><td><span class="ak-tag ak-tag-orange">eGFR 15–30</span> Anti-Xa kontrollieren</td></tr>';
+    } else {
+      html+='<tr><td class="ak-dose-hl">UFH bevorzugen</td><td>→ UFH-Perfusor-Tab</td><td>—</td><td><span class="ak-tag ak-tag-red">eGFR &lt;15 / HD</span> UFH bevorzugen</td></tr>';
+    }
+    html+='</tbody></table>';
+
+  } else if(akPInd===2){
+    html='<table class="ak-dose-table"><thead><tr><th>Medikament</th><th>Dosis</th><th>Schema</th><th>Hinweis</th></tr></thead><tbody>';
+    if(g50){
+      html+='<tr><td class="ak-dose-hl">Fragmin (Dalteparin)</td><td class="ak-dose-hl">5.000 IE s.c.</td><td>1× tgl.</td><td><span class="ak-tag ak-tag-green">eGFR &gt;50</span></td></tr>';
+    } else if(g30){
+      html+='<tr><td class="ak-dose-hl">Fragmin (Dalteparin)</td><td class="ak-dose-hl">2.500 IE s.c.</td><td>1× tgl.</td><td><span class="ak-tag ak-tag-orange">eGFR 30–50 → reduzierte Dosis</span></td></tr>';
+    } else if(g15){
+      html+='<tr><td class="ak-dose-hl">Fragmin</td><td>Individuell reduziert</td><td>1× tgl.</td><td><span class="ak-tag ak-tag-red">eGFR 15–30</span> Anti-Xa zwingend</td></tr>';
+    } else {
+      html+='<tr><td class="ak-dose-hl">UFH bevorzugen</td><td>→ UFH-Perfusor-Tab</td><td>—</td><td><span class="ak-tag ak-tag-red">eGFR &lt;15 / HD</span></td></tr>';
+    }
+    html+='</tbody></table>';
+
+  } else {
+    // TEP
+    html='<table class="ak-dose-table"><thead><tr><th>Medikament</th><th>eGFR</th><th>Dosis</th><th>Hinweis</th></tr></thead><tbody>';
+    // Pradaxa
+    if(hd){
+      html+='<tr><td class="ak-dose-hl">Pradaxa (Dabigatran)</td><td><span class="ak-tag ak-tag-red">HD</span></td><td class="ak-dose-ki">KI</td><td>Kontraindiziert</td></tr>';
+    } else if(g50){
+      html+='<tr><td class="ak-dose-hl">Pradaxa (Dabigatran)</td><td><span class="ak-tag ak-tag-green">&gt;50</span></td><td class="ak-dose-hl">220 mg 1× tgl.</td><td>Erstgabe: 110 mg 1–4h post-OP</td></tr>';
+    } else if(g30){
+      html+='<tr><td class="ak-dose-hl">Pradaxa (Dabigatran)</td><td><span class="ak-tag ak-tag-orange">30–50</span></td><td class="ak-dose-hl">150 mg 1× tgl.</td><td>Reduzierte Dosis; Eliquis bevorzugen</td></tr>';
+    } else {
+      html+='<tr><td class="ak-dose-hl">Pradaxa (Dabigatran)</td><td><span class="ak-tag ak-tag-red">&lt;30</span></td><td class="ak-dose-ki">KI</td><td>Kontraindiziert</td></tr>';
+    }
+    // Eliquis
+    html+='<tr><td class="ak-dose-hl">Eliquis (Apixaban)</td><td><span class="ak-tag ak-tag-blue">bevorzugt</span></td><td class="ak-dose-hl">2 × 2,5 mg p.o.</td><td>Günstigstes Profil auch bei eingeschränkter NF</td></tr>';
+    // Xarelto
+    if(g15){
+      html+='<tr><td class="ak-dose-hl">Xarelto (Rivaroxaban)</td><td><span class="ak-tag '+(g50?'ak-tag-green':'ak-tag-orange')+'">'+(g50?'&gt;50':'15–50')+'</span></td><td class="ak-dose-hl">1 × 10 mg p.o.</td><td>Erstgabe 12–24h post-OP; bei eGFR 15–30 vorsichtig</td></tr>';
+    } else {
+      html+='<tr><td class="ak-dose-hl">Xarelto (Rivaroxaban)</td><td><span class="ak-tag ak-tag-red">&lt;15 / HD</span></td><td class="ak-dose-ki">KI</td><td>Off-label HD: evtl. 1×10 mg – immer nephrol. Rücksprache</td></tr>';
+    }
+    html+='</tbody></table>';
+  }
+
+  var el=document.getElementById('ak-p-result');
+  if(el) el.innerHTML=html;
+};
+
+// ── THERAPIE ─────────────────────────────────────────────────
+window.akCalcTherapie=function(){
+  var w=+(document.getElementById('ak-t-weight')||{value:80}).value||80;
+  var egfr=+(document.getElementById('ak-t-egfr')||{value:60}).value||0;
+  var age80El=document.querySelector('input[name="ak-t-age"]:checked');
+  var age80=age80El&&age80El.value==='yes';
+  akSetBadge('ak-t-egfr-badge',egfr);
+  var hd=egfr<5, g50=egfr>50, g30=egfr>=30, g15=egfr>=15;
+  var antixaWarn=(!g50||age80)?'<div class="ak-warn" style="margin-top:8px;">⚠️ <span>Anti-Xa-Kontrolle obligat: eGFR &lt;50 oder Alter ≥80J.</span></div>':'';
+
+  // Fragmin
+  var fHtml='';
+  if(hd){
+    fHtml='<div class="ak-warn">⚠️ <span>Bei HD UFH bevorzugen. NMH nur unter strenger Anti-Xa-Kontrolle und nephrologischer Rücksprache.</span></div>';
+  } else {
+    var fF=g50?100:g30?90:g15?80:null;
+    if(fF){
+      var d=rd(fF*w);
+      var badge=g50?'':'<span class="ak-tag '+(g30?'ak-tag-orange':'ak-tag-red')+'">'+(g30?'eGFR 30–50 → 90 IE/kg':'eGFR 15–30 → 80 IE/kg')+'</span>';
+      fHtml='<div class="ak-result-box">'
+        +'<div class="ak-result-row"><span class="ak-result-label">Dosis / Gabe</span><span class="ak-result-val">'+d.toLocaleString('de-DE')+'<span class="ak-result-unit">IE s.c.</span></span></div>'
+        +'<div class="ak-result-row"><span class="ak-result-label">Schema</span><span class="ak-result-val" style="font-size:.9rem;">2× täglich s.c.</span></div>'
+        +'<div class="ak-result-row"><span class="ak-result-label">Berechnung</span><span class="ak-result-val" style="font-size:.78rem;font-weight:600;">'+fF+' IE/kg × '+w+' kg = '+d.toLocaleString('de-DE')+' IE</span></div>'
+        +'</div>'+badge+antixaWarn;
+    } else {
+      fHtml='<div class="ak-warn">⚠️ <span>eGFR &lt;15: UFH bevorzugen.</span></div>';
+    }
+  }
+  var fEl=document.getElementById('ak-t-fragmin');
+  if(fEl) fEl.innerHTML=fHtml;
+
+  // Clexane
+  var cHtml='';
+  if(hd){
+    cHtml='<div class="ak-warn">⚠️ <span>Bei HD UFH bevorzugen.</span></div>';
+  } else if(g50){
+    var d=rd(100*w);
+    cHtml='<div class="ak-result-box">'
+      +'<div class="ak-result-row"><span class="ak-result-label">Dosis / Gabe</span><span class="ak-result-val">'+d.toLocaleString('de-DE')+'<span class="ak-result-unit">IE s.c.</span></span></div>'
+      +'<div class="ak-result-row"><span class="ak-result-label">Schema</span><span class="ak-result-val" style="font-size:.9rem;">2× täglich s.c.</span></div>'
+      +'<div class="ak-result-row"><span class="ak-result-label">Berechnung</span><span class="ak-result-val" style="font-size:.78rem;font-weight:600;">100 IE/kg × '+w+' kg = '+d.toLocaleString('de-DE')+' IE</span></div>'
+      +'</div>'+antixaWarn;
+  } else if(g30){
+    var d=rd(100*w);
+    cHtml='<div class="ak-result-box">'
+      +'<div class="ak-result-row"><span class="ak-result-label">Dosis / Gabe</span><span class="ak-result-val">'+d.toLocaleString('de-DE')+'<span class="ak-result-unit">IE s.c.</span></span></div>'
+      +'<div class="ak-result-row"><span class="ak-result-label">Schema</span><span class="ak-result-val" style="font-size:.9rem;"><strong>1× täglich</strong> s.c. <span class="ak-tag ak-tag-orange">eGFR 30–50: Einmalgabe!</span></span></div>'
+      +'<div class="ak-result-row"><span class="ak-result-label">Berechnung</span><span class="ak-result-val" style="font-size:.78rem;font-weight:600;">100 IE/kg × '+w+' kg = '+d.toLocaleString('de-DE')+' IE</span></div>'
+      +'</div>'+antixaWarn;
+  } else if(g15){
+    var d=rd(100*w);
+    cHtml='<div class="ak-result-box">'
+      +'<div class="ak-result-row"><span class="ak-result-label">Dosis / Gabe</span><span class="ak-result-val">'+d.toLocaleString('de-DE')+'<span class="ak-result-unit">IE s.c.</span></span></div>'
+      +'<div class="ak-result-row"><span class="ak-result-label">Schema</span><span class="ak-result-val" style="font-size:.9rem;"><strong>1× täglich</strong> s.c. <span class="ak-tag ak-tag-red">eGFR 15–30</span></span></div>'
+      +'</div><div class="ak-warn">⚠️ <span>Anti-Xa zwingend bei eGFR 15–30</span></div>';
+  } else {
+    cHtml='<div class="ak-warn">⚠️ <span>eGFR &lt;15 / HD: UFH bevorzugen.</span></div>';
+  }
+  var cEl=document.getElementById('ak-t-clexane');
+  if(cEl) cEl.innerHTML=cHtml;
+};
+
+// ── UFH PERFUSOR ─────────────────────────────────────────────
+window.akCalcUFH=function(){
+  var w=+(document.getElementById('ak-u-weight')||{value:80}).value||80;
+  var egfr=+(document.getElementById('ak-u-egfr')||{value:30}).value||0;
+  var conc=+(document.getElementById('ak-u-conc')||{value:500}).value||500;
+  akSetBadge('ak-u-egfr-badge',egfr);
+  var hd=egfr<5;
+  var bIE=rd(70*w); var bML=rd(bIE/conc,1);
+  var rIE=rd(15*w); var rML=rd(rIE/conc,1);
+  ['ak-u-bolus-ie','ak-u-bolus-ml','ak-u-rate-ieh','ak-u-rate-ml'].forEach(function(id,i){
+    var el=document.getElementById(id);
+    if(el) el.textContent=[bIE,bML,rIE,rML][i].toLocaleString('de-DE');
+  });
+  var warn=document.getElementById('ak-u-warn');
+  if(warn) warn.style.display=(egfr<30||hd)?'flex':'none';
+
+  // s.c.
+  var sc='';
+  if(hd||egfr<15){
+    var d=rd(125*w);
+    sc='<table class="ak-dose-table"><thead><tr><th>eGFR</th><th>Dosis/Gabe</th><th>Schema</th><th>Berechnung</th></tr></thead><tbody>'
+      +'<tr><td><span class="ak-tag ak-tag-red">HD / &lt;15</span></td><td class="ak-dose-hl">'+d.toLocaleString('de-DE')+' IE s.c.</td><td>2× tgl.</td><td>~125 IE/kg × '+w+' kg</td></tr></tbody></table>'
+      +'<div class="ak-warn" style="margin-top:8px;">⚠️ <span>HD: Pausierung durch Dialysepersonal. PTT-Steuerung erforderlich.</span></div>';
+  } else if(egfr<30){
+    var d=rd(125*w);
+    sc='<table class="ak-dose-table"><thead><tr><th>eGFR</th><th>Dosis/Gabe</th><th>Schema</th><th>Berechnung</th></tr></thead><tbody>'
+      +'<tr><td><span class="ak-tag ak-tag-red">15–30</span></td><td class="ak-dose-hl">'+d.toLocaleString('de-DE')+' IE s.c.</td><td>2× tgl.</td><td>~125 IE/kg × '+w+' kg</td></tr></tbody></table>';
+  } else if(egfr<50){
+    var d=rd(125*w);
+    sc='<table class="ak-dose-table"><thead><tr><th>eGFR</th><th>Dosis/Gabe</th><th>Schema</th><th>Berechnung</th></tr></thead><tbody>'
+      +'<tr><td><span class="ak-tag ak-tag-orange">30–50</span></td><td class="ak-dose-hl">'+d.toLocaleString('de-DE')+' IE s.c.</td><td>3× tgl.</td><td>~125 IE/kg × '+w+' kg</td></tr></tbody></table>';
+  } else {
+    var d=rd(175*w);
+    sc='<table class="ak-dose-table"><thead><tr><th>eGFR</th><th>Dosis/Gabe</th><th>Schema</th><th>Berechnung</th></tr></thead><tbody>'
+      +'<tr><td><span class="ak-tag ak-tag-green">&gt;50</span></td><td class="ak-dose-hl">'+d.toLocaleString('de-DE')+' IE s.c.</td><td>3× tgl.</td><td>~175 IE/kg × '+w+' kg (≈3×12.000)</td></tr></tbody></table>';
+  }
+  var scEl=document.getElementById('ak-u-sc');
+  if(scEl) scEl.innerHTML=sc;
+};
+
+// ── HIT II ───────────────────────────────────────────────────
+window.akCalcHIT=function(){
+  var w=+(document.getElementById('ak-h-weight')||{value:80}).value||80;
+  var egfr=+(document.getElementById('ak-h-egfr')||{value:60}).value||0;
+  var hdEl=document.querySelector('input[name="ak-h-hd"]:checked');
+  var hd=(hdEl&&hdEl.value==='yes')||egfr<5;
+  var argEl=document.querySelector('input[name="ak-h-arg"]:checked');
+  var argMode=argEl?argEl.value:'std';
+  akSetBadge('ak-h-egfr-badge',egfr);
+
+  var html='<div class="ak-hit-grid">';
+
+  // Fondaparinux Prophylaxe
+  if(hd||egfr<15){
+    html+='<div class="ak-hit-card ak-hit-hd"><div class="ak-hit-title" style="color:#1a237e;">Arixtra Prophylaxe</div><div class="ak-hit-dose ak-dose-ki">KI (eGFR &lt;15 / HD)</div><div class="ak-hit-sub">→ Citrat-HD oder Argatra-HD</div></div>';
+  } else if(egfr<=50){
+    var d=egfr<30?'1,5 mg':'2,5 mg';
+    var badge=egfr<30?'<span class="ak-tag ak-tag-red">eGFR 15–30</span>':'<span class="ak-tag ak-tag-orange">eGFR 30–50</span>';
+    html+='<div class="ak-hit-card ak-hit-proph"><div class="ak-hit-title" style="color:#6a1b9a;">Arixtra Prophylaxe</div><div class="ak-hit-dose">1 × '+d+' s.c.</div><div class="ak-hit-sub">'+badge+'</div></div>';
+  } else {
+    html+='<div class="ak-hit-card ak-hit-proph"><div class="ak-hit-title" style="color:#6a1b9a;">Arixtra (Fondaparinux) Prophylaxe</div><div class="ak-hit-dose">1 × 2,5 mg s.c.</div><div class="ak-hit-sub"><span class="ak-tag ak-tag-green">eGFR &gt;50</span></div></div>';
+  }
+
+  // Fondaparinux Therapie
+  if(hd){
+    html+='<div class="ak-hit-card ak-hit-hd"><div class="ak-hit-title" style="color:#1a237e;">Arixtra Therapie (HD)</div><div class="ak-hit-dose">2,5 mg i.v. zur HD</div><div class="ak-hit-sub">Spez. Faktor-Anti-Xa-Assay</div></div>';
+  } else if(egfr<50){
+    html+='<div class="ak-hit-card ak-hit-ther"><div class="ak-hit-title" style="color:#880e4f;">Arixtra Therapie</div><div class="ak-hit-dose ak-dose-ki">KI (eGFR &lt;50)</div><div class="ak-hit-sub">→ Danaparoid oder Argatra</div></div>';
+  } else {
+    var d=w<50?'5,0 mg':w<=100?'7,5 mg':'10,0 mg';
+    html+='<div class="ak-hit-card ak-hit-ther"><div class="ak-hit-title" style="color:#880e4f;">Arixtra (Fondaparinux) Therapie</div><div class="ak-hit-dose">1 × '+d+' s.c.</div><div class="ak-hit-sub">&lt;50kg: 5mg · 50–100kg: 7,5mg · &gt;100kg: 10mg</div></div>';
+  }
+
+  // Danaparoid
+  var dana_hd=w<55?'2.500 IE':'3.750 IE';
+  html+='<div class="ak-hit-card ak-hit-dana"><div class="ak-hit-title" style="color:#004d40;">Danaparoid (Orgaran)</div>'
+    +'<div class="ak-hit-dose">Bolus: 1.250 IE i.v.</div>'
+    +'<div class="ak-hit-dose">Erhalt: 750 IE 2–3× tgl. s.c.</div>'
+    +'<div class="ak-hit-sub">HD-Initialdosis '+(w<55?'&lt;55kg: ':'≥55kg: ')+dana_hd+' · Ziel Anti-Xa: 0,5 IE/ml</div></div>';
+
+  // HD-Verfahren
+  if(hd||egfr<15){
+    html+='<div class="ak-hit-card ak-hit-hd"><div class="ak-hit-title" style="color:#1a237e;">HD-Verfahren bei HIT II</div>'
+      +'<div class="ak-hit-dose">Option 1: Citrat-HD</div>'
+      +'<div class="ak-hit-dose">Option 2: Argatra-HD</div>'
+      +'<div class="ak-hit-sub">Argatra-HD: Bolus 250 µg/kg + Dauerinfusion · Ziel-PTT 55–100</div></div>';
+  }
+
+  html+='</div>';
+  var hEl=document.getElementById('ak-h-result');
+  if(hEl) hEl.innerHTML=html;
+
+  // Argatra
+  var rate=argMode==='std'?1.0:0.5;
+  var rate_mg_h=rate*w*60/1000;
+  var rate_ml_h=+rate_mg_h.toFixed(1);
+  var argHtml='<div class="ak-arg-box">'
+    +'<div class="ak-arg-row"><span class="ak-arg-label">Dosis</span><span class="ak-arg-val">'+rate+' µg/kg/min</span></div>'
+    +'<div class="ak-arg-row"><span class="ak-arg-label">Rate ('+w+' kg)</span><span class="ak-arg-val">'+rate_ml_h.toLocaleString('de-DE')+' ml/h</span></div>'
+    +'<div class="ak-arg-row"><span class="ak-arg-label">Berechnung</span><span class="ak-arg-val" style="font-size:.78rem;">'+rate+' × '+w+' × 60 ÷ 1000 = '+rate_mg_h.toFixed(2)+' mg/h → '+rate_ml_h+' ml/h</span></div>'
+    +'<div class="ak-arg-row"><span class="ak-arg-label">Konzentration</span><span class="ak-arg-val" style="font-size:.78rem;">50 mg / 50 ml = 1 mg/ml</span></div>'
+    +'</div>';
+  var aEl=document.getElementById('ak-h-argatra');
+  if(aEl) aEl.innerHTML=argHtml;
+};
+
+// Auto-import from CKD tab
+window.akAutoImport=function(){
+  var ckdW=document.getElementById('weight')||document.getElementById('tah-weight');
+  var ckdEgfr=document.getElementById('egfr-result-val');
+  if(ckdW&&ckdW.value){
+    ['ak-p-weight','ak-t-weight','ak-u-weight','ak-h-weight'].forEach(function(id){
+      var el=document.getElementById(id); if(el&&!el.value) el.value=ckdW.value;
+    });
+  }
+  if(ckdEgfr&&ckdEgfr.textContent){
+    var v=parseFloat(ckdEgfr.textContent);
+    if(!isNaN(v)){
+      ['ak-p-egfr','ak-t-egfr','ak-u-egfr','ak-h-egfr'].forEach(function(id){
+        var el=document.getElementById(id); if(el) el.value=v;
+      });
+    }
+  }
+  window.akCalcProphylaxe();
+  window.akCalcTherapie();
+  window.akCalcUFH();
+  window.akCalcHIT();
+};
+
+// Init
+window.akCalcProphylaxe();
+window.akCalcTherapie();
+window.akCalcUFH();
+window.akCalcHIT();
+
+})();
+</script>
+
+</div><!-- end tab-antikoag -->
+
 <div class="shared-footer">
   ⚕️ Nur zur ärztlichen Unterstützung — kein Ersatz für klinisches Urteil &bull;
   CKD: KDIGO 2024 &bull; CKD-EPI 2021 &bull;
@@ -5047,6 +5731,10 @@ function switchToolTab(tabName) {
   document.getElementById('tab-tah').style.display = tabName === 'tah' ? 'block' : 'none';
   if (tabName === 'tah' && window.tahAutoImport) {
     window.tahAutoImport();
+  }
+  document.getElementById('tab-antikoag').style.display = tabName === 'antikoag' ? 'block' : 'none';
+  if (tabName === 'antikoag' && window.akAutoImport) {
+    window.akAutoImport();
   }
   document.getElementById('tab-aki').style.display = tabName === 'aki' ? 'block' : 'none';
   if (tabName === 'aki' && window.akiAutoImport) {
