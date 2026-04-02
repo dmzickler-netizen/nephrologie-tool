@@ -1675,7 +1675,7 @@ label .lip-optional {
         <table style="width:100%;border-collapse:collapse;font-size:.82rem;" id="verlauf-table">
           <thead>
             <tr style="background:#e8eaf6;">
-              <th style="padding:6px 8px;text-align:left;font-size:.73rem;color:#1a237e;font-weight:800;border-radius:6px 0 0 0;">Datum</th>
+              <th style="padding:6px 8px;text-align:left;font-size:.73rem;color:#1a237e;font-weight:800;border-radius:6px 0 0 0;">Monat / Jahr <span style="font-weight:400;color:#90a4ae;">(optional)</span></th>
               <th style="padding:6px 8px;text-align:center;font-size:.73rem;color:#1a237e;font-weight:800;">Krea (mg/dl)</th>
               <th style="padding:6px 8px;text-align:center;font-size:.73rem;color:#1a237e;font-weight:800;">eGFR (ml/min)</th>
               <th style="padding:6px 8px;border-radius:0 6px 0 0;"></th>
@@ -6225,7 +6225,6 @@ function verlaufEgfrFromKrea(krea) {
 }
 
 function verlaufAddRow(dateVal, kreaVal, egfrVal) {
-  var idx = verlaufRows.length;
   verlaufRows.push({ date: dateVal || '', krea: kreaVal || '', egfr: egfrVal || '' });
   verlaufRenderTable();
   verlaufDraw();
@@ -6237,32 +6236,55 @@ function verlaufClear() {
   verlaufDraw();
 }
 
+function verlaufGetCurrentEgfr() {
+  var el = document.getElementById('egfr-result-val');
+  if (!el) return null;
+  var v = parseFloat(el.textContent);
+  return (!isNaN(v) && v > 0) ? v : null;
+}
+
 function verlaufRenderTable() {
   var tbody = document.getElementById('verlauf-tbody');
   if (!tbody) return;
   tbody.innerHTML = '';
+
+  // Historische Zeilen
   verlaufRows.forEach(function(row, i) {
     var tr = document.createElement('tr');
     tr.style.borderBottom = '1px solid #f0f4f8';
     tr.innerHTML =
-      '<td style="padding:4px 6px;"><input type="date" value="' + row.date + '" style="border:1px solid #cfd8dc;border-radius:6px;padding:4px 6px;font-size:.8rem;width:100%;" oninput="verlaufUpdate(' + i + ',\'date\',this.value)"></td>' +
+      '<td style="padding:4px 6px;"><input type="month" value="' + row.date + '" style="border:1px solid #cfd8dc;border-radius:6px;padding:4px 6px;font-size:.8rem;width:100%;" oninput="verlaufUpdate(' + i + ',\'date\',this.value)"></td>' +
       '<td style="padding:4px 6px;"><input type="number" value="' + row.krea + '" placeholder="—" step="0.01" min="0" style="border:1px solid #cfd8dc;border-radius:6px;padding:4px 6px;font-size:.8rem;width:100%;text-align:center;" oninput="verlaufUpdate(' + i + ',\'krea\',this.value)"></td>' +
       '<td style="padding:4px 6px;"><input type="number" value="' + row.egfr + '" placeholder="—" step="0.1" min="0" style="border:1px solid #cfd8dc;border-radius:6px;padding:4px 6px;font-size:.8rem;width:100%;text-align:center;" oninput="verlaufUpdate(' + i + ',\'egfr\',this.value)"></td>' +
       '<td style="padding:4px 6px;text-align:center;"><button onclick="verlaufDeleteRow(' + i + ')" style="background:#ffebee;color:#b71c1c;border:none;border-radius:5px;padding:3px 8px;cursor:pointer;font-size:.8rem;">✕</button></td>';
     tbody.appendChild(tr);
   });
+
+  // Aktuelle Zeile (read-only, aus CKD-Tab)
+  var curEgfr = verlaufGetCurrentEgfr();
+  if (curEgfr !== null) {
+    var now = new Date();
+    var todayLabel = now.toLocaleDateString('de-DE', { month: '2-digit', year: 'numeric' });
+    var tr = document.createElement('tr');
+    tr.style.background = '#fff8e1';
+    tr.style.borderTop = '2px solid #ffb74d';
+    tr.innerHTML =
+      '<td style="padding:5px 8px;font-size:.78rem;color:#e65100;font-weight:700;">Heute<br><span style="font-weight:400;color:#90a4ae;">' + todayLabel + '</span></td>' +
+      '<td style="padding:5px 8px;text-align:center;font-size:.8rem;color:#607d8b;">—</td>' +
+      '<td style="padding:5px 8px;text-align:center;"><span style="font-size:1rem;font-weight:900;color:#b71c1c;">' + curEgfr + '</span><br><span style="font-size:.68rem;color:#b71c1c;">aktuell</span></td>' +
+      '<td style="padding:5px 8px;text-align:center;font-size:.75rem;color:#b0bec5;">auto</td>';
+    tbody.appendChild(tr);
+  }
 }
 
 function verlaufUpdate(i, field, val) {
   verlaufRows[i][field] = val;
-  // Auto-berechnung: Krea -> eGFR oder eGFR bleibt
+  // Krea eingegeben & noch kein eGFR → automatisch berechnen
   if (field === 'krea' && val && !verlaufRows[i].egfr) {
     var calc = verlaufEgfrFromKrea(parseFloat(val));
-    if (calc) {
-      verlaufRows[i].egfr = calc;
-      verlaufRenderTable();
-    }
+    if (calc) { verlaufRows[i].egfr = calc; verlaufRenderTable(); }
   }
+  // eGFR eingegeben & noch kein Krea → nichts tun (Krea optional)
   verlaufDraw();
 }
 
@@ -6273,53 +6295,65 @@ function verlaufDeleteRow(i) {
 }
 
 function verlaufGetPoints() {
-  // Verlauf-Einträge
-  var pts = [];
+  // Alle Zeilen mit mindestens einem eGFR-Wert sammeln (Datum optional)
+  var raw = [];
   verlaufRows.forEach(function(row) {
-    if (!row.date) return;
     var egfr = parseFloat(row.egfr);
     var krea = parseFloat(row.krea);
     if (!egfr && krea) egfr = verlaufEgfrFromKrea(krea);
-    if (row.date && egfr) {
-      pts.push({ date: new Date(row.date), egfr: egfr, fromKrea: !row.egfr && !!row.krea });
+    if (!egfr) return;
+    // type="month" liefert "2023-06" — ersten Tag des Monats als Date
+    var date = null;
+    if (row.date) {
+      var parts = row.date.split('-');
+      date = parts.length >= 2 ? new Date(parseInt(parts[0]), parseInt(parts[1])-1, 15) : new Date(row.date);
     }
+    raw.push({ date: date, egfr: egfr });
   });
-  // Aktuellen Wert aus CKD-Ergebnis anhängen
-  var egfrEl = document.getElementById('egfr-result-val');
-  if (egfrEl) {
-    var curEgfr = parseFloat(egfrEl.textContent);
-    if (!isNaN(curEgfr) && curEgfr > 0) {
-      var today = new Date();
-      today.setHours(0,0,0,0);
-      // Nur anfügen wenn noch kein Punkt mit heutigem Datum vorhanden
-      var exists = pts.some(function(p) { return p.date.toDateString() === today.toDateString(); });
-      if (!exists) pts.push({ date: today, egfr: curEgfr, current: true });
-    }
+
+  // Aktuellen eGFR aus CKD-Tab anhängen
+  var curEgfr = verlaufGetCurrentEgfr();
+  if (curEgfr !== null) {
+    var today = new Date(); today.setHours(0,0,0,0);
+    // Nicht doppelt hinzufügen wenn bereits heute-Datum in Tabelle
+    var exists = raw.some(function(p) { return p.date && p.date.toDateString() === today.toDateString(); });
+    if (!exists) raw.push({ date: today, egfr: curEgfr, current: true });
   }
-  pts.sort(function(a,b){ return a.date - b.date; });
-  return pts;
+
+  if (raw.length === 0) return { pts: [], dateMode: false };
+
+  // Prüfen ob alle Punkte ein Datum haben
+  var allHaveDates = raw.every(function(p) { return p.date instanceof Date && !isNaN(p.date); });
+
+  if (allHaveDates) {
+    // Datum-Modus: sortieren nach Datum
+    raw.sort(function(a,b){ return a.date - b.date; });
+    return { pts: raw, dateMode: true };
+  } else {
+    // Sequenz-Modus: Index als x-Position, Datum nur als Label wenn vorhanden
+    // Punkte mit Datum zuerst, restliche in Eingabe-Reihenfolge
+    return { pts: raw, dateMode: false };
+  }
 }
 
 function verlaufDraw() {
   var canvas = document.getElementById('verlauf-canvas');
   if (!canvas) return;
   var ctx = canvas.getContext('2d');
-  var pts = verlaufGetPoints();
+  var result = verlaufGetPoints();
+  var pts = result.pts;
+  var dateMode = result.dateMode;
 
-  // Canvas-Groesse
-  canvas.width = canvas.offsetWidth * window.devicePixelRatio || 400;
+  canvas.width = (canvas.offsetWidth || 400) * (window.devicePixelRatio || 1);
   canvas.height = 280 * (window.devicePixelRatio || 1);
   ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
   var W = canvas.offsetWidth || 400;
   var H = 280;
-
-  var pad = { top: 24, right: 20, bottom: 48, left: 48 };
+  var pad = { top: 24, right: 24, bottom: 44, left: 48 };
   var gW = W - pad.left - pad.right;
   var gH = H - pad.top - pad.bottom;
 
   ctx.clearRect(0, 0, W, H);
-
-  // Hintergrund
   ctx.fillStyle = '#fafafa';
   ctx.fillRect(0, 0, W, H);
 
@@ -6327,23 +6361,30 @@ function verlaufDraw() {
     ctx.fillStyle = '#b0bec5';
     ctx.font = '13px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('Bitte Messwerte eingeben', W/2, H/2);
-    verlaufStats([]);
+    ctx.fillText('Bitte eGFR oder Kreatinin eingeben', W/2, H/2);
+    verlaufStats([], false, false);
     return;
   }
 
-  // Achsenbereiche
-  var minDate = pts[0].date.getTime();
-  var maxDate = pts[pts.length-1].date.getTime();
-  if (minDate === maxDate) { maxDate = minDate + 86400000 * 30; }
+  // Y-Achse
   var allEgfr = pts.map(function(p){ return p.egfr; });
-  var minEgfr = Math.max(0, Math.min.apply(null, allEgfr) - 5);
-  var maxEgfr = Math.min(130, Math.max.apply(null, allEgfr) + 10);
-
-  function xPos(d) { return pad.left + (d.getTime() - minDate) / (maxDate - minDate) * gW; }
+  var minEgfr = Math.max(0, Math.min.apply(null, allEgfr) - 8);
+  var maxEgfr = Math.min(130, Math.max.apply(null, allEgfr) + 12);
   function yPos(v) { return pad.top + gH - (v - minEgfr) / (maxEgfr - minEgfr) * gH; }
 
-  // CKD-Bänder Hintergrundfarben
+  // X-Achse: Datum- oder Sequenz-Modus
+  var xPos;
+  if (dateMode && pts.length > 1) {
+    var minT = pts[0].date.getTime();
+    var maxT = pts[pts.length-1].date.getTime();
+    if (minT === maxT) maxT = minT + 86400000 * 30;
+    xPos = function(p, idx) { return pad.left + (p.date.getTime() - minT) / (maxT - minT) * gW; };
+  } else {
+    var n = pts.length;
+    xPos = function(p, idx) { return n === 1 ? pad.left + gW/2 : pad.left + idx / (n - 1) * gW; };
+  }
+
+  // CKD-Bänder
   var bands = [
     { min: 90, max: 130, color: 'rgba(200,230,201,0.35)', label: 'G1' },
     { min: 60, max: 90,  color: 'rgba(220,237,200,0.35)', label: 'G2' },
@@ -6358,10 +6399,9 @@ function verlaufDraw() {
     if (y2 > y1) {
       ctx.fillStyle = b.color;
       ctx.fillRect(pad.left, y1, gW, y2 - y1);
-      // Label rechts
       var midY = (y1 + y2) / 2;
       if (midY > pad.top && midY < pad.top + gH) {
-        ctx.fillStyle = 'rgba(100,120,140,0.7)';
+        ctx.fillStyle = 'rgba(100,120,140,0.65)';
         ctx.font = '10px sans-serif';
         ctx.textAlign = 'right';
         ctx.fillText(b.label, pad.left + gW - 3, midY + 4);
@@ -6382,50 +6422,54 @@ function verlaufDraw() {
     ctx.fillText(v, pad.left - 5, y + 3);
   });
 
-  // Achsenbeschriftung Y
+  // Y-Achsenbeschriftung
   ctx.fillStyle = '#546e7a';
-  ctx.font = 'bold 11px sans-serif';
+  ctx.font = 'bold 10px sans-serif';
   ctx.textAlign = 'center';
   ctx.save();
   ctx.translate(12, pad.top + gH / 2);
   ctx.rotate(-Math.PI / 2);
-  ctx.fillText('eGFR (ml/min/1,73 m²)', 0, 0);
+  ctx.fillText('eGFR (ml/min/1,73 m\u00b2)', 0, 0);
   ctx.restore();
 
-  // Datum X-Achse
+  // X-Achsen-Labels
   ctx.fillStyle = '#90a4ae';
   ctx.font = '10px sans-serif';
   ctx.textAlign = 'center';
-  var nTicks = Math.min(pts.length, 5);
-  for (var ti = 0; ti < nTicks; ti++) {
-    var pt = pts[Math.round(ti * (pts.length - 1) / Math.max(nTicks - 1, 1))];
-    var x = xPos(pt.date);
-    var label = pt.date.toLocaleDateString('de-DE', { month: '2-digit', year: '2-digit' });
-    ctx.fillText(label, x, pad.top + gH + 16);
-    ctx.strokeStyle = '#e0e0e0';
+  pts.forEach(function(p, idx) {
+    var x = xPos(p, idx);
+    var label;
+    if (p.date && !isNaN(p.date)) {
+      label = p.date.toLocaleDateString('de-DE', { month: '2-digit', year: '2-digit' });
+    } else {
+      label = 'M' + (idx + 1);
+    }
+    ctx.fillStyle = '#90a4ae';
+    ctx.fillText(label, x, pad.top + gH + 15);
+    ctx.strokeStyle = 'rgba(200,200,200,0.5)';
     ctx.beginPath(); ctx.moveTo(x, pad.top); ctx.lineTo(x, pad.top + gH); ctx.stroke();
-  }
+  });
 
-  // Trendlinie (lineare Regression)
-  if (pts.length >= 2) {
+  // Trendlinie — nur im Datum-Modus mit ≥2 datierten Punkten sinnvoll
+  var slope = null;
+  if (dateMode && pts.length >= 2) {
     var n = pts.length;
     var t0 = pts[0].date.getTime();
-    var xs = pts.map(function(p){ return (p.date.getTime() - t0) / (1000*60*60*24*365); });
+    var xs = pts.map(function(p){ return (p.date.getTime() - t0) / (1000*60*60*24*365.25); });
     var ys = pts.map(function(p){ return p.egfr; });
     var xm = xs.reduce(function(a,b){return a+b;},0)/n;
     var ym = ys.reduce(function(a,b){return a+b;},0)/n;
     var num = 0, den = 0;
-    for (var i=0;i<n;i++){ num+=(xs[i]-xm)*(ys[i]-ym); den+=(xs[i]-xm)*(xs[i]-xm); }
-    var slope = den>0 ? num/den : 0; // eGFR-Änderung pro Jahr
+    for (var ii=0;ii<n;ii++){ num+=(xs[ii]-xm)*(ys[ii]-ym); den+=(xs[ii]-xm)*(xs[ii]-xm); }
+    slope = den > 0 ? num/den : 0;
     var intercept = ym - slope * xm;
-    var x0 = pad.left, xN = pad.left + gW;
     var y0t = yPos(intercept);
-    var xEnd = (pts[pts.length-1].date.getTime() - t0) / (1000*60*60*24*365);
+    var xEnd = xs[xs.length-1];
     var yNt = yPos(intercept + slope * xEnd);
     ctx.strokeStyle = 'rgba(183,28,28,0.5)';
     ctx.lineWidth = 1.5;
     ctx.setLineDash([5,4]);
-    ctx.beginPath(); ctx.moveTo(x0, y0t); ctx.lineTo(pad.left+gW, yNt); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(pad.left, y0t); ctx.lineTo(pad.left + gW, yNt); ctx.stroke();
     ctx.setLineDash([]);
   }
 
@@ -6434,16 +6478,16 @@ function verlaufDraw() {
     ctx.strokeStyle = '#1a237e';
     ctx.lineWidth = 2.5;
     ctx.beginPath();
-    ctx.moveTo(xPos(pts[0].date), yPos(pts[0].egfr));
+    ctx.moveTo(xPos(pts[0], 0), yPos(pts[0].egfr));
     for (var j=1;j<pts.length;j++) {
-      ctx.lineTo(xPos(pts[j].date), yPos(pts[j].egfr));
+      ctx.lineTo(xPos(pts[j], j), yPos(pts[j].egfr));
     }
     ctx.stroke();
   }
 
-  // Punkte
-  pts.forEach(function(p) {
-    var x = xPos(p.date);
+  // Punkte zeichnen
+  pts.forEach(function(p, idx) {
+    var x = xPos(p, idx);
     var y = yPos(p.egfr);
     ctx.beginPath();
     ctx.arc(x, y, p.current ? 7 : 5, 0, 2*Math.PI);
@@ -6452,54 +6496,67 @@ function verlaufDraw() {
     ctx.strokeStyle = '#fff';
     ctx.lineWidth = 2;
     ctx.stroke();
-    // Wert-Label
     ctx.fillStyle = p.current ? '#b71c1c' : '#1a237e';
     ctx.font = 'bold 10px sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText(Math.round(p.egfr), x, y - 10);
   });
 
-  verlaufStats(pts, typeof slope !== 'undefined' ? slope : null);
+  verlaufStats(pts, slope, dateMode);
 }
 
-function verlaufStats(pts, slope) {
+function verlaufStats(pts, slope, dateMode) {
   var el = document.getElementById('verlauf-stats');
   if (!el) return;
   if (pts.length < 2) { el.innerHTML = ''; return; }
+
   var first = pts[0], last = pts[pts.length-1];
   var diffEgfr = last.egfr - first.egfr;
-  var diffMs = last.date - first.date;
-  var diffYears = diffMs / (1000*60*60*24*365.25);
-  var perYear = diffYears > 0 ? diffEgfr / diffYears : 0;
-  var col = perYear < -3 ? '#b71c1c' : perYear < 0 ? '#e65100' : '#2e7d32';
-  var prog = perYear < -5 ? 'Rapid progression' : perYear < -3 ? 'Progression' : perYear < 0 ? 'Stabil/langsam' : 'Stabil / Verbesserung';
-  el.innerHTML =
-    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">' +
-      '<div style="background:#f5f5f5;border-radius:8px;padding:8px 10px;text-align:center;">' +
-        '<div style="font-size:.68rem;color:#78909c;text-transform:uppercase;">eGFR-Verlauf</div>' +
-        '<div style="font-size:1.1rem;font-weight:900;color:' + col + ';">' + (diffEgfr > 0 ? '+' : '') + Math.round(diffEgfr*10)/10 + '</div>' +
-        '<div style="font-size:.68rem;color:#90a4ae;">ml/min gesamt</div>' +
-      '</div>' +
+  var col = diffEgfr < -5 ? '#b71c1c' : diffEgfr < 0 ? '#e65100' : '#2e7d32';
+
+  var slopeHTML = '';
+  if (dateMode && slope !== null) {
+    var slopeCol = slope < -5 ? '#b71c1c' : slope < -3 ? '#e65100' : '#2e7d32';
+    var prog = slope < -5 ? 'Rapid progression' : slope < -3 ? 'Progression' : slope < 0 ? 'Stabil / langsam' : 'Stabil / Verbesserung';
+    slopeHTML =
       '<div style="background:#f5f5f5;border-radius:8px;padding:8px 10px;text-align:center;">' +
         '<div style="font-size:.68rem;color:#78909c;text-transform:uppercase;">Slope</div>' +
-        '<div style="font-size:1.1rem;font-weight:900;color:' + col + ';">' + (perYear > 0 ? '+' : '') + Math.round(perYear*10)/10 + '</div>' +
-        '<div style="font-size:.68rem;color:#90a4ae;">ml/min pro Jahr</div>' +
+        '<div style="font-size:1.1rem;font-weight:900;color:' + slopeCol + ';">' + (slope > 0 ? '+' : '') + Math.round(slope*10)/10 + '</div>' +
+        '<div style="font-size:.68rem;color:#90a4ae;">ml/min / Jahr</div>' +
       '</div>' +
       '<div style="background:#f5f5f5;border-radius:8px;padding:8px 10px;text-align:center;">' +
         '<div style="font-size:.68rem;color:#78909c;text-transform:uppercase;">Bewertung</div>' +
-        '<div style="font-size:.82rem;font-weight:800;color:' + col + ';margin-top:4px;">' + prog + '</div>' +
+        '<div style="font-size:.78rem;font-weight:800;color:' + slopeCol + ';margin-top:4px;">' + prog + '</div>' +
+      '</div>';
+  } else {
+    slopeHTML = '<div style="background:#f5f5f5;border-radius:8px;padding:8px 10px;text-align:center;grid-column:span 2;">' +
+      '<div style="font-size:.72rem;color:#90a4ae;">Slope-Berechnung: Datum für alle Einträge angeben</div>' +
+    '</div>';
+  }
+
+  el.innerHTML =
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">' +
+      '<div style="background:#f5f5f5;border-radius:8px;padding:8px 10px;text-align:center;">' +
+        '<div style="font-size:.68rem;color:#78909c;text-transform:uppercase;">eGFR gesamt</div>' +
+        '<div style="font-size:1.1rem;font-weight:900;color:' + col + ';">' + (diffEgfr > 0 ? '+' : '') + Math.round(diffEgfr*10)/10 + '</div>' +
+        '<div style="font-size:.68rem;color:#90a4ae;">ml/min</div>' +
       '</div>' +
+      slopeHTML +
     '</div>' +
-    '<div style="font-size:.69rem;color:#90a4ae;margin-top:6px;">Rote Linie = lineare Trendlinie · Roter Punkt = aktueller eGFR aus CKD-Tab · KDIGO: Rapid progression = >5 ml/min/Jahr</div>';
+    '<div style="font-size:.69rem;color:#90a4ae;margin-top:6px;">' +
+      (dateMode ? 'Rote Linie = lineare Trendlinie · ' : 'Kein Datum \u2192 Sequenz-Modus \u00b7 ') +
+      'Roter Punkt = aktueller eGFR \u00b7 KDIGO: Rapid progression &gt;5 ml/min/Jahr' +
+    '</div>';
 }
 
-window.verlaufAddRow = verlaufAddRow;
-window.verlaufClear  = verlaufClear;
-window.verlaufUpdate = verlaufUpdate;
+window.verlaufAddRow    = verlaufAddRow;
+window.verlaufClear     = verlaufClear;
+window.verlaufUpdate    = verlaufUpdate;
 window.verlaufDeleteRow = verlaufDeleteRow;
-window.verlaufDraw   = verlaufDraw;
+window.verlaufDraw      = verlaufDraw;
+window.verlaufRenderTable = verlaufRenderTable;
 
-// Initial: 3 leere Zeilen anzeigen
+// Initial: 3 leere Zeilen
 verlaufAddRow(); verlaufAddRow(); verlaufAddRow();
 
 </script>
