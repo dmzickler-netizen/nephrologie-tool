@@ -1675,7 +1675,7 @@ label .lip-optional {
         <table style="width:100%;border-collapse:collapse;font-size:.82rem;" id="verlauf-table">
           <thead>
             <tr style="background:#e8eaf6;">
-              <th style="padding:6px 8px;text-align:left;font-size:.73rem;color:#1a237e;font-weight:800;border-radius:6px 0 0 0;">Monat / Jahr <span style="font-weight:400;color:#90a4ae;">(optional)</span></th>
+              <th style="padding:6px 8px;text-align:left;font-size:.73rem;color:#1a237e;font-weight:800;border-radius:6px 0 0 0;">Datum <span style="font-weight:400;color:#90a4ae;">(optional)</span></th>
               <th style="padding:6px 8px;text-align:center;font-size:.73rem;color:#1a237e;font-weight:800;">Krea (mg/dl)</th>
               <th style="padding:6px 8px;text-align:center;font-size:.73rem;color:#1a237e;font-weight:800;">eGFR (ml/min)</th>
               <th style="padding:6px 8px;border-radius:0 6px 0 0;"></th>
@@ -1686,6 +1686,7 @@ label .lip-optional {
 
         <div style="margin-top:10px;padding:10px 12px;background:#f5f5f5;border-radius:8px;font-size:.75rem;color:#607d8b;line-height:1.7;">
           💡 <b>Tipp:</b> Krea oder eGFR eingeben — das jeweils andere wird automatisch berechnet (Alter + Geschlecht aus CKD-Tab).
+          <br>Datum flexibel: <b>2023</b> · <b>06/2023</b> · <b>15.06.2023</b> — oder weglassen (dann Sequenz-Modus).
           <br>Aktueller Wert aus CKD-Tab wird automatisch als letzter Punkt ergänzt.
         </div>
       </div>
@@ -6253,7 +6254,7 @@ function verlaufRenderTable() {
     var tr = document.createElement('tr');
     tr.style.borderBottom = '1px solid #f0f4f8';
     tr.innerHTML =
-      '<td style="padding:4px 6px;"><input type="month" value="' + row.date + '" style="border:1px solid #cfd8dc;border-radius:6px;padding:4px 6px;font-size:.8rem;width:100%;" oninput="verlaufUpdate(' + i + ',\'date\',this.value)"></td>' +
+      '<td style="padding:4px 6px;"><input type="text" value="' + row.date + '" placeholder="2023 / 06/2023 / 15.06.23" style="border:1px solid #cfd8dc;border-radius:6px;padding:4px 6px;font-size:.78rem;width:100%;" oninput="verlaufUpdate(' + i + ',\'date\',this.value)"></td>' +
       '<td style="padding:4px 6px;"><input type="number" value="' + row.krea + '" placeholder="—" step="0.01" min="0" style="border:1px solid #cfd8dc;border-radius:6px;padding:4px 6px;font-size:.8rem;width:100%;text-align:center;" oninput="verlaufUpdate(' + i + ',\'krea\',this.value)"></td>' +
       '<td style="padding:4px 6px;"><input type="number" value="' + row.egfr + '" placeholder="—" step="0.1" min="0" style="border:1px solid #cfd8dc;border-radius:6px;padding:4px 6px;font-size:.8rem;width:100%;text-align:center;" oninput="verlaufUpdate(' + i + ',\'egfr\',this.value)"></td>' +
       '<td style="padding:4px 6px;text-align:center;"><button onclick="verlaufDeleteRow(' + i + ')" style="background:#ffebee;color:#b71c1c;border:none;border-radius:5px;padding:3px 8px;cursor:pointer;font-size:.8rem;">✕</button></td>';
@@ -6294,6 +6295,45 @@ function verlaufDeleteRow(i) {
   verlaufDraw();
 }
 
+function verlaufParseDate(s) {
+  if (!s || !s.trim()) return null;
+  s = s.trim();
+
+  // Nur Jahr: "2023" oder "23"
+  if (/^\d{2,4}$/.test(s)) {
+    var y = parseInt(s);
+    if (y < 100) y += 2000;
+    return new Date(y, 6, 1); // Mitte des Jahres
+  }
+
+  // MM/JJJJ oder MM.JJJJ oder MM-JJJJ: "06/2023" "6/23"
+  var m1 = s.match(/^(\d{1,2})[\/\.\-](\d{2,4})$/);
+  if (m1) {
+    var mo = parseInt(m1[1]) - 1;
+    var yr = parseInt(m1[2]);
+    if (yr < 100) yr += 2000;
+    return new Date(yr, mo, 15);
+  }
+
+  // TT.MM.JJ oder TT.MM.JJJJ: "15.06.2023" "15.6.23"
+  var m2 = s.match(/^(\d{1,2})[\/\.\-](\d{1,2})[\/\.\-](\d{2,4})$/);
+  if (m2) {
+    var day = parseInt(m2[1]);
+    var mo2 = parseInt(m2[2]) - 1;
+    var yr2 = parseInt(m2[3]);
+    if (yr2 < 100) yr2 += 2000;
+    return new Date(yr2, mo2, day);
+  }
+
+  // ISO "2023-06" (type=month fallback)
+  var m3 = s.match(/^(\d{4})-(\d{2})$/);
+  if (m3) return new Date(parseInt(m3[1]), parseInt(m3[2])-1, 15);
+
+  // ISO "2023-06-15"
+  var d = new Date(s);
+  return isNaN(d) ? null : d;
+}
+
 function verlaufGetPoints() {
   // Alle Zeilen mit mindestens einem eGFR-Wert sammeln (Datum optional)
   var raw = [];
@@ -6302,12 +6342,7 @@ function verlaufGetPoints() {
     var krea = parseFloat(row.krea);
     if (!egfr && krea) egfr = verlaufEgfrFromKrea(krea);
     if (!egfr) return;
-    // type="month" liefert "2023-06" — ersten Tag des Monats als Date
-    var date = null;
-    if (row.date) {
-      var parts = row.date.split('-');
-      date = parts.length >= 2 ? new Date(parseInt(parts[0]), parseInt(parts[1])-1, 15) : new Date(row.date);
-    }
+    var date = verlaufParseDate(row.date);
     raw.push({ date: date, egfr: egfr });
   });
 
