@@ -33,6 +33,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 #tool-abx{display:none;}
 #tool-elektrolyte{display:none;}
 #tool-ernaehrung{display:none;}
+#tool-copd{display:none;}
 
 /* ============================================================
    LAE — CSS (vollständig aus lae.html, in Datei isoliert)
@@ -166,6 +167,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <button class="nav-tab-btn" data-tool="abx" onclick="switchTool('abx')">💊 ABx-Dosierung</button>
   <button class="nav-tab-btn" data-tool="elektrolyte" onclick="switchTool('elektrolyte')">⚗️ Elektrolyte</button>
   <button class="nav-tab-btn" data-tool="ernaehrung" onclick="switchTool('ernaehrung')">🥗 Ernährung ITS</button>
+  <button class="nav-tab-btn" data-tool="copd" onclick="switchTool('copd')">🫁 COPD / AECOPD</button>
   <!-- Platzhalter für weitere Tools: -->
   <!-- <button class="nav-tab-btn" data-tool="sepsis" onclick="switchTool('sepsis')">🦠 Sepsis</button> -->
   <!-- <button class="nav-tab-btn" data-tool="ards" onclick="switchTool('ards')">💨 ARDS</button> -->
@@ -2716,6 +2718,7 @@ window.switchTool = function(name) {
   document.getElementById('tool-abx').style.display = name === 'abx' ? 'block' : 'none';
   document.getElementById('tool-elektrolyte').style.display = name === 'elektrolyte' ? 'block' : 'none';
   document.getElementById('tool-ernaehrung').style.display = name === 'ernaehrung' ? 'block' : 'none';
+  document.getElementById('tool-copd').style.display = name === 'copd' ? 'block' : 'none';
 };
 
 // ── LAE Sub-Tab-Switcher ───────────────────────────────────
@@ -4115,6 +4118,917 @@ laeCalcRisk();
 })();
 </script>
 </div><!-- end tool-ernaehrung -->
+
+<!-- ══════════════════════════════════════════════════════════
+     TOOL: COPD / AECOPD
+     ══════════════════════════════════════════════════════════ -->
+<div id="tool-copd">
+<style>
+/* ── COPD scoped CSS ─────────────────────────────────────── */
+#tool-copd .copd-wrap{max-width:820px;margin:0 auto;padding:16px;}
+
+/* Sub-tab nav */
+#tool-copd .copd-tab-nav{background:#fff;border-bottom:2px solid #f5e0e0;display:flex;overflow-x:auto;padding:0 12px;gap:2px;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:0;}
+#tool-copd .copd-tab-btn{border:none;background:none;padding:13px 15px 11px;font-size:.8rem;font-weight:600;color:#78909c;cursor:pointer;border-bottom:2.5px solid transparent;white-space:nowrap;transition:color .15s,border-color .15s;}
+#tool-copd .copd-tab-btn.active{color:#b71c1c;border-bottom-color:#b71c1c;}
+#tool-copd .copd-tab-btn:hover:not(.active){color:#c62828;border-bottom-color:#ef9a9a;}
+
+/* Sub-tab content */
+#tool-copd .copd-tab{display:none;padding:16px 0;}
+#tool-copd .copd-tab.active{display:block;}
+
+/* Cards */
+#tool-copd .copd-card{background:#fff;border-radius:14px;box-shadow:0 1px 6px rgba(0,0,0,.08);margin-bottom:14px;overflow:hidden;}
+#tool-copd .copd-card-head{padding:13px 16px 10px;border-bottom:1px solid #fce8e8;display:flex;align-items:center;gap:8px;}
+#tool-copd .copd-card-icon{font-size:1.1rem;}
+#tool-copd .copd-card-title{font-size:.82rem;font-weight:800;color:#b71c1c;text-transform:uppercase;letter-spacing:.6px;}
+#tool-copd .copd-card-body{padding:14px 16px;}
+
+/* Form elements */
+#tool-copd .copd-form-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
+#tool-copd .copd-form-label{font-size:.78rem;font-weight:600;color:#37474f;flex:1 1 160px;}
+#tool-copd .copd-form-input{border:1.5px solid #cfd8dc;border-radius:8px;padding:7px 10px;font-size:.82rem;width:100px;outline:none;transition:border-color .15s;}
+#tool-copd .copd-form-input:focus{border-color:#b71c1c;}
+#tool-copd .copd-form-unit{font-size:.72rem;color:#90a4ae;min-width:36px;}
+#tool-copd select.copd-form-input{width:140px;}
+
+/* Toggle group */
+#tool-copd .copd-toggle{display:flex;gap:6px;flex-wrap:wrap;}
+#tool-copd .copd-toggle input[type=radio]{display:none;}
+#tool-copd .copd-toggle label{padding:5px 13px;border-radius:20px;font-size:.76rem;font-weight:600;cursor:pointer;border:1.5px solid #cfd8dc;color:#607d8b;transition:all .15s;user-select:none;}
+#tool-copd .copd-toggle input[type=radio]:checked + label{background:#b71c1c;border-color:#b71c1c;color:#fff;}
+
+/* Checkboxes */
+#tool-copd .copd-check{display:flex;align-items:flex-start;gap:9px;padding:7px 10px;border-radius:8px;cursor:pointer;transition:background .12s;margin-bottom:3px;}
+#tool-copd .copd-check:hover{background:#fdf0f0;}
+#tool-copd .copd-check input[type=checkbox]{margin-top:1px;accent-color:#b71c1c;width:15px;height:15px;flex-shrink:0;}
+#tool-copd .copd-check-label{font-size:.79rem;color:#37474f;line-height:1.45;}
+#tool-copd .copd-check-sub{font-size:.7rem;color:#90a4ae;display:block;}
+
+/* Result boxes */
+#tool-copd .copd-result{border-radius:12px;padding:14px 16px;margin-bottom:12px;border-width:2px;border-style:solid;}
+#tool-copd .copd-r-low{background:#e8f5e9;border-color:#4caf50;}
+#tool-copd .copd-r-mid{background:#fff8e1;border-color:#ffc107;}
+#tool-copd .copd-r-high{background:#ffebee;border-color:#f44336;}
+#tool-copd .copd-r-critical{background:#b71c1c;border-color:#7f0000;color:#fff;}
+#tool-copd .copd-r-info{background:#fce8e8;border-color:#b71c1c;}
+#tool-copd .copd-result-title{font-size:.85rem;font-weight:800;margin-bottom:5px;}
+#tool-copd .copd-result-text{font-size:.77rem;line-height:1.6;}
+#tool-copd .copd-result-text ul{padding-left:16px;margin-top:4px;}
+#tool-copd .copd-result-text li{margin-bottom:3px;}
+
+/* Warning boxes */
+#tool-copd .copd-warn{background:#fff3cd;border:1.5px solid #ffc107;border-radius:10px;padding:11px 14px;font-size:.75rem;color:#7c5700;margin-bottom:10px;line-height:1.5;}
+#tool-copd .copd-warn-red{background:#ffebee;border:1.5px solid #f44336;border-radius:10px;padding:11px 14px;font-size:.75rem;color:#b71c1c;margin-bottom:10px;line-height:1.5;}
+#tool-copd .copd-warn strong{font-weight:800;}
+#tool-copd .copd-info{background:#fce8e8;border:1.5px solid #ef9a9a;border-radius:10px;padding:11px 14px;font-size:.75rem;color:#5d1010;margin-bottom:10px;line-height:1.5;}
+
+/* SpO2 safety box */
+#tool-copd .copd-spo2-box{background:linear-gradient(135deg,#b71c1c,#c62828);color:#fff;border-radius:12px;padding:16px;margin-bottom:14px;text-align:center;}
+#tool-copd .copd-spo2-title{font-size:1rem;font-weight:900;letter-spacing:.5px;margin-bottom:6px;}
+#tool-copd .copd-spo2-val{font-size:2rem;font-weight:900;line-height:1;}
+#tool-copd .copd-spo2-sub{font-size:.72rem;opacity:.9;margin-top:4px;}
+
+/* Section headers */
+#tool-copd .copd-sec{font-size:.72rem;font-weight:800;color:#b71c1c;text-transform:uppercase;letter-spacing:.7px;border-bottom:2px solid #f5c6c6;padding-bottom:4px;margin:16px 0 10px 0;}
+
+/* Tables */
+#tool-copd .copd-table{width:100%;border-collapse:collapse;font-size:.76rem;margin-top:8px;}
+#tool-copd .copd-table th{background:#fce8e8;color:#b71c1c;font-weight:700;padding:8px 10px;text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.4px;}
+#tool-copd .copd-table td{padding:8px 10px;border-bottom:1px solid #fce8e8;vertical-align:top;}
+#tool-copd .copd-table tr:last-child td{border-bottom:none;}
+#tool-copd .copd-table tr:hover td{background:#fff9f9;}
+
+/* Dose cards */
+#tool-copd .copd-dose{background:#fff7f7;border-radius:10px;padding:12px 14px;margin-bottom:8px;border:1px solid #f5c6c6;}
+#tool-copd .copd-dose-name{font-size:.79rem;font-weight:800;color:#b71c1c;margin-bottom:4px;}
+#tool-copd .copd-dose-text{font-size:.74rem;color:#37474f;line-height:1.5;}
+#tool-copd .copd-dose-note{font-size:.69rem;color:#90a4ae;margin-top:3px;}
+
+/* DD cards */
+#tool-copd .copd-dd-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px;}
+#tool-copd .copd-dd-card{background:#f9f9f9;border-radius:10px;padding:11px 13px;border:1px solid #e0e0e0;}
+#tool-copd .copd-dd-title{font-size:.77rem;font-weight:800;color:#b71c1c;margin-bottom:4px;}
+#tool-copd .copd-dd-text{font-size:.72rem;color:#37474f;line-height:1.45;}
+
+/* Flowchart */
+#tool-copd .copd-flow{display:flex;flex-direction:column;align-items:center;gap:4px;margin:10px 0;}
+#tool-copd .copd-flow-box{border-radius:10px;padding:9px 16px;font-size:.77rem;font-weight:600;text-align:center;width:100%;max-width:460px;}
+#tool-copd .copd-flow-box.action{background:#fce8e8;border:1.5px solid #ef9a9a;color:#5d1010;}
+#tool-copd .copd-flow-box.decision{background:#fff8e1;border:1.5px solid #ffc107;color:#7c5700;}
+#tool-copd .copd-flow-box.yes{background:#e8f5e9;border:1.5px solid #4caf50;color:#1b5e20;}
+#tool-copd .copd-flow-box.no{background:#f3f4f6;border:1.5px solid #9e9e9e;color:#424242;}
+#tool-copd .copd-flow-arrow{font-size:.9rem;color:#90a4ae;}
+
+/* Venturi table */
+#tool-copd .copd-venturi-table{width:100%;border-collapse:collapse;font-size:.76rem;}
+#tool-copd .copd-venturi-table th{background:#b71c1c;color:#fff;padding:7px 10px;font-size:.7rem;text-transform:uppercase;}
+#tool-copd .copd-venturi-table td{padding:7px 10px;border-bottom:1px solid #fce8e8;text-align:center;}
+#tool-copd .copd-venturi-table tr:last-child td{border-bottom:none;}
+
+/* NIV result */
+#tool-copd .copd-niv-result{border-radius:12px;padding:14px 16px;margin-top:10px;display:none;}
+#tool-copd .copd-niv-result.show{display:block;}
+
+/* BGA inputs */
+#tool-copd .copd-bga-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+#tool-copd .copd-bga-field label{font-size:.72rem;font-weight:700;color:#37474f;display:block;margin-bottom:4px;}
+#tool-copd .copd-bga-field input{border:1.5px solid #cfd8dc;border-radius:8px;padding:7px 10px;font-size:.82rem;width:100%;outline:none;}
+#tool-copd .copd-bga-field input:focus{border-color:#b71c1c;}
+
+/* Score badge */
+#tool-copd .copd-score-box{background:linear-gradient(135deg,#fce8e8,#f5c6c6);border-radius:12px;padding:16px;text-align:center;margin:14px 0;}
+#tool-copd .copd-score-num{font-size:2.2rem;font-weight:900;color:#b71c1c;line-height:1;}
+#tool-copd .copd-score-label{font-size:.72rem;color:#c62828;font-weight:600;margin-top:3px;text-transform:uppercase;letter-spacing:.5px;}
+
+/* Sources */
+#tool-copd .copd-source-list{list-style:none;padding:0;}
+#tool-copd .copd-source-list li{font-size:.72rem;color:#546e7a;padding:5px 0;border-bottom:1px solid #f5c6c6;display:flex;gap:8px;align-items:flex-start;}
+#tool-copd .copd-source-list li:last-child{border-bottom:none;}
+#tool-copd .copd-source-list li::before{content:"📄";flex-shrink:0;}
+
+@media(max-width:500px){
+  #tool-copd .copd-tab-btn{padding:11px 10px 9px;font-size:.72rem;}
+  #tool-copd .copd-form-label{flex:1 1 120px;}
+  #tool-copd .copd-dd-grid{grid-template-columns:1fr;}
+  #tool-copd .copd-bga-row{grid-template-columns:1fr;}
+}
+</style>
+
+<div class="copd-wrap">
+
+  <!-- Sub-Tab-Navigation -->
+  <div class="copd-tab-nav">
+    <button class="copd-tab-btn active" onclick="copdShowTab('diagnose',this)">🫁 AECOPD-Diagnose</button>
+    <button class="copd-tab-btn" onclick="copdShowTab('ventilation',this)">💨 Ventilation &amp; NIV</button>
+    <button class="copd-tab-btn" onclick="copdShowTab('pharmako',this)">💊 Pharmakotherapie</button>
+    <button class="copd-tab-btn" onclick="copdShowTab('monitoring',this)">📋 Monitoring &amp; Verlauf</button>
+  </div>
+
+  <!-- ══ TAB 1: AECOPD-DIAGNOSE ══ -->
+  <div id="copd-diagnose" class="copd-tab active">
+
+    <!-- Schweregrad-Rechner -->
+    <div class="copd-card">
+      <div class="copd-card-head"><span class="copd-card-icon">📊</span><span class="copd-card-title">AECOPD-Schweregrad (GOLD 2024 + Anthonisen)</span></div>
+      <div class="copd-card-body">
+
+        <div class="copd-form-row">
+          <span class="copd-form-label">Ruhedyspnoe</span>
+          <div class="copd-toggle">
+            <input type="radio" name="copd-dyspnoe" id="copd-dyspnoe-nein" value="0" checked oninput="copdCalcSchweregrad()">
+            <label for="copd-dyspnoe-nein">Nein</label>
+            <input type="radio" name="copd-dyspnoe" id="copd-dyspnoe-ja" value="1" oninput="copdCalcSchweregrad()">
+            <label for="copd-dyspnoe-ja">Ja</label>
+          </div>
+        </div>
+
+        <div class="copd-form-row">
+          <span class="copd-form-label">Atemhilfsmuskulatur</span>
+          <div class="copd-toggle">
+            <input type="radio" name="copd-hilfsmus" id="copd-hilfsmus-nein" value="0" checked oninput="copdCalcSchweregrad()">
+            <label for="copd-hilfsmus-nein">Nein</label>
+            <input type="radio" name="copd-hilfsmus" id="copd-hilfsmus-ja" value="1" oninput="copdCalcSchweregrad()">
+            <label for="copd-hilfsmus-ja">Ja</label>
+          </div>
+        </div>
+
+        <div class="copd-form-row">
+          <span class="copd-form-label">Atemfrequenz</span>
+          <input type="number" id="copd-af" class="copd-form-input" placeholder="18" min="8" max="60" oninput="copdCalcSchweregrad()">
+          <span class="copd-form-unit">/min</span>
+        </div>
+
+        <div class="copd-form-row">
+          <span class="copd-form-label">SpO2</span>
+          <input type="number" id="copd-spo2" class="copd-form-input" placeholder="94" min="50" max="100" oninput="copdCalcSchweregrad()">
+          <span class="copd-form-unit">%</span>
+        </div>
+
+        <div class="copd-form-row">
+          <span class="copd-form-label">pH (BGA)</span>
+          <input type="number" id="copd-ph" class="copd-form-input" placeholder="7.40" step="0.01" min="6.8" max="7.8" oninput="copdCalcSchweregrad()">
+        </div>
+
+        <div class="copd-form-row">
+          <span class="copd-form-label">pCO2</span>
+          <input type="number" id="copd-pco2" class="copd-form-input" placeholder="40" min="15" max="120" oninput="copdCalcSchweregrad()">
+          <span class="copd-form-unit">mmHg</span>
+        </div>
+
+        <div class="copd-form-row">
+          <span class="copd-form-label">pO2</span>
+          <input type="number" id="copd-po2" class="copd-form-input" placeholder="80" min="20" max="200" oninput="copdCalcSchweregrad()">
+          <span class="copd-form-unit">mmHg</span>
+        </div>
+
+        <div class="copd-form-row">
+          <span class="copd-form-label">GOLD-Stadium (bekannt)</span>
+          <select id="copd-gold" class="copd-form-input" oninput="copdCalcSchweregrad()">
+            <option value="unknown">Unbekannt</option>
+            <option value="1">GOLD I (FEV1 ≥80%)</option>
+            <option value="2">GOLD II (FEV1 50–79%)</option>
+            <option value="3">GOLD III (FEV1 30–49%)</option>
+            <option value="4">GOLD IV (FEV1 &lt;30%)</option>
+          </select>
+        </div>
+
+        <div id="copd-schweregrad-result"></div>
+      </div>
+    </div>
+
+    <!-- Auslöser-Checkliste -->
+    <div class="copd-card">
+      <div class="copd-card-head"><span class="copd-card-icon">🔍</span><span class="copd-card-title">Auslöser-Checkliste (Reminder)</span></div>
+      <div class="copd-card-body">
+        <div class="copd-info" style="margin-bottom:10px;">Auslöser identifizieren — beeinflusst Therapie und Prognose. ~80% infektiös, ~30% ohne identifizierten Auslöser.</div>
+        <label class="copd-check"><input type="checkbox"><span class="copd-check-label">Viraler / bakterieller Infekt <span class="copd-check-sub">Häufigste Ursache (~80%): Rhinoviren, Influenza, H. influenzae, S. pneumoniae, M. catarrhalis</span></span></label>
+        <label class="copd-check"><input type="checkbox"><span class="copd-check-label">Luftverschmutzung / Kälteexposition <span class="copd-check-sub">Feinstaubbelastung, Temperaturabfall, Jahreszeit (Winter)</span></span></label>
+        <label class="copd-check"><input type="checkbox"><span class="copd-check-label">Non-Compliance (Inhalatoren vergessen) <span class="copd-check-sub">Häufig unterschätzt — Inhalationsschulung bei Entlassung</span></span></label>
+        <label class="copd-check"><input type="checkbox"><span class="copd-check-label">Herzinsuffizienz / Lungenödem <span class="copd-check-sub">Cave DD! BNP / NT-proBNP, Echo, Röntgen-Thorax klären</span></span></label>
+        <label class="copd-check"><input type="checkbox"><span class="copd-check-label">Pneumothorax <span class="copd-check-sub">⚠ Immer ausschließen! Auskultation + Röntgen / Ultraschall</span></span></label>
+        <label class="copd-check"><input type="checkbox"><span class="copd-check-label">Lungenarterienembolie <span class="copd-check-sub">5–10% der AECOPD; Wells-Score, D-Dimer, CT-Angio erwägen</span></span></label>
+        <label class="copd-check"><input type="checkbox"><span class="copd-check-label">Nicht identifiziert <span class="copd-check-sub">~30% bleiben ohne nachweisbaren Auslöser</span></span></label>
+      </div>
+    </div>
+
+    <!-- Differentialdiagnosen -->
+    <div class="copd-card">
+      <div class="copd-card-head"><span class="copd-card-icon">⚖️</span><span class="copd-card-title">Differentialdiagnosen</span></div>
+      <div class="copd-card-body">
+        <div class="copd-dd-grid">
+          <div class="copd-dd-card">
+            <div class="copd-dd-title">🩸 Lungenarterienembolie</div>
+            <div class="copd-dd-text">D-Dimer (altersadjustiert), Wells-Score, CT-Angio bei mittl./hoher Wahrscheinlichkeit — LAE-Tab verwenden</div>
+          </div>
+          <div class="copd-dd-card">
+            <div class="copd-dd-title">❤️ Herzinsuffizienz</div>
+            <div class="copd-dd-text">BNP/NT-proBNP erhöht, Orthopnoe, Knöchelödeme, Echo (EF?), Röntgen-Thorax (Kerley-B, vaskuläre Kongestion)</div>
+          </div>
+          <div class="copd-dd-card">
+            <div class="copd-dd-title">🫧 Pneumothorax</div>
+            <div class="copd-dd-text">Abgeschwächtes Atemgeräusch, Schmerz, Trachealdeviation bei Spannungs-PTX — Röntgen-Thorax / Lungen-Sono (Sliding-Sign absent)</div>
+          </div>
+          <div class="copd-dd-card">
+            <div class="copd-dd-title">🦠 Pneumonie (CAP)</div>
+            <div class="copd-dd-text">Fieber, Schüttelfrost, neues Infiltrat im Röntgen-Thorax, erhöhtes CRP/PCT — Therapie nach CAP-Leitlinie bei Bestätigung</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end copd-diagnose -->
+
+  <!-- ══ TAB 2: VENTILATION & NIV ══ -->
+  <div id="copd-ventilation" class="copd-tab">
+
+    <!-- SpO2-Ziel Warnung -->
+    <div class="copd-spo2-box">
+      <div class="copd-spo2-title">⚠ SpO2-Ziel bei COPD</div>
+      <div class="copd-spo2-val">88–92%</div>
+      <div class="copd-spo2-sub">NICHT 94–98%! Hyperoxie → Haldane-Effekt + Hypoxic Drive ↓ → CO2-Retention</div>
+    </div>
+
+    <!-- NIV-Indikationsrechner -->
+    <div class="copd-card">
+      <div class="copd-card-head"><span class="copd-card-icon">💨</span><span class="copd-card-title">NIV-Indikationsrechner</span></div>
+      <div class="copd-card-body">
+
+        <div class="copd-form-row">
+          <span class="copd-form-label">pH (BGA)</span>
+          <input type="number" id="copd-niv-ph" class="copd-form-input" placeholder="7.32" step="0.01" min="6.8" max="7.8" oninput="copdCalcNIV()">
+        </div>
+        <div class="copd-form-row">
+          <span class="copd-form-label">pCO2</span>
+          <input type="number" id="copd-niv-pco2" class="copd-form-input" placeholder="55" min="15" max="120" oninput="copdCalcNIV()">
+          <span class="copd-form-unit">mmHg</span>
+        </div>
+        <div class="copd-form-row">
+          <span class="copd-form-label">Atemfrequenz</span>
+          <input type="number" id="copd-niv-af" class="copd-form-input" placeholder="28" min="8" max="60" oninput="copdCalcNIV()">
+          <span class="copd-form-unit">/min</span>
+        </div>
+        <div class="copd-form-row">
+          <span class="copd-form-label">GCS</span>
+          <input type="number" id="copd-niv-gcs" class="copd-form-input" placeholder="14" min="3" max="15" oninput="copdCalcNIV()">
+        </div>
+
+        <div id="copd-niv-result"></div>
+      </div>
+    </div>
+
+    <!-- NIV-Einstellungen -->
+    <div class="copd-card">
+      <div class="copd-card-head"><span class="copd-card-icon">⚙️</span><span class="copd-card-title">NIV-Einstellempfehlungen (GOLD 2024 / BTS)</span></div>
+      <div class="copd-card-body">
+        <div class="copd-dose">
+          <div class="copd-dose-name">IPAP</div>
+          <div class="copd-dose-text">12–20 cmH2O — Start 10 cmH2O, titrieren auf pCO2-Reduktion und Patientenkomfort. Ziel: pCO2-Abfall ≥10 mmHg in 1–2h.</div>
+        </div>
+        <div class="copd-dose">
+          <div class="copd-dose-name">EPAP</div>
+          <div class="copd-dose-text">4–5 cmH2O — Wirkt Auto-PEEP entgegen, reduziert Atemarbeit.</div>
+        </div>
+        <div class="copd-dose">
+          <div class="copd-dose-name">FiO2 / O2-Flow</div>
+          <div class="copd-dose-text">Titrieren auf SpO2 <strong>88–92%</strong>. Kein fixer Flow — kontinuierliches Monitoring. Bei Maske: Venturi-Adapter bevorzugen.</div>
+        </div>
+        <div class="copd-dose">
+          <div class="copd-dose-name">Backup-AF</div>
+          <div class="copd-dose-text">14–16/min — Sicherheitsnetz bei Apnoe; sollte nicht getriggert werden wenn NIV toleriert wird.</div>
+        </div>
+        <div class="copd-dose">
+          <div class="copd-dose-name">Interface</div>
+          <div class="copd-dose-text">Vollgesichtsmaske bevorzugen (bessere Dichtigkeit, weniger Aerophagie). Wechsel auf Nasenmaske bei gutem Ansprechen möglich.</div>
+        </div>
+        <div class="copd-warn" style="margin-top:10px;">
+          <strong>NIV-Kontrolle nach 1–2h:</strong> pH-Kontrolle — Verbesserung pH &gt;0.03 in 1h gilt als gutes Ansprechen. Keine Besserung → Eskalation (invasive Beatmung) erwägen.
+        </div>
+      </div>
+    </div>
+
+    <!-- Venturi-Tabelle -->
+    <div class="copd-card">
+      <div class="copd-card-head"><span class="copd-card-icon">🎭</span><span class="copd-card-title">Venturi-Maske — FiO2 und Flow</span></div>
+      <div class="copd-card-body">
+        <div class="copd-warn">Venturi-Maske gibt zuverlässige FiO2 — empfohlen bei COPD für präzise O2-Dosierung. Ziel SpO2 88–92%.</div>
+        <table class="copd-venturi-table">
+          <tr><th>Farbe</th><th>FiO2</th><th>O2-Flow (L/min)</th><th>Empfehlung</th></tr>
+          <tr><td>Blau</td><td>24%</td><td>2 L/min</td><td>Start bei sehr schwerer Hyperkapnie</td></tr>
+          <tr><td>Weiß</td><td>28%</td><td>4 L/min</td><td>Standard-Start bei COPD-AECOPD</td></tr>
+          <tr><td>Gelb/Orange</td><td>31%</td><td>6 L/min</td><td>Bei SpO2 &lt;88% trotz 28%</td></tr>
+          <tr><td>Rot</td><td>35%</td><td>8 L/min</td><td>Cave: CO2-Kontrolle notwendig</td></tr>
+          <tr><td>Grün</td><td>40%</td><td>10 L/min</td><td>Nur kurzfristig; BGA-Kontrolle</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- Invasive Beatmung -->
+    <div class="copd-card">
+      <div class="copd-card-head"><span class="copd-card-icon">🌬️</span><span class="copd-card-title">Invasive Beatmung — Besonderheiten bei COPD</span></div>
+      <div class="copd-card-body">
+        <div class="copd-warn-red"><strong>Intubation erwägen bei:</strong> pH &lt;7.25, GCS &lt;8, NIV-Versagen nach 1–2h, massive Sekretion (Atemwegssicherung), Kreislaufinstabilität</div>
+        <div class="copd-dose">
+          <div class="copd-dose-name">Permissive Hyperkapnie</div>
+          <div class="copd-dose-text">Ziel pH &gt;7.20 — pCO2 darf &gt;60 mmHg sein. Normalisierung nicht anstreben (Auto-PEEP-Gefahr).</div>
+        </div>
+        <div class="copd-dose">
+          <div class="copd-dose-name">Atemzugvolumen</div>
+          <div class="copd-dose-text">6–8 ml/kg IBW — weniger restriktiv als reines ARDS-Protokoll. Exspirationszeitfenster wichtiger als niedriges VT.</div>
+        </div>
+        <div class="copd-dose">
+          <div class="copd-dose-name">Atemfrequenz &amp; I:E-Verhältnis</div>
+          <div class="copd-dose-text">AF niedrig halten (10–14/min) — verlängerte Exspirationszeit: <strong>I:E 1:3 bis 1:4</strong> → Auto-PEEP-Reduktion.</div>
+        </div>
+        <div class="copd-dose">
+          <div class="copd-dose-name">PEEP</div>
+          <div class="copd-dose-text">Niedrig (3–5 cmH2O) — intrinsischen PEEP (PEEPi) messen (Okklusionsdruck). Ext. PEEP ca. 80% des PEEPi als Gegendruck.</div>
+        </div>
+        <div class="copd-dose">
+          <div class="copd-dose-name">Cave Auto-PEEP</div>
+          <div class="copd-dose-text">Exspiration durch Obstruktion unvollständig → Luftstau → erhöhter intrathorakaler Druck → RV-Belastung, Hypotonie. Okklusionsmessung, I:E verlängern, Bronchodilatatoren.</div>
+        </div>
+        <div class="copd-dose">
+          <div class="copd-dose-name">Entwöhnung (Weaning)</div>
+          <div class="copd-dose-text">SBT beginnen wenn: pH &gt;7.30, pCO2 ≤ Ausgangswert, AF &lt;25/min, PEEP ≤8, FiO2 ≤0.5, klinische Besserung. Frühzeitige NIV-Brücke nach Extubation erwägen.</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end copd-ventilation -->
+
+  <!-- ══ TAB 3: PHARMAKOTHERAPIE ══ -->
+  <div id="copd-pharmako" class="copd-tab">
+
+    <!-- O2-Warnung oben -->
+    <div class="copd-warn-red"><strong>⚠ SpO2-Ziel 88–92%!</strong> Nicht höher titrieren — Hyperoxie verschlechtert Hyperkapnie durch Haldane-Effekt und Hemmung des hypoxischen Atemantriebs.</div>
+
+    <!-- Sektion A: Bronchodilatatoren -->
+    <div class="copd-card">
+      <div class="copd-card-head"><span class="copd-card-icon">💨</span><span class="copd-card-title">A — Bronchodilatatoren (Erste Linie, sofort)</span></div>
+      <div class="copd-card-body">
+        <div class="copd-dose">
+          <div class="copd-dose-name">Salbutamol (SABA)</div>
+          <div class="copd-dose-text">
+            <strong>Vernebler:</strong> 2,5 mg NEB alle 20 min in der 1. Stunde (3× hintereinander), dann 2,5–5 mg alle 4–6h<br>
+            <strong>MDI:</strong> 400–800 µg (4–8 Hübe) alle 20 min in 1. Stunde via Spacer — gleichwertig bei korrekter Technik
+          </div>
+          <div class="copd-dose-note">⚠ Cave: Tachykardie, Hypokaliämie bei häufiger Gabe — Kalium überwachen</div>
+        </div>
+        <div class="copd-dose">
+          <div class="copd-dose-name">Ipratropium (SAMA)</div>
+          <div class="copd-dose-text">
+            <strong>Vernebler:</strong> 0,5 mg NEB alle 6h (kombinierbar mit Salbutamol im Vernebler — Combivent)<br>
+            <strong>MDI:</strong> 40–80 µg alle 6h via Spacer
+          </div>
+          <div class="copd-dose-note">Kombination Salbutamol + Ipratropium synergistisch — bevorzugt in Akutphase</div>
+        </div>
+        <div class="copd-info">MDI mit Spacer ist bei korrekter Anwendung gleichwertig zum Vernebler — bevorzugen wenn möglich (spart Zeit, weniger Keimrisiko).</div>
+      </div>
+    </div>
+
+    <!-- Sektion B: Kortikosteroide -->
+    <div class="copd-card">
+      <div class="copd-card-head"><span class="copd-card-icon">🩺</span><span class="copd-card-title">B — Kortikosteroide (Systemisch)</span></div>
+      <div class="copd-card-body">
+        <div class="copd-dose">
+          <div class="copd-dose-name">Prednisolon 40 mg p.o. × 5 Tage (Standard)</div>
+          <div class="copd-dose-text">GOLD 2024-Empfehlung. REDUCE-Studie (Leuppi et al., JAMA 2013): 5 Tage gleichwertig zu 14 Tagen bzgl. Reexazerbation bei nicht-signifikant kürzerer Hospitalisierung.</div>
+          <div class="copd-dose-note">Bei p.o. nicht möglich: Prednisolon 50 mg i.v. oder Methylprednisolon 40 mg i.v. (äquipotent)</div>
+        </div>
+        <div class="copd-warn">
+          <strong>Kein Benefit bei &gt;5–7 Tagen.</strong> Längere Verläufe: nur bei schwerem ARDS-ähnlichem Bild oder individueller Indikation. Cave: Hyperglykämie (BZ-Monitoring!), Infektanfälligkeit.
+        </div>
+      </div>
+    </div>
+
+    <!-- Sektion C: Antibiotika -->
+    <div class="copd-card">
+      <div class="copd-card-head"><span class="copd-card-icon">🦠</span><span class="copd-card-title">C — Antibiotika (nur bei Indikation!)</span></div>
+      <div class="copd-card-body">
+
+        <div class="copd-sec">Anthonisen-Kriterien (Kardinalssymptome)</div>
+        <label class="copd-check"><input type="checkbox" id="copd-anth1" onchange="copdCalcAnthonisen()"><span class="copd-check-label">Zunahme der Dyspnoe</span></label>
+        <label class="copd-check"><input type="checkbox" id="copd-anth2" onchange="copdCalcAnthonisen()"><span class="copd-check-label">Zunahme der Sputummenge</span></label>
+        <label class="copd-check"><input type="checkbox" id="copd-anth3" onchange="copdCalcAnthonisen()"><span class="copd-check-label">Purulentes (eitrig-gelb-grünes) Sputum</span></label>
+
+        <div class="copd-sec" style="margin-top:14px;">Pseudomonas-Risikofaktoren</div>
+        <label class="copd-check"><input type="checkbox" id="copd-pseudo" onchange="copdCalcAnthonisen()"><span class="copd-check-label">Pseudomonas-Risiko vorhanden <span class="copd-check-sub">FEV1 &lt;30%, häufige Exazerbationen (≥2/Jahr), Bronchiektasen, frühere Pseudomonas-Isolation, Immunsuppression, prolongierter Antibiotikaeinsatz</span></span></label>
+        <label class="copd-check"><input type="checkbox" id="copd-beatmung" onchange="copdCalcAnthonisen()"><span class="copd-check-label">Mechanische Beatmung (NIV oder invasiv) <span class="copd-check-sub">→ Antibiotika immer indiziert, unabhängig von Anthonisen-Kriterien</span></span></label>
+
+        <div id="copd-abx-result" style="margin-top:12px;"></div>
+      </div>
+    </div>
+
+    <!-- Sektion D: Theophyllin -->
+    <div class="copd-card">
+      <div class="copd-card-head"><span class="copd-card-icon">🚫</span><span class="copd-card-title">D — Theophyllin (NICHT empfohlen)</span></div>
+      <div class="copd-card-body">
+        <div class="copd-warn-red"><strong>GOLD 2024: Theophyllin wird NICHT empfohlen</strong> — Kein Nachweis für klinischen Nutzen in der AECOPD, hohes Risikoprofil.</div>
+        <div class="copd-info">Nebenwirkungen: Tachyarrhythmien, Übelkeit, Erbrechen, Tremor, Krampfanfälle — enge therapeutische Breite (10–20 mg/L). Interaktionen mit Ciprofloxacin, Makroliden, zahlreichen weiteren Medikamenten (Plasmaspiegel-Kontrolle erforderlich).</div>
+        <div class="copd-dose-note" style="padding:8px;font-size:.73rem;color:#37474f;">Nur als allerletztes Mittel erwägen wenn alle anderen Bronchodilatatoren nicht möglich sind — Plasmasspiegelkontrolle obligat.</div>
+      </div>
+    </div>
+
+    <!-- Sektion E: Magnesium -->
+    <div class="copd-card">
+      <div class="copd-card-head"><span class="copd-card-icon">🧪</span><span class="copd-card-title">E — Magnesium (Adjuvant, schwache Evidenz)</span></div>
+      <div class="copd-card-body">
+        <div class="copd-dose">
+          <div class="copd-dose-name">MgSO4 1,2–2,0 g i.v. über 20 min</div>
+          <div class="copd-dose-text">Kann bei schwerer Bronchospastik als Zusatztherapie erwogen werden. Schwache Evidenz bei AECOPD (stärker belegt beim Status asthmaticus). Relaxiert glatte Muskulatur.</div>
+          <div class="copd-dose-note">Cave: Hypotonie, Atemdepression (selten bei einmaliger Gabe). Niereninsuffizienz: Dosis reduzieren, Mg-Spiegel kontrollieren.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Flussdiagramm -->
+    <div class="copd-card">
+      <div class="copd-card-head"><span class="copd-card-icon">🔀</span><span class="copd-card-title">Pharmakotherapie-Algorithmus AECOPD</span></div>
+      <div class="copd-card-body">
+        <div class="copd-flow">
+          <div class="copd-flow-box action">🔵 ALLE: Salbutamol 2,5 mg NEB + Ipratropium 0,5 mg NEB (sofort, kombinierbar)</div>
+          <div class="copd-flow-arrow">↓</div>
+          <div class="copd-flow-box action">🔵 ALLE: Prednisolon 40 mg p.o. (oder 50 mg i.v.) × 5 Tage</div>
+          <div class="copd-flow-arrow">↓</div>
+          <div class="copd-flow-box decision">❓ Anthonisen ≥ 2 Kriterien ODER mechanische Beatmung?</div>
+          <div class="copd-flow-arrow">↓</div>
+          <div style="display:flex;gap:10px;width:100%;max-width:460px;justify-content:space-between;">
+            <div class="copd-flow-box yes" style="flex:1;">✅ JA → Antibiotika nach Pseudomonas-Risiko (s. oben)</div>
+            <div class="copd-flow-box no" style="flex:1;">❌ NEIN → Keine Antibiotika (kein Benefit, Resistenzrisiko)</div>
+          </div>
+          <div class="copd-flow-arrow">↓</div>
+          <div class="copd-flow-box action">🫁 NIV bei pH &lt;7.35 + pCO2 &gt;45 mmHg (s. Ventilation-Tab)</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end copd-pharmako -->
+
+  <!-- ══ TAB 4: MONITORING & VERLAUF ══ -->
+  <div id="copd-monitoring" class="copd-tab">
+
+    <!-- Zielparameter-Tabelle -->
+    <div class="copd-card">
+      <div class="copd-card-head"><span class="copd-card-icon">📊</span><span class="copd-card-title">Zielparameter auf ITS</span></div>
+      <div class="copd-card-body">
+        <table class="copd-table">
+          <tr><th>Parameter</th><th>Ziel</th><th>Warnschwelle / Aktion</th></tr>
+          <tr><td><strong>SpO2</strong></td><td>88–92%</td><td>&lt;85%: O2 erhöhen / Ventilation eskalieren; &gt;95%: O2 reduzieren (Hyperoxie!)</td></tr>
+          <tr><td><strong>pH</strong></td><td>7.30–7.45</td><td>&lt;7.25: Intubation erwägen; &lt;7.20: dringliche Intubation</td></tr>
+          <tr><td><strong>pCO2</strong></td><td>Baseline oder Rückgang</td><td>Anstieg trotz NIV → Eskalation (NIV-Versagen?)</td></tr>
+          <tr><td><strong>Atemfrequenz</strong></td><td>&lt;25/min</td><td>&gt;30/min: NIV/Intubation erwägen</td></tr>
+          <tr><td><strong>Herzfrequenz</strong></td><td>60–100/min</td><td>&gt;120/min: Salbutamol-Tachykardie? Vorhofflimmern? Hypovolämie?</td></tr>
+          <tr><td><strong>Urinausscheidung</strong></td><td>&gt;0,5 ml/kg/h</td><td>Oligurie: Volumen? Auto-PEEP → VR ↓?</td></tr>
+          <tr><td><strong>Blutglukose</strong></td><td>140–180 mg/dL (ITS)</td><td>&gt;200 mg/dL: Kortikosteroid-Hyperglykämie → Insulin-Schema</td></tr>
+          <tr><td><strong>Kalium</strong></td><td>3.5–5.0 mmol/L</td><td>&lt;3.2: Supplementation (Salbutamol/Steroide → K↓)</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- BGA-Verlaufskalkulator -->
+    <div class="copd-card">
+      <div class="copd-card-head"><span class="copd-card-icon">📈</span><span class="copd-card-title">BGA-Verlaufskalkulator</span></div>
+      <div class="copd-card-body">
+        <div class="copd-info" style="margin-bottom:12px;">Vergleich initiale BGA vs. aktuelle BGA zur NIV-Ansprechen-Beurteilung</div>
+
+        <div class="copd-sec">Erste BGA (bei Aufnahme)</div>
+        <div class="copd-bga-row">
+          <div class="copd-bga-field"><label>pH (initial)</label><input type="number" id="copd-bga1-ph" placeholder="7.25" step="0.01" min="6.8" max="7.8" oninput="copdCalcBGA()"></div>
+          <div class="copd-bga-field"><label>pCO2 (initial, mmHg)</label><input type="number" id="copd-bga1-pco2" placeholder="68" min="15" max="120" oninput="copdCalcBGA()"></div>
+        </div>
+
+        <div class="copd-sec">Aktuelle BGA (nach Therapie)</div>
+        <div class="copd-bga-row">
+          <div class="copd-bga-field"><label>pH (jetzt)</label><input type="number" id="copd-bga2-ph" placeholder="7.30" step="0.01" min="6.8" max="7.8" oninput="copdCalcBGA()"></div>
+          <div class="copd-bga-field"><label>pCO2 (jetzt, mmHg)</label><input type="number" id="copd-bga2-pco2" placeholder="60" min="15" max="120" oninput="copdCalcBGA()"></div>
+        </div>
+
+        <div class="copd-form-row">
+          <span class="copd-form-label">Zeitdifferenz</span>
+          <input type="number" id="copd-bga-zeit" class="copd-form-input" placeholder="2" min="0" max="48" oninput="copdCalcBGA()">
+          <span class="copd-form-unit">Stunden</span>
+        </div>
+
+        <div id="copd-bga-result"></div>
+      </div>
+    </div>
+
+    <!-- Entlassungskriterien ITS -> Ward -->
+    <div class="copd-card">
+      <div class="copd-card-head"><span class="copd-card-icon">✅</span><span class="copd-card-title">Verlegungskriterien ITS → Normalstation</span></div>
+      <div class="copd-card-body">
+        <div class="copd-info">Alle Kriterien sollten erfüllt sein vor Verlegung.</div>
+        <label class="copd-check"><input type="checkbox"><span class="copd-check-label">pH &gt;7.30 in stabilen BGAs</span></label>
+        <label class="copd-check"><input type="checkbox"><span class="copd-check-label">pCO2 ≤ Ausgangswert (oder stabil auf akzeptablem Niveau)</span></label>
+        <label class="copd-check"><input type="checkbox"><span class="copd-check-label">SpO2 ≥88% mit Niedrigfluss-O2 (Venturi 24–28% oder ≤2 L/min Nasensonde)</span></label>
+        <label class="copd-check"><input type="checkbox"><span class="copd-check-label">Atemfrequenz &lt;25/min ohne Einsatz der Atemhilfsmuskulatur</span></label>
+        <label class="copd-check"><input type="checkbox"><span class="copd-check-label">Orale Medikation toleriert (Kortikosteroide, Inhalatoren)</span></label>
+        <label class="copd-check"><input type="checkbox"><span class="copd-check-label">NIV-frei für ≥4h (wenn vorher NIV-pflichtig)</span></label>
+        <label class="copd-check"><input type="checkbox"><span class="copd-check-label">Klinisch stabil, kooperativ, Schlucken möglich</span></label>
+      </div>
+    </div>
+
+    <!-- Entlass-Checkliste -->
+    <div class="copd-card">
+      <div class="copd-card-head"><span class="copd-card-icon">🏠</span><span class="copd-card-title">Entlass-Checkliste Krankenhaus → Ambulant</span></div>
+      <div class="copd-card-body">
+        <label class="copd-check"><input type="checkbox"><span class="copd-check-label">Inhalationsschulung wiederholt / Technik überprüft</span></label>
+        <label class="copd-check"><input type="checkbox"><span class="copd-check-label">Heimsauerstoff-Indikation geprüft (pO2 &lt;55 mmHg oder &lt;60 mmHg + Erythrozytose/Cor pulmonale)</span></label>
+        <label class="copd-check"><input type="checkbox"><span class="copd-check-label">Heimbeatmung (NIV) evaluiert (bei chronischer ventilatorischer Insuffizienz)</span></label>
+        <label class="copd-check"><input type="checkbox"><span class="copd-check-label">Pneumokokken-Impfung Status geprüft</span></label>
+        <label class="copd-check"><input type="checkbox"><span class="copd-check-label">Influenza-/COVID-Impfung Status geprüft</span></label>
+        <label class="copd-check"><input type="checkbox"><span class="copd-check-label">Raucherentwöhnung angesprochen / eingeleitet</span></label>
+        <label class="copd-check"><input type="checkbox"><span class="copd-check-label">Pulmonale Rehabilitation empfohlen (nach Exazerbation besonders effektiv)</span></label>
+        <label class="copd-check"><input type="checkbox"><span class="copd-check-label">Pneumologe-Termin innerhalb 4 Wochen vereinbart</span></label>
+        <label class="copd-check"><input type="checkbox"><span class="copd-check-label">Notfallplan besprochen (ab wann wieder vorstellen)</span></label>
+      </div>
+    </div>
+
+    <!-- Quellen -->
+    <div class="copd-card">
+      <div class="copd-card-head"><span class="copd-card-icon">📚</span><span class="copd-card-title">Quellen &amp; Leitlinien</span></div>
+      <div class="copd-card-body">
+        <ul class="copd-source-list">
+          <li>GOLD 2024 Report — Global Strategy for Prevention, Diagnosis and Management of COPD (goldcopd.org)</li>
+          <li>AWMF S2k Leitlinie COPD (021-006) — Deutsche Gesellschaft für Pneumologie, 2021</li>
+          <li>BTS/ICS Guidelines for the ventilatory management of acute hypercapnic respiratory failure in adults — Thorax 2016</li>
+          <li>Anthonisen NR et al. — Antibiotic therapy in exacerbations of COPD. Ann Intern Med 1987;106:196–204</li>
+          <li>Leuppi JD et al. (REDUCE Trial) — Short-term vs conventional glucocorticoid therapy in AECOPD. JAMA 2013;309:2223–2231</li>
+          <li>Austin MA et al. — Effect of high flow oxygen on mortality in COPD patients. BMJ 2010;341:c5462</li>
+          <li>Plant PK et al. (AECOPD NIV RCT) — Early use of non-invasive ventilation for AECOPD. Lancet 2000;355:1931–1935</li>
+          <li>Osadnik CR et al. — Non-invasive ventilation for management of AECOPD. Cochrane Database 2017</li>
+        </ul>
+      </div>
+    </div>
+
+  </div><!-- end copd-monitoring -->
+
+</div><!-- end copd-wrap -->
+
+<script>
+(function(){
+'use strict';
+
+/* ── Sub-Tab-Switcher ── */
+window.copdShowTab = function(id, btn) {
+  var tabs = document.querySelectorAll('#tool-copd .copd-tab');
+  var btns = document.querySelectorAll('#tool-copd .copd-tab-btn');
+  for (var i = 0; i < tabs.length; i++) { tabs[i].classList.remove('active'); }
+  for (var j = 0; j < btns.length; j++) { btns[j].classList.remove('active'); }
+  document.getElementById('copd-' + id).classList.add('active');
+  btn.classList.add('active');
+};
+
+/* ── AECOPD-Schweregrad-Rechner ── */
+window.copdCalcSchweregrad = function() {
+  var dyspnoe = document.querySelector('input[name="copd-dyspnoe"]:checked');
+  var hilfsmus = document.querySelector('input[name="copd-hilfsmus"]:checked');
+  var af = parseFloat(document.getElementById('copd-af').value);
+  var spo2 = parseFloat(document.getElementById('copd-spo2').value);
+  var ph = parseFloat(document.getElementById('copd-ph').value);
+  var pco2 = parseFloat(document.getElementById('copd-pco2').value);
+  var po2 = parseFloat(document.getElementById('copd-po2').value);
+
+  var resultDiv = document.getElementById('copd-schweregrad-result');
+
+  var hasDyspnoe = dyspnoe && dyspnoe.value === '1';
+  var hasHilfsmus = hilfsmus && hilfsmus.value === '1';
+
+  var hasSomething = hasDyspnoe || hasHilfsmus ||
+    !isNaN(af) || !isNaN(spo2) || !isNaN(ph) || !isNaN(pco2) || !isNaN(po2);
+
+  if (!hasSomething) {
+    resultDiv.innerHTML = '';
+    return;
+  }
+
+  /* Kritisch / Lebensbedrohlich */
+  var isCritical = (!isNaN(ph) && ph < 7.25) ||
+    (!isNaN(af) && af > 30) ||
+    (!isNaN(spo2) && spo2 < 85) ||
+    (!isNaN(po2) && po2 < 50);
+
+  /* Schwer */
+  var isSevere = (!isNaN(ph) && ph < 7.30) ||
+    (!isNaN(ph) && ph >= 7.25 && ph < 7.30) ||
+    (!isNaN(af) && af >= 25 && af <= 30) ||
+    (!isNaN(spo2) && spo2 >= 85 && spo2 < 88) ||
+    (hasHilfsmus);
+
+  /* Maessig */
+  var isModerate = (!isNaN(ph) && ph >= 7.30 && ph < 7.35) ||
+    (!isNaN(pco2) && pco2 > 50) ||
+    (!isNaN(spo2) && spo2 >= 88 && spo2 < 92) ||
+    hasDyspnoe;
+
+  var html;
+  if (isCritical) {
+    html = '<div class="copd-result copd-r-critical">' +
+      '<div class="copd-result-title">🔴 SCHWER / LEBENSBEDROHLICH</div>' +
+      '<div class="copd-result-text">' +
+      '<strong>Sofortmaßnahmen:</strong>' +
+      '<ul>' +
+      '<li>ITS-Aufnahme</li>' +
+      '<li>Sofortige NIV — pH &lt;7.30: dringliche Indikation (Klasse I, Evidenz A)</li>' +
+      '<li>pH &lt;7.25 oder GCS &lt;8 oder NIV-Versagen → Intubation vorbereiten</li>' +
+      '<li>Intensiviertes Monitoring: BGA 1–2-stündlich, kontinuierliches SpO2</li>' +
+      '<li>Bronchodilatatoren + Steroide i.v., Antibiotika nach Indikation</li>' +
+      '</ul>' +
+      '</div></div>';
+  } else if (isSevere) {
+    html = '<div class="copd-result copd-r-high">' +
+      '<div class="copd-result-title">🟠 SCHWER — ITS / IMC empfohlen</div>' +
+      '<div class="copd-result-text">' +
+      '<strong>Maßnahmen:</strong>' +
+      '<ul>' +
+      '<li>ITS- oder IMC-Aufnahme</li>' +
+      '<li>NIV-Indikation prüfen (pH &lt;7.35 + pCO2 &gt;45 → NIV)</li>' +
+      '<li>BGA-Kontrolle nach 1–2h unter Therapie</li>' +
+      '<li>Standard-Pharmakotherapie (Bronchodilatatoren + Steroide + Antibiotika nach Indikation)</li>' +
+      '</ul>' +
+      '</div></div>';
+  } else if (isModerate) {
+    html = '<div class="copd-result copd-r-mid">' +
+      '<div class="copd-result-title">🟡 MÄSSIG — Stationäre Aufnahme, Ward + NIV-Bereitschaft</div>' +
+      '<div class="copd-result-text">' +
+      '<ul>' +
+      '<li>Normalstation mit NIV-Bereitschaft</li>' +
+      '<li>BGA bei Aufnahme, Kontrolle nach 2–4h</li>' +
+      '<li>Standard-Pharmakotherapie beginnen</li>' +
+      '<li>Engmaschiges Monitoring, Eskalationsplan festlegen</li>' +
+      '</ul>' +
+      '</div></div>';
+  } else {
+    html = '<div class="copd-result copd-r-low">' +
+      '<div class="copd-result-title">🟢 LEICHT — Ambulant / Normalstation möglich</div>' +
+      '<div class="copd-result-text">' +
+      '<ul>' +
+      '<li>Ambulante Behandlung erwägen wenn Compliance gewährleistet</li>' +
+      '<li>SpO2 ≥88% unter Niedrigfluss-O2, AF &lt;25/min, keine Atemhilfsmuskulatur</li>' +
+      '<li>Salbutamol-MDI + Prednisolon p.o. 40 mg × 5d + Antibiotika nach Indikation</li>' +
+      '<li>Wiedervorstellung in 48–72h empfohlen</li>' +
+      '</ul>' +
+      '</div></div>';
+  }
+
+  resultDiv.innerHTML = html;
+};
+
+/* ── NIV-Indikationsrechner ── */
+window.copdCalcNIV = function() {
+  var ph = parseFloat(document.getElementById('copd-niv-ph').value);
+  var pco2 = parseFloat(document.getElementById('copd-niv-pco2').value);
+  var af = parseFloat(document.getElementById('copd-niv-af').value);
+  var gcs = parseFloat(document.getElementById('copd-niv-gcs').value);
+
+  var resultDiv = document.getElementById('copd-niv-result');
+
+  if (isNaN(ph) && isNaN(pco2) && isNaN(af) && isNaN(gcs)) {
+    resultDiv.innerHTML = '';
+    return;
+  }
+
+  var html;
+
+  /* Kontraindikation / Intubation */
+  if ((!isNaN(ph) && ph < 7.20) || (!isNaN(gcs) && gcs < 8)) {
+    html = '<div class="copd-result copd-r-critical" style="color:#fff;">' +
+      '<div class="copd-result-title">🔴 INTUBATION — NIV kontraindiziert / unzureichend</div>' +
+      '<div class="copd-result-text" style="color:rgba(255,255,255,.92);">' +
+      '<ul>' +
+      '<li>pH &lt;7.20 oder GCS &lt;8: NIV nicht sicher genug — Intubation</li>' +
+      '<li>Anästhesie/Intensivmediziner hinzuziehen</li>' +
+      '<li>RSI vorbereiten (Cave: Auto-PEEP post-Intubation)</li>' +
+      '</ul>' +
+      '</div></div>';
+  } else if (!isNaN(ph) && ph < 7.25) {
+    html = '<div class="copd-result copd-r-high">' +
+      '<div class="copd-result-title">🔴 DRINGLICHE NIV — Intubation vorbereiten</div>' +
+      '<div class="copd-result-text">' +
+      '<ul>' +
+      '<li>pH 7.20–7.25: NIV dringlichst einleiten</li>' +
+      '<li>Intubationsbereitschaft herstellen — Versagen sehr wahrscheinlich</li>' +
+      '<li>BGA-Kontrolle nach 1h obligat</li>' +
+      '<li>Keine Besserung pH &gt;0.05 in 1h → Intubation</li>' +
+      '</ul>' +
+      '</div></div>';
+  } else if ((!isNaN(ph) && ph < 7.35) && (!isNaN(pco2) && pco2 > 45)) {
+    html = '<div class="copd-result copd-r-high">' +
+      '<div class="copd-result-title">✅ NIV INDIZIERT (Klasse I, Evidenz A — BTS/GOLD)</div>' +
+      '<div class="copd-result-text">' +
+      '<ul>' +
+      '<li>pH &lt;7.35 + pCO2 &gt;45 mmHg: NIV unverzüglich einleiten</li>' +
+      '<li>IPAP Start 10 cmH2O, titrieren 12–20 cmH2O | EPAP 4–5 cmH2O</li>' +
+      '<li>SpO2-Ziel 88–92% unter NIV</li>' +
+      '<li>BGA-Kontrolle nach 1–2h: pH-Verbesserung ≥0.03 gilt als Ansprechen</li>' +
+      '</ul>' +
+      '</div></div>';
+  } else if ((!isNaN(ph) && ph < 7.35) || (!isNaN(pco2) && pco2 > 45) || (!isNaN(af) && af > 25)) {
+    html = '<div class="copd-result copd-r-mid">' +
+      '<div class="copd-result-title">⚠ NIV ERWÄGEN — Grenzwertige Situation</div>' +
+      '<div class="copd-result-text">' +
+      '<ul>' +
+      '<li>Einzelnes Kriterium erfullt — engmaschiges Monitoring</li>' +
+      '<li>BGA-Kontrolle nach 1–2h unter Pharmakotherapie</li>' +
+      '<li>Bei klinischer Verschlechterung oder ausbleibendem Ansprechen: NIV einleiten</li>' +
+      '</ul>' +
+      '</div></div>';
+  } else {
+    html = '<div class="copd-result copd-r-low">' +
+      '<div class="copd-result-title">🟢 NIV aktuell nicht indiziert</div>' +
+      '<div class="copd-result-text">' +
+      '<ul>' +
+      '<li>pH ≥7.35, pCO2 ≤45 mmHg, AF &lt;25/min, GCS normal</li>' +
+      '<li>Pharmakologische Therapie und O2-Titration (88–92%) fortführen</li>' +
+      '<li>BGA-Verlaufskontrolle bei klinischer Verschlechterung</li>' +
+      '</ul>' +
+      '</div></div>';
+  }
+
+  resultDiv.innerHTML = html;
+};
+
+/* ── Anthonisen / Antibiotika-Rechner ── */
+window.copdCalcAnthonisen = function() {
+  var a1 = document.getElementById('copd-anth1').checked;
+  var a2 = document.getElementById('copd-anth2').checked;
+  var a3 = document.getElementById('copd-anth3').checked;
+  var pseudo = document.getElementById('copd-pseudo').checked;
+  var beatmung = document.getElementById('copd-beatmung').checked;
+
+  var anth = (a1 ? 1 : 0) + (a2 ? 1 : 0) + (a3 ? 1 : 0);
+  var resultDiv = document.getElementById('copd-abx-result');
+
+  var html = '<div class="copd-score-box" style="margin-top:8px;">' +
+    '<div class="copd-score-num">' + anth + '/3</div>' +
+    '<div class="copd-score-label">Anthonisen-Kriterien</div>' +
+    '</div>';
+
+  if (beatmung) {
+    if (pseudo) {
+      html += '<div class="copd-result copd-r-high">' +
+        '<div class="copd-result-title">🔴 Antibiotika INDIZIERT — Pseudomonas-Risiko + Beatmung</div>' +
+        '<div class="copd-result-text">' +
+        '<ul>' +
+        '<li><strong>Ciprofloxacin 400 mg i.v. 2×/d</strong> × 7–10 Tage (Pseudomonas-Aktivität)</li>' +
+        '<li>Alternative: <strong>Piperacillin/Tazobactam 4,5 g i.v. 3×/d</strong> (breiteres Spektrum)</li>' +
+        '<li>Erregerdiagnostik anstreben: Sputum / Trachealsekret / BAL vor AB-Gabe</li>' +
+        '<li>De-Eskalation nach Antibiogramm</li>' +
+        '</ul>' +
+        '</div></div>';
+    } else {
+      html += '<div class="copd-result copd-r-high">' +
+        '<div class="copd-result-title">🔴 Antibiotika INDIZIERT — Mechanische Beatmung</div>' +
+        '<div class="copd-result-text">' +
+        '<ul>' +
+        '<li><strong>Amoxicillin/Clavulansäure 2,2 g i.v. 3×/d</strong> × 5–7 Tage</li>' +
+        '<li>Alternative: <strong>Ampicillin/Sulbactam 3 g i.v. 3×/d</strong></li>' +
+        '<li>Bei Penicillinallergie: <strong>Moxifloxacin 400 mg i.v. 1×/d</strong></li>' +
+        '<li>Erregerdiagnostik (Sputum/BAL) vor erster AB-Gabe</li>' +
+        '</ul>' +
+        '</div></div>';
+    }
+  } else if (anth >= 2) {
+    if (pseudo) {
+      html += '<div class="copd-result copd-r-mid">' +
+        '<div class="copd-result-title">🟠 Antibiotika INDIZIERT — Anthonisen ≥2, Pseudomonas-Risiko</div>' +
+        '<div class="copd-result-text">' +
+        '<ul>' +
+        '<li><strong>Ciprofloxacin 500 mg p.o. 2×/d</strong> × 7–10 Tage</li>' +
+        '<li>Bei i.v.-Notwendigkeit: Ciprofloxacin 400 mg i.v. 2×/d</li>' +
+        '<li>Sputumkultur vor AB-Gabe sinnvoll</li>' +
+        '</ul>' +
+        '</div></div>';
+    } else {
+      html += '<div class="copd-result copd-r-mid">' +
+        '<div class="copd-result-title">🟡 Antibiotika INDIZIERT — Anthonisen ≥2</div>' +
+        '<div class="copd-result-text">' +
+        '<ul>' +
+        '<li><strong>1. Wahl: Amoxicillin/Clavulansäure 875/125 mg p.o. 2×/d × 5 Tage</strong></li>' +
+        '<li>Alternative: <strong>Azithromycin 500 mg p.o. Tag 1, dann 250 mg Tag 2–5</strong></li>' +
+        '<li>Alternative: Doxycyclin 200 mg p.o. Tag 1, dann 100 mg × 5 Tage</li>' +
+        '<li>Penicillinallergie: Moxifloxacin 400 mg p.o. 1×/d × 5 Tage</li>' +
+        '</ul>' +
+        '</div></div>';
+    }
+  } else if (anth === 1) {
+    html += '<div class="copd-result copd-r-low">' +
+      '<div class="copd-result-title">🟢 Antibiotika nicht empfohlen (Anthonisen 1/3)</div>' +
+      '<div class="copd-result-text">Nur 1 Kardinalkriterium — kein signifikanter Benefit von Antibiotika. Reevaluation bei Verschlechterung.</div>' +
+      '</div>';
+  } else {
+    html += '<div class="copd-result copd-r-low">' +
+      '<div class="copd-result-title">🟢 Keine Antibiotika-Indikation</div>' +
+      '<div class="copd-result-text">Kein Anthonisen-Kriterium, keine mechanische Beatmung. Antibiotika nicht indiziert — vermeidet Resistenzentwicklung.</div>' +
+      '</div>';
+  }
+
+  resultDiv.innerHTML = html;
+};
+
+/* ── BGA-Verlaufskalkulator ── */
+window.copdCalcBGA = function() {
+  var ph1 = parseFloat(document.getElementById('copd-bga1-ph').value);
+  var pco21 = parseFloat(document.getElementById('copd-bga1-pco2').value);
+  var ph2 = parseFloat(document.getElementById('copd-bga2-ph').value);
+  var pco22 = parseFloat(document.getElementById('copd-bga2-pco2').value);
+  var zeit = parseFloat(document.getElementById('copd-bga-zeit').value);
+
+  var resultDiv = document.getElementById('copd-bga-result');
+
+  if (isNaN(ph1) || isNaN(ph2) || isNaN(pco21) || isNaN(pco22)) {
+    resultDiv.innerHTML = '';
+    return;
+  }
+
+  var deltaPh = ph2 - ph1;
+  var deltaPco2 = pco22 - pco21;
+  var zeitText = !isNaN(zeit) ? ' in ' + zeit + 'h' : '';
+
+  var phTrend, pco2Trend, phClass, overallClass, overallText;
+
+  if (deltaPh >= 0.05) { phTrend = 'Deutliche Verbesserung (+' + deltaPh.toFixed(3) + ')'; phClass = 'color:#2e7d32;'; }
+  else if (deltaPh >= 0.02) { phTrend = 'Leichte Verbesserung (+' + deltaPh.toFixed(3) + ')'; phClass = 'color:#388e3c;'; }
+  else if (deltaPh >= -0.01) { phTrend = 'Stabil (' + (deltaPh >= 0 ? '+' : '') + deltaPh.toFixed(3) + ')'; phClass = 'color:#f57c00;'; }
+  else if (deltaPh < -0.01) { phTrend = 'Verschlechterung (' + deltaPh.toFixed(3) + ')'; phClass = 'color:#c62828;'; }
+
+  if (deltaPco2 <= -5) { pco2Trend = 'Deutlich gefallen (' + deltaPco2.toFixed(1) + ' mmHg) — NIV wirksam'; }
+  else if (deltaPco2 <= 0) { pco2Trend = 'Leicht gefallen / stabil (' + deltaPco2.toFixed(1) + ' mmHg)'; }
+  else if (deltaPco2 <= 5) { pco2Trend = 'Leicht angestiegen (+' + deltaPco2.toFixed(1) + ' mmHg) — Verlauf beobachten'; }
+  else { pco2Trend = 'Deutlich angestiegen (+' + deltaPco2.toFixed(1) + ' mmHg) — NIV-Versagen? Eskalation erwägen'; }
+
+  if (deltaPh >= 0.03 && deltaPco2 <= 0) {
+    overallClass = 'copd-r-low';
+    overallText = 'NIV-Ansprechen gut' + zeitText + '. Therapie fortführen, BGA-Verlauf weiterbeobachten.';
+  } else if (deltaPh >= 0 && deltaPco2 < 5) {
+    overallClass = 'copd-r-mid';
+    overallText = 'Mäßiges Ansprechen' + zeitText + '. Therapieoptimierung erwägen (NIV-Einstellungen, Bronchodilatatoren).';
+  } else if (deltaPh < -0.02 || deltaPco2 > 5) {
+    overallClass = 'copd-r-high';
+    overallText = 'Therapieversagen' + zeitText + '! Eskalation prüfen — Intubation erwägen wenn pH unter 7.25.';
+  } else {
+    overallClass = 'copd-r-mid';
+    overallText = 'Grenzwertig' + zeitText + '. Engmaschiges Monitoring, nächste BGA in 1–2h.';
+  }
+
+  var html = '<div class="copd-result ' + overallClass + '" style="margin-top:10px;">' +
+    '<div class="copd-result-title">Verlaufsbeurteilung</div>' +
+    '<div class="copd-result-text">' +
+    '<p><strong>pH-Trend:</strong> <span style="' + phClass + '">' + phTrend + '</span></p>' +
+    '<p><strong>pCO2-Trend:</strong> ' + pco2Trend + '</p>' +
+    '<p style="margin-top:8px;font-weight:700;">' + overallText + '</p>' +
+    '</div></div>';
+
+  resultDiv.innerHTML = html;
+};
+
+/* ── Init ── */
+copdCalcAnthonisen();
+
+})();
+</script>
+</div><!-- end tool-copd -->
 
 </body>
 </html>
