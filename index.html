@@ -7640,6 +7640,33 @@ window.gichtAutoImport = function() {
 .abx-tag.noadj { background: #e8f5e9; color: #2e7d32; }
 .abx-empty { text-align: center; color: #aaa; padding: 30px; font-size: .95rem; }
 .abx-disclaimer { background: #fff8e1; border: 1px solid #ffe082; border-radius: 8px; padding: 10px 14px; margin-top: 14px; font-size: .8rem; color: #5d4037; }
+/* Spektrum-Badges */
+.abx-spek { display:flex; gap:4px; flex-wrap:wrap; margin-top:4px; }
+.abx-spek-tag { display:inline-block; padding:1px 6px; border-radius:8px; font-size:.68rem; font-weight:700; letter-spacing:.02em; white-space:nowrap; }
+.abx-spek-tag.gpos { background:#dbeafe; color:#1565c0; border:1px solid #90caf9; }
+.abx-spek-tag.gneg { background:#dcfce7; color:#15803d; border:1px solid #86efac; }
+.abx-spek-tag.aty  { background:#f3e8ff; color:#6b21a8; border:1px solid #d8b4fe; }
+.abx-spek-tag.ent  { background:#fff7ed; color:#c2410c; border:1px solid #fdba74; }
+.abx-spek-tag.psa  { background:#fde8e8; color:#b91c1c; border:1px solid #fca5a5; }
+.abx-spek-tag.ana  { background:#f1f5f9; color:#334155; border:1px solid #cbd5e1; }
+/* Spektrum-Filter */
+.abx-spek-filter { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; align-items:center; }
+.abx-spek-filter label { font-size:.75rem; font-weight:700; color:#555; text-transform:uppercase; letter-spacing:.04em; margin-right:2px; }
+.abx-spek-btn { padding:3px 10px; border-radius:12px; cursor:pointer; font-size:.78rem; font-weight:700; transition:all .15s; }
+.abx-spek-btn.alle { border:1.5px solid #aaa; background:#fafafa; color:#555; }
+.abx-spek-btn.alle.active { background:#555; color:#fff; border-color:#555; }
+.abx-spek-btn.gpos { border:1.5px solid #90caf9; background:#fff; color:#1565c0; }
+.abx-spek-btn.gpos.active { background:#1565c0; color:#fff; }
+.abx-spek-btn.gneg { border:1.5px solid #86efac; background:#fff; color:#15803d; }
+.abx-spek-btn.gneg.active { background:#15803d; color:#fff; }
+.abx-spek-btn.aty  { border:1.5px solid #d8b4fe; background:#fff; color:#6b21a8; }
+.abx-spek-btn.aty.active  { background:#6b21a8; color:#fff; }
+.abx-spek-btn.ent  { border:1.5px solid #fdba74; background:#fff; color:#c2410c; }
+.abx-spek-btn.ent.active  { background:#c2410c; color:#fff; }
+.abx-spek-btn.psa  { border:1.5px solid #fca5a5; background:#fff; color:#b91c1c; }
+.abx-spek-btn.psa.active  { background:#b91c1c; color:#fff; }
+.abx-spek-btn.ana  { border:1.5px solid #cbd5e1; background:#fff; color:#334155; }
+.abx-spek-btn.ana.active  { background:#334155; color:#fff; }
 </style>
 
 <div class="abx-container">
@@ -7683,6 +7710,17 @@ window.gichtAutoImport = function() {
     <button class="abx-grp-btn" onclick="abxSetGruppe('Sonstige',this)">Sonstige</button>
   </div>
 
+  <div class="abx-spek-filter" id="abx-spek-filter">
+    <label>Spektrum:</label>
+    <button class="abx-spek-btn alle active" onclick="abxSetSpektrum('',this)">Alle</button>
+    <button class="abx-spek-btn gpos" onclick="abxSetSpektrum('G+',this)">Gram+</button>
+    <button class="abx-spek-btn gneg" onclick="abxSetSpektrum('G-',this)">Gram−</button>
+    <button class="abx-spek-btn aty"  onclick="abxSetSpektrum('Aty',this)">Atypiker</button>
+    <button class="abx-spek-btn ent"  onclick="abxSetSpektrum('Ent',this)">Enterokokken</button>
+    <button class="abx-spek-btn psa"  onclick="abxSetSpektrum('PSA',this)">Pseudomonas</button>
+    <button class="abx-spek-btn ana"  onclick="abxSetSpektrum('Ana',this)">Anaerobier</button>
+  </div>
+
   <div class="abx-grid" id="abx-grid"></div>
 
   <div class="abx-disclaimer">
@@ -7696,13 +7734,24 @@ window.gichtAutoImport = function() {
 
 var abxCurrentEgfr = '';
 var abxCurrentGruppe = '';
+var abxCurrentSpektrum = '';
 
 var EGFR_STUFEN = ['>50','30-50','15-30','<15','HD','CRRT','PD'];
+
+var SPEK_META = {
+  'G+':  { cls:'gpos', label:'Gram+' },
+  'G-':  { cls:'gneg', label:'Gram−' },
+  'Aty': { cls:'aty',  label:'Atypiker' },
+  'Ent': { cls:'ent',  label:'Enterokokken' },
+  'PSA': { cls:'psa',  label:'Pseudomonas' },
+  'Ana': { cls:'ana',  label:'Anaerobier' }
+};
 
 var abxData = [
   // ===== PENICILLINE / BLI =====
   {
     name: 'Amoxicillin/Clavulansäure', brand: 'Augmentan®', gruppe: 'Penicillin/BLI',
+    spektrum: ['G+','G-','Ent'],
     indikation: 'HWI, CAP, ABECB, Sinusitis, Weichteilinfektionen, Bisse',
     dosierung: {
       '>50':   { dosis: '875/125 mg q8h p.o. | 2,2 g q8h i.v.', hinweis: '' },
@@ -7717,6 +7766,7 @@ var abxData = [
   },
   {
     name: 'Ampicillin/Sulbactam', brand: 'Unacid®', gruppe: 'Penicillin/BLI',
+    spektrum: ['G+','G-','Ent','Ana'],
     indikation: 'HAP, Aspirationspneumonie, intraabdominell, Acinetobacter',
     dosierung: {
       '>50':   { dosis: '3 g (2+1) q6h i.v.', hinweis: '' },
@@ -7731,6 +7781,7 @@ var abxData = [
   },
   {
     name: 'Piperacillin/Tazobactam', brand: 'Tazobac®', gruppe: 'Penicillin/BLI',
+    spektrum: ['G+','G-','Ent','PSA','Ana'],
     indikation: 'Sepsis, HAP, Pseudomonas, intraabdominell, febrile Neutropenie',
     dosierung: {
       '>50':   { dosis: '4,5 g q6–8h i.v.', hinweis: 'q6h bei schwerer Infektion / Pseudomonas' },
@@ -7747,6 +7798,7 @@ var abxData = [
   // ===== CEPHALOSPORINE =====
   {
     name: 'Cefazolin', brand: 'Cefazolin®', gruppe: 'Cephalosporin',
+    spektrum: ['G+','G-'],
     indikation: 'Perioperative Prophylaxe, Haut-/Weichteilinfektion, MSSA-Bakteriämie',
     dosierung: {
       '>50':   { dosis: '2 g q8h i.v. | Prophylaxe: 2 g Einmaldosis', hinweis: '' },
@@ -7761,6 +7813,7 @@ var abxData = [
   },
   {
     name: 'Cefuroxim', brand: 'Zinacef®', gruppe: 'Cephalosporin',
+    spektrum: ['G+','G-'],
     indikation: 'CAP, HWI, Haut-/Weichteilinfektion (2. Generation)',
     dosierung: {
       '>50':   { dosis: '750 mg–1,5 g q8h i.v. | 500 mg q12h p.o.', hinweis: '' },
@@ -7775,6 +7828,7 @@ var abxData = [
   },
   {
     name: 'Ceftriaxon', brand: 'Rocephin®', gruppe: 'Cephalosporin',
+    spektrum: ['G+','G-'],
     indikation: 'CAP, Meningitis, Sepsis, HWI, Gonorrhoe (3. Generation)',
     dosierung: {
       '>50':   { dosis: '1–2 g q24h i.v. | Meningitis: 2 g q12h', hinweis: '' },
@@ -7789,6 +7843,7 @@ var abxData = [
   },
   {
     name: 'Ceftazidim', brand: 'Fortum®', gruppe: 'Cephalosporin',
+    spektrum: ['G-','PSA'],
     indikation: 'Pseudomonas, HAP, febrile Neutropenie, ZNS-Infektionen (3. Gen.)',
     dosierung: {
       '>50':   { dosis: '2 g q8h i.v.', hinweis: '' },
@@ -7803,6 +7858,7 @@ var abxData = [
   },
   {
     name: 'Cefepim', brand: 'Maxipime®', gruppe: 'Cephalosporin',
+    spektrum: ['G+','G-','PSA'],
     indikation: 'Pseudomonas, HAP, febrile Neutropenie, Gram-negative Sepsis (4. Gen.)',
     dosierung: {
       '>50':   { dosis: '2 g q8h i.v. | leichte Infektion: 1 g q12h', hinweis: '' },
@@ -7819,6 +7875,7 @@ var abxData = [
   // ===== CARBAPENEME =====
   {
     name: 'Meropenem', brand: 'Meronem®', gruppe: 'Carbapenem',
+    spektrum: ['G+','G-','Ent','PSA','Ana'],
     indikation: 'Schwere Sepsis, ESBL, Pseudomonas, HAP, intraabdominell, Meningitis',
     dosierung: {
       '>50':   { dosis: '1 g q8h i.v. | schwere/Meningitis: 2 g q8h', hinweis: '' },
@@ -7833,6 +7890,7 @@ var abxData = [
   },
   {
     name: 'Imipenem/Cilastatin', brand: 'Zienam®', gruppe: 'Carbapenem',
+    spektrum: ['G+','G-','Ent','PSA','Ana'],
     indikation: 'Schwere Sepsis, ESBL, polymikrobielle Infektionen, Nokardiose',
     dosierung: {
       '>50':   { dosis: '500 mg q6h i.v. | oder 1 g q8h', hinweis: '' },
@@ -7847,6 +7905,7 @@ var abxData = [
   },
   {
     name: 'Ertapenem', brand: 'Invanz®', gruppe: 'Carbapenem',
+    spektrum: ['G+','G-','Ana'],
     indikation: 'Ambulant erworbene Infektionen, ESBL, intraabdominell (KEIN Pseudomonas!)',
     dosierung: {
       '>50':   { dosis: '1 g q24h i.v./i.m.', hinweis: '' },
@@ -7863,6 +7922,7 @@ var abxData = [
   // ===== FLUORCHINOLONE =====
   {
     name: 'Ciprofloxacin', brand: 'Ciprobay®', gruppe: 'Fluorchinolon',
+    spektrum: ['G+','G-','Aty','PSA'],
     indikation: 'HWI, Reisediarrhö, Pseudomonas (Gruppe 2), Knochen-/Gelenkinfektion',
     dosierung: {
       '>50':   { dosis: '400 mg q8–12h i.v. | 500–750 mg q12h p.o.', hinweis: '' },
@@ -7877,6 +7937,7 @@ var abxData = [
   },
   {
     name: 'Levofloxacin', brand: 'Tavanic®', gruppe: 'Fluorchinolon',
+    spektrum: ['G+','G-','Aty','PSA'],
     indikation: 'CAP, ABECB, HWI, atypische Erreger, Legionella (Gruppe 3)',
     dosierung: {
       '>50':   { dosis: '500 mg q24h i.v./p.o. | schwere CAP: 500 mg q12h', hinweis: '' },
@@ -7891,6 +7952,7 @@ var abxData = [
   },
   {
     name: 'Moxifloxacin', brand: 'Avalox®', gruppe: 'Fluorchinolon',
+    spektrum: ['G+','G-','Aty','Ana'],
     indikation: 'CAP, ABECB, intraabdominell, Anaerobier (Gruppe 4)',
     dosierung: {
       '>50':   { dosis: '400 mg q24h i.v./p.o.', hinweis: 'keine renale Anpassung' },
@@ -7907,6 +7969,7 @@ var abxData = [
   // ===== GLYKOPEPTIDE =====
   {
     name: 'Vancomycin', brand: 'Vancomycin®', gruppe: 'Glykopeptid',
+    spektrum: ['G+','Ent'],
     indikation: 'MRSA, Koagulase-neg. Staph., Enterokokken, penicillinresistente Grampositive',
     dosierung: {
       '>50':   { dosis: '15–20 mg/kg q8–12h i.v.', hinweis: 'TDM obligat; AUC/MIC-Ziel 400–600 mg·h/l' },
@@ -7921,6 +7984,7 @@ var abxData = [
   },
   {
     name: 'Teicoplanin', brand: 'Targocid®', gruppe: 'Glykopeptid',
+    spektrum: ['G+','Ent'],
     indikation: 'MRSA, Gram-positive Infektionen (Alternative zu Vancomycin)',
     dosierung: {
       '>50':   { dosis: 'Loading: 6–10 mg/kg q12h × 3 Dosen, dann 6–10 mg/kg q24h i.v.', hinweis: 'TDM empfohlen' },
@@ -7937,6 +8001,7 @@ var abxData = [
   // ===== AMINOGLYKOSIDE =====
   {
     name: 'Gentamicin', brand: 'Gentamicin®', gruppe: 'Aminoglykosid',
+    spektrum: ['G+','G-','Ent','PSA'],
     indikation: 'Synergistisch bei Endokarditis, Gram-negative Sepsis, Tularämie',
     dosierung: {
       '>50':   { dosis: '5–7 mg/kg q24h i.v. (Extended-Interval)', hinweis: 'TDM: Peak 1h: 15–20 mg/l; Talspiegel <1 mg/l' },
@@ -7951,6 +8016,7 @@ var abxData = [
   },
   {
     name: 'Tobramycin', brand: 'Gernebcin®', gruppe: 'Aminoglykosid',
+    spektrum: ['G-','PSA'],
     indikation: 'Pseudomonas (besser als Gentamicin), gram-negative Infektionen',
     dosierung: {
       '>50':   { dosis: '5–7 mg/kg q24h i.v. (Extended-Interval)', hinweis: 'TDM; Peak 15–20 mg/l; Talspiegel <1 mg/l' },
@@ -7967,6 +8033,7 @@ var abxData = [
   // ===== SONSTIGE =====
   {
     name: 'Metronidazol', brand: 'Flagyl® / Clont®', gruppe: 'Sonstige',
+    spektrum: ['Ana'],
     indikation: 'Anaerobier, C. difficile (p.o.), Trichomoniasis, Amöben, Giardia',
     dosierung: {
       '>50':   { dosis: '500 mg q8h i.v./p.o. | C. diff: 400 mg q8h p.o.', hinweis: '' },
@@ -7981,6 +8048,7 @@ var abxData = [
   },
   {
     name: 'Clindamycin', brand: 'Sobelin®', gruppe: 'Sonstige',
+    spektrum: ['G+','Ana'],
     indikation: 'Gram-positive, Anaerobier, Weichteilinfektionen, Knochen, MRSA-Haut (p.o.)',
     dosierung: {
       '>50':   { dosis: '600–900 mg q8h i.v. | 300–450 mg q8h p.o.', hinweis: '' },
@@ -7995,6 +8063,7 @@ var abxData = [
   },
   {
     name: 'Cotrimoxazol (TMP/SMX)', brand: 'Bactrim® / Cotrim®', gruppe: 'Sonstige',
+    spektrum: ['G+','G-'],
     indikation: 'HWI (unkompliziert), PCP-Prophylaxe/-Therapie, Nokardiose, MRSA-HWI',
     dosierung: {
       '>50':   { dosis: 'HWI: 160/800 mg q12h p.o. | PCP-Therapie: 5 mg/kg TMP q6h i.v.', hinweis: '' },
@@ -8009,6 +8078,7 @@ var abxData = [
   },
   {
     name: 'Nitrofurantoin', brand: 'Furadantin® / Nifurantin®', gruppe: 'Sonstige',
+    spektrum: ['G+','G-','Ent'],
     indikation: 'Unkomplizierter HWI (nur untere HWI, kein Gewebepenetration!)',
     dosierung: {
       '>50':   { dosis: '50–100 mg q6h p.o. × 5–7 Tage', hinweis: 'nur bei eGFR >45' },
@@ -8023,6 +8093,7 @@ var abxData = [
   },
   {
     name: 'Fosfomycin i.v.', brand: 'Infectofos®', gruppe: 'Sonstige',
+    spektrum: ['G+','G-'],
     indikation: 'ESBL, komplizierte HWI, Knochen, Kombinationstherapie (immer Kombination!)',
     dosierung: {
       '>50':   { dosis: '8–12 g q6–8h i.v. (200 mg/kg/d)', hinweis: 'immer in Kombination' },
@@ -8037,6 +8108,7 @@ var abxData = [
   },
   {
     name: 'Linezolid', brand: 'Zyvoxid®', gruppe: 'Sonstige',
+    spektrum: ['G+','Ent'],
     indikation: 'MRSA, VRE, therapierefraktäre gram-positive Infektionen, ZNS-MRSA',
     dosierung: {
       '>50':   { dosis: '600 mg q12h i.v./p.o.', hinweis: '100% orale Bioverfügbarkeit' },
@@ -8051,6 +8123,7 @@ var abxData = [
   },
   {
     name: 'Daptomycin', brand: 'Cubicin®', gruppe: 'Sonstige',
+    spektrum: ['G+','Ent'],
     indikation: 'MRSA-Bakteriämie/-Endokarditis, VRE, komplizierte Hautinfektionen (KEIN Pneumonie!)',
     dosierung: {
       '>50':   { dosis: '6–8 mg/kg q24h i.v. | Endokarditis: 8–10 mg/kg q24h', hinweis: '' },
@@ -8065,6 +8138,7 @@ var abxData = [
   },
   {
     name: 'Tigecyclin', brand: 'Tygacil®', gruppe: 'Sonstige',
+    spektrum: ['G+','G-','Aty','Ent','Ana'],
     indikation: 'Reserve-Antibiotikum: komplizierte Haut-/Weichgewebeinfektionen, intraabdominelle Infektionen, MBL-/KPC-Carbapenemase-produzierende Erreger',
     dosierung: {
       '>50':   { dosis: '100 mg Ladedosis, dann 50 mg q12h i.v. (Inf. über 30–60 min)', hinweis: '' },
@@ -8079,6 +8153,7 @@ var abxData = [
   },
   {
     name: 'Cefpodoxim', brand: 'Orelox® / Podomexef®', gruppe: 'Cephalosporin',
+    spektrum: ['G+','G-'],
     indikation: 'Oral: HWI, ambulant erworbene Pneumonie, Haut-/Weichgewebeinfektionen, Exazerbation COPD',
     dosierung: {
       '>50':   { dosis: '200 mg q12h p.o. | HWI unkompliziert: 100 mg q12h p.o.', hinweis: '' },
@@ -8093,6 +8168,7 @@ var abxData = [
   },
   {
     name: 'Flucloxacillin', brand: 'Staphylex®', gruppe: 'Penicillin/BLI',
+    spektrum: ['G+'],
     indikation: 'MSSA-Infektionen: Endokarditis, Osteomyelitis, Haut-/Weichgewebeinfektionen, Pneumonie',
     dosierung: {
       '>50':   { dosis: '1–2 g q4–6h i.v. | Endokarditis/Osteomyelitis: 2 g q4h i.v.', hinweis: '' },
@@ -8107,6 +8183,7 @@ var abxData = [
   },
   {
     name: 'Azithromycin', brand: 'Zithromax®', gruppe: 'Sonstige',
+    spektrum: ['G+','G-','Aty'],
     indikation: 'CAP (ambulant), atypische Pneumonie (Legionellen, Mykoplasmen, Chlamydien), Exazerbation COPD, Harnröhren-/Zervizitis (Chlamydien)',
     dosierung: {
       '>50':   { dosis: '500 mg q24h i.v./p.o. × 3–5 Tage | CAP-Kombination: 500 mg/d × 3d', hinweis: '' },
@@ -8121,6 +8198,7 @@ var abxData = [
   },
   {
     name: 'Doxycyclin', brand: 'Vibramycin® / Doxycyclin AL®', gruppe: 'Sonstige',
+    spektrum: ['G+','G-','Aty'],
     indikation: 'Atypische Pneumonie, Borrelia, Rickettsia, Chlamydien, Syphilis, Malaria-Prophylaxe, akne (Langzeit)',
     dosierung: {
       '>50':   { dosis: '200 mg Ladedosis, dann 100 mg q12–24h p.o./i.v.', hinweis: '' },
@@ -8149,6 +8227,13 @@ window.abxSetGruppe = function(val, btn) {
   abxRender();
 };
 
+window.abxSetSpektrum = function(val, btn) {
+  abxCurrentSpektrum = val;
+  document.querySelectorAll('.abx-spek-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  abxRender();
+};
+
 window.abxToggleCard = function(id) {
   var body = document.getElementById('abx-body-' + id);
   if (body) body.classList.toggle('open');
@@ -8158,8 +8243,9 @@ window.abxRender = function() {
   var search = (document.getElementById('abx-search').value || '').toLowerCase();
   var filtered = abxData.filter(function(a) {
     var matchGruppe = !abxCurrentGruppe || a.gruppe === abxCurrentGruppe;
+    var matchSpektrum = !abxCurrentSpektrum || (a.spektrum && a.spektrum.indexOf(abxCurrentSpektrum) !== -1);
     var matchSearch = !search || a.name.toLowerCase().includes(search) || (a.brand||'').toLowerCase().includes(search) || a.indikation.toLowerCase().includes(search);
-    return matchGruppe && matchSearch;
+    return matchGruppe && matchSpektrum && matchSearch;
   });
 
   var grid = document.getElementById('abx-grid');
@@ -8176,10 +8262,21 @@ window.abxRender = function() {
 
     html += '<div class="abx-card">';
     html += '<div class="abx-card-head" onclick="abxToggleCard(\'' + idx + '\')">';
-    html += '<div><div class="abx-card-title">' + a.name + tdmTag;
+    html += '<div style="flex:1;min-width:0;">';
+    html += '<div class="abx-card-title">' + a.name + tdmTag;
     if (a.brand) html += ' <span class="abx-card-brand">(' + a.brand + ')</span>';
-    html += '</div><div style="font-size:.78rem;color:#777;margin-top:2px;">' + a.indikation + '</div></div>';
-    html += '<span class="abx-card-gruppe">' + a.gruppe + '</span>';
+    html += '</div>';
+    if (a.spektrum && a.spektrum.length) {
+      html += '<div class="abx-spek">';
+      a.spektrum.forEach(function(s) {
+        var m = SPEK_META[s];
+        if (m) html += '<span class="abx-spek-tag ' + m.cls + '">' + m.label + '</span>';
+      });
+      html += '</div>';
+    }
+    html += '<div style="font-size:.78rem;color:#777;margin-top:3px;">' + a.indikation + '</div>';
+    html += '</div>';
+    html += '<span class="abx-card-gruppe" style="flex-shrink:0;">' + a.gruppe + '</span>';
     html += '</div>';
 
     html += '<div class="abx-card-body' + (isOpen ? ' open' : '') + '" id="abx-body-' + idx + '">';
