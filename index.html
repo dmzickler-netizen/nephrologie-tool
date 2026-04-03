@@ -68,6 +68,7 @@
 #tab-tma { display: none; }
 #tab-gn { display: none; }
 #tab-ns { display: none; }
+#tab-elektrolyte { display: none; }
 .gicht-section { padding:10px 12px; border-radius:10px; margin-bottom:0; }
 .gicht-section-title { font-size:.75rem; font-weight:800; text-transform:uppercase; letter-spacing:.5px; color:#455a64; margin-bottom:8px; }
 .gicht-akut { background:#fff3e0; border:1.5px solid #ffb74d; }
@@ -1373,6 +1374,7 @@ label .lip-optional {
   <button class="nav-tab-btn" data-tab="tma" onclick="switchToolTab('tma')">🩸 TTP / HUS / HELLP</button>
   <button class="nav-tab-btn" data-tab="gn" onclick="switchToolTab('gn')">🔬 Glomerulonephritis</button>
   <button class="nav-tab-btn" data-tab="ns" onclick="switchToolTab('ns')">🫧 Nephrotisches Syndrom</button>
+  <button class="nav-tab-btn" data-tab="elektrolyte" onclick="switchToolTab('elektrolyte')">⚗️ Elektrolyte</button>
 </div>
 
 <!-- ============================================================
@@ -6653,6 +6655,927 @@ window.gichtAutoImport = function() {
 
 </div><!-- end tab-ns -->
 
+<div id="tab-elektrolyte">
+<style>
+/* ===== ELEKTROLYTE TAB ===== */
+.elek-container { max-width: 900px; margin: 0 auto; padding: 16px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+.elek-header { background: linear-gradient(135deg, #1565c0, #0d47a1); color: #fff; border-radius: 12px; padding: 18px 22px; margin-bottom: 20px; }
+.elek-header h2 { margin: 0 0 4px; font-size: 1.3rem; }
+.elek-header p { margin: 0; font-size: .85rem; opacity: .85; }
+.elek-subtabs { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+.elek-subtab-btn { padding: 8px 18px; border: 2px solid #1565c0; background: #fff; color: #1565c0; border-radius: 20px; cursor: pointer; font-size: .9rem; font-weight: 600; transition: all .2s; }
+.elek-subtab-btn.active { background: #1565c0; color: #fff; }
+.elek-subtab-btn:hover { background: #e3f2fd; }
+.elek-section { display: none; }
+.elek-section.active { display: block; }
+.elek-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 10px; padding: 16px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+.elek-card h3 { margin: 0 0 12px; font-size: 1rem; color: #1565c0; }
+.elek-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; align-items: flex-end; }
+.elek-field { display: flex; flex-direction: column; gap: 4px; }
+.elek-field label { font-size: .8rem; font-weight: 600; color: #555; }
+.elek-field input, .elek-field select { padding: 7px 10px; border: 1.5px solid #ccc; border-radius: 6px; font-size: .95rem; width: 110px; }
+.elek-field input:focus, .elek-field select:focus { border-color: #1565c0; outline: none; }
+.elek-result { background: #e8f5e9; border-left: 4px solid #2e7d32; border-radius: 6px; padding: 12px 14px; margin-top: 10px; font-size: .9rem; line-height: 1.6; white-space: pre-wrap; }
+.elek-result.warn { background: #fff3e0; border-color: #e65100; }
+.elek-result.danger { background: #fce4ec; border-color: #c62828; }
+.elek-result.info { background: #e3f2fd; border-color: #1565c0; }
+.elek-result.neutral { background: #f5f5f5; border-color: #757575; }
+.elek-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media(max-width:600px){ .elek-grid2 { grid-template-columns: 1fr; } }
+.elek-step-badge { display: inline-block; background: #1565c0; color: #fff; border-radius: 50%; width: 22px; height: 22px; text-align: center; line-height: 22px; font-size: .8rem; font-weight: 700; margin-right: 6px; }
+.elek-divider { border: none; border-top: 1px solid #e0e0e0; margin: 14px 0; }
+.elek-tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: .78rem; font-weight: 600; margin: 2px; }
+.elek-tag.green { background: #c8e6c9; color: #1b5e20; }
+.elek-tag.orange { background: #ffe0b2; color: #bf360c; }
+.elek-tag.red { background: #ffcdd2; color: #b71c1c; }
+.elek-tag.blue { background: #bbdefb; color: #0d47a1; }
+.elek-infobox { background: #e3f2fd; border: 1px solid #90caf9; border-radius: 8px; padding: 12px 14px; margin-top: 10px; font-size: .85rem; line-height: 1.6; }
+.elek-infobox.yellow { background: #fffde7; border-color: #f9a825; }
+.elek-infobox.red { background: #fce4ec; border-color: #e91e63; }
+.elek-formula { font-family: monospace; background: #f5f5f5; border-radius: 4px; padding: 6px 10px; display: block; margin: 6px 0; font-size: .88rem; }
+</style>
+
+<div class="elek-container">
+  <div class="elek-header">
+    <h2>⚗️ Elektrolyt- & Säure-Basen-Störungen</h2>
+    <p>Hyponatriämie-Algorithmus · BGA-Auswertung · Anionenlücke · Urin-Anionenlücke</p>
+  </div>
+
+  <div class="elek-subtabs">
+    <button class="elek-subtab-btn active" onclick="elekShowSection('hypo', this)">💧 Hyponatriämie</button>
+    <button class="elek-subtab-btn" onclick="elekShowSection('sab', this)">🧪 Säure-Basen-BGA</button>
+  </div>
+
+  <!-- ===== HYPONATRIÄMIE ===== -->
+  <div id="elek-hypo" class="elek-section active">
+
+    <!-- Eingabe-Panel -->
+    <div class="elek-card">
+      <h3><span class="elek-step-badge">1</span> Klinische Daten & Labor</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <!-- Serum -->
+        <div>
+          <div style="font-size:.78rem;font-weight:700;color:#1565c0;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Serum / Plasma</div>
+          <div class="elek-row">
+            <div class="elek-field"><label>Na⁺ (mmol/l) <span style="color:#c62828">*</span></label><input type="number" id="hypo-na" placeholder="z.B. 122" oninput="hypoCalc()"></div>
+            <div class="elek-field"><label>Harnstoff (mmol/l)</label><input type="number" id="hypo-hst" placeholder="z.B. 5" oninput="hypoCalc()"></div>
+            <div class="elek-field"><label>Glukose (mmol/l)</label><input type="number" id="hypo-glu" placeholder="z.B. 6" oninput="hypoCalc()"></div>
+          </div>
+          <div class="elek-row">
+            <div class="elek-field"><label>Osmolalität gemessen <small style="color:#888">(mOsm/kg)</small></label><input type="number" id="hypo-osm-mess" placeholder="optional" oninput="hypoCalc()"></div>
+            <div class="elek-field"><label>Kalium (mmol/l)</label><input type="number" id="hypo-k" placeholder="z.B. 3.8" step="0.1" oninput="hypoCalc()"></div>
+          </div>
+        </div>
+        <!-- Urin -->
+        <div>
+          <div style="font-size:.78rem;font-weight:700;color:#1565c0;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Urin (Spontanurin)</div>
+          <div class="elek-row">
+            <div class="elek-field"><label>Urin-Na⁺ (mmol/l)</label><input type="number" id="hypo-una" placeholder="z.B. 46" oninput="hypoCalc()"></div>
+            <div class="elek-field"><label>Urin-K⁺ (mmol/l)</label><input type="number" id="hypo-uk" placeholder="z.B. 24" oninput="hypoCalc()"></div>
+          </div>
+          <div class="elek-row">
+            <div class="elek-field"><label>Urin-Osmolalität (mOsm/kg)</label><input type="number" id="hypo-uosm" placeholder="z.B. 470" oninput="hypoCalc()"></div>
+            <div class="elek-field"><label>Urin-Harnsäure (mg/dl) <small style="color:#888">opt.</small></label><input type="number" id="hypo-uha" placeholder="opt." oninput="hypoCalc()"></div>
+          </div>
+        </div>
+      </div>
+      <hr style="border:none;border-top:1px solid #eee;margin:12px 0;">
+      <!-- Klinik -->
+      <div style="font-size:.78rem;font-weight:700;color:#1565c0;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Klinische Einschätzung</div>
+      <div class="elek-row">
+        <div class="elek-field" style="min-width:220px;">
+          <label>Symptomschwere</label>
+          <select id="hypo-symp" onchange="hypoCalc()" style="width:auto;">
+            <option value="">— bitte wählen —</option>
+            <option value="sev">Schwer: Erbrechen · Krampfanfall · Koma (GCS &lt;8) · Atemstillstand</option>
+            <option value="mod">Mittelschwer: Übelkeit · Verwirrtheit · Kopfschmerzen · Gangunsicherheit</option>
+            <option value="mild">Mild: asymptomatisch / subtile neuropsychiatrische Auffälligkeiten</option>
+          </select>
+        </div>
+        <div class="elek-field">
+          <label>Verlauf</label>
+          <select id="hypo-dauer" onchange="hypoCalc()" style="width:auto;">
+            <option value="">— bitte wählen —</option>
+            <option value="akut">Akut (&lt;48h) — keine Adaptation</option>
+            <option value="chronisch">Chronisch (≥48h) oder unbekannt</option>
+          </select>
+        </div>
+        <div class="elek-field">
+          <label>Volumenstatus (klinisch)</label>
+          <select id="hypo-vol" onchange="hypoCalc()" style="width:auto;">
+            <option value="">— bitte wählen —</option>
+            <option value="hypo">Hypovolämie (Orthostase · Tachykardie · trockene Achseln)</option>
+            <option value="eu">Euvolämie (kein Ödem · kein Volumenmangel)</option>
+            <option value="hyper">Hypervolämie (Ödeme · Aszites · Halsvenenstau)</option>
+          </select>
+        </div>
+      </div>
+      <div class="elek-row" style="margin-top:6px;">
+        <div class="elek-field">
+          <label>Diuretika aktiv?</label>
+          <select id="hypo-diuretikum" onchange="hypoCalc()" style="width:auto;">
+            <option value="">— unbekannt —</option>
+            <option value="thiazid">Ja — Thiazid (HCT, Xipamid)</option>
+            <option value="schleife">Ja — Schleifendiuretikum</option>
+            <option value="nein">Nein</option>
+          </select>
+        </div>
+        <div class="elek-field">
+          <label>Morgen-Kortisol / NNR-Insuff. ausgeschlossen?</label>
+          <select id="hypo-kortisol" onchange="hypoCalc()" style="width:auto;">
+            <option value="">— nicht bekannt —</option>
+            <option value="ja">Ja — NNR-Insuff. ausgeschlossen</option>
+            <option value="nein">Nein — noch nicht untersucht</option>
+          </select>
+        </div>
+        <div class="elek-field">
+          <label>ODS-Risikofaktoren vorhanden?</label>
+          <select id="hypo-ods" onchange="hypoCalc()" style="width:auto;">
+            <option value="">— nicht beurteilt —</option>
+            <option value="ja">Ja (Alkohol · Mangelern. · Leber · Hypokaliämie · Hypoxämie)</option>
+            <option value="nein">Nein</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ergebnis-Ausgabe -->
+    <div id="hypo-result-box" style="display:none;">
+
+      <div class="elek-card">
+        <h3><span class="elek-step-badge">2</span> Schweregrad & Osmolalitätsstatus</h3>
+        <div id="hypo-r-osm"></div>
+      </div>
+
+      <div class="elek-card">
+        <h3><span class="elek-step-badge">3</span> Differentialdiagnose nach Volumenstatus & Urin-Na⁺</h3>
+        <div id="hypo-r-diag"></div>
+      </div>
+
+      <div class="elek-card">
+        <h3><span class="elek-step-badge">4</span> Freie Wasser-Clearance (Verlaufsprognose)</h3>
+        <div id="hypo-r-efwc"></div>
+      </div>
+
+      <div class="elek-card">
+        <h3><span class="elek-step-badge">5</span> Therapie — akute Maßnahmen</h3>
+        <div id="hypo-r-therapie"></div>
+      </div>
+
+      <div class="elek-card">
+        <h3><span class="elek-step-badge">6</span> Ursachentherapie & Korrekturgrenzen</h3>
+        <div id="hypo-r-ursache"></div>
+      </div>
+
+    </div>
+
+    <div id="hypo-hint" class="elek-result info" style="margin-top:8px;">
+      Plasma-Na⁺ eingeben, um die Analyse zu starten. Symptomschwere und Verlauf für Therapieempfehlung erforderlich.
+    </div>
+
+    <!-- Referenz-Karten -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px;">
+
+      <div class="elek-card">
+        <h3>📋 SIAD-Diagnosekriterien</h3>
+        <div class="elek-infobox">
+          <ol style="margin:0;padding-left:18px;line-height:1.9;">
+            <li>Serumosmolalität &lt;275 mOsm/kg H₂O</li>
+            <li>Urin-Osmolalität &gt;100 mOsm/kg H₂O (inadäquat konzentriert)</li>
+            <li>Euvolämie + Urin-Na⁺ &gt;30 mmol/l</li>
+            <li>Ausschluss Glukokortikoidmangel + schwere Hypothyreose</li>
+            <li>Keine Thiazide / keine relevante Niereninsuffizienz</li>
+          </ol>
+          <div style="margin-top:8px;font-size:.82rem;">
+            <strong>Zusatzbefunde:</strong> Serum-Harnsäure &lt;4 mg/dl · Fraktionelle Harnsäureexkretion &gt;10%<br>
+            <strong>Ursachen:</strong> Malignome · Lungen-/ZNS-Erkrankungen · Medikamente (Neuroleptika, Antiepileptika, Antidepressiva) · Schmerz, Übelkeit, Stress · V2R-Gain-of-Function-Mutation (selten)
+          </div>
+        </div>
+      </div>
+
+      <div class="elek-card">
+        <h3>⚠️ ODS-Risikofaktoren & Überkorrektur</h3>
+        <div class="elek-infobox red" style="margin-bottom:8px;">
+          <strong>ODS-Risikofaktoren:</strong>
+          <ul style="margin:4px 0;padding-left:16px;line-height:1.8;">
+            <li>Na⁺-Anstieg &gt;12 mmol/l/24h (oder &gt;8 bei weiteren Risiken)</li>
+            <li>Ausgangs-Na⁺ &lt;105 mmol/l</li>
+            <li>Hypokaliämie</li>
+            <li>Alkoholabusus / Mangelernährung</li>
+            <li>Fortgeschrittene Lebererkrankung</li>
+            <li>Hypoxämie</li>
+          </ul>
+          <strong>Korrekturgrenzen:</strong> max. <strong>8–10 mmol/l/24h</strong>; bei ODS-Risiko max. <strong>6–8 mmol/l/24h</strong>
+        </div>
+        <div class="elek-infobox yellow">
+          <strong>Überkorrektur-Management:</strong><br>
+          • <strong>G5% 10 ml/kg über 1h</strong><br>
+          • <strong>Desmopressin (DDAVP) 2 µg i.v. alle 8h</strong><br>
+          <small>Tierexperimentell: Gegensteuern bis 12h nach Überkorrektur verhindert ODS</small>
+        </div>
+      </div>
+
+      <div class="elek-card">
+        <h3>🏥 ICU-Indikationen (Charité-Standard)</h3>
+        <div class="elek-infobox">
+          <ul style="margin:0;padding-left:16px;line-height:1.9;">
+            <li>Serum-Na⁺ &lt;120 mmol/l — auch ohne Symptome</li>
+            <li>Mittelschwere oder schwere Symptome</li>
+            <li>Erwarteter schneller Na⁺-Anstieg (z.B. nach Thiazid-Absetzen + positive Freiwasser-Clearance)</li>
+          </ul>
+          <strong>Monitoring:</strong> Initial alle 20 min (BGA) → alle 1–2h → schrittweise Reduktion
+        </div>
+      </div>
+
+      <div class="elek-card">
+        <h3>💊 Chronische SIAD — Therapieoptionen</h3>
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:.83rem;">
+            <thead><tr style="background:#e3f2fd;"><th style="padding:5px 8px;text-align:left;">Maßnahme</th><th style="padding:5px 8px;text-align:left;">Dosis</th><th style="padding:5px 8px;text-align:left;">Hinweis</th></tr></thead>
+            <tbody>
+              <tr style="border-bottom:1px solid #eee;"><td style="padding:5px 8px;">Trinkmengenbeschränkung</td><td style="padding:5px 8px;">500–800 ml/d</td><td style="padding:5px 8px;">Nur bei pos. Freiwasser-Clearance wirksam</td></tr>
+              <tr style="border-bottom:1px solid #eee;"><td style="padding:5px 8px;"><strong>Oraler Harnstoff</strong></td><td style="padding:5px 8px;">15–60 g/d</td><td style="padding:5px 8px;">Mit Fruchtsaft, schlechter Geschmack</td></tr>
+              <tr style="border-bottom:1px solid #eee;"><td style="padding:5px 8px;">Proteinpulver</td><td style="padding:5px 8px;">90 g/d</td><td style="padding:5px 8px;">Osmotische Diurese via Harnstoff</td></tr>
+              <tr style="border-bottom:1px solid #eee;"><td style="padding:5px 8px;">Dapagliflozin (SGLT2-I)</td><td style="padding:5px 8px;">25 mg/d</td><td style="padding:5px 8px;">Osmotische Glukosurie → Wasserausscheidung</td></tr>
+              <tr><td style="padding:5px 8px;">Tolvaptan (V2R-Blocker)</td><td style="padding:5px 8px;">—</td><td style="padding:5px 8px;color:#c62828;">⚠️ Hohe Überkorrekturrate — Vorsicht! Keine Trinkmengenrestriktion kombinieren</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+  </div><!-- end elek-hypo -->
+
+
+  <!-- ===== SÄURE-BASEN ===== -->
+  <div id="elek-sab" class="elek-section">
+
+    <div class="elek-card">
+      <h3>🩸 BGA-Werte eingeben</h3>
+      <div class="elek-row">
+        <div class="elek-field">
+          <label>pH</label>
+          <input type="number" id="sab-ph" placeholder="7.40" step="0.01" oninput="sabCalc()">
+        </div>
+        <div class="elek-field">
+          <label>pCO₂ (mmHg)</label>
+          <input type="number" id="sab-pco2" placeholder="40" oninput="sabCalc()">
+        </div>
+        <div class="elek-field">
+          <label>HCO₃⁻ (mmol/l)</label>
+          <input type="number" id="sab-hco3" placeholder="24" oninput="sabCalc()">
+        </div>
+        <div class="elek-field">
+          <label>Na⁺ (mmol/l)</label>
+          <input type="number" id="sab-na" placeholder="140" oninput="sabCalc()">
+        </div>
+        <div class="elek-field">
+          <label>Cl⁻ (mmol/l)</label>
+          <input type="number" id="sab-cl" placeholder="100" oninput="sabCalc()">
+        </div>
+        <div class="elek-field">
+          <label>K⁺ (mmol/l) <small style="color:#888">opt.</small></label>
+          <input type="number" id="sab-k" placeholder="4.0" step="0.1" oninput="sabCalc()">
+        </div>
+        <div class="elek-field">
+          <label>Albumin (g/l) <small style="color:#888">opt.</small></label>
+          <input type="number" id="sab-alb" placeholder="40" oninput="sabCalc()">
+        </div>
+        <div class="elek-field">
+          <label>Laktat (mmol/l) <small style="color:#888">opt.</small></label>
+          <input type="number" id="sab-lak" placeholder="" oninput="sabCalc()">
+        </div>
+      </div>
+      <div class="elek-row">
+        <div class="elek-field">
+          <label>Urin-Na⁺ (mmol/l) <small style="color:#888">opt.</small></label>
+          <input type="number" id="sab-una" placeholder="" oninput="sabCalc()">
+        </div>
+        <div class="elek-field">
+          <label>Urin-K⁺ (mmol/l) <small style="color:#888">opt.</small></label>
+          <input type="number" id="sab-uk" placeholder="" oninput="sabCalc()">
+        </div>
+        <div class="elek-field">
+          <label>Urin-Cl⁻ (mmol/l) <small style="color:#888">opt.</small></label>
+          <input type="number" id="sab-ucl" placeholder="" oninput="sabCalc()">
+        </div>
+        <div class="elek-field">
+          <label>Urin-Harnstoff (mmol/l) <small style="color:#888">opt.</small></label>
+          <input type="number" id="sab-uhst" placeholder="" oninput="sabCalc()">
+        </div>
+        <div class="elek-field">
+          <label>Urin-Osmolalität (mOsm/kg) <small style="color:#888">opt.</small></label>
+          <input type="number" id="sab-uosm" placeholder="" oninput="sabCalc()">
+        </div>
+      </div>
+    </div>
+
+    <div id="sab-result-box" style="display:none;">
+
+      <!-- Schritt 1: pH -->
+      <div class="elek-card">
+        <h3><span class="elek-step-badge">1</span> pH-Beurteilung</h3>
+        <div id="sab-r-ph"></div>
+      </div>
+
+      <!-- Schritt 2: Primärstörung -->
+      <div class="elek-card">
+        <h3><span class="elek-step-badge">2</span> Primärstörung</h3>
+        <div id="sab-r-prim"></div>
+      </div>
+
+      <!-- Schritt 3: Kompensation -->
+      <div class="elek-card">
+        <h3><span class="elek-step-badge">3</span> Kompensationsprüfung</h3>
+        <div id="sab-r-komp"></div>
+      </div>
+
+      <!-- Schritt 4: Anionenlücke -->
+      <div class="elek-card">
+        <h3><span class="elek-step-badge">4</span> Anionenlücke</h3>
+        <div id="sab-r-al"></div>
+      </div>
+
+      <!-- Schritt 5: Delta-Ratio (wenn AL erhöht) -->
+      <div id="sab-r-delta-box" class="elek-card" style="display:none;">
+        <h3><span class="elek-step-badge">5</span> Delta-Ratio (bei erhöhter AL)</h3>
+        <div id="sab-r-delta"></div>
+      </div>
+
+      <!-- Schritt 6: Urin-Anionenlücke (wenn Urin-Werte vorhanden) -->
+      <div id="sab-r-ual-box" class="elek-card" style="display:none;">
+        <h3><span class="elek-step-badge">6</span> Urin-Anionenlücke</h3>
+        <div id="sab-r-ual"></div>
+      </div>
+
+      <!-- Zusammenfassung -->
+      <div class="elek-card">
+        <h3>📋 Zusammenfassung & Differentialdiagnosen</h3>
+        <div id="sab-r-summary"></div>
+      </div>
+
+    </div>
+
+    <div id="sab-hint" class="elek-result info">
+      pH und HCO₃⁻ oder pCO₂ eingeben, um die BGA-Auswertung zu starten.
+    </div>
+
+    <!-- Referenz-Infobox -->
+    <div class="elek-card" style="margin-top:8px;">
+      <h3>📐 Kompensationsformeln (Referenz)</h3>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:.85rem;">
+          <thead><tr style="background:#e3f2fd;"><th style="padding:7px 10px;text-align:left;border-bottom:2px solid #90caf9;">Primärstörung</th><th style="padding:7px 10px;text-align:left;border-bottom:2px solid #90caf9;">Formel</th><th style="padding:7px 10px;text-align:left;border-bottom:2px solid #90caf9;">Erwarteter Bereich</th></tr></thead>
+          <tbody>
+            <tr style="border-bottom:1px solid #eee;"><td style="padding:6px 10px;"><strong>Met. Azidose</strong></td><td style="padding:6px 10px;font-family:monospace;">pCO₂ = 1,5 × HCO₃⁻ + 8 (±2) <br><small>Winters-Formel</small></td><td style="padding:6px 10px;">z.B. HCO₃⁻ 15 → pCO₂ 28–32</td></tr>
+            <tr style="border-bottom:1px solid #eee;"><td style="padding:6px 10px;"><strong>Met. Alkalose</strong></td><td style="padding:6px 10px;font-family:monospace;">pCO₂ = 0,7 × HCO₃⁻ + 20 (±2)</td><td style="padding:6px 10px;">z.B. HCO₃⁻ 36 → pCO₂ 43–47</td></tr>
+            <tr style="border-bottom:1px solid #eee;"><td style="padding:6px 10px;"><strong>Resp. Azidose akut</strong></td><td style="padding:6px 10px;font-family:monospace;">HCO₃⁻ = 24 + 1 × (pCO₂−40)/10</td><td style="padding:6px 10px;">1 mmol/l pro 10 mmHg ↑ pCO₂</td></tr>
+            <tr style="border-bottom:1px solid #eee;"><td style="padding:6px 10px;"><strong>Resp. Azidose chron.</strong></td><td style="padding:6px 10px;font-family:monospace;">HCO₃⁻ = 24 + 4 × (pCO₂−40)/10</td><td style="padding:6px 10px;">4 mmol/l pro 10 mmHg ↑ pCO₂</td></tr>
+            <tr style="border-bottom:1px solid #eee;"><td style="padding:6px 10px;"><strong>Resp. Alkalose akut</strong></td><td style="padding:6px 10px;font-family:monospace;">HCO₃⁻ = 24 − 2 × (40−pCO₂)/10</td><td style="padding:6px 10px;">2 mmol/l pro 10 mmHg ↓ pCO₂</td></tr>
+            <tr><td style="padding:6px 10px;"><strong>Resp. Alkalose chron.</strong></td><td style="padding:6px 10px;font-family:monospace;">HCO₃⁻ = 24 − 5 × (40−pCO₂)/10</td><td style="padding:6px 10px;">5 mmol/l pro 10 mmHg ↓ pCO₂</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="elek-infobox" style="margin-top:10px;">
+        <strong>Anionenlücke (AL)</strong> = Na⁺ − (HCO₃⁻ + Cl⁻) · Normal: 8–12 mmol/l<br>
+        <strong>Albumin-Korrektur:</strong> für jede 10 g/l Albumin unter 40 g/l → AL um 2,5 mmol/l erhöhen<br>
+        <strong>GOLDMARK</strong> (erhöhte AL): Glycolat · Oxoprolin · L-Laktat · D-Laktat · Methanol · Aspirin · Renal (Urämie) · Ketoazidose<br>
+        <strong>Normale AL</strong> (hyperchlorämisch): RTA · Diarrhö · Diuretika · Ureterableitung · Acetazolamid
+      </div>
+    </div>
+
+  </div><!-- end elek-sab -->
+
+</div><!-- end elek-container -->
+
+<script>
+(function(){
+  'use strict';
+
+  window.elekShowSection = function(id, btn) {
+    document.querySelectorAll('.elek-section').forEach(function(s){ s.classList.remove('active'); });
+    document.querySelectorAll('.elek-subtab-btn').forEach(function(b){ b.classList.remove('active'); });
+    document.getElementById('elek-' + id).classList.add('active');
+    btn.classList.add('active');
+  };
+
+  /* ===== HYPONATRIÄMIE ===== */
+  window.hypoCalc = function() {
+    var na    = parseFloat(document.getElementById('hypo-na').value);
+    var hst   = parseFloat(document.getElementById('hypo-hst').value);
+    var glu   = parseFloat(document.getElementById('hypo-glu').value);
+    var k     = parseFloat(document.getElementById('hypo-k').value);
+    var osmM  = parseFloat(document.getElementById('hypo-osm-mess').value);
+    var uosm  = parseFloat(document.getElementById('hypo-uosm').value);
+    var una   = parseFloat(document.getElementById('hypo-una').value);
+    var uk    = parseFloat(document.getElementById('hypo-uk').value);
+    var uha   = parseFloat(document.getElementById('hypo-uha').value);
+    var vol   = document.getElementById('hypo-vol').value;
+    var symp  = document.getElementById('hypo-symp').value;
+    var dauer = document.getElementById('hypo-dauer').value;
+    var diur  = document.getElementById('hypo-diuretikum').value;
+    var korts = document.getElementById('hypo-kortisol').value;
+    var ods   = document.getElementById('hypo-ods').value;
+
+    if (isNaN(na)) {
+      document.getElementById('hypo-result-box').style.display = 'none';
+      document.getElementById('hypo-hint').style.display = 'block';
+      return;
+    }
+    document.getElementById('hypo-result-box').style.display = 'block';
+    document.getElementById('hypo-hint').style.display = 'none';
+
+    // ===== SCHRITT 2: SCHWEREGRAD & OSMOLALITÄT =====
+    var schwere = na > 135 ? 'normal' : na >= 130 ? 'mild' : na >= 125 ? 'moderat' : 'schwer';
+    var schwereTag = {
+      normal:  '<span class="elek-tag green">Na⁺ normal (&gt;135)</span>',
+      mild:    '<span class="elek-tag blue">Mild (130–135 mmol/l)</span>',
+      moderat: '<span class="elek-tag orange">Mäßig (125–129 mmol/l)</span>',
+      schwer:  '<span class="elek-tag red">Ausgeprägt (&lt;125 mmol/l)</span>'
+    }[schwere];
+
+    var osmB = (!isNaN(hst) && !isNaN(glu)) ? (na + hst + glu) : null;
+    var osmLuecke = (!isNaN(osmM) && osmB !== null) ? (osmM - osmB) : null;
+
+    var osmTyp = '';
+    var osmRef = osmB !== null ? osmB : osmM;
+    if (!isNaN(osmRef)) {
+      if (osmRef < 275)      osmTyp = '<span class="elek-tag blue">Hypotone Hyponatriämie</span>';
+      else if (osmRef <= 295) osmTyp = '<span class="elek-tag orange">Isotone Hyponatriämie → Pseudohyponatriämie? (extreme Triglyzeride / Paraproteine)</span>';
+      else                   osmTyp = '<span class="elek-tag red">Hypertone Hyponatriämie → effektives Osmol vorhanden (Hyperglykämie, Mannitol, Kontrastmittel)</span>';
+    }
+
+    var dauer_tag = dauer === 'akut'
+      ? '<span class="elek-tag blue">Akut (&lt;48h) — keine Adaptation</span>'
+      : dauer === 'chronisch'
+      ? '<span class="elek-tag orange">Chronisch / unbekannt — Adaptation abgeschlossen</span>'
+      : '';
+
+    var osmHtml = '<div style="margin-bottom:8px;">' + schwereTag;
+    if (osmTyp) osmHtml += ' ' + osmTyp;
+    if (dauer_tag) osmHtml += ' ' + dauer_tag;
+    osmHtml += '</div>';
+    osmHtml += '<strong>Plasma-Na⁺:</strong> ' + na + ' mmol/l<br>';
+    if (osmB !== null) osmHtml += '<strong>Berechnete Osmolalität</strong> (Na+Hst+Glu): <strong>' + osmB.toFixed(0) + ' mOsm/kg</strong><br>';
+    if (!isNaN(osmM)) osmHtml += '<strong>Gemessene Osmolalität:</strong> ' + osmM + ' mOsm/kg<br>';
+    if (osmLuecke !== null) {
+      osmHtml += '<strong>Osmotische Lücke:</strong> ' + osmLuecke.toFixed(1) + ' mOsm/kg ';
+      osmHtml += osmLuecke > 10 ? '<span class="elek-tag orange">Erhöht → weitere Osmolyte vorhanden (Mannitol, Ethanol, Kontrastmittel)</span>' : '<span class="elek-tag green">Normal</span>';
+      osmHtml += '<br>';
+    }
+    if (na < 120) osmHtml += '<div class="elek-infobox red" style="margin-top:8px;">🏥 <strong>IMC/ITS-Indikation:</strong> Na⁺ &lt;120 mmol/l — Überwachung auch bei asymptomatischem Verlauf (Charité-Standard)</div>';
+    document.getElementById('hypo-r-osm').innerHTML = osmHtml;
+
+    // ===== SCHRITT 3: DIFFERENTIALDIAGNOSE =====
+    var diagHtml = '';
+
+    // Urin-Osmolalität: primäre Einordnung
+    if (!isNaN(uosm)) {
+      diagHtml += '<strong>Urin-Osmolalität:</strong> ' + uosm + ' mOsm/kg ';
+      if (uosm < 100) {
+        diagHtml += '<span class="elek-tag green">→ &lt;100: AVP supprimiert → Polydipsie / Bier-Potomanie / niedriger Solut-Input</span>';
+      } else {
+        diagHtml += '<span class="elek-tag orange">→ &gt;100: AVP aktiv / inadäquate Verdünnung</span>';
+      }
+      diagHtml += '<br>';
+    }
+
+    // Urin-Na
+    if (!isNaN(una)) {
+      diagHtml += '<strong>Urin-Na⁺:</strong> ' + una + ' mmol/l ';
+      if (una < 30) {
+        diagHtml += '<span class="elek-tag blue">→ &lt;30: extrarenale Verluste oder reduziertes effektives Volumen (HI, Zirrhose, neph. Syndrom)</span>';
+        if (diur === 'thiazid' || diur === 'schleife') diagHtml += ' <span class="elek-tag orange">Cave: unter Diuretika falsch niedrig!</span>';
+      } else {
+        diagHtml += '<span class="elek-tag orange">→ &gt;30: renaler Verlust oder SIAD';
+        if (diur === 'thiazid') diagHtml += ' (Thiazid-Effekt möglich!)';
+        diagHtml += '</span>';
+      }
+      diagHtml += '<br>';
+    }
+
+    // Volumenstatus + Differentialdiagnose
+    if (vol) {
+      diagHtml += '<hr style="border:none;border-top:1px solid #eee;margin:8px 0;">';
+      if (vol === 'hypo') {
+        diagHtml += '<strong>Hypovolämie</strong> — Differentialdiagnose:<br>';
+        diagHtml += '<div style="margin-left:12px;margin-top:4px;">';
+        diagHtml += '<em>Urin-Na &lt;30 (extrarenal):</em> Diarrhoe · Erbrechen · Schwitzen · Ileus · Pankreatitis · Sepsis<br>';
+        diagHtml += '<em>Urin-Na &gt;30 (renal):</em> Diuretika · renales/zerebrales Salzverlustsyndrom · Nebenniereninsuffizienz<br>';
+        diagHtml += '<em>Cave:</em> Diuretika maskieren Urin-Na (falsch hoch trotz Volumendefizit)';
+        diagHtml += '</div>';
+      } else if (vol === 'eu') {
+        diagHtml += '<strong>Euvolämie</strong> — Differentialdiagnose:<br>';
+        diagHtml += '<div style="margin-left:12px;margin-top:4px;">';
+        diagHtml += '<em>Häufig:</em> SIAD · Thiazid-induziert · Hypothyreose (TSH prüfen)<br>';
+        diagHtml += '<em>Wichtig ausschließen:</em> Nebenniereninsuffizienz (Morgen-Kortisol!)';
+        if (korts === 'nein') diagHtml += ' <span class="elek-tag red">→ noch nicht ausgeschlossen!</span>';
+        else if (korts === 'ja') diagHtml += ' <span class="elek-tag green">→ ausgeschlossen</span>';
+        diagHtml += '<br>';
+        if (diur === 'thiazid') diagHtml += '<span class="elek-tag orange">Thiazid aktiv → SIAD-Kriterien formal nicht erfüllbar; Thiazid-Mechanismus wahrscheinlich</span><br>';
+        diagHtml += '<em>Selten:</em> Primäre Polydipsie (U-Osm &lt;100) · V2R-Gain-of-Function-Mutation';
+        diagHtml += '</div>';
+      } else if (vol === 'hyper') {
+        diagHtml += '<strong>Hypervolämie</strong> — Differentialdiagnose:<br>';
+        diagHtml += '<div style="margin-left:12px;margin-top:4px;">';
+        diagHtml += 'Herzinsuffizienz · Leberzirrhose / Leberversagen · Nephrotisches Syndrom · Fortgeschrittene CKD<br>';
+        diagHtml += '<em>Mechanismus:</em> Reduziertes effektives Zirkulationsvolumen → unkontrollierte AVP-Ausschüttung trotz Volumenüberschuss';
+        diagHtml += '</div>';
+      }
+    } else {
+      diagHtml += '<div class="elek-result neutral" style="margin-top:8px;">Volumenstatus angeben für Differentialdiagnose.</div>';
+    }
+
+    // Sonderfall Hypokaliämie
+    if (!isNaN(k) && k < 3.5) {
+      diagHtml += '<div class="elek-infobox red" style="margin-top:8px;">⚠️ <strong>Hypokaliämie (K⁺ ' + k + ' mmol/l):</strong> ODS-Risikofaktor! Kaliumersatz zählt zur Korrektur (jedes mmol/l K⁺ ↑ ≈ 1 mmol/l Na⁺ ↑).</div>';
+    }
+
+    document.getElementById('hypo-r-diag').innerHTML = diagHtml;
+
+    // ===== SCHRITT 4: FREIWASSER-CLEARANCE =====
+    var efwcHtml = '';
+    if (!isNaN(una) && !isNaN(uk)) {
+      var uKat = una + uk;
+      efwcHtml += '<code>Urin-Kationen = Na⁺<sub>U</sub> + K⁺<sub>U</sub> = ' + una + ' + ' + uk + ' = <strong>' + uKat + ' mmol/l</strong></code><br>';
+      efwcHtml += '<code>Plasma-Na⁺ = <strong>' + na + ' mmol/l</strong></code><br><br>';
+      if (uKat < na) {
+        efwcHtml += '<span class="elek-tag green">Urin-Kationen &lt; Plasma-Na⁺ → Freiwasser-Clearance <strong>positiv</strong></span><br>';
+        efwcHtml += '<div style="margin-top:6px;">Netto-Wasserausscheidung möglich → Na⁺ wird spontan ansteigen.<br>';
+        efwcHtml += '<strong>Klinische Konsequenz:</strong> Engmaschige Kontrollen! Bei erwarteter rascher Selbstkorrektur (z.B. nach Thiazid-Absetzen) → prophylaktisches Desmopressin erwägen.</div>';
+      } else {
+        efwcHtml += '<span class="elek-tag red">Urin-Kationen ≥ Plasma-Na⁺ → Freiwasser-Clearance <strong>negativ</strong></span><br>';
+        efwcHtml += '<div style="margin-top:6px;">Niere retiniert Wasser → Na⁺ wird ohne Intervention weiter fallen.<br>';
+        efwcHtml += '<strong>Klinische Konsequenz:</strong> Trinkmengenbeschränkung allein unzureichend → NaCl-haltige Lösungen, Harnstoff oder Solutzufuhr erforderlich.</div>';
+      }
+      if (!isNaN(uha)) {
+        efwcHtml += '<br><strong>Urin-Harnsäure:</strong> ' + uha + ' mg/dl';
+        if (uha < 4) efwcHtml += ' <span class="elek-tag orange">→ SIAD-Hinweis (Harnsäure &lt;4 + fraktionelle Exkretion &gt;10%)</span>';
+      }
+    } else {
+      efwcHtml = '<div class="elek-result neutral">Urin-Na⁺ und Urin-K⁺ eingeben für Freiwasser-Clearance-Berechnung.</div>';
+    }
+    document.getElementById('hypo-r-efwc').innerHTML = efwcHtml;
+
+    // ===== SCHRITT 5: AKUTTHERAPIE =====
+    var thHtml = '';
+    if (!symp || !dauer) {
+      thHtml = '<div class="elek-result neutral">Symptomschwere und Verlauf auswählen für Therapieempfehlung.</div>';
+    } else if (symp === 'sev') {
+      var odsLimit = ods === 'ja' ? '6–8' : '8–10';
+      thHtml += '<div class="elek-result danger">';
+      thHtml += '<strong>⚡ Schwere Symptome — Sofortmaßnahme</strong><br>';
+      thHtml += '① <strong>150 ml 3% NaCl i.v. über 20 min</strong><br>';
+      thHtml += '② BGA-Kontrolle nach 20 min<br>';
+      thHtml += '③ Ziel: Na⁺ ↑ <strong>4–6 mmol/l</strong> → ICP-Senkung ~50%<br>';
+      thHtml += '④ Bei persistierenden Symptomen: Bolus wiederholen (max. 3×)<br>';
+      thHtml += '⑤ <strong>Korrekturgrenzen 24h: max. ' + odsLimit + ' mmol/l</strong><br>';
+      thHtml += 'Monitoring: alle 20 min (BGA) → stündlich → alle 2h</div>';
+      if (dauer === 'chronisch') {
+        thHtml += '<div class="elek-infobox yellow" style="margin-top:8px;">⚠️ Chronische Hyponatriämie: Initiale Sofortmaßnahme (3% NaCl) bleibt indiziert — aber nach Symptom-Sistieren: langsame Weiterkorrektur, <strong>max. ' + odsLimit + ' mmol/l/24h</strong>!</div>';
+      }
+    } else if (symp === 'mod') {
+      thHtml += '<div class="elek-result warn">';
+      thHtml += '<strong>Mittelschwere Symptome</strong><br>';
+      thHtml += '• Zeit für vollständige Diagnostik nutzen<br>';
+      thHtml += '• Auslöser beheben (Thiazid absetzen, Antiemetikum, Analgesie)<br>';
+      if (dauer === 'akut') {
+        thHtml += '• Akut (&lt;48h): <strong>3% NaCl 1 ml/kg/h</strong> bis Symptomkontrolle, Ziel Na⁺ +5 mmol/l<br>';
+      } else {
+        thHtml += '• Chronisch: zurückhaltend — Ursachentherapie, kein 3% NaCl außer bei Verschlechterung<br>';
+      }
+      thHtml += '• Monitoring: alle 4–6h initial</div>';
+    } else {
+      thHtml += '<div class="elek-result">';
+      thHtml += '<strong>Milde / asymptomatische Hyponatriämie</strong><br>';
+      thHtml += '• Keine i.v. NaCl<br>';
+      thHtml += '• Ursachentherapie (s. Schritt 6)<br>';
+      thHtml += '• Na⁺-Kontrolle ambulant alle 24–48h';
+      thHtml += '</div>';
+    }
+    document.getElementById('hypo-r-therapie').innerHTML = thHtml;
+
+    // ===== SCHRITT 6: URSACHENTHERAPIE =====
+    var urHtml = '';
+    if (vol === 'hypo') {
+      urHtml += '<strong>Hypovolämie → Volumenersatz</strong><br>';
+      urHtml += '• Balancierte Vollelektrolytlösung (NaCl 0,9% oder Ringerlaktat) 0,5–1 ml/kg/h<br>';
+      urHtml += '• Auslösende Medikamente absetzen (v.a. Diuretika)<br>';
+      urHtml += '• Cave: Wiederherstellung des Volumens → AVP-Suppression → rascher spontaner Na⁺-Anstieg → engmaschige BGA!<br>';
+      urHtml += '• Nebenniereninsuffizienz? → Hydrokortison 100 mg i.v. sofort (lebensrettend)';
+    } else if (vol === 'eu') {
+      if (diur === 'thiazid') {
+        urHtml += '<strong>Thiazid-induzierte Hyponatriämie</strong><br>';
+        urHtml += '• <strong>Thiazid absetzen</strong> (erste Maßnahme)<br>';
+        urHtml += '• Trinkmenge auf 1 l/d reduzieren<br>';
+        urHtml += '• Kein 3% NaCl bei chronischem Verlauf ohne schwere Symptome<br>';
+        urHtml += '• Cave: nach Absetzen → rascher spontaner Na⁺-Anstieg möglich → BGA alle 4–6h';
+      } else {
+        urHtml += '<strong>SIAD / Euvoläme Hyponatriämie</strong><br>';
+        urHtml += '• Kausaltherapie: Auslöser identifizieren und beseitigen<br>';
+        urHtml += '• Trinkmengenbeschränkung 500–800 ml/d (nur bei positiver Freiwasser-Clearance wirksam!)<br>';
+        urHtml += '• Solutzufuhr steigern: Harnstoff 15–60 g/d oral · Proteinpulver 90 g/d · NaCl-Kapseln<br>';
+        urHtml += '• SGLT2-Hemmer: Dapagliflozin 25 mg/d (osmotische Glukosurie)<br>';
+        urHtml += '• Furosemid: wäscht intrarenalen Osmolgradienten aus → mehr freie Wasserausscheidung';
+      }
+    } else if (vol === 'hyper') {
+      urHtml += '<strong>Hypervoläme Hyponatriämie (HI / Zirrhose / Neph. Syndrom)</strong><br>';
+      urHtml += '• Primärtherapie der Grunderkrankung<br>';
+      urHtml += '• Trinkmengenbeschränkung ± Schleifendiuretika (Furosemid)<br>';
+      urHtml += '• Milde Hyponatriämie im hypervolämischen Kontext nicht isoliert korrigieren<br>';
+      urHtml += '• Na⁺ &lt;125 + schwere Symptome → hypertone NaCl in Ausnahmen';
+    } else {
+      urHtml = '<div class="elek-result neutral">Volumenstatus angeben für ursachenspezifische Therapieempfehlung.</div>';
+    }
+
+    if (urHtml && vol) {
+      var odsMax = (ods === 'ja') ? '6–8' : '8–10';
+      urHtml += '<hr style="border:none;border-top:1px solid #e0e0e0;margin:10px 0;">';
+      urHtml += '<strong>Korrekturgrenzen:</strong> ';
+      urHtml += 'Erste 24h max. <strong>' + odsMax + ' mmol/l</strong>';
+      if (ods === 'ja') urHtml += ' <span class="elek-tag red">ODS-Risiko: konservative Grenze!</span>';
+      urHtml += ' | Folgende 24h max. <strong>8 mmol/l</strong><br>';
+      urHtml += dauer === 'akut' ? '<span class="elek-tag blue">Akute Hyponatriämie: schnellere Korrektur nach initialem Ziel erlaubt</span>' : '';
+    }
+    document.getElementById('hypo-r-ursache').innerHTML = urHtml;
+  };
+
+
+  /* ===== SÄURE-BASEN ===== */
+  window.sabCalc = function() {
+    var ph   = parseFloat(document.getElementById('sab-ph').value);
+    var pco2 = parseFloat(document.getElementById('sab-pco2').value);
+    var hco3 = parseFloat(document.getElementById('sab-hco3').value);
+    var na   = parseFloat(document.getElementById('sab-na').value);
+    var cl   = parseFloat(document.getElementById('sab-cl').value);
+    var k    = parseFloat(document.getElementById('sab-k').value);
+    var alb  = parseFloat(document.getElementById('sab-alb').value);
+    var lak  = parseFloat(document.getElementById('sab-lak').value);
+    var una  = parseFloat(document.getElementById('sab-una').value);
+    var uk   = parseFloat(document.getElementById('sab-uk').value);
+    var ucl  = parseFloat(document.getElementById('sab-ucl').value);
+    var uhst = parseFloat(document.getElementById('sab-uhst').value);
+    var uosm = parseFloat(document.getElementById('sab-uosm').value);
+
+    var hasPh   = !isNaN(ph);
+    var hasPco2 = !isNaN(pco2);
+    var hasHco3 = !isNaN(hco3);
+
+    if (!hasPh || (!hasPco2 && !hasHco3)) {
+      document.getElementById('sab-result-box').style.display = 'none';
+      document.getElementById('sab-hint').style.display = 'block';
+      return;
+    }
+    document.getElementById('sab-result-box').style.display = 'block';
+    document.getElementById('sab-hint').style.display = 'none';
+
+    // HCO3 schätzen aus pH+pCO2 falls nicht eingegeben
+    var hco3calc = hasHco3 ? hco3 : (hasPco2 ? (0.03 * pco2 * Math.pow(10, ph - 6.1)) : NaN);
+    if (!hasHco3 && !isNaN(hco3calc)) hco3 = parseFloat(hco3calc.toFixed(1));
+
+    // pCO2 schätzen falls nicht eingegeben
+    if (!hasPco2 && hasHco3) pco2 = parseFloat((hco3 / (0.03 * Math.pow(10, ph - 6.1))).toFixed(1));
+
+    // ===== SCHRITT 1: pH =====
+    var phClass = '';
+    var phText = '';
+    if (ph < 6.8 || ph > 7.8) { phClass = 'danger'; phText = '⛔ Lebensbedrohlicher pH!'; }
+    else if (ph < 7.35)  { phClass = 'warn';   phText = '<span class="elek-tag red">Azidämie</span>'; }
+    else if (ph > 7.45)  { phClass = 'warn';   phText = '<span class="elek-tag orange">Alkalämie</span>'; }
+    else                 { phClass = '';        phText = '<span class="elek-tag green">Normaler pH</span>'; }
+    document.getElementById('sab-r-ph').innerHTML =
+      '<div class="elek-result ' + phClass + '">' +
+      'pH <strong>' + ph + '</strong> — ' + phText + '<br>' +
+      '<small>Normal: 7,35–7,45 | Azidämie &lt;7,35 | Alkalämie &gt;7,45</small></div>';
+
+    // ===== SCHRITT 2: PRIMÄRSTÖRUNG =====
+    var isAzid  = ph < 7.35;
+    var isAlkal = ph > 7.45;
+    var metComp = hco3 - 24;    // + = met. Alkalose
+    var respComp= pco2 - 40;    // + = resp. Azidose
+
+    var primText = '';
+    var primType = ''; // 'metazid', 'metalk', 'respazid', 'respalk', 'gemischt'
+
+    // Primärstörung bestimmen
+    // Metabolische Azidose: HCO3 ↓ (primär), pCO2 ↓ = kompensatorische Hyperventilation (kein Fehler!)
+    // Respiratorische Azidose: pCO2 ↑ (primär), HCO3 ↑ = renale Kompensation
+    // Gemischte Azidose: HCO3 ↓ UND pCO2 ↑ (beide treiben pH nach unten)
+    if (isAzid) {
+      if (metComp < -2 && respComp > 2) {
+        primType = 'gemischt';
+        primText = '<span class="elek-tag red">Gemischte Azidose</span> (HCO₃⁻ ↓ + pCO₂ ↑)';
+      } else if (metComp < -2) {
+        primType = 'metazid';
+        primText = '<span class="elek-tag red">Metabolische Azidose</span> (HCO₃⁻ ↓ = ' + hco3 + ' mmol/l)';
+      } else if (respComp > 2) {
+        primType = 'respazid';
+        primText = '<span class="elek-tag red">Respiratorische Azidose</span> (pCO₂ ↑ = ' + pco2 + ' mmHg)';
+      } else {
+        primText = '<span class="elek-tag red">Azidose</span> — Primärstörung unklar (beide Parameter nur gering verändert)';
+      }
+    } else if (isAlkal) {
+      if (metComp > 2 && respComp < -2) {
+        primType = 'gemischt_alk';
+        primText = '<span class="elek-tag orange">Gemischte Alkalose</span> (HCO₃⁻ ↑ + pCO₂ ↓)';
+      } else if (metComp > 2) {
+        primType = 'metalk';
+        primText = '<span class="elek-tag orange">Metabolische Alkalose</span> (HCO₃⁻ ↑ = ' + hco3 + ' mmol/l)';
+      } else if (respComp < -2) {
+        primType = 'respalk';
+        primText = '<span class="elek-tag orange">Respiratorische Alkalose</span> (pCO₂ ↓ = ' + pco2 + ' mmHg)';
+      } else {
+        primText = '<span class="elek-tag orange">Alkalose</span> — Primärstörung unklar';
+      }
+    } else {
+      primText = '<span class="elek-tag green">Keine primäre Störung erkennbar</span> (pH normal — trotzdem AL prüfen!)';
+      if (metComp < -3 && respComp < -3) {
+        primText += '<br><small>Achtung: HCO₃⁻ und pCO₂ beide erniedrigt bei normalem pH → möglicherweise kompensierte met. Azidose + resp. Alkalose</small>';
+      }
+    }
+    primText += '<br><small>HCO₃⁻: ' + hco3 + ' mmol/l (Normal 22–26) | pCO₂: ' + pco2 + ' mmHg (Normal 35–45)</small>';
+    document.getElementById('sab-r-prim').innerHTML = '<div class="elek-result ' + (isAzid ? 'warn' : isAlkal ? 'warn' : '') + '">' + primText + '</div>';
+
+    // ===== SCHRITT 3: KOMPENSATION =====
+    var kompHtml = '';
+    var kompOk = null;
+    var erwartet = null;
+    var erwartetStr = '';
+
+    if (primType === 'metazid') {
+      var winters = 1.5 * hco3 + 8;
+      var wLow = winters - 2, wHigh = winters + 2;
+      erwartetStr = 'Winters-Formel: <code>pCO₂ = 1,5 × HCO₃⁻ + 8 (±2) = ' + wLow.toFixed(1) + '–' + wHigh.toFixed(1) + ' mmHg</code>';
+      kompOk = (pco2 >= wLow && pco2 <= wHigh);
+      kompHtml = erwartetStr + '<br><strong>Gemessenes pCO₂: ' + pco2 + ' mmHg</strong> → ';
+      if (kompOk) {
+        kompHtml += '<span class="elek-tag green">Adäquate respiratorische Kompensation</span>';
+      } else if (pco2 < wLow) {
+        kompHtml += '<span class="elek-tag orange">pCO₂ zu niedrig → zusätzliche respiratorische Alkalose</span>';
+      } else {
+        kompHtml += '<span class="elek-tag red">pCO₂ zu hoch → zusätzliche respiratorische Azidose (z.B. Ateminsuffizienz)</span>';
+      }
+    } else if (primType === 'metalk') {
+      var expPco2 = 0.7 * hco3 + 20;
+      var eLow = expPco2 - 2, eHigh = expPco2 + 2;
+      erwartetStr = '<code>pCO₂ = 0,7 × HCO₃⁻ + 20 (±2) = ' + eLow.toFixed(1) + '–' + eHigh.toFixed(1) + ' mmHg</code>';
+      kompOk = (pco2 >= eLow && pco2 <= eHigh);
+      kompHtml = erwartetStr + '<br><strong>Gemessenes pCO₂: ' + pco2 + ' mmHg</strong> → ';
+      if (kompOk) {
+        kompHtml += '<span class="elek-tag green">Adäquate respiratorische Kompensation</span>';
+      } else if (pco2 < eLow) {
+        kompHtml += '<span class="elek-tag orange">pCO₂ zu niedrig → zusätzliche respiratorische Alkalose</span>';
+      } else {
+        kompHtml += '<span class="elek-tag red">pCO₂ zu hoch → unzureichende Kompensation / zusätzliche resp. Azidose</span>';
+      }
+    } else if (primType === 'respazid') {
+      var hco3expAkut    = 24 + 1 * (pco2 - 40) / 10;
+      var hco3expChron   = 24 + 4 * (pco2 - 40) / 10;
+      kompHtml = '<strong>Akute resp. Azidose:</strong> erwartet HCO₃⁻ ≈ <strong>' + hco3expAkut.toFixed(1) + '</strong> mmol/l<br>';
+      kompHtml += '<strong>Chronische resp. Azidose (COPD):</strong> erwartet HCO₃⁻ ≈ <strong>' + hco3expChron.toFixed(1) + '</strong> mmol/l<br>';
+      kompHtml += '<strong>Gemessenes HCO₃⁻: ' + hco3 + ' mmol/l</strong> → ';
+      var diffAkut  = Math.abs(hco3 - hco3expAkut);
+      var diffChron = Math.abs(hco3 - hco3expChron);
+      if (diffAkut < 2) {
+        kompHtml += '<span class="elek-tag green">Adäquate Kompensation (akut)</span>';
+      } else if (diffChron < 2) {
+        kompHtml += '<span class="elek-tag green">Adäquate Kompensation (chronisch/COPD)</span>';
+      } else if (hco3 < hco3expAkut - 2) {
+        kompHtml += '<span class="elek-tag red">HCO₃⁻ zu niedrig → zusätzliche metabolische Azidose</span>';
+      } else {
+        kompHtml += '<span class="elek-tag orange">HCO₃⁻ > Erwartungswert → zusätzliche metabolische Alkalose</span>';
+      }
+    } else if (primType === 'respalk') {
+      var hco3expAkutAlk  = 24 - 2 * (40 - pco2) / 10;
+      var hco3expChronAlk = 24 - 5 * (40 - pco2) / 10;
+      kompHtml = '<strong>Akute resp. Alkalose:</strong> erwartet HCO₃⁻ ≈ <strong>' + hco3expAkutAlk.toFixed(1) + '</strong> mmol/l<br>';
+      kompHtml += '<strong>Chronische resp. Alkalose:</strong> erwartet HCO₃⁻ ≈ <strong>' + hco3expChronAlk.toFixed(1) + '</strong> mmol/l<br>';
+      kompHtml += '<strong>Gemessenes HCO₃⁻: ' + hco3 + ' mmol/l</strong>';
+    } else {
+      kompHtml = '<span class="elek-tag green">Keine Kompensationsberechnung erforderlich (kein pH-Abweichung)</span>';
+    }
+    document.getElementById('sab-r-komp').innerHTML = '<div class="elek-result">' + kompHtml + '</div>';
+
+    // ===== SCHRITT 4: ANIONENLÜCKE =====
+    var alHtml = '';
+    var al = null;
+    var alKorr = null;
+    if (!isNaN(na) && !isNaN(cl)) {
+      al = na - (hco3 + cl);
+      var albKorr = (!isNaN(alb) && alb < 40) ? 2.5 * (40 - alb) / 10 : 0;
+      alKorr = al + albKorr;
+
+      alHtml += '<code>AL = Na⁺ − (HCO₃⁻ + Cl⁻) = ' + na + ' − (' + hco3 + ' + ' + cl + ') = <strong>' + al.toFixed(1) + ' mmol/l</strong></code><br>';
+      if (!isNaN(alb) && alb < 40) {
+        alHtml += '<code>Albumin-Korrektur (+' + albKorr.toFixed(1) + '): AL<sub>korr</sub> = <strong>' + alKorr.toFixed(1) + ' mmol/l</strong></code><br>';
+      }
+      alHtml += '<br>';
+
+      var alVal = alKorr !== null ? alKorr : al;
+      if (alVal > 12) {
+        alHtml += '<span class="elek-tag red">Erhöhte Anionenlücke (&gt;12 mmol/l)</span><br>';
+        alHtml += '<small><strong>GOLDMARK:</strong> <b>G</b>lycolat/Ethylenglykol · <b>O</b>xoprolin · <b>L</b>-Laktat · <b>D</b>-Laktat · <b>M</b>ethanol · <b>A</b>spirin · <b>R</b>enal (Urämie) · <b>K</b>etoazidose (DKA, alkohol., Hunger)</small>';
+        if (!isNaN(lak) && lak > 2) {
+          alHtml += '<br><span class="elek-tag orange">Laktat: ' + lak + ' mmol/l → Laktatazidose trägt zur AL bei</span>';
+        }
+      } else if (alVal < 6) {
+        alHtml += '<span class="elek-tag orange">Erniedrigte Anionenlücke</span><br>';
+        alHtml += '<small>Mögliche Ursachen: Hypoalbuminämie, erhöhte Kationen (Ca, Mg, K, Li), positiv geladene Paraproteine</small>';
+      } else {
+        alHtml += '<span class="elek-tag green">Normale Anionenlücke (8–12 mmol/l)</span><br>';
+        alHtml += '<small><strong>Hyperchlorämische Azidose</strong> (wenn met. Azidose vorhanden):<br>RTA (Typ 1/2/4) · Diarrhö · Diuretika (Acetazolamid) · Ureterableitung · Pankreasfistel · NaHCO₃-Verlust</small>';
+      }
+    } else {
+      alHtml = '<div class="elek-result neutral">Na⁺ und Cl⁻ eingeben, um die Anionenlücke zu berechnen.</div>';
+    }
+    document.getElementById('sab-r-al').innerHTML = '<div class="elek-result">' + alHtml + '</div>';
+
+    // ===== DELTA-RATIO (nur bei erhöhter AL) =====
+    if (al !== null && (alKorr || al) > 12 && !isNaN(hco3)) {
+      var alUse = alKorr !== null ? alKorr : al;
+      var dr = (alUse - 12) / (24 - hco3);
+      var dl = (alUse - 12) - (24 - hco3);
+      var deltaHtml = '<code>Delta-Ratio = (AL − 12) / (24 − HCO₃⁻) = (' + alUse.toFixed(1) + ' − 12) / (24 − ' + hco3 + ') = <strong>' + dr.toFixed(2) + '</strong></code><br>';
+      deltaHtml += '<code>Delta-Lücke = (AL − 12) − (24 − HCO₃⁻) = <strong>' + dl.toFixed(1) + '</strong></code><br><br>';
+      if (dr < 1) {
+        deltaHtml += '<span class="elek-tag orange">DR &lt;1 → zusätzliche <strong>metabolische Azidose mit normaler AL</strong> (hyperchlorämische Komponente)</span>';
+      } else if (dr > 2) {
+        deltaHtml += '<span class="elek-tag orange">DR &gt;2 → zusätzliche <strong>metabolische Alkalose</strong></span>';
+      } else {
+        deltaHtml += '<span class="elek-tag green">DR 1–2 → reine metabolische Azidose mit erhöhter AL</span>';
+      }
+      document.getElementById('sab-r-delta').innerHTML = '<div class="elek-result">' + deltaHtml + '</div>';
+      document.getElementById('sab-r-delta-box').style.display = 'block';
+    } else {
+      document.getElementById('sab-r-delta-box').style.display = 'none';
+    }
+
+    // ===== URIN-ANIONENLÜCKE =====
+    if (!isNaN(una) && !isNaN(uk) && !isNaN(ucl)) {
+      var ual = (una + uk) - ucl;
+      var ualHtml = '<code>UAL = (Na⁺<sub>U</sub> + K⁺<sub>U</sub>) − Cl⁻<sub>U</sub> = (' + una + ' + ' + uk + ') − ' + ucl + ' = <strong>' + ual.toFixed(1) + ' mmol/l</strong></code><br><br>';
+      if (ual > 0) {
+        ualHtml += '<span class="elek-tag red">UAL positiv (+) → <strong>verminderte renale NH₄⁺-Ausscheidung</strong></span><br>';
+        ualHtml += '<small>Eher renale Ursache der metabolischen Azidose: RTA Typ 1 (distal), RTA Typ 4, CKD</small>';
+      } else {
+        ualHtml += '<span class="elek-tag green">UAL negativ (−) → <strong>adäquate renale NH₄⁺-Ausscheidung</strong></span><br>';
+        ualHtml += '<small>Eher extrarenale Ursache: Diarrhö, GI-Verluste, Fisteln</small>';
+      }
+
+      // Urin-Osmolalitätslücke
+      if (!isNaN(uhst) && !isNaN(uosm)) {
+        var uosmB = 2 * (una + uk) + uhst / 2.8;
+        var uol = uosm - uosmB;
+        ualHtml += '<br><hr style="border:none;border-top:1px solid #e0e0e0;margin:8px 0;">';
+        ualHtml += '<code>Urin-Osmolalitätslücke = ' + uosm + ' − ' + uosmB.toFixed(0) + ' = <strong>' + uol.toFixed(0) + ' mOsm/kg</strong></code><br>';
+        if (uol < 100) {
+          ualHtml += '<span class="elek-tag red">UOL &lt;100 → geringe NH₄⁺-Ausscheidung → renale Ursache</span>';
+        } else {
+          ualHtml += '<span class="elek-tag green">UOL &gt;100 → hohe NH₄⁺-Ausscheidung → extrarenale Ursache</span>';
+        }
+      }
+      document.getElementById('sab-r-ual').innerHTML = '<div class="elek-result">' + ualHtml + '</div>';
+      document.getElementById('sab-r-ual-box').style.display = 'block';
+    } else {
+      document.getElementById('sab-r-ual-box').style.display = 'none';
+    }
+
+    // ===== ZUSAMMENFASSUNG =====
+    var sumHtml = '<div class="elek-result">';
+    var findings = [];
+    if (ph < 7.35) findings.push('Azidämie (pH ' + ph + ')');
+    if (ph > 7.45) findings.push('Alkalämie (pH ' + ph + ')');
+    if (primType === 'metazid') findings.push('Metabolische Azidose (HCO₃⁻ ' + hco3 + ')');
+    if (primType === 'metalk') findings.push('Metabolische Alkalose (HCO₃⁻ ' + hco3 + ')');
+    if (primType === 'respazid') findings.push('Respiratorische Azidose (pCO₂ ' + pco2 + ')');
+    if (primType === 'respalk') findings.push('Respiratorische Alkalose (pCO₂ ' + pco2 + ')');
+    if (al !== null && (alKorr || al) > 12) findings.push('Erhöhte Anionenlücke (' + (alKorr||al).toFixed(1) + ')');
+    if (!isNaN(lak) && lak > 2) findings.push('Laktaterhöhung (' + lak + ' mmol/l)');
+
+    if (findings.length === 0) {
+      sumHtml += '<span class="elek-tag green">Alle Parameter im Normbereich</span>';
+    } else {
+      sumHtml += findings.map(function(f){ return '• ' + f; }).join('<br>');
+    }
+    sumHtml += '</div>';
+    document.getElementById('sab-r-summary').innerHTML = sumHtml;
+  };
+
+  window.elekAutoImport = function() {
+    var ckdNa = document.getElementById('sodium');
+    if (ckdNa && ckdNa.value) {
+      var sabNa = document.getElementById('sab-na');
+      var hypoNa = document.getElementById('hypo-na');
+      if (sabNa && !sabNa.value) sabNa.value = ckdNa.value;
+      if (hypoNa && !hypoNa.value) hypoNa.value = ckdNa.value;
+    }
+  };
+
+})();
+</script>
+</div><!-- end tab-elektrolyte -->
+
 <div class="shared-footer">
   ⚕️ Nur zur ärztlichen Unterstützung — kein Ersatz für klinisches Urteil &bull;
   CKD: KDIGO 2024 &bull; CKD-EPI 2021 &bull;
@@ -8476,6 +9399,10 @@ function switchToolTab(tabName) {
   document.getElementById('tab-mbd').style.display = tabName === 'mbd' ? 'block' : 'none';
   if (tabName === 'mbd' && window.mbdAutoImport) {
     window.mbdAutoImport();
+  }
+  document.getElementById('tab-elektrolyte').style.display = tabName === 'elektrolyte' ? 'block' : 'none';
+  if (tabName === 'elektrolyte' && window.elekAutoImport) {
+    window.elekAutoImport();
   }
 }
 
