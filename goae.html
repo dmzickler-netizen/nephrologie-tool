@@ -145,18 +145,36 @@ var PKTW = 0.058287;
 var goaeDB = [
   { nr:1,   name:'Beratung',                              short:'Beratung (kurz)',               kat:'Beratung & Untersuchung', typ:'P', p:80,   excl:[3],      tip:'Auch telefonisch. Bei Gespräch >10 min besser Nr. 3.' },
   { nr:3,   name:'Eingehende Beratung >10 min',           short:'Eingehende Beratung',           kat:'Beratung & Untersuchung', typ:'P', p:150,  excl:[1],      tip:'Mind. 10 min Gesprächsdauer; bei nephrologischen Patienten fast immer zutreffend.' },
+  { nr:4,   name:'Fremdanamnese (Bezugsperson)',          short:'Fremdanamnese',                 kat:'Beratung & Untersuchung', typ:'P', p:150,  excl:[],       tip:'Anamnese bei Bezugsperson, wenn Patient nicht ausreichend auskunftsfähig (z.B. dement, verwirrt). Neben Nr. 3 ansetzbar — separat dokumentieren.' },
   { nr:5,   name:'Symptombezogene Untersuchung',          short:'US symptombezogen',             kat:'Beratung & Untersuchung', typ:'P', p:164,  excl:[6,7,8],  tip:'Beschränkt auf ein Symptom oder ein Organ.' },
   { nr:6,   name:'Vollst. Untersuchung Organsystem',      short:'Organsystem vollst.',           kat:'Beratung & Untersuchung', typ:'P', p:260,  excl:[5,7,8],  tip:'Vollst. Untersuchung z.B. kardiovaskuläres System oder Niere.' },
   { nr:7,   name:'Körperl. Untersuchung (≥2 Systeme)',   short:'US ≥2 Organsysteme',            kat:'Beratung & Untersuchung', typ:'P', p:320,  excl:[5,6,8],  tip:'Mindestens 2 Organsysteme vollständig untersucht und dokumentiert.' },
   { nr:8,   name:'Eingehende ganzkörperl. Untersuchung', short:'Ganzkörperuntersuchung',        kat:'Beratung & Untersuchung', typ:'P', p:450,  excl:[5,6,7],  tip:'Erstvorstellung oder wesentliche Statusänderung. Vollst. internist. Befund inkl. Anamnese.' },
-  { nr:410, name:'Sonographie Niere/Organ',               short:'Sono Niere (1 Region)',        kat:'Sonographie',             typ:'T', p:330,  excl:[413],    tip:'Nieren bilateral = 1 Region. Bei fast jedem nephrologischen Besuch ansetzbar.' },
-  { nr:413, name:'Sonographie Abdomen/Mehrorgan',         short:'Sono Abdomen (≥3 Organe)',     kat:'Sonographie',             typ:'T', p:550,  excl:[410],    tip:'Mindestens 3 Organe/Regionen. Statt Nr. 410 wenn Abdomen vollständig.' },
+  { nr:15,  name:'Betreuung chronisch Kranker',           short:'Chronisch Kranke (≥3 Konsult.)',kat:'Beratung & Untersuchung', typ:'P', p:80,   excl:[],       tip:'Bei ≥3 Konsultationen/Jahr für dieselbe Grunderkrankung (CKD, HTN, Diabetes). Zusätzlich neben Nr. 1 oder 3 ansetzbar.' },
+  { nr:401, name:'Sonographie (1 Organ)',                  short:'Sono 1 Organ',                kat:'Sonographie',             typ:'T', p:200,  excl:[410,413],tip:'Einzelorganbefundung, z.B. Harnblase, Pleura. Bei Niere besser Nr. 410 (beide Nieren = 1 Region).' },
+  { nr:410, name:'Sonographie Niere/Organ',               short:'Sono Niere (1 Region)',        kat:'Sonographie',             typ:'T', p:330,  excl:[401,413],tip:'Nieren bilateral = 1 Region. Bei fast jedem nephrologischen Besuch ansetzbar.' },
+  { nr:413, name:'Sonographie Abdomen/Mehrorgan',         short:'Sono Abdomen (≥3 Organe)',     kat:'Sonographie',             typ:'T', p:550,  excl:[401,410],tip:'Mindestens 3 Organe/Regionen. Statt Nr. 410 wenn Abdomen vollständig.' },
+  { nr:417, name:'Schilddrüse Sonographie',               short:'Sono Schilddrüse',             kat:'Sonographie',             typ:'T', p:250,  excl:[],       tip:'Relevant bei CKD mit Hypothyreose (häufig), HTN, medikamentöser Therapie. Zusätzlich zu Abdomensono ansetzbar.' },
   { nr:420, name:'Doppler/Duplex Nierenarterie',          short:'Duplex-Sono Nierenarterie',    kat:'Sonographie',             typ:'T', p:600,  excl:[],       tip:'Farbkodierte Duplexsonographie. Zusätzlich zu Nr. 410/413. Bei RR-resistenter HTN, Transplantat.' },
+  { nr:424, name:'Echokardiographie (TTE)',               short:'Echo TTE',                     kat:'Echo / Gefäß-Duplex',     typ:'T', p:700,  excl:[],       tip:'Herzinsuffizienz, Volumenüberlastung, kardiorenales Syndrom, Perikarderguss. Nr. 424a/424b zusätzlich ansetzbar.' },
+  { nr:4240,display:'424a', name:'Echo + Doppler-Zusatz', short:'Echo Doppler-Zusatz',          kat:'Echo / Gefäß-Duplex',     typ:'T', p:370,  excl:[],       tip:'Doppler-Klappengradient, E/A-Ratio. Nur zusätzlich zu Nr. 424.' },
+  { nr:4241,display:'424b', name:'Echo + Farbduplex',     short:'Echo Farbduplex-Zusatz',       kat:'Echo / Gefäß-Duplex',     typ:'T', p:550,  excl:[],       tip:'Farbkodierter Duplex. Nur zusätzlich zu Nr. 424.' },
+  { nr:428, name:'Duplex Carotis / extrakranielle Gefäße',short:'Carotis-Duplex',              kat:'Echo / Gefäß-Duplex',     typ:'T', p:850,  excl:[],       tip:'Arteriosklerose-Screening bei CKD. KDIGO empfiehlt kardiovaskuläres Risiko-Assessment. Intima-Media-Dicke dokumentieren.' },
+  { nr:430, name:'Duplex periphere Gefäße',               short:'Periph. Gefäß-Duplex',         kat:'Echo / Gefäß-Duplex',     typ:'T', p:900,  excl:[],       tip:'pAVK-Screening bei CKD G3+. Ergänzt klinische ABI-Messung. Hohe Prävalenz bei Diabetiker + CKD.' },
+  { nr:250, name:'Blutentnahme (venös)',                  short:'Blutentnahme',                 kat:'Diagnostik & Therapie',   typ:'T', p:60,   excl:[],       tip:'Einfachsatz üblich. Fast immer ansetzbar bei Laborkontrollen.' },
+  { nr:252, name:'Injektion (i.m. / s.c.)',               short:'Injektion i.m./s.c.',          kat:'Diagnostik & Therapie',   typ:'T', p:70,   excl:[],       tip:'z.B. EPO s.c., Vitamins B12 i.m. Bei i.v.-Infusion besser Nr. 270.' },
+  { nr:270, name:'Infusionstherapie (≤30 min)',           short:'Infusion ≤30 min',             kat:'Diagnostik & Therapie',   typ:'T', p:240,  excl:[],       tip:'Eisencarboxymaltose (Ferinject), Pamidronate, Ibandronsäure. Ab 30 min Nr. 271 ansetzbar.' },
+  { nr:375, name:'Schutzimpfung',                         short:'Impfung',                      kat:'Diagnostik & Therapie',   typ:'T', p:148,  excl:[],       tip:'Hepatitis B (obligat bei CKD G4/G5/HD), Pneumokokken, Influenza, COVID. KDIGO-Empfehlung. Impfstoff separat berechnen.' },
+  { nr:3531,name:'Urinsediment (Mikroskopie)',             short:'Urinsediment mikrosk.',        kat:'Diagnostik & Therapie',   typ:'T', p:200,  excl:[],       tip:'Manuelle Auswertung mit Mikroskop. Diagnostisch wertvoll bei Hämaturie, Zylinder (AKI, GN). Höherer Steigerungsfaktor begründbar.' },
+  { nr:644, name:'Doppleruntersuchung Gefäße (CW)',       short:'Gefäß-Doppler',                kat:'Diagnostik & Therapie',   typ:'T', p:350,  excl:[],       tip:'CW-Doppler; ABI-Messung bei pAVK. Niederschwelliger als farbkodierter Duplex (Nr. 428/430).' },
+  { nr:659, name:'Langzeit-EKG 24h (Holter)',             short:'Holter-EKG 24h',               kat:'Diagnostik & Therapie',   typ:'T', p:750,  excl:[],       tip:'VHF-Screening bei CKD — AF-Prävalenz erhöht. Synkopen, Palpitationen. Anlegen + Auswertung = eine Position.' },
   { nr:650, name:'Blutdruckmessung',                      short:'RR-Messung',                   kat:'Blutdruck / ABPM',        typ:'T', p:40,   excl:[],       tip:'Einzelmessung; mehrfache Messungen gehen nur 1× an.' },
   { nr:651, name:'Langzeit-RR-Messung (Anlegen)',         short:'ABPM Anlegen + Aufzeichnung',  kat:'Blutdruck / ABPM',        typ:'T', p:265,  excl:[],       tip:'Anlegen des ABPM-Geräts + Aufzeichnung >18h. Auswertung am Folgetag (Nr. 652).' },
   { nr:652, name:'Langzeit-RR Auswertung',                short:'ABPM Auswertung',              kat:'Blutdruck / ABPM',        typ:'T', p:265,  excl:[],       tip:'Computergestützte Auswertung und schriftl. Befundung des ABPM.' },
-  { nr:34,  name:'Erörterung lebensverändernde Erkrankung >20 min', short:'Erörterung Auswirkungen auf Lebensgestaltung', kat:'Nephrologie spezifisch', typ:'P', p:291, excl:[],      tip:'GOÄ-Text: „Erörterung der Auswirkungen einer Erkrankung auf die Lebensgestaltung" (mind. 20 min). Kernposition bei Dialyse-Aufklärung, Transplantations-Gespräch, Palliativentscheidung. Uhrzeit + Dauer dokumentieren.' },
+  { nr:34,  name:'Erörterung lebensverändernde Erkrankung >20 min', short:'Erörterung Auswirkungen auf Lebensgestaltung', kat:'Nephrologie spezifisch', typ:'P', p:291, excl:[35],    tip:'GOÄ-Text: „Erörterung der Auswirkungen einer Erkrankung auf die Lebensgestaltung" (mind. 20 min). Kernposition bei Dialyse-Aufklärung, Transplantations-Gespräch, Palliativentscheidung. Uhrzeit + Dauer dokumentieren.' },
+  { nr:35,  name:'Erörterung Lebenssituation (bis 30 min)',short:'Erörterung Lebenssituation',  kat:'Nephrologie spezifisch', typ:'P', p:200,  excl:[34],     tip:'Kürzere Erörterung psychosozialer Krankheitsfolgen mit Patient oder Bezugspersonen. Nicht neben Nr. 34 ansetzbar — je nach Gesprächsdauer entscheiden.' },
   { nr:626, name:'Beurteilung Dialysepflichtigkeit',      short:'Dialyseindikation/-beurteilung', kat:'Nephrologie spezifisch', typ:'P', p:292, excl:[],      tip:'Erstmalige oder nach Intervall erneute Einschätzung. Bei CKD G4/G5 im Verlauf ansetzbar.' },
+  { nr:826, name:'Koordination interdisziplinäre Behandlung', short:'Interdiszip. Koordination', kat:'Nephrologie spezifisch', typ:'P', p:160, excl:[],      tip:'Absprache mit anderen Fachgebieten zur Gesamttherapieplanung (z.B. Hämatologie + Nephrologie bei MGUS/Myelom-Niere, Transplant-Team).' },
   { nr:315, name:'Perkutane Nierenbiopsie (USS-gezielt)', short:'Nierenbiopsie perkutan',       kat:'Intervention',            typ:'T', p:1600, excl:[],       tip:'Ultraschallgeführt. Üblich ×1,8 bis ×2,3. Zusätzlich Nr. 410 für Sono ansetzbar.' },
   { nr:75,  name:'Kurze Bescheinigung / Attest',          short:'Attest kurz',                  kat:'Dokumentation',           typ:'P', p:60,   excl:[76,80],  tip:'Einfaches Attest oder Kurzbescheinigung.' },
   { nr:76,  name:'Ausführlicher Arztbericht',             short:'Arztbrief / Befundbericht',    kat:'Dokumentation',           typ:'P', p:480,  excl:[75,80],  tip:'⭐ Wird sehr häufig vergessen! Nach jeder nephrol. Konsultation mit Arztbrief ansetzbar.' },
@@ -176,6 +194,12 @@ var goaeOptRules = [
     text: 'Nr. 410 Nierensonographie ergänzen', nr: 410 },
   { cond: function(s){ return s.has(651) && !s.has(652); },
     text: 'Nr. 652 ABPM-Auswertung (Folgetag)', nr: 652 },
+  { cond: function(s){ return s.has(4240) && !s.has(424); },
+    text: 'Nr. 424 TTE fehlt — 424a nur als Zusatz', nr: 424 },
+  { cond: function(s){ return s.has(34) && !s.has(76); },
+    text: 'Nr. 76 Arztbrief nach Erörterungsgespräch', nr: 76 },
+  { cond: function(s){ return s.has(270) && !s.has(3)&&!s.has(1); },
+    text: 'Nr. 3 Beratung zur Infusionstherapie ergänzen', nr: 3 },
   { cond: function(s){ return s.has(5) && !s.has(6)&&!s.has(7)&&!s.has(8); },
     text: 'Nr. 6 statt Nr. 5 wenn vollst. Organsystem untersucht', nr: 6, remove: 5 },
 ];
@@ -262,7 +286,7 @@ function goaeRender() {
       var rowCls = isConfl ? ' conflict' : isSel ? ' selected' : '';
       leftHtml += '<div class="goae-pos' + rowCls + '" onclick="goaeToggle(' + pos.nr + ')">';
       leftHtml += '<input type="checkbox"' + (isSel&&!isConfl?' checked':'') + ' onclick="event.stopPropagation();goaeToggle(' + pos.nr + ')">';
-      leftHtml += '<span class="goae-pos-nr' + (isSel?' sel':'') + '">Nr. ' + pos.nr + '</span>';
+      leftHtml += '<span class="goae-pos-nr' + (isSel?' sel':'') + '">Nr. ' + (pos.display||pos.nr) + '</span>';
       leftHtml += '<span class="goae-pos-name">' + pos.name;
       if (pos.tip) leftHtml += '<small>' + pos.tip.replace('⭐ ','') + '</small>';
       leftHtml += '</span>';
@@ -286,7 +310,7 @@ function goaeRender() {
     var fee = goaeFee(pos, fP, fT);
     total += fee;
     var fStr = (pos.typ==='P'?fP:fT).toFixed(1).replace('.', ',');
-    itemsHtml += '<div class="goae-res-row"><span class="goae-res-label">Nr. ' + pos.nr + ' ' + pos.short + '<small>×' + fStr + ' (' + pos.p + 'P)</small></span><span class="goae-res-amt">' + fee.toFixed(2).replace('.', ',') + ' €</span></div>';
+    itemsHtml += '<div class="goae-res-row"><span class="goae-res-label">Nr. ' + (pos.display||pos.nr) + ' ' + pos.short + '<small>×' + fStr + ' (' + pos.p + 'P)</small></span><span class="goae-res-amt">' + fee.toFixed(2).replace('.', ',') + ' €</span></div>';
   });
   if (conflicts.size > 0) {
     itemsHtml += '<div style="font-size:.75rem;color:#c62828;margin-top:6px;padding-top:6px;border-top:1px dashed #f48fb1;">⊘ Ausgeschlossen: Nr. ' + Array.from(conflicts).join(', ') + '</div>';
