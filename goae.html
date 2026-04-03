@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GOÄ-Abrechnung — Privatambulanz Nephrologie</title>
+<title>GOÄ-Abrechnung — PD Dr. Zickler · St. Joseph KH Berlin</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { background: #f4f6f8; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; min-height: 100vh; }
@@ -38,7 +38,7 @@ body { background: #f4f6f8; font-family: -apple-system, BlinkMacSystemFont, "Seg
 .goae-pos { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 8px; cursor: pointer; transition: background .1s; }
 .goae-pos:hover { background: #f5f5f5; }
 .goae-pos.selected { background: #e8eaf6; }
-.goae-pos.conflict { background: #fce4ec; opacity: .6; pointer-events: none; }
+.goae-pos.conflict { background: #fce4ec; opacity: .7; }
 .goae-pos input[type=checkbox] { width: 16px; height: 16px; accent-color: #3949ab; flex-shrink: 0; cursor: pointer; }
 .goae-pos-nr { font-size: .72rem; font-weight: 800; color: #888; min-width: 32px; }
 .goae-pos-nr.sel { color: #1a237e; }
@@ -70,6 +70,14 @@ body { background: #f4f6f8; font-family: -apple-system, BlinkMacSystemFont, "Seg
 .goae-opt-add { font-size: .68rem; background: #e8eaf6; color: #3949ab; border-radius: 5px; padding: 1px 6px; font-weight: 700; white-space: nowrap; flex-shrink: 0; margin-top: 1px; }
 .goae-empty { color: #aaa; font-size: .85rem; text-align: center; padding: 24px 0; }
 
+/* Kontext-Selector */
+.goae-ctx { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; align-items: center; }
+.goae-ctx-lbl { font-size: .78rem; font-weight: 700; color: #555; margin-right: 4px; }
+.goae-ctx-btn { padding: 6px 14px; border: 2px solid #5c6bc0; background: #fff; color: #5c6bc0; border-radius: 20px; cursor: pointer; font-size: .8rem; font-weight: 700; transition: all .15s; }
+.goae-ctx-btn:hover { background: #e8eaf6; }
+.goae-ctx-btn.active { background: #5c6bc0; color: #fff; }
+.goae-ctx-note { font-size: .73rem; color: #666; padding: 5px 12px; background: #f5f5f5; border-radius: 8px; border-left: 3px solid #5c6bc0; margin-bottom: 10px; }
+
 /* Disclaimer */
 .goae-disc { background: #fff8e1; border: 1px solid #ffe082; border-radius: 8px; padding: 9px 14px; margin-top: 12px; font-size: .75rem; color: #5d4037; }
 </style>
@@ -78,22 +86,27 @@ body { background: #f4f6f8; font-family: -apple-system, BlinkMacSystemFont, "Seg
 
 <div class="goae-wrap">
   <div class="goae-hdr">
-    <h2>🧾 GOÄ-Abrechnungsoptimierung — Privatambulanz Nephrologie</h2>
-    <p>Leistungen auswählen · Steigerungsfaktor anpassen · Kombinationsprüfung · Erlös-Optimierung &nbsp;|&nbsp; GOÄ 1996 · Punktwert 5,8287 ct/P</p>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;">
+      <div>
+        <h2 style="margin:0 0 2px;">🧾 GOÄ-Abrechnungsoptimierung</h2>
+        <p style="margin:0;font-size:.82rem;opacity:.9;">PD Dr. med. D. Zickler &nbsp;·&nbsp; St. Joseph Krankenhaus Berlin-Tempelhof</p>
+        <p style="margin:2px 0 0;font-size:.75rem;opacity:.7;">Klinik m.S. Nephrologie u. Int. Intensivmedizin &nbsp;·&nbsp; GOÄ 1996 · Punktwert 5,8287 ct/P</p>
+      </div>
+      <div style="font-size:.75rem;opacity:.7;text-align:right;padding-top:4px;">Wüsthoffstraße 15<br>12101 Berlin</div>
+    </div>
   </div>
 
-  <!-- Besuchstyp-Presets -->
-  <div class="goae-presets" id="goae-presets">
-    <strong style="font-size:.78rem;color:#555;align-self:center;margin-right:4px;">Vorlage:</strong>
-    <button class="goae-preset-btn" onclick="goaePreset('folge', this)">📋 Folgebesuch</button>
-    <button class="goae-preset-btn" onclick="goaePreset('erst', this)">🆕 Erstvorstellung</button>
-    <button class="goae-preset-btn" onclick="goaePreset('htn', this)">💊 Hypertonie-Kontrolle</button>
-    <button class="goae-preset-btn" onclick="goaePreset('sono', this)">🔍 Sono-Kontrolle</button>
-    <button class="goae-preset-btn" onclick="goaePreset('biopsy', this)">🩸 Post-Biopsie</button>
-    <button class="goae-preset-btn" onclick="goaePreset('dialyse', this)">🫘 Dialyse-Aufklärung</button>
-    <button class="goae-preset-btn" onclick="goaePreset('konsil', this)">📞 Konsil</button>
-    <button class="goae-preset-btn" style="border-color:#c62828;color:#c62828;" onclick="goaeClear()">✕ Leeren</button>
+  <!-- Kontext-Selector -->
+  <div class="goae-ctx">
+    <span class="goae-ctx-lbl">Bereich:</span>
+    <button class="goae-ctx-btn active" data-ctx="ambulanz" onclick="goaeSetCtx('ambulanz',this)">🏥 Privatambulanz</button>
+    <button class="goae-ctx-btn" data-ctx="station" onclick="goaeSetCtx('station',this)">🛏️ Stationär Nephrologie</button>
+    <button class="goae-ctx-btn" data-ctx="its" onclick="goaeSetCtx('its',this)">🚨 Intensivmedizin</button>
   </div>
+  <div class="goae-ctx-note" id="goae-ctx-note">Privatambulanz · volle GOÄ-Abrechnung · Steigerung pers. bis 2,3× ohne Begründung</div>
+
+  <!-- Besuchstyp-Presets (dynamisch per goaeSetCtx) -->
+  <div class="goae-presets" id="goae-presets"></div>
 
   <!-- Steigerungsfaktoren -->
   <div class="goae-factor-row">
@@ -156,9 +169,12 @@ var goaeDB = [
   { nr:413, name:'Sonographie Abdomen/Mehrorgan',         short:'Sono Abdomen (≥3 Organe)',     kat:'Sonographie',             typ:'T', p:550,  excl:[401,410],tip:'Mindestens 3 Organe/Regionen. Statt Nr. 410 wenn Abdomen vollständig.' },
   { nr:417, name:'Schilddrüse Sonographie',               short:'Sono Schilddrüse',             kat:'Sonographie',             typ:'T', p:250,  excl:[],       tip:'Relevant bei CKD mit Hypothyreose (häufig), HTN, medikamentöser Therapie. Zusätzlich zu Abdomensono ansetzbar.' },
   { nr:420, name:'Doppler/Duplex Nierenarterie',          short:'Duplex-Sono Nierenarterie',    kat:'Sonographie',             typ:'T', p:600,  excl:[],       tip:'Farbkodierte Duplexsonographie. Zusätzlich zu Nr. 410/413. Bei RR-resistenter HTN, Transplantat.' },
+  { nr:558, name:'Muskelfunktionsprüfung',                 short:'Muskuläre Untersuchung',       kat:'Klinische Untersuchung',  typ:'P', p:80,   excl:[],       tip:'Prüfung Muskelkraft/-funktion; relevant bei CKD-Sarkopenie, neuromuskulären Begleiterkrankungen, Myopathie unter Statinen/Steroiden.' },
+  { nr:800, name:'Neurologische Untersuchung (eingehend)', short:'Neurol. Untersuchung',          kat:'Klinische Untersuchung',  typ:'P', p:206,  excl:[],       tip:'Vollständige neurologische Untersuchung; z.B. urämische Neuropathie, Enzephalopathie, Shunt-bedingte Stehlen-Syndrome.' },
   { nr:424, name:'Echokardiographie (TTE)',               short:'Echo TTE',                     kat:'Echo / Gefäß-Duplex',     typ:'T', p:700,  excl:[],       tip:'Herzinsuffizienz, Volumenüberlastung, kardiorenales Syndrom, Perikarderguss. Nr. 424a/424b zusätzlich ansetzbar.' },
   { nr:4240,display:'424a', name:'Echo + Doppler-Zusatz', short:'Echo Doppler-Zusatz',          kat:'Echo / Gefäß-Duplex',     typ:'T', p:370,  excl:[],       tip:'Doppler-Klappengradient, E/A-Ratio. Nur zusätzlich zu Nr. 424.' },
   { nr:4241,display:'424b', name:'Echo + Farbduplex',     short:'Echo Farbduplex-Zusatz',       kat:'Echo / Gefäß-Duplex',     typ:'T', p:550,  excl:[],       tip:'Farbkodierter Duplex. Nur zusätzlich zu Nr. 424.' },
+  { nr:4201,display:'420a', name:'Shuntsonographie (Farbduplex, analog Nr. 420)', short:'Shunt-Duplex (analog)', kat:'Echo / Gefäß-Duplex', typ:'T', p:600, excl:[], tip:'Farbkodierte Duplexsonographie AV-Shunt / Transplantat. Abrechnung analog § 6 Abs. 2 GOÄ entsprechend Nr. 420. Shuntfluss, Stenosen, Pseudoaneurysmen. Bei Dialysepatienten standard.' },
   { nr:428, name:'Duplex Carotis / extrakranielle Gefäße',short:'Carotis-Duplex',              kat:'Echo / Gefäß-Duplex',     typ:'T', p:850,  excl:[],       tip:'Arteriosklerose-Screening bei CKD. KDIGO empfiehlt kardiovaskuläres Risiko-Assessment. Intima-Media-Dicke dokumentieren.' },
   { nr:430, name:'Duplex periphere Gefäße',               short:'Periph. Gefäß-Duplex',         kat:'Echo / Gefäß-Duplex',     typ:'T', p:900,  excl:[],       tip:'pAVK-Screening bei CKD G3+. Ergänzt klinische ABI-Messung. Hohe Prävalenz bei Diabetiker + CKD.' },
   { nr:250, name:'Blutentnahme (venös)',                  short:'Blutentnahme',                 kat:'Diagnostik & Therapie',   typ:'T', p:60,   excl:[],       tip:'Einfachsatz üblich. Fast immer ansetzbar bei Laborkontrollen.' },
@@ -220,8 +236,15 @@ function goaeGetConflicts() {
 }
 
 function goaeToggle(nr) {
-  if (goaeSelected.has(nr)) goaeSelected.delete(nr);
-  else goaeSelected.add(nr);
+  if (goaeSelected.has(nr)) {
+    goaeSelected.delete(nr);
+  } else {
+    // Letzter Klick gewinnt: Konflikte automatisch entfernen
+    var pos = goaeDB.find(function(p){ return p.nr===nr; });
+    if (pos && pos.excl) pos.excl.forEach(function(x){ goaeSelected.delete(x); });
+    goaeDB.forEach(function(p){ if (p.excl && p.excl.indexOf(nr)!==-1) goaeSelected.delete(p.nr); });
+    goaeSelected.add(nr);
+  }
   goaeRender();
 }
 
@@ -229,6 +252,53 @@ function goaeOptAdd(nr, remove) {
   if (remove) goaeSelected.delete(remove);
   goaeSelected.add(nr);
   goaeRender();
+}
+
+var goaeCtxPresets = {
+  ambulanz: [
+    {key:'folge',   label:'📋 Folgebesuch'},
+    {key:'erst',    label:'🆕 Erstvorstellung'},
+    {key:'htn',     label:'💊 Hypertonie-Kontrolle'},
+    {key:'sono',    label:'🔍 Sono-Kontrolle'},
+    {key:'biopsy',  label:'🩸 Post-Biopsie'},
+    {key:'dialyse', label:'🫘 Dialyse-Aufklärung'},
+    {key:'konsil',  label:'📞 Konsil'}
+  ],
+  station: [
+    {key:'aufnahme',label:'🏥 Aufnahme-Untersuchung'},
+    {key:'visite',  label:'📋 Tagesvisite'},
+    {key:'entlass', label:'🚪 Entlassungsuntersuchung'},
+    {key:'epikrise',label:'📝 Epikrise / Gutachten'},
+    {key:'dialyse', label:'🫘 Dialyse-Aufklärung'},
+    {key:'konsil',  label:'📞 Konsil'}
+  ],
+  its: [
+    {key:'its_aufnahme',label:'🚨 ITS-Aufnahme'},
+    {key:'its_visite',  label:'📋 ITS-Visite'},
+    {key:'its_ecu',     label:'🔵 Eculizumab-Gespräch (aHUS)'},
+    {key:'dialyse',     label:'🫘 Dialyse-Aufklärung'},
+    {key:'konsil',      label:'📞 Konsil'}
+  ]
+};
+var goaeCtxNotes = {
+  ambulanz: 'Privatambulanz · volle GOÄ-Abrechnung · Steigerung pers. bis 2,3× ohne Begründung',
+  station:  'Stationär Wahlleistung · §17 KHEntgG · Liquidation auf Patientenwunsch · gleiche GOÄ-Faktoren',
+  its:      'Intensivmedizin · Wahlleistungsarzt · ggf. Analogabrechnung bei ITS-spezifischen Leistungen'
+};
+function goaeSetCtx(ctx, btn) {
+  document.querySelectorAll('.goae-ctx-btn').forEach(function(b){ b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  var note = document.getElementById('goae-ctx-note');
+  if (note) note.textContent = goaeCtxNotes[ctx] || '';
+  var presets = goaeCtxPresets[ctx] || goaeCtxPresets.ambulanz;
+  var bar = document.getElementById('goae-presets');
+  if (!bar) return;
+  var html = '<strong style="font-size:.78rem;color:#555;align-self:center;margin-right:4px;">Vorlage:</strong>';
+  presets.forEach(function(p){
+    html += '<button class="goae-preset-btn" onclick="goaePreset(\''+p.key+'\',this)">'+p.label+'</button>';
+  });
+  html += '<button class="goae-preset-btn" style="border-color:#c62828;color:#c62828;" onclick="goaeClear()">✕ Leeren</button>';
+  bar.innerHTML = html;
 }
 
 function goaeClear() {
@@ -248,7 +318,16 @@ function goaePreset(type, btn) {
     sono:   [3,5,410],
     biopsy: [3,7,315,410],
     dialyse:[3,34,626,76],
-    konsil: [60,76]
+    konsil: [60,76],
+    // Stationär
+    aufnahme:[8,34,410,76],
+    visite:  [3,6,410],
+    epikrise:[3,80],
+    entlass: [3,7,76],
+    // ITS
+    its_aufnahme:[8,34,410,420,76],
+    its_visite:  [3,7,410],
+    its_ecu:     [3,34,420,4201,76]
   };
   (map[type]||[]).forEach(function(n){ goaeSelected.add(n); });
   goaeRender();
@@ -328,6 +407,7 @@ function goaeRender() {
   document.getElementById('goae-opt').style.display = optList ? 'block' : 'none';
 }
 
+goaeSetCtx('ambulanz', document.querySelector('.goae-ctx-btn[data-ctx="ambulanz"]'));
 goaeRender();
 </script>
 </body>
