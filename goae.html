@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GOÄ-Abrechnung — Privatambulanz Nephrologie</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #f4f6f8; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; min-height: 100vh; }
+
+.goae-wrap { max-width: 1100px; margin: 0 auto; padding: 16px; }
+.goae-hdr { background: linear-gradient(135deg, #1a237e, #283593); color: #fff; border-radius: 12px; padding: 16px 22px; margin-bottom: 16px; }
+.goae-hdr h2 { margin: 0 0 3px; font-size: 1.25rem; }
+.goae-hdr p { margin: 0; font-size: .82rem; opacity: .8; }
+.goae-layout { display: grid; grid-template-columns: 1fr 360px; gap: 16px; align-items: start; }
+@media(max-width:820px){ .goae-layout { grid-template-columns: 1fr; } }
+
+/* Presets */
+.goae-presets { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 14px; }
+.goae-preset-btn { padding: 7px 14px; border: 2px solid #3949ab; background: #fff; color: #3949ab; border-radius: 20px; cursor: pointer; font-size: .82rem; font-weight: 700; transition: all .15s; }
+.goae-preset-btn:hover { background: #e8eaf6; }
+.goae-preset-btn.active { background: #3949ab; color: #fff; }
+
+/* Factor row */
+.goae-factor-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; background: #f5f5f5; border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; }
+.goae-factor-row label { font-size: .78rem; font-weight: 700; color: #555; }
+.goae-factor-input { width: 64px; padding: 5px 8px; border: 2px solid #ccc; border-radius: 6px; font-size: .9rem; font-weight: 700; text-align: center; }
+.goae-factor-input.warn { border-color: #f57f17; background: #fff8e1; }
+.goae-factor-note { font-size: .72rem; color: #888; }
+
+/* Category */
+.goae-cat { background: #fff; border: 1px solid #e0e0e0; border-radius: 10px; overflow: hidden; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.05); }
+.goae-cat-head { padding: 9px 14px; background: #e8eaf6; color: #1a237e; font-weight: 700; font-size: .82rem; letter-spacing: .03em; display: flex; justify-content: space-between; align-items: center; }
+.goae-cat-head .goae-cat-sum { font-size: .75rem; color: #3949ab; background: #c5cae9; padding: 1px 8px; border-radius: 10px; font-weight: 800; }
+.goae-cat-body { padding: 6px 4px; }
+
+/* Position row */
+.goae-pos { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 8px; cursor: pointer; transition: background .1s; }
+.goae-pos:hover { background: #f5f5f5; }
+.goae-pos.selected { background: #e8eaf6; }
+.goae-pos.conflict { background: #fce4ec; opacity: .6; pointer-events: none; }
+.goae-pos input[type=checkbox] { width: 16px; height: 16px; accent-color: #3949ab; flex-shrink: 0; cursor: pointer; }
+.goae-pos-nr { font-size: .72rem; font-weight: 800; color: #888; min-width: 32px; }
+.goae-pos-nr.sel { color: #1a237e; }
+.goae-pos-name { flex: 1; font-size: .85rem; font-weight: 600; color: #333; }
+.goae-pos-name small { display: block; font-size: .73rem; font-weight: 400; color: #888; margin-top: 1px; }
+.goae-pos-fee { font-size: .85rem; font-weight: 700; color: #2e7d32; min-width: 58px; text-align: right; white-space: nowrap; }
+.goae-conflict-tag { font-size: .68rem; background: #fce4ec; color: #c62828; border-radius: 6px; padding: 1px 5px; font-weight: 700; }
+
+/* Results panel */
+.goae-results { background: #fff; border: 2px solid #3949ab; border-radius: 12px; position: sticky; top: 12px; overflow: hidden; }
+.goae-res-head { background: #1a237e; color: #fff; padding: 12px 16px; font-weight: 700; font-size: .9rem; display: flex; justify-content: space-between; align-items: center; }
+.goae-res-head button { background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3); color: #fff; border-radius: 6px; padding: 3px 10px; font-size: .75rem; cursor: pointer; }
+.goae-res-head button:hover { background: rgba(255,255,255,.25); }
+.goae-res-items { padding: 10px 14px; max-height: 420px; overflow-y: auto; }
+.goae-res-row { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 0; border-bottom: 1px solid #f0f0f0; font-size: .82rem; gap: 8px; }
+.goae-res-row:last-child { border-bottom: none; }
+.goae-res-label { color: #444; flex: 1; }
+.goae-res-label small { color: #999; font-size: .72rem; margin-left: 4px; }
+.goae-res-amt { font-weight: 700; color: #2e7d32; white-space: nowrap; }
+.goae-total-row { background: #e8eaf6; border-top: 2px solid #3949ab; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; }
+.goae-total-label { font-size: .85rem; font-weight: 700; color: #1a237e; }
+.goae-total-amt { font-size: 1.6rem; font-weight: 800; color: #1a237e; }
+
+/* Optimierung */
+.goae-opt { padding: 10px 14px; border-top: 1px solid #e8eaf6; }
+.goae-opt-title { font-size: .75rem; font-weight: 700; color: #f57f17; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
+.goae-opt-item { font-size: .78rem; color: #555; padding: 3px 0; display: flex; gap: 6px; align-items: flex-start; cursor: pointer; }
+.goae-opt-item:hover .goae-opt-add { background: #3949ab; color: #fff; }
+.goae-opt-add { font-size: .68rem; background: #e8eaf6; color: #3949ab; border-radius: 5px; padding: 1px 6px; font-weight: 700; white-space: nowrap; flex-shrink: 0; margin-top: 1px; }
+.goae-empty { color: #aaa; font-size: .85rem; text-align: center; padding: 24px 0; }
+
+/* Disclaimer */
+.goae-disc { background: #fff8e1; border: 1px solid #ffe082; border-radius: 8px; padding: 9px 14px; margin-top: 12px; font-size: .75rem; color: #5d4037; }
+</style>
+</head>
+<body>
+
+<div class="goae-wrap">
+  <div class="goae-hdr">
+    <h2>🧾 GOÄ-Abrechnungsoptimierung — Privatambulanz Nephrologie</h2>
+    <p>Leistungen auswählen · Steigerungsfaktor anpassen · Kombinationsprüfung · Erlös-Optimierung &nbsp;|&nbsp; GOÄ 1996 · Punktwert 5,8287 ct/P</p>
+  </div>
+
+  <!-- Besuchstyp-Presets -->
+  <div class="goae-presets" id="goae-presets">
+    <strong style="font-size:.78rem;color:#555;align-self:center;margin-right:4px;">Vorlage:</strong>
+    <button class="goae-preset-btn" onclick="goaePreset('folge', this)">📋 Folgebesuch</button>
+    <button class="goae-preset-btn" onclick="goaePreset('erst', this)">🆕 Erstvorstellung</button>
+    <button class="goae-preset-btn" onclick="goaePreset('htn', this)">💊 Hypertonie-Kontrolle</button>
+    <button class="goae-preset-btn" onclick="goaePreset('sono', this)">🔍 Sono-Kontrolle</button>
+    <button class="goae-preset-btn" onclick="goaePreset('biopsy', this)">🩸 Post-Biopsie</button>
+    <button class="goae-preset-btn" onclick="goaePreset('konsil', this)">📞 Konsil</button>
+    <button class="goae-preset-btn" style="border-color:#c62828;color:#c62828;" onclick="goaeClear()">✕ Leeren</button>
+  </div>
+
+  <!-- Steigerungsfaktoren -->
+  <div class="goae-factor-row">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <label>Faktor persönlich</label>
+      <input type="number" id="goae-fP" class="goae-factor-input" value="2.3" min="1.0" max="3.5" step="0.1" oninput="goaeRender()">
+      <span class="goae-factor-note" id="goae-fP-note">≤2,3× ohne Begründung</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <label>Faktor technisch</label>
+      <input type="number" id="goae-fT" class="goae-factor-input" value="1.8" min="1.0" max="3.5" step="0.1" oninput="goaeRender()">
+      <span class="goae-factor-note" id="goae-fT-note">≤1,8× ohne Begründung</span>
+    </div>
+    <div style="font-size:.75rem;color:#3949ab;margin-left:auto;">Punktwert: 5,8287 ct/P</div>
+  </div>
+
+  <div class="goae-layout">
+    <!-- LEFT: Leistungsauswahl -->
+    <div id="goae-left"></div>
+
+    <!-- RIGHT: Ergebnis -->
+    <div class="goae-results">
+      <div class="goae-res-head">
+        <span>💶 Abrechnung</span>
+        <button onclick="goaeClear()">Leeren</button>
+      </div>
+      <div class="goae-res-items" id="goae-res-items">
+        <div class="goae-empty">Leistungen links auswählen</div>
+      </div>
+      <div class="goae-total-row">
+        <span class="goae-total-label">Gesamt</span>
+        <span class="goae-total-amt" id="goae-total">0,00 €</span>
+      </div>
+      <div class="goae-opt" id="goae-opt" style="display:none;">
+        <div class="goae-opt-title">💡 Noch abrechenbar</div>
+        <div id="goae-opt-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="goae-disc">
+    ⚠️ <strong>Hinweis:</strong> Punktzahlen nach GOÄ 1996 (Anlage zur GOÄ). Steigerungsfaktoren: persönliche Leistungen bis 2,3× ohne Begründung (max 3,5×); technische Leistungen bis 1,8× ohne Begründung (max 3,5×). Kein Ersatz für rechtliche Abrechnungsberatung. Kombinations- und Ausschlussregeln gemäß GOÄ und BÄK-Empfehlungen.
+  </div>
+</div>
+
+<script>
+var PKTW = 0.058287;
+
+var goaeDB = [
+  { nr:1,   name:'Beratung',                              short:'Beratung (kurz)',               kat:'Beratung & Untersuchung', typ:'P', p:80,   excl:[3],      tip:'Auch telefonisch. Bei Gespräch >10 min besser Nr. 3.' },
+  { nr:3,   name:'Eingehende Beratung >10 min',           short:'Eingehende Beratung',           kat:'Beratung & Untersuchung', typ:'P', p:150,  excl:[1],      tip:'Mind. 10 min Gesprächsdauer; bei nephrologischen Patienten fast immer zutreffend.' },
+  { nr:5,   name:'Symptombezogene Untersuchung',          short:'US symptombezogen',             kat:'Beratung & Untersuchung', typ:'P', p:164,  excl:[6,7,8],  tip:'Beschränkt auf ein Symptom oder ein Organ.' },
+  { nr:6,   name:'Vollst. Untersuchung Organsystem',      short:'Organsystem vollst.',           kat:'Beratung & Untersuchung', typ:'P', p:260,  excl:[5,7,8],  tip:'Vollst. Untersuchung z.B. kardiovaskuläres System oder Niere.' },
+  { nr:7,   name:'Körperl. Untersuchung (≥2 Systeme)',   short:'US ≥2 Organsysteme',            kat:'Beratung & Untersuchung', typ:'P', p:320,  excl:[5,6,8],  tip:'Mindestens 2 Organsysteme vollständig untersucht und dokumentiert.' },
+  { nr:8,   name:'Eingehende ganzkörperl. Untersuchung', short:'Ganzkörperuntersuchung',        kat:'Beratung & Untersuchung', typ:'P', p:450,  excl:[5,6,7],  tip:'Erstvorstellung oder wesentliche Statusänderung. Vollst. internist. Befund inkl. Anamnese.' },
+  { nr:410, name:'Sonographie Niere/Organ',               short:'Sono Niere (1 Region)',        kat:'Sonographie',             typ:'T', p:330,  excl:[413],    tip:'Nieren bilateral = 1 Region. Bei fast jedem nephrologischen Besuch ansetzbar.' },
+  { nr:413, name:'Sonographie Abdomen/Mehrorgan',         short:'Sono Abdomen (≥3 Organe)',     kat:'Sonographie',             typ:'T', p:550,  excl:[410],    tip:'Mindestens 3 Organe/Regionen. Statt Nr. 410 wenn Abdomen vollständig.' },
+  { nr:420, name:'Doppler/Duplex Nierenarterie',          short:'Duplex-Sono Nierenarterie',    kat:'Sonographie',             typ:'T', p:600,  excl:[],       tip:'Farbkodierte Duplexsonographie. Zusätzlich zu Nr. 410/413. Bei RR-resistenter HTN, Transplantat.' },
+  { nr:650, name:'Blutdruckmessung',                      short:'RR-Messung',                   kat:'Blutdruck / ABPM',        typ:'T', p:40,   excl:[],       tip:'Einzelmessung; mehrfache Messungen gehen nur 1× an.' },
+  { nr:651, name:'Langzeit-RR-Messung (Anlegen)',         short:'ABPM Anlegen + Aufzeichnung',  kat:'Blutdruck / ABPM',        typ:'T', p:265,  excl:[],       tip:'Anlegen des ABPM-Geräts + Aufzeichnung >18h. Auswertung am Folgetag (Nr. 652).' },
+  { nr:652, name:'Langzeit-RR Auswertung',                short:'ABPM Auswertung',              kat:'Blutdruck / ABPM',        typ:'T', p:265,  excl:[],       tip:'Computergestützte Auswertung und schriftl. Befundung des ABPM.' },
+  { nr:34,  name:'Erörterung Therapieplanung >20 min',    short:'Therapieerörterung Schwerkranke', kat:'Nephrologie spezifisch', typ:'P', p:291, excl:[],      tip:'Eingehende Erörterung >20 min bei CKD, Dialyse-Einleitung, Transplantation. Dauer dokumentieren.' },
+  { nr:626, name:'Beurteilung Dialysepflichtigkeit',      short:'Dialyseindikation/-beurteilung', kat:'Nephrologie spezifisch', typ:'P', p:292, excl:[],      tip:'Erstmalige oder nach Intervall erneute Einschätzung. Bei CKD G4/G5 im Verlauf ansetzbar.' },
+  { nr:315, name:'Perkutane Nierenbiopsie (USS-gezielt)', short:'Nierenbiopsie perkutan',       kat:'Intervention',            typ:'T', p:1600, excl:[],       tip:'Ultraschallgeführt. Üblich ×1,8 bis ×2,3. Zusätzlich Nr. 410 für Sono ansetzbar.' },
+  { nr:75,  name:'Kurze Bescheinigung / Attest',          short:'Attest kurz',                  kat:'Dokumentation',           typ:'P', p:60,   excl:[76,80],  tip:'Einfaches Attest oder Kurzbescheinigung.' },
+  { nr:76,  name:'Ausführlicher Arztbericht',             short:'Arztbrief / Befundbericht',    kat:'Dokumentation',           typ:'P', p:480,  excl:[75,80],  tip:'⭐ Wird sehr häufig vergessen! Nach jeder nephrol. Konsultation mit Arztbrief ansetzbar.' },
+  { nr:80,  name:'Gutachten / schriftl. Äußerung',        short:'Gutachten (umfangreich)',      kat:'Dokumentation',           typ:'P', p:800,  excl:[75,76],  tip:'Umfangreiche gutachterliche Stellungnahme.' },
+  { nr:60,  name:'Konsiliarische Untersuchung',           short:'Konsil (mit Untersuchung)',    kat:'Konsil',                  typ:'P', p:510,  excl:[61],     tip:'Schriftliche Konsiliarantwort an zuweisenden Arzt, inkl. eigener Untersuchung.' },
+  { nr:61,  name:'Konsil ohne Untersuchung',              short:'Konsil (telefonisch/schriftl.)',kat:'Konsil',                 typ:'P', p:290,  excl:[60],     tip:'Ohne eigene körperliche Untersuchung; z.B. Telefonkonsil mit einweisendem Arzt.' },
+];
+
+var goaeOptRules = [
+  { cond: function(s){ return s.has(1) && !s.has(3); },
+    text: 'Nr. 1 → Nr. 3 bei Gespräch >10 min', nr: 3, remove: 1 },
+  { cond: function(s){ return (s.has(3)||s.has(1)) && !s.has(5)&&!s.has(6)&&!s.has(7)&&!s.has(8)&&!s.has(60); },
+    text: 'Untersuchung (Nr. 5–8) ergänzen', nr: 6 },
+  { cond: function(s){ return (s.has(3)||s.has(1)||s.has(6)||s.has(7)||s.has(8)) && !s.has(76)&&!s.has(75); },
+    text: 'Nr. 76 Arztbrief — fast immer vergessen!', nr: 76 },
+  { cond: function(s){ return (s.has(3)||s.has(6)||s.has(7)||s.has(8)) && !s.has(410)&&!s.has(413)&&!s.has(60); },
+    text: 'Nr. 410 Nierensonographie ergänzen', nr: 410 },
+  { cond: function(s){ return s.has(651) && !s.has(652); },
+    text: 'Nr. 652 ABPM-Auswertung (Folgetag)', nr: 652 },
+  { cond: function(s){ return s.has(5) && !s.has(6)&&!s.has(7)&&!s.has(8); },
+    text: 'Nr. 6 statt Nr. 5 wenn vollst. Organsystem untersucht', nr: 6, remove: 5 },
+];
+
+var goaeSelected = new Set();
+
+function goaeFee(pos, fP, fT) {
+  return pos.p * PKTW * (pos.typ === 'P' ? fP : fT);
+}
+
+function goaeGetConflicts() {
+  var c = new Set();
+  goaeSelected.forEach(function(nr) {
+    var pos = goaeDB.find(function(p){ return p.nr === nr; });
+    if (pos) pos.excl.forEach(function(x){ if (goaeSelected.has(x)) { c.add(x); c.add(nr); } });
+  });
+  return c;
+}
+
+function goaeToggle(nr) {
+  if (goaeSelected.has(nr)) goaeSelected.delete(nr);
+  else goaeSelected.add(nr);
+  goaeRender();
+}
+
+function goaeOptAdd(nr, remove) {
+  if (remove) goaeSelected.delete(remove);
+  goaeSelected.add(nr);
+  goaeRender();
+}
+
+function goaeClear() {
+  goaeSelected.clear();
+  document.querySelectorAll('.goae-preset-btn').forEach(function(b){ b.classList.remove('active'); });
+  goaeRender();
+}
+
+function goaePreset(type, btn) {
+  goaeSelected.clear();
+  document.querySelectorAll('.goae-preset-btn').forEach(function(b){ b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  var map = {
+    erst:   [3,8,410,76],
+    folge:  [3,6,410],
+    htn:    [3,6,650,410,76],
+    sono:   [3,5,410],
+    biopsy: [3,7,315,410],
+    konsil: [60,76]
+  };
+  (map[type]||[]).forEach(function(n){ goaeSelected.add(n); });
+  goaeRender();
+}
+
+function goaeRender() {
+  var fP = Math.max(1.0, Math.min(3.5, parseFloat(document.getElementById('goae-fP').value)||2.3));
+  var fT = Math.max(1.0, Math.min(3.5, parseFloat(document.getElementById('goae-fT').value)||1.8));
+
+  var fpInp = document.getElementById('goae-fP'), ftInp = document.getElementById('goae-fT');
+  var fpNote = document.getElementById('goae-fP-note'), ftNote = document.getElementById('goae-fT-note');
+  fpInp.classList.toggle('warn', fP > 2.3);
+  ftInp.classList.toggle('warn', fT > 1.8);
+  fpNote.textContent = fP > 2.3 ? '⚠️ >2,3× → schriftl. Begründung erforderlich' : '≤2,3× ohne Begründung';
+  ftNote.textContent = fT > 1.8 ? '⚠️ >1,8× → schriftl. Begründung erforderlich' : '≤1,8× ohne Begründung';
+
+  var conflicts = goaeGetConflicts();
+
+  var cats = {};
+  goaeDB.forEach(function(pos){ if (!cats[pos.kat]) cats[pos.kat]=[]; cats[pos.kat].push(pos); });
+
+  var leftHtml = '';
+  Object.keys(cats).forEach(function(kat) {
+    var positions = cats[kat];
+    var catTotal = 0;
+    positions.forEach(function(pos){
+      if (goaeSelected.has(pos.nr) && !conflicts.has(pos.nr)) catTotal += goaeFee(pos, fP, fT);
+    });
+    leftHtml += '<div class="goae-cat"><div class="goae-cat-head">' + kat;
+    if (catTotal > 0) leftHtml += '<span class="goae-cat-sum">' + catTotal.toFixed(2).replace('.', ',') + ' €</span>';
+    leftHtml += '</div><div class="goae-cat-body">';
+    positions.forEach(function(pos) {
+      var isSel = goaeSelected.has(pos.nr), isConfl = conflicts.has(pos.nr);
+      var fee = goaeFee(pos, fP, fT);
+      var rowCls = isConfl ? ' conflict' : isSel ? ' selected' : '';
+      leftHtml += '<div class="goae-pos' + rowCls + '" onclick="goaeToggle(' + pos.nr + ')">';
+      leftHtml += '<input type="checkbox"' + (isSel&&!isConfl?' checked':'') + ' onclick="event.stopPropagation();goaeToggle(' + pos.nr + ')">';
+      leftHtml += '<span class="goae-pos-nr' + (isSel?' sel':'') + '">Nr. ' + pos.nr + '</span>';
+      leftHtml += '<span class="goae-pos-name">' + pos.name;
+      if (pos.tip) leftHtml += '<small>' + pos.tip.replace('⭐ ','') + '</small>';
+      leftHtml += '</span>';
+      if (isConfl) {
+        var cw = pos.excl.filter(function(x){ return goaeSelected.has(x); });
+        leftHtml += '<span class="goae-conflict-tag">⊘ excl. Nr. ' + cw.join('/') + '</span>';
+      } else {
+        leftHtml += '<span class="goae-pos-fee">' + (isSel ? fee.toFixed(2).replace('.', ',') + ' €' : (pos.p*PKTW).toFixed(2).replace('.', ',') + ' €') + '</span>';
+      }
+      leftHtml += '</div>';
+    });
+    leftHtml += '</div></div>';
+  });
+  document.getElementById('goae-left').innerHTML = leftHtml;
+
+  var itemsHtml = '', total = 0;
+  goaeSelected.forEach(function(nr) {
+    if (conflicts.has(nr)) return;
+    var pos = goaeDB.find(function(p){ return p.nr===nr; });
+    if (!pos) return;
+    var fee = goaeFee(pos, fP, fT);
+    total += fee;
+    var fStr = (pos.typ==='P'?fP:fT).toFixed(1).replace('.', ',');
+    itemsHtml += '<div class="goae-res-row"><span class="goae-res-label">Nr. ' + pos.nr + ' ' + pos.short + '<small>×' + fStr + ' (' + pos.p + 'P)</small></span><span class="goae-res-amt">' + fee.toFixed(2).replace('.', ',') + ' €</span></div>';
+  });
+  if (conflicts.size > 0) {
+    itemsHtml += '<div style="font-size:.75rem;color:#c62828;margin-top:6px;padding-top:6px;border-top:1px dashed #f48fb1;">⊘ Ausgeschlossen: Nr. ' + Array.from(conflicts).join(', ') + '</div>';
+  }
+  document.getElementById('goae-res-items').innerHTML = itemsHtml || '<div class="goae-empty">Leistungen links auswählen</div>';
+  document.getElementById('goae-total').textContent = total.toFixed(2).replace('.', ',') + ' €';
+
+  var optList = '';
+  goaeOptRules.forEach(function(rule) {
+    if (rule.cond(goaeSelected)) {
+      optList += '<div class="goae-opt-item" onclick="goaeOptAdd(' + rule.nr + (rule.remove?','+rule.remove:'') + ')"><span class="goae-opt-add">+ Nr. ' + rule.nr + '</span><span>' + rule.text + '</span></div>';
+    }
+  });
+  document.getElementById('goae-opt-list').innerHTML = optList;
+  document.getElementById('goae-opt').style.display = optList ? 'block' : 'none';
+}
+
+goaeRender();
+</script>
+</body>
+</html>
