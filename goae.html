@@ -70,6 +70,11 @@ body { background: #f4f6f8; font-family: -apple-system, BlinkMacSystemFont, "Seg
 .goae-opt-add { font-size: .68rem; background: #e8eaf6; color: #3949ab; border-radius: 5px; padding: 1px 6px; font-weight: 700; white-space: nowrap; flex-shrink: 0; margin-top: 1px; }
 .goae-empty { color: #aaa; font-size: .85rem; text-align: center; padding: 24px 0; }
 
+/* Häufigkeits-Badge */
+.goae-freq { display: inline-block; font-size: .63rem; font-weight: 700; padding: 1px 6px; border-radius: 8px; background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; margin-left: 5px; vertical-align: middle; white-space: nowrap; }
+.goae-freq.warn-freq { background: #fff3e0; color: #e65100; border-color: #ffcc80; }
+.goae-freq.info-freq { background: #e3f2fd; color: #1565c0; border-color: #90caf9; }
+
 /* Kontext-Selector */
 .goae-ctx { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; align-items: center; }
 .goae-ctx-lbl { font-size: .78rem; font-weight: 700; color: #555; margin-right: 4px; }
@@ -162,8 +167,8 @@ var goaeDB = [
   { nr:5,   name:'Symptombezogene Untersuchung',          short:'US symptombezogen',             kat:'Beratung & Untersuchung', typ:'P', p:164,  excl:[6,7,8],  tip:'Beschränkt auf ein Symptom oder ein Organ.' },
   { nr:6,   name:'Vollst. Untersuchung Organsystem',      short:'Organsystem vollst.',           kat:'Beratung & Untersuchung', typ:'P', p:260,  excl:[5,7,8],  tip:'Vollst. Untersuchung z.B. kardiovaskuläres System oder Niere.' },
   { nr:7,   name:'Körperl. Untersuchung (≥2 Systeme)',   short:'US ≥2 Organsysteme',            kat:'Beratung & Untersuchung', typ:'P', p:320,  excl:[5,6,8],  tip:'Mindestens 2 Organsysteme vollständig untersucht und dokumentiert.' },
-  { nr:8,   name:'Eingehende ganzkörperl. Untersuchung', short:'Ganzkörperuntersuchung',        kat:'Beratung & Untersuchung', typ:'P', p:450,  excl:[5,6,7],  tip:'Erstvorstellung oder wesentliche Statusänderung. Vollst. internist. Befund inkl. Anamnese.' },
-  { nr:15,  name:'Betreuung chronisch Kranker',           short:'Chronisch Kranke (≥3 Konsult.)',kat:'Beratung & Untersuchung', typ:'P', p:80,   excl:[],       tip:'Bei ≥3 Konsultationen/Jahr für dieselbe Grunderkrankung (CKD, HTN, Diabetes). Zusätzlich neben Nr. 1 oder 3 ansetzbar.' },
+  { nr:8,   name:'Eingehende ganzkörperl. Untersuchung', short:'Ganzkörperuntersuchung',        kat:'Beratung & Untersuchung', typ:'P', p:450,  excl:[5,6,7],  freq:'1×/Jahr begründbar', tip:'Erstvorstellung oder wesentliche Statusänderung. Vollst. internist. Befund inkl. Anamnese.' },
+  { nr:15,  name:'Betreuung chronisch Kranker',           short:'Chronisch Kranke (≥3 Konsult.)',kat:'Beratung & Untersuchung', typ:'P', p:80,   excl:[],       freq:'3×/Jahr je Erkrankung', tip:'Bei ≥3 Konsultationen/Jahr für dieselbe Grunderkrankung (CKD, HTN, Diabetes). Zusätzlich neben Nr. 1 oder 3 ansetzbar.' },
   { nr:401, name:'Sonographie (1 Organ)',                  short:'Sono 1 Organ',                kat:'Sonographie',             typ:'T', p:200,  excl:[410,413],tip:'Einzelorganbefundung, z.B. Harnblase, Pleura. Bei Niere besser Nr. 410 (beide Nieren = 1 Region).' },
   { nr:410, name:'Sonographie Niere/Organ',               short:'Sono Niere (1 Region)',        kat:'Sonographie',             typ:'T', p:330,  excl:[401,413],tip:'Nieren bilateral = 1 Region. Bei fast jedem nephrologischen Besuch ansetzbar.' },
   { nr:413, name:'Sonographie Abdomen/Mehrorgan',         short:'Sono Abdomen (≥3 Organe)',     kat:'Sonographie',             typ:'T', p:550,  excl:[401,410],tip:'Mindestens 3 Organe/Regionen. Statt Nr. 410 wenn Abdomen vollständig.' },
@@ -182,14 +187,23 @@ var goaeDB = [
   { nr:270, name:'Infusionstherapie (≤30 min)',           short:'Infusion ≤30 min',             kat:'Diagnostik & Therapie',   typ:'T', p:240,  excl:[],       tip:'Eisencarboxymaltose (Ferinject), Pamidronate, Ibandronsäure. Ab 30 min Nr. 271 ansetzbar.' },
   { nr:375, name:'Schutzimpfung',                         short:'Impfung',                      kat:'Diagnostik & Therapie',   typ:'T', p:148,  excl:[],       tip:'Hepatitis B (obligat bei CKD G4/G5/HD), Pneumokokken, Influenza, COVID. KDIGO-Empfehlung. Impfstoff separat berechnen.' },
   { nr:3531,name:'Urinsediment (Mikroskopie)',             short:'Urinsediment mikrosk.',        kat:'Diagnostik & Therapie',   typ:'T', p:200,  excl:[],       tip:'Manuelle Auswertung mit Mikroskop. Diagnostisch wertvoll bei Hämaturie, Zylinder (AKI, GN). Höherer Steigerungsfaktor begründbar.' },
+  { nr:602, name:'Oxymetrie / Pulsoximetrie',              short:'Pulsoximetrie',                kat:'Diagnostik & Therapie',   typ:'T', p:40,   excl:[],       freq:'unbegrenzt', tip:'Nicht-invasive SpO2-Messung. Auf ITS mehrfach täglich ansetzbar.' },
   { nr:644, name:'Doppleruntersuchung Gefäße (CW)',       short:'Gefäß-Doppler',                kat:'Diagnostik & Therapie',   typ:'T', p:350,  excl:[],       tip:'CW-Doppler; ABI-Messung bei pAVK. Niederschwelliger als farbkodierter Duplex (Nr. 428/430).' },
-  { nr:659, name:'Langzeit-EKG 24h (Holter)',             short:'Holter-EKG 24h',               kat:'Diagnostik & Therapie',   typ:'T', p:750,  excl:[],       tip:'VHF-Screening bei CKD — AF-Prävalenz erhöht. Synkopen, Palpitationen. Anlegen + Auswertung = eine Position.' },
+  { nr:659, name:'Langzeit-EKG 24h (Holter)',             short:'Holter-EKG 24h',               kat:'Diagnostik & Therapie',   typ:'T', p:750,  excl:[],       freq:'1–2×/Jahr', tip:'VHF-Screening bei CKD — AF-Prävalenz erhöht. Synkopen, Palpitationen. Anlegen + Auswertung = eine Position.' },
+  { nr:3710,name:'Blutgasanalyse (pH, pO₂, pCO₂, HCO₃)',short:'BGA komplett',                 kat:'BGA / Labor',             typ:'T', p:250,  excl:[],       freq:'unbegrenzt / je Messung', tip:'GOÄ Nr. 3710: vollständige Blutgasanalyse inkl. Elektrolyte. Auf ITS mehrfach täglich ansetzbar und begründbar. POCT-Gerät = technische Leistung. Auch arterielle BGA = gleiche Position.' },
+  { nr:3714,name:'pO₂ oder pCO₂ (Einzelparameter)',      short:'BGA Einzelmessung',            kat:'BGA / Labor',             typ:'T', p:80,   excl:[3710],   freq:'unbegrenzt / je Messung', tip:'Nur wenn nicht als vollständige BGA (Nr. 3710) — z.B. reine Oxygenierungskontrolle.' },
+  { nr:429, name:'Kardiopulmonale Reanimation',           short:'Reanimation CPR',              kat:'ITS-Prozeduren',          typ:'P', p:1500, excl:[],       freq:'je Ereignis', tip:'GOÄ Nr. 429: vollständige Reanimationsleistung (Herzdruckmassage + Beatmung + Defibrillation). Separate Berechnung der medikamentösen Maßnahmen. Dokumentation Verlauf + Dauer obligat.' },
+  { nr:427, name:'Endotracheale Intubation',              short:'Intubation (ETI)',              kat:'ITS-Prozeduren',          typ:'P', p:600,  excl:[],       freq:'je Einleitung', tip:'Selbstständige Intubationsleistung. Neben Nr. 429 (Reanimation) und Nr. 602 (Monitoring) ansetzbar. Laryngoskopie + Fixierung dokumentieren.' },
+  { nr:261, name:'Venenpunktion mit Katheteranlage',      short:'ZVK-Anlage (Nr. 261)',         kat:'ITS-Prozeduren',          typ:'T', p:300,  excl:[],       freq:'je Anlage', tip:'GOÄ Nr. 261 für einfache Kathetereinlage; bei Subclavia/Jugularis-ZVK oft als Nr. 260 oder § 6-Analogabrechnung. Sonografische Führung dokumentieren.' },
+  { nr:284, name:'Arterienverweilkatheter',               short:'Arterienkatheter (A-line)',     kat:'ITS-Prozeduren',          typ:'T', p:370,  excl:[],       freq:'je Anlage', tip:'GOÄ Nr. 284: intraarterieller Verweilkatheter. Radialisarterien-Katheter für invasives Monitoring. Ggf. § 6-Analog begründen. Neben nr. 602/3710 ansetzbar.' },
+  { nr:307, name:'Pleurapunktion (therapeutisch)',        short:'Pleurapunktion',               kat:'ITS-Prozeduren',          typ:'T', p:250,  excl:[],       freq:'je Punktion', tip:'GOÄ Nr. 307. Bei pleuralen Ergüssen im Rahmen nephrotisches Syndrom, Herzinsuffizienz. Sonografische Lagekontrolle (Nr. 410) zusätzlich ansetzbar.' },
+  { nr:320, name:'Aszitespunktion',                       short:'Aszitespunktion / Parazentese', kat:'ITS-Prozeduren',          typ:'T', p:250,  excl:[],       freq:'je Punktion', tip:'GOÄ Nr. 320. Hepatorenales Syndrom, dekompensierten Zirrhose, nephrotisches Syndrom. Nr. 410 für Sono-Steuerung zusätzlich.' },
   { nr:650, name:'Blutdruckmessung',                      short:'RR-Messung',                   kat:'Blutdruck / ABPM',        typ:'T', p:40,   excl:[],       tip:'Einzelmessung; mehrfache Messungen gehen nur 1× an.' },
-  { nr:651, name:'Langzeit-RR-Messung (Anlegen)',         short:'ABPM Anlegen + Aufzeichnung',  kat:'Blutdruck / ABPM',        typ:'T', p:265,  excl:[],       tip:'Anlegen des ABPM-Geräts + Aufzeichnung >18h. Auswertung am Folgetag (Nr. 652).' },
-  { nr:652, name:'Langzeit-RR Auswertung',                short:'ABPM Auswertung',              kat:'Blutdruck / ABPM',        typ:'T', p:265,  excl:[],       tip:'Computergestützte Auswertung und schriftl. Befundung des ABPM.' },
-  { nr:34,  name:'Erörterung lebensverändernde Erkrankung >20 min', short:'Erörterung Auswirkungen auf Lebensgestaltung', kat:'Nephrologie spezifisch', typ:'P', p:291, excl:[35],    tip:'GOÄ-Text: „Erörterung der Auswirkungen einer Erkrankung auf die Lebensgestaltung" (mind. 20 min). Kernposition bei Dialyse-Aufklärung, Transplantations-Gespräch, Palliativentscheidung. Uhrzeit + Dauer dokumentieren.' },
-  { nr:35,  name:'Erörterung Lebenssituation (bis 30 min)',short:'Erörterung Lebenssituation',  kat:'Nephrologie spezifisch', typ:'P', p:200,  excl:[34],     tip:'Kürzere Erörterung psychosozialer Krankheitsfolgen mit Patient oder Bezugspersonen. Nicht neben Nr. 34 ansetzbar — je nach Gesprächsdauer entscheiden.' },
-  { nr:626, name:'Beurteilung Dialysepflichtigkeit',      short:'Dialyseindikation/-beurteilung', kat:'Nephrologie spezifisch', typ:'P', p:292, excl:[],      tip:'Erstmalige oder nach Intervall erneute Einschätzung. Bei CKD G4/G5 im Verlauf ansetzbar.' },
+  { nr:651, name:'Langzeit-RR-Messung (Anlegen)',         short:'ABPM Anlegen + Aufzeichnung',  kat:'Blutdruck / ABPM',        typ:'T', p:265,  excl:[],       freq:'1–2×/Jahr', tip:'Anlegen des ABPM-Geräts + Aufzeichnung >18h. Auswertung am Folgetag (Nr. 652).' },
+  { nr:652, name:'Langzeit-RR Auswertung',                short:'ABPM Auswertung',              kat:'Blutdruck / ABPM',        typ:'T', p:265,  excl:[],       freq:'1–2×/Jahr', tip:'Computergestützte Auswertung und schriftl. Befundung des ABPM.' },
+  { nr:34,  name:'Erörterung lebensverändernde Erkrankung >20 min', short:'Erörterung Auswirkungen auf Lebensgestaltung', kat:'Nephrologie spezifisch', typ:'P', p:291, excl:[35],    freq:'Dauer dokumentieren', tip:'GOÄ-Text: „Erörterung der Auswirkungen einer Erkrankung auf die Lebensgestaltung" (mind. 20 min). Kernposition bei Dialyse-Aufklärung, Transplantations-Gespräch, Palliativentscheidung. Uhrzeit + Dauer dokumentieren.' },
+  { nr:35,  name:'Erörterung Lebenssituation (bis 30 min)',short:'Erörterung Lebenssituation',  kat:'Nephrologie spezifisch', typ:'P', p:200,  excl:[34],     freq:'Dauer dokumentieren', tip:'Kürzere Erörterung psychosozialer Krankheitsfolgen mit Patient oder Bezugspersonen. Nicht neben Nr. 34 ansetzbar — je nach Gesprächsdauer entscheiden.' },
+  { nr:626, name:'Beurteilung Dialysepflichtigkeit',      short:'Dialyseindikation/-beurteilung', kat:'Nephrologie spezifisch', typ:'P', p:292, excl:[],      freq:'1×/Quartal begründbar', tip:'Erstmalige oder nach Intervall erneute Einschätzung. Bei CKD G4/G5 im Verlauf ansetzbar.' },
   { nr:826, name:'Koordination interdisziplinäre Behandlung', short:'Interdiszip. Koordination', kat:'Nephrologie spezifisch', typ:'P', p:160, excl:[],      tip:'Absprache mit anderen Fachgebieten zur Gesamttherapieplanung (z.B. Hämatologie + Nephrologie bei MGUS/Myelom-Niere, Transplant-Team).' },
   { nr:315, name:'Perkutane Nierenbiopsie (USS-gezielt)', short:'Nierenbiopsie perkutan',       kat:'Intervention',            typ:'T', p:1600, excl:[],       tip:'Ultraschallgeführt. Üblich ×1,8 bis ×2,3. Zusätzlich Nr. 410 für Sono ansetzbar.' },
   { nr:75,  name:'Kurze Bescheinigung / Attest',          short:'Attest kurz',                  kat:'Dokumentation',           typ:'P', p:60,   excl:[76,80],  tip:'Einfaches Attest oder Kurzbescheinigung.' },
@@ -274,7 +288,10 @@ var goaeCtxPresets = {
   ],
   its: [
     {key:'its_aufnahme',label:'🚨 ITS-Aufnahme'},
-    {key:'its_visite',  label:'📋 ITS-Visite'},
+    {key:'its_visite',  label:'📋 ITS-Visite + BGA'},
+    {key:'its_reani',   label:'❤️ Reanimation'},
+    {key:'its_zvk',     label:'🩸 ZVK-Anlage'},
+    {key:'its_pleura',  label:'🫁 Pleurapunktion'},
     {key:'its_ecu',     label:'🔵 Eculizumab-Gespräch (aHUS)'},
     {key:'dialyse',     label:'🫘 Dialyse-Aufklärung'},
     {key:'konsil',      label:'📞 Konsil'}
@@ -325,8 +342,11 @@ function goaePreset(type, btn) {
     epikrise:[3,80],
     entlass: [3,7,76],
     // ITS
-    its_aufnahme:[8,34,410,420,76],
-    its_visite:  [3,7,410],
+    its_aufnahme:[8,34,410,420,3710,76],
+    its_visite:  [3,7,410,3710],
+    its_reani:   [429,427,3710,76],
+    its_zvk:     [3,261,284,3710,410],
+    its_pleura:  [3,307,410,3710],
     its_ecu:     [3,34,420,4201,76]
   };
   (map[type]||[]).forEach(function(n){ goaeSelected.add(n); });
@@ -367,6 +387,7 @@ function goaeRender() {
       leftHtml += '<input type="checkbox"' + (isSel&&!isConfl?' checked':'') + ' onclick="event.stopPropagation();goaeToggle(' + pos.nr + ')">';
       leftHtml += '<span class="goae-pos-nr' + (isSel?' sel':'') + '">Nr. ' + (pos.display||pos.nr) + '</span>';
       leftHtml += '<span class="goae-pos-name">' + pos.name;
+      if (pos.freq) leftHtml += '<span class="goae-freq' + (pos.freq.indexOf('1×')!==-1||pos.freq.indexOf('3×')!==-1?' warn-freq':pos.freq.indexOf('unbegrenzt')!==-1?' info-freq':'') + '">' + pos.freq + '</span>';
       if (pos.tip) leftHtml += '<small>' + pos.tip.replace('⭐ ','') + '</small>';
       leftHtml += '</span>';
       if (isConfl) {
