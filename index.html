@@ -8525,6 +8525,9 @@ function calculate() {
     <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${pColor};"></div></div>`;
   }
 
+  // Hidden carrier for cross-tab auto-import (akAutoImport, abxAutoImport, gichtAutoImport …)
+  resHTML += `<span id="egfr-result-val" style="display:none">${primaryEGFR !== null ? primaryEGFR : ''}</span>`;
+
   document.getElementById('results-panel').innerHTML = resHTML;
 
   // Build matrix
