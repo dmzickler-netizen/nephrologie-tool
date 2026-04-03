@@ -66,6 +66,7 @@
 #tab-gicht { display: none; }
 #tab-tma { display: none; }
 #tab-gn { display: none; }
+#tab-ns { display: none; }
 .gicht-section { padding:10px 12px; border-radius:10px; margin-bottom:0; }
 .gicht-section-title { font-size:.75rem; font-weight:800; text-transform:uppercase; letter-spacing:.5px; color:#455a64; margin-bottom:8px; }
 .gicht-akut { background:#fff3e0; border:1.5px solid #ffb74d; }
@@ -1370,6 +1371,7 @@ label .lip-optional {
   <button class="nav-tab-btn" data-tab="gicht" onclick="switchToolTab('gicht')">🦴 Gicht</button>
   <button class="nav-tab-btn" data-tab="tma" onclick="switchToolTab('tma')">🩸 TTP / HUS / DIC</button>
   <button class="nav-tab-btn" data-tab="gn" onclick="switchToolTab('gn')">🔬 Glomerulonephritis</button>
+  <button class="nav-tab-btn" data-tab="ns" onclick="switchToolTab('ns')">🫧 Nephrotisches Syndrom</button>
 </div>
 
 <!-- ============================================================
@@ -5936,6 +5938,523 @@ window.gichtAutoImport = function() {
 
 </div><!-- end tab-gn -->
 
+<!-- ============================================================
+     NEPHROTISCHES SYNDROM — WORKUP
+     ============================================================ -->
+<div id="tab-ns">
+<style>
+#tab-ns .ns-container { max-width:920px; margin:0 auto; padding:16px; }
+#tab-ns .ns-subtabs { display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap; }
+#tab-ns .ns-stab-btn { background:#fff; border:2px solid #4527a0; color:#4527a0; border-radius:8px; padding:8px 16px; cursor:pointer; font-weight:700; font-size:.83rem; transition:.15s; }
+#tab-ns .ns-stab-btn.active, #tab-ns .ns-stab-btn:hover { background:#4527a0; color:#fff; }
+#tab-ns .ns-tab { display:none; }
+#tab-ns .ns-tab.active { display:block; }
+#tab-ns .ns-card { background:#fff; border-radius:12px; padding:16px; box-shadow:0 2px 8px rgba(0,0,0,.08); margin-bottom:14px; }
+#tab-ns .ns-card-title { font-size:.78rem; font-weight:800; text-transform:uppercase; letter-spacing:.5px; color:#455a64; margin-bottom:12px; border-bottom:2px solid #ede7f6; padding-bottom:6px; }
+#tab-ns .ns-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+#tab-ns .ns-field { display:flex; flex-direction:column; gap:4px; margin-bottom:10px; }
+#tab-ns .ns-label { font-size:.78rem; font-weight:600; color:#546e7a; }
+#tab-ns .ns-input { border:1.5px solid #cfd8dc; border-radius:6px; padding:6px 10px; font-size:.88rem; width:100%; box-sizing:border-box; }
+#tab-ns .ns-input:focus { border-color:#4527a0; outline:none; }
+#tab-ns .ns-select { border:1.5px solid #cfd8dc; border-radius:6px; padding:6px 10px; font-size:.88rem; width:100%; box-sizing:border-box; background:#fff; }
+#tab-ns .ns-radio-group { display:flex; gap:14px; margin-top:3px; }
+#tab-ns .ns-radio-group label { font-size:.83rem; display:flex; align-items:center; gap:4px; cursor:pointer; }
+#tab-ns .ns-result-ok   { background:#e8f5e9; border:2px solid #43a047; border-radius:10px; padding:14px 16px; margin-bottom:10px; }
+#tab-ns .ns-result-warn { background:#fff8e1; border:2px solid #f9a825; border-radius:10px; padding:14px 16px; margin-bottom:10px; }
+#tab-ns .ns-result-bad  { background:#fce4ec; border:2px solid #e53935; border-radius:10px; padding:14px 16px; margin-bottom:10px; }
+#tab-ns .ns-result-blue { background:#e3f2fd; border:2px solid #1565c0; border-radius:10px; padding:14px 16px; margin-bottom:10px; }
+#tab-ns .ns-result-title { font-weight:800; font-size:.95rem; margin-bottom:6px; }
+#tab-ns .ns-result-sub { font-size:.82rem; line-height:1.65; }
+#tab-ns .ns-result-sub ul { margin:4px 0 0 16px; padding:0; }
+#tab-ns .ns-result-sub li { margin-bottom:3px; }
+#tab-ns .ns-section-label { font-size:.74rem; font-weight:800; text-transform:uppercase; letter-spacing:.5px; color:#4527a0; border-bottom:1.5px solid #ede7f6; padding-bottom:4px; margin:14px 0 8px; }
+#tab-ns .ns-row { font-size:.82rem; line-height:1.65; padding:4px 0; border-bottom:1px solid #f5f5f5; display:flex; gap:8px; }
+#tab-ns .ns-row:last-child { border-bottom:none; }
+#tab-ns .ns-key { font-weight:700; color:#37474f; min-width:130px; flex-shrink:0; }
+#tab-ns .ns-table { width:100%; border-collapse:collapse; font-size:.8rem; margin:8px 0; }
+#tab-ns .ns-table th { background:#ede7f6; padding:5px 8px; text-align:left; font-size:.77rem; font-weight:700; color:#4527a0; }
+#tab-ns .ns-table td { padding:5px 8px; border-bottom:1px solid #f5f0ff; vertical-align:top; }
+#tab-ns .ns-check-list { list-style:none; padding:0; margin:0; }
+#tab-ns .ns-check-list li { display:flex; align-items:flex-start; gap:8px; font-size:.82rem; padding:4px 0; border-bottom:1px solid #f5f5f5; line-height:1.5; }
+#tab-ns .ns-check-list li:last-child { border-bottom:none; }
+#tab-ns .ns-check-list input[type=checkbox] { margin-top:3px; flex-shrink:0; accent-color:#4527a0; }
+#tab-ns .ns-badge { display:inline-block; padding:2px 8px; border-radius:12px; font-size:.72rem; font-weight:700; margin:1px; }
+#tab-ns .ns-badge-red   { background:#fce4ec; color:#c62828; }
+#tab-ns .ns-badge-amber { background:#fff8e1; color:#e65100; }
+#tab-ns .ns-badge-green { background:#e8f5e9; color:#2e7d32; }
+#tab-ns .ns-badge-blue  { background:#e3f2fd; color:#1565c0; }
+#tab-ns .ns-badge-purple{ background:#ede7f6; color:#4527a0; }
+#tab-ns .ns-step { display:flex; gap:10px; margin-bottom:10px; }
+#tab-ns .ns-step-num { background:#4527a0; color:#fff; border-radius:50%; min-width:26px; height:26px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.82rem; flex-shrink:0; margin-top:1px; }
+#tab-ns .ns-step-body { font-size:.82rem; line-height:1.6; }
+#tab-ns .ns-step-title { font-weight:800; color:#4527a0; margin-bottom:3px; }
+@media(max-width:620px){ #tab-ns .ns-grid { grid-template-columns:1fr; } }
+</style>
+
+<div class="ns-container">
+  <h2 style="margin:0 0 3px;font-size:1.1rem;color:#4527a0;">🫧 Nephrotisches Syndrom — Workup &amp; Management</h2>
+  <p style="margin:0 0 14px;font-size:.8rem;color:#78909c;">Strukturierter Abklärungsalgorithmus · KDIGO 2021 Glomerular Diseases Guideline</p>
+
+  <div class="ns-subtabs">
+    <button class="ns-stab-btn active" onclick="nsShowTab('workup',this)">🔍 Workup-Algorithmus</button>
+    <button class="ns-stab-btn" onclick="nsShowTab('komplikationen',this)">⚠️ Komplikationen</button>
+    <button class="ns-stab-btn" onclick="nsShowTab('labor',this)">🧪 Labor-Checkliste</button>
+    <button class="ns-stab-btn" onclick="nsShowTab('info',this)">ℹ️ Info &amp; Ursachen</button>
+  </div>
+
+  <!-- ===== WORKUP ALGORITHMUS ===== -->
+  <div id="ns-workup" class="ns-tab active">
+
+    <div class="ns-card">
+      <div class="ns-card-title">📋 Klinische Angaben</div>
+
+      <div class="ns-grid">
+        <div>
+          <div class="ns-field">
+            <label class="ns-label">Alter des Patienten (Jahre)</label>
+            <input class="ns-input" id="ns-age" type="number" min="0" max="120" placeholder="z.B. 45" oninput="nsCalc()">
+          </div>
+          <div class="ns-field">
+            <label class="ns-label">Proteinurie (g/d oder PCR g/g)</label>
+            <input class="ns-input" id="ns-prot" type="number" min="0" step="0.1" placeholder="z.B. 5.2" oninput="nsCalc()">
+          </div>
+          <div class="ns-field">
+            <label class="ns-label">Serum-Albumin (g/L)</label>
+            <input class="ns-input" id="ns-alb" type="number" min="0" max="60" step="0.5" placeholder="z.B. 22" oninput="nsCalc()">
+          </div>
+          <div class="ns-field">
+            <label class="ns-label">Ödeme?</label>
+            <div class="ns-radio-group">
+              <label><input type="radio" name="ns-oedeme" value="ja" onchange="nsCalc()"> Ja</label>
+              <label><input type="radio" name="ns-oedeme" value="nein" onchange="nsCalc()"> Nein</label>
+            </div>
+          </div>
+          <div class="ns-field">
+            <label class="ns-label">Hämaturie (Urinstatus / Sediment)?</label>
+            <div class="ns-radio-group">
+              <label><input type="radio" name="ns-haem" value="ja" onchange="nsCalc()"> Ja</label>
+              <label><input type="radio" name="ns-haem" value="nein" onchange="nsCalc()"> Nein</label>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="ns-field">
+            <label class="ns-label">PLA2R-Antikörper</label>
+            <select class="ns-select" id="ns-pla2r" onchange="nsCalc()">
+              <option value="">— noch nicht bestimmt —</option>
+              <option value="pos_hoch">Positiv — hoher Titer (&gt;14 RU/ml)</option>
+              <option value="pos_niedrig">Positiv — niedriger Titer (grenzwertig)</option>
+              <option value="neg">Negativ</option>
+              <option value="ausstehend">Bestellt — noch ausstehend</option>
+            </select>
+          </div>
+          <div class="ns-field">
+            <label class="ns-label">Bekannter Diabetes mellitus?</label>
+            <div class="ns-radio-group">
+              <label><input type="radio" name="ns-dm" value="ja" onchange="nsCalc()"> Ja</label>
+              <label><input type="radio" name="ns-dm" value="nein" onchange="nsCalc()"> Nein</label>
+            </div>
+          </div>
+          <div class="ns-field">
+            <label class="ns-label">Bekannte Systemerkrankung (SLE, Amyloidose etc.)?</label>
+            <div class="ns-radio-group">
+              <label><input type="radio" name="ns-sys" value="ja" onchange="nsCalc()"> Ja</label>
+              <label><input type="radio" name="ns-sys" value="nein" onchange="nsCalc()"> Nein</label>
+            </div>
+          </div>
+          <div class="ns-field">
+            <label class="ns-label">Aktive Malignomerkrankung?</label>
+            <div class="ns-radio-group">
+              <label><input type="radio" name="ns-malig" value="ja" onchange="nsCalc()"> Ja</label>
+              <label><input type="radio" name="ns-malig" value="nein" onchange="nsCalc()"> Nein</label>
+            </div>
+          </div>
+          <div class="ns-field">
+            <label class="ns-label">Potenziell auslösendes Medikament?</label>
+            <select class="ns-select" id="ns-drug" onchange="nsCalc()">
+              <option value="">— keines bekannt —</option>
+              <option value="nsaid">NSAID / COX-2-Hemmer</option>
+              <option value="gold">Gold / Penicillamin</option>
+              <option value="lithium">Lithium</option>
+              <option value="heroin">Heroin</option>
+              <option value="bucillamin">Bucillamin / Thiola</option>
+              <option value="ifn">Interferon α/β</option>
+              <option value="vegf">VEGF-Inhibitor (Bevacizumab)</option>
+              <option value="cni">Calcineurin-Inhibitor (CNI)</option>
+              <option value="bisphosphonat">Bisphosphonat (Zoledronsäure)</option>
+              <option value="captopril">Captopril (hochdosiert)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="ns-result-area" style="display:none;">
+      <div id="ns-definition-box"></div>
+      <div id="ns-algo-box"></div>
+      <div id="ns-biopsy-box"></div>
+      <div id="ns-thrombo-box"></div>
+      <div id="ns-secondary-box"></div>
+    </div>
+
+    <div id="ns-hint" style="text-align:center;color:#90a4ae;padding:40px 0;font-size:.88rem;">
+      ↑ Klinische Angaben eingeben — Workup-Algorithmus wird angezeigt
+    </div>
+
+  </div><!-- end ns-workup -->
+
+  <!-- ===== KOMPLIKATIONEN ===== -->
+  <div id="ns-komplikationen" class="ns-tab">
+
+    <div class="ns-card">
+      <div class="ns-card-title">🩸 Thromboembolie-Risiko (wichtigste lebensbedrohliche Komplikation)</div>
+
+      <div class="ns-field" style="margin-bottom:12px;">
+        <label class="ns-label">Albumin (g/L) für Thrombose-Risikoabschätzung</label>
+        <input class="ns-input" id="ns-alb-komp" type="number" min="0" max="60" step="0.5" placeholder="z.B. 22" oninput="nsKompCalc()">
+      </div>
+      <div id="ns-thrombo-result"></div>
+
+      <div class="ns-section-label">Pathomechanismus</div>
+      <div class="ns-row"><span class="ns-key">Verlust gerinnungshemmender Proteine</span><span style="font-size:.82rem;color:#212121;">Antithrombin III ↓↓, Protein C ↓, Protein S ↓ (alle &lt;50 kDa → renale Ausscheidung)</span></div>
+      <div class="ns-row"><span class="ns-key">Aktivierung Prokoagulantiensystem</span><span style="font-size:.82rem;color:#212121;">Fibrinogen ↑, Faktor V/VIII ↑, Thrombozytenaggregation ↑ (Hypoalbuminämie)</span></div>
+      <div class="ns-row"><span class="ns-key">Renale Venenthrombose</span><span style="font-size:.82rem;color:#212121;">Besonders bei membranöser Nephropathie (30–40%!) — oft oligosymptomatisch</span></div>
+      <div class="ns-row"><span class="ns-key">Screening RVT</span><span style="font-size:.82rem;color:#212121;">Doppler-Sono Nierenvenen bei NS + Flanken-/Rückenschmerz oder unerklärtem eGFR-Abfall, besonders bei primärer MN</span></div>
+
+      <div class="ns-section-label">Antikoagulation — Empfehlungen (KDIGO 2021)</div>
+      <table class="ns-table">
+        <tr><th>Situation</th><th>Empfehlung</th><th>Präparat</th></tr>
+        <tr><td><span class="ns-badge ns-badge-red">Albumin &lt;20 g/L + primäre MN</span></td><td>Prophylaktische Antikoagulation empfohlen</td><td>NMH oder Vitamin-K-Antagonist (Ziel INR 2–3)</td></tr>
+        <tr><td><span class="ns-badge ns-badge-amber">Albumin 20–25 g/L</span></td><td>Individuell abwägen (Blutungsrisiko vs. Thromboserisiko)</td><td>NMH oder p.o. Antikoagulanz</td></tr>
+        <tr><td><span class="ns-badge ns-badge-amber">Albumin &lt;25 g/L + andere NS-Entitäten</span></td><td>Erwägen bei weiteren Risikofaktoren (Immobilität, Übergewicht, Voranamnese)</td><td>NMH oder Apixaban/Rivaroxaban</td></tr>
+        <tr><td><span class="ns-badge ns-badge-green">Albumin &gt;25 g/L, mobile Patienten</span></td><td>Keine prophylaktische Antikoagulation</td><td>—</td></tr>
+        <tr><td><span class="ns-badge ns-badge-red">Bestehende TVT/LE</span></td><td>Therapeutische Antikoagulation mind. 6 Monate</td><td>NMH oder DOAC; VKA möglich</td></tr>
+        <tr><td><span class="ns-badge ns-badge-red">Renale Venenthrombose</span></td><td>Therapeutische Antikoagulation 6–12 Monate</td><td>NMH initial, dann DOAC oder VKA</td></tr>
+      </table>
+      <div style="background:#fff3e0;border:1.5px solid #fb8c00;border-radius:8px;padding:8px 12px;font-size:.79rem;margin-top:8px;line-height:1.6;">
+        ⚠️ <strong>DOAC bei NS:</strong> Albumin-Bindung der DOACs variiert — bei sehr niedrigem Albumin veränderte Pharmakokinetik möglich. Apixaban gilt als relativ sicherer (höhere Proteinbindung = weniger freies Medikament). Einzelfallentscheidung mit Antikoagulations-Expertise.
+      </div>
+    </div>
+
+    <div class="ns-card">
+      <div class="ns-card-title">🦠 Infektionsrisiko</div>
+      <div class="ns-row"><span class="ns-key">Ursache</span><span style="font-size:.82rem;color:#212121;">Verlust von Immunglobulinen (IgG ↓↓), Opsoninen, Komplement-Faktoren im Urin → Abwehrschwäche gegen bekapselte Bakterien</span></div>
+      <div class="ns-row"><span class="ns-key">Häufigste Erreger</span><span style="font-size:.82rem;color:#212121;">Streptococcus pneumoniae (peritonitisches Syndrom!), E. coli, Klebsiella, Haemophilus influenzae</span></div>
+      <div class="ns-row"><span class="ns-key">Spontanbakt. Peritonitis</span><span style="font-size:.82rem;color:#212121;">Klassische Komplikation bei Kindern mit NS + Aszites — klinisch oft subtil</span></div>
+      <div class="ns-row"><span class="ns-key">Impfungen</span><span style="font-size:.82rem;color:#212121;"><strong>Pneumokokken (PCV20 + PPSV23), Influenza, HBV, Varizellen</strong> — alle VOR IS-Therapie wenn möglich; keine Lebendimpfstoffe unter IS</span></div>
+      <div class="ns-row"><span class="ns-key">Unter Immunsuppression</span><span style="font-size:.82rem;color:#212121;">PCP-Prophylaxe (TMP/SMX 960 mg 3×/Woche) bei hochdosierter IS; CMV-Monitoring nach Rituximab</span></div>
+    </div>
+
+    <div class="ns-card">
+      <div class="ns-card-title">💧 Ödem-Management</div>
+      <div class="ns-row"><span class="ns-key">Pathomechanismus</span><span style="font-size:.82rem;color:#212121;">Hypoalbuminämie → ↓ onkotischer Druck + primäre renale Na-Retention → generalisierte Ödeme, Aszites, Pleuraerguss</span></div>
+      <div class="ns-row"><span class="ns-key">Furosemid</span><span style="font-size:.82rem;color:#212121;">Initial 40–80 mg/d p.o., titrieren bis –0,5–1 L/d Bilanz. Bei Resistenz: i.v. (Resorptionsstörung bei darmödem!) oder Dauerinfusion</span></div>
+      <div class="ns-row"><span class="ns-key">Torasemid</span><span style="font-size:.82rem;color:#212121;">Bessere orale Bioverfügbarkeit als Furosemid bei Ödem — 10–200 mg/d p.o. Alternative bei Furosemid-Resistenz</span></div>
+      <div class="ns-row"><span class="ns-key">Kombinationsdiuretika</span><span style="font-size:.82rem;color:#212121;">Furosemid + Thiazid (Hydrochlorothiazid 12,5–25 mg/d) bei Diuretika-Resistenz — Hypokaliämie-Monitoring!</span></div>
+      <div class="ns-row"><span class="ns-key">Albumin-Infusion</span><span style="font-size:.82rem;color:#212121;">20% Albumin 100 ml i.v. — nur bei therapierefraktären Ödemen; Effekt kurzfristig (wird rasch ausgeschieden). <em>Keine Routinetherapie</em></span></div>
+      <div class="ns-row"><span class="ns-key">Kochsalz-Restriktion</span><span style="font-size:.82rem;color:#212121;">&lt;5 g/d NaCl (= &lt;2 g Na/d) — immer empfohlen</span></div>
+      <div class="ns-row"><span class="ns-key">Ziel</span><span style="font-size:.82rem;color:#212121;">Langsame Dekongestierung (–0,5–1 L/d) — zu aggressiv → intravasale Depletion → prärenales ANV, besonders bei Kindern!</span></div>
+    </div>
+
+    <div class="ns-card">
+      <div class="ns-card-title">🧬 Hyperlipidämie &amp; Lipidtherapie</div>
+      <div class="ns-row"><span class="ns-key">Ursache</span><span style="font-size:.82rem;color:#212121;">↓ Albumin → kompensatorisch ↑ Lebersynthese von Lipoproteinen + ↓ Lipoprotein-Lipase-Aktivität → LDL ↑↑, Triglyzeride ↑, HDL ↓ (paradox)</span></div>
+      <div class="ns-row"><span class="ns-key">Statin-Therapie</span><span style="font-size:.82rem;color:#212121;">Empfohlen bei persistierender Hypercholesterinämie &gt;3 Monate — Standard wie bei kardiovaskulärem Risiko (Atorvastatin 40–80 mg/d). LDL-Ziel &lt;1,4–1,8 mmol/L</span></div>
+      <div class="ns-row"><span class="ns-key">Monitoring</span><span style="font-size:.82rem;color:#212121;">Lipidpanel bei Diagnose und alle 3–6 Monate; Normalisierung oft nach Remission der NS</span></div>
+    </div>
+
+  </div><!-- end ns-komplikationen -->
+
+  <!-- ===== LABOR CHECKLISTE ===== -->
+  <div id="ns-labor" class="ns-tab">
+
+    <div class="ns-card">
+      <div class="ns-card-title">🧪 Initiales Labor-Panel bei nephrotischem Syndrom</div>
+      <p style="font-size:.78rem;color:#607d8b;margin:-4px 0 12px;">Checkliste — abhaken was bereits veranlasst wurde</p>
+
+      <div class="ns-grid">
+        <div>
+          <div class="ns-section-label">Basisdiagnostik</div>
+          <ul class="ns-check-list">
+            <li><input type="checkbox"><span><strong>Urin-Stix + Sediment</strong> — Phasenkontrastmikroskopie (Erythrozytenmorphologie, Zylinder, ovale Fettkörperchen)</span></li>
+            <li><input type="checkbox"><span><strong>Urin PCR</strong> (Protein/Kreatinin-Ratio) — alternativ 24h-Sammelurin für Proteinurie-Quantifizierung</span></li>
+            <li><input type="checkbox"><span><strong>Serum-Albumin</strong> (für Thromboserisiko-Abschätzung und NS-Definition)</span></li>
+            <li><input type="checkbox"><span><strong>Gesamteiweiß, Lipidelektrophorese</strong></span></li>
+            <li><input type="checkbox"><span><strong>Lipide</strong> — Cholesterin, LDL, HDL, Triglyzeride (↑↑ bei NS)</span></li>
+            <li><input type="checkbox"><span><strong>Kreatinin, Harnstoff, eGFR, Elektrolyte</strong></span></li>
+            <li><input type="checkbox"><span><strong>Blutbild + Differentialblutbild</strong></span></li>
+            <li><input type="checkbox"><span><strong>Gerinnung</strong> — PT, aPTT, Fibrinogen, AT III, Protein C, Protein S (bei schwerer Hypoalbuminämie!)</span></li>
+            <li><input type="checkbox"><span><strong>LDH, Harnsäure</strong></span></li>
+          </ul>
+
+          <div class="ns-section-label" style="margin-top:14px;">Primär membranöse Nephropathie</div>
+          <ul class="ns-check-list">
+            <li><input type="checkbox"><span><strong>PLA2R-Antikörper</strong> (Serum, ELISA) — positiv bei ~70–80% primärer MN. Titer = Aktivitätsmarker! <span class="ns-badge ns-badge-purple">Schlüsseltest</span></span></li>
+            <li><input type="checkbox"><span><strong>THSD7A-Antikörper</strong> — bei PLA2R-negativer MN (~3–5%), Assoziation mit Malignomen</span></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="ns-section-label">Immunologie (sekundäre Ursachen)</div>
+          <ul class="ns-check-list">
+            <li><input type="checkbox"><span><strong>ANA, Anti-dsDNA</strong> — SLE-Ausschluss (obligat bei Frauen im gebärfähigen Alter)</span></li>
+            <li><input type="checkbox"><span><strong>C3, C4</strong> — Komplement (↓ bei SLE, C3G, Kryoglobulinämie)</span></li>
+            <li><input type="checkbox"><span><strong>ANCA (PR3/MPO)</strong> — bei nephritischer Komponente</span></li>
+            <li><input type="checkbox"><span><strong>Anti-GBM-AK</strong> — bei Hämaturie / RPGN</span></li>
+            <li><input type="checkbox"><span><strong>Kryoglobuline</strong> — bei HCV, MGUS</span></li>
+            <li><input type="checkbox"><span><strong>Rheumafaktor, Anti-CCP</strong></span></li>
+          </ul>
+
+          <div class="ns-section-label" style="margin-top:14px;">Infektionen</div>
+          <ul class="ns-check-list">
+            <li><input type="checkbox"><span><strong>HBV</strong> — HBsAg, Anti-HBs, Anti-HBc (MN durch HBV möglich!)</span></li>
+            <li><input type="checkbox"><span><strong>HCV</strong> — Anti-HCV, HCV-RNA bei positivem AK</span></li>
+            <li><input type="checkbox"><span><strong>HIV</strong> — Anti-HIV (kollabsierende FSGS)</span></li>
+            <li><input type="checkbox"><span><strong>Syphilis</strong> — TPHA/VDRL bei Verdacht</span></li>
+            <li><input type="checkbox"><span><strong>Blutkulturen</strong> — bei Fieber / Infektionsverdacht</span></li>
+          </ul>
+
+          <div class="ns-section-label" style="margin-top:14px;">Dysproteinämie / Amyloidose</div>
+          <ul class="ns-check-list">
+            <li><input type="checkbox"><span><strong>Serum-IFE</strong> (Immunfixations-Elektrophorese) + <strong>Serum-FLC</strong> (freie Leichtketten)</span></li>
+            <li><input type="checkbox"><span><strong>Urin-IFE</strong> (Bence-Jones-Protein)</span></li>
+            <li><input type="checkbox"><span><strong>Serum-Amyloid-A (SAA)</strong> — bei Verdacht AA-Amyloidose (chron. Entzündung)</span></li>
+            <li><input type="checkbox"><span><strong>Knochenmarkpunktion + Biopsie</strong> — bei MGUS/Myelom-Verdacht (nach Hämatologie)</span></li>
+          </ul>
+
+          <div class="ns-section-label" style="margin-top:14px;">Malignomsuche (bei Erwachsenen &gt;40 J, PLA2R-negativ)</div>
+          <ul class="ns-check-list">
+            <li><input type="checkbox"><span><strong>CT Thorax/Abdomen/Becken</strong> — solide Tumoren (Lunge, Kolon, Prostata, Mamma)</span></li>
+            <li><input type="checkbox"><span><strong>Koloskopie</strong> — altersadaptiert</span></li>
+            <li><input type="checkbox"><span><strong>PSA</strong> — Männer &gt;50 J</span></li>
+            <li><input type="checkbox"><span><strong>PET-CT / LK-Sono</strong> — bei Verdacht Hodgkin-Lymphom (MCD-Assoziation!)</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end ns-labor -->
+
+  <!-- ===== INFO ===== -->
+  <div id="ns-info" class="ns-tab">
+
+    <div class="ns-card">
+      <div class="ns-card-title">📖 Definition &amp; Leitsymptome</div>
+      <div class="ns-row"><span class="ns-key">Proteinurie</span><span style="font-size:.82rem;color:#212121;">&gt;3,5 g/d (oder Urin-PCR &gt;3,5 g/g) — schwere glomeruläre Proteinurie</span></div>
+      <div class="ns-row"><span class="ns-key">Hypoalbuminämie</span><span style="font-size:.82rem;color:#212121;">&lt;30 g/L (klinisch relevant oft &lt;25 g/L)</span></div>
+      <div class="ns-row"><span class="ns-key">Ödeme</span><span style="font-size:.82rem;color:#212121;">Periorbital (morgens), prätibial, Aszites, Pleuraerguss, Anasarka bei schwerem Verlauf</span></div>
+      <div class="ns-row"><span class="ns-key">Hyperlipidämie</span><span style="font-size:.82rem;color:#212121;">LDL ↑↑, Triglyzeride ↑, Cholesterin ↑ — kompensatorische Lebersynthese</span></div>
+      <div class="ns-row"><span class="ns-key">Lipidurie</span><span style="font-size:.82rem;color:#212121;">Ovale Fettkörperchen, Fettzylinder im Sediment — Malteserkranzphänomen</span></div>
+    </div>
+
+    <div class="ns-card">
+      <div class="ns-card-title">🔬 Häufigste Ursachen nach Altersgruppe</div>
+      <table class="ns-table">
+        <tr><th>Altersgruppe</th><th>Häufigste Entität</th><th>Vorgehen</th></tr>
+        <tr><td><strong>Kinder &lt;12 J</strong></td><td>MCD (~90%) → empirische Steroidtherapie</td><td>Keine Biopsie bei typischem Ansprechen (≤4 Wochen)</td></tr>
+        <tr><td><strong>Kinder/Jugendliche steroidresistent</strong></td><td>FSGS (~25%), MCD</td><td>Biopsie indiziert</td></tr>
+        <tr><td><strong>Junge Erwachsene 18–40 J</strong></td><td>MCD, primäre MN (PLA2R+), FSGS</td><td>Biopsie; PLA2R-AK vorher</td></tr>
+        <tr><td><strong>Erwachsene 40–60 J</strong></td><td>Primäre MN (häufigste!), FSGS, diabet. Nephropathie</td><td>PLA2R-AK + Biopsie; Diabetesabklärung</td></tr>
+        <tr><td><strong>Ältere &gt;60 J</strong></td><td>MN (sek. durch Malignome!), diabet. Nephropathie, Amyloidose</td><td>Biopsie + intensive Malignomsuche</td></tr>
+        <tr><td><strong>Alle Altersgruppen</strong></td><td>Diabet. Nephropathie (häufigste sek. NS-Ursache weltweit!)</td><td>Klinisch oft ohne Biopsie diagnostizierbar</td></tr>
+      </table>
+    </div>
+
+    <div class="ns-card">
+      <div class="ns-card-title">🔑 PLA2R-Antikörper — Klinische Bedeutung (KDIGO 2021)</div>
+      <div class="ns-step">
+        <div class="ns-step-num">1</div>
+        <div class="ns-step-body">
+          <div class="ns-step-title">Positiver PLA2R-AK (hoch-titer) + typische klinische Präsentation + keine sekundäre Ursache</div>
+          Diagnose einer <strong>primären membranösen Nephropathie ohne Biopsie akzeptabel</strong> (KDIGO 2021, Empfehlungsgrad 2C). In vielen Zentren wird die Biopsie trotzdem für Baseline-Histologie und Aktivitätsbeurteilung durchgeführt.
+        </div>
+      </div>
+      <div class="ns-step">
+        <div class="ns-step-num">2</div>
+        <div class="ns-step-body">
+          <div class="ns-step-title">PLA2R-Titer als Aktivitätsmarker</div>
+          Fallender Titer = Therapieansprechen (auch ohne Proteinurie-Abfall initial sichtbar). Wiederanstieg = Rezidivgefahr. Kontrolle alle 3–6 Monate unter IS-Therapie.
+        </div>
+      </div>
+      <div class="ns-step">
+        <div class="ns-step-num">3</div>
+        <div class="ns-step-body">
+          <div class="ns-step-title">Negativer PLA2R-AK → Biopsie obligat</div>
+          PLA2R-negativ bedeutet: entweder sekundäre MN (Malignome! Infektionen! SLE!) oder andere GN-Entität (FSGS, MCD, Amyloidose). Biopsie und Malignomsuche unbedingt.
+        </div>
+      </div>
+      <div class="ns-step">
+        <div class="ns-step-num">4</div>
+        <div class="ns-step-body">
+          <div class="ns-step-title">Spontanremission der primären MN</div>
+          ~30% innerhalb 2 Jahren → <strong>Watch &amp; Wait 6 Monate</strong> bei niedrig-mittlerem Risiko (Proteinurie &lt;8 g/d, stabiler eGFR) gerechtfertigt, bevor IS-Therapie begonnen wird.
+        </div>
+      </div>
+
+      <div style="background:#ede7f6;border-radius:8px;padding:10px 14px;margin-top:8px;font-size:.8rem;line-height:1.6;">
+        <strong>THSD7A-Antikörper:</strong> Bei 3–5% der primären MN (PLA2R-negativ). Starke Assoziation mit Malignomen (v.a. Kolon, Lunge) → bei THSD7A-positiver MN immer intensive Tumorsuche, ggf. PET-CT.
+      </div>
+    </div>
+
+    <div class="ns-card">
+      <div class="ns-card-title">📚 Leitlinien</div>
+      <div class="ns-row"><span class="ns-key">KDIGO 2021 Glomerular Diseases</span><span style="font-size:.82rem;color:#212121;">KDIGO 2021 Clinical Practice Guideline for the Management of Glomerular Diseases — Kidney Int 2021 (inkl. 2024 Chapter Updates)</span></div>
+      <div class="ns-row"><span class="ns-key">KDIGO MN 2021</span><span style="font-size:.82rem;color:#212121;">Kapitel Membranöse Nephropathie: PLA2R, Risikostratifikation, Rituximab als neue Erstlinie</span></div>
+      <div class="ns-row"><span class="ns-key">MENTOR Trial</span><span style="font-size:.82rem;color:#212121;">Rituximab vs. Cyclosporin bei primärer MN — Rituximab überlegen bei 24 Monaten (NEJM 2019)</span></div>
+      <div class="ns-row"><span class="ns-key">STARMEN Trial</span><span style="font-size:.82rem;color:#212121;">Rituximab vs. alternating Ponticelli bei MN (Tacrolimus/Rituximab kombiniert)</span></div>
+    </div>
+
+  </div><!-- end ns-info -->
+
+</div><!-- end ns-container -->
+
+<script>
+(function(){
+  'use strict';
+
+  window.nsShowTab = function(id, btn) {
+    document.querySelectorAll('#tab-ns .ns-tab').forEach(function(t){ t.classList.remove('active'); });
+    document.querySelectorAll('#tab-ns .ns-stab-btn').forEach(function(b){ b.classList.remove('active'); });
+    document.getElementById('ns-'+id).classList.add('active');
+    if (btn) btn.classList.add('active');
+  };
+
+  function nsGetRadio(name) {
+    var r = document.querySelector('input[name="'+name+'"]:checked');
+    return r ? r.value : null;
+  }
+
+  window.nsKompCalc = function() {
+    var alb = parseFloat(document.getElementById('ns-alb-komp').value);
+    var el = document.getElementById('ns-thrombo-result');
+    if (!el) return;
+    if (isNaN(alb)) { el.innerHTML = ''; return; }
+    var html, cls;
+    if (alb < 20) {
+      cls = 'ns-result-bad';
+      html = '<div class="ns-result-title">🔴 Hohes Thromboembolie-Risiko — Albumin '+alb+' g/L</div><div class="ns-result-sub">Prophylaktische Antikoagulation empfohlen (KDIGO 2021), insbesondere bei primärer MN.<ul><li>NMH gewichtsadaptiert (z.B. Enoxaparin 40 mg/d s.c.) oder</li><li>Vitamin-K-Antagonist (Ziel-INR 2–3) oder Apixaban 2,5 mg 2×/d</li><li>Doppler-Sono Nierenvenen: Ausschluss Nierenvenen-Thrombose</li><li>LE-Diagnostik bei klinischem Verdacht (D-Dimere bei NS oft falsch-positiv!)</li></ul></div>';
+    } else if (alb < 25) {
+      cls = 'ns-result-warn';
+      html = '<div class="ns-result-title">🟡 Erhöhtes Thromboembolie-Risiko — Albumin '+alb+' g/L</div><div class="ns-result-sub">Antikoagulation individuell abwägen (Thromboserisiko vs. Blutungsrisiko).<ul><li>Bei primärer MN + weiteren Risikofaktoren (Immobilität, Adipositas, Vorgeschichte): Antikoagulation empfohlen</li><li>Bei anderen NS-Entitäten: klinische Einschätzung</li><li>Engmaschige Kontrolle des Albumins</li></ul></div>';
+    } else {
+      cls = 'ns-result-ok';
+      html = '<div class="ns-result-title">🟢 Moderates Risiko — Albumin '+alb+' g/L</div><div class="ns-result-sub">Routinemäßige prophylaktische Antikoagulation nicht empfohlen. Mobilisation fördern, klinisches Monitoring.</div>';
+    }
+    el.innerHTML = '<div class="'+cls+'">'+html+'</div>';
+  };
+
+  window.nsCalc = function() {
+    var age   = parseFloat(document.getElementById('ns-age').value);
+    var prot  = parseFloat(document.getElementById('ns-prot').value);
+    var alb   = parseFloat(document.getElementById('ns-alb').value);
+    var pla2r = document.getElementById('ns-pla2r').value;
+    var drug  = document.getElementById('ns-drug').value;
+    var dm    = nsGetRadio('ns-dm');
+    var sys   = nsGetRadio('ns-sys');
+    var malig = nsGetRadio('ns-malig');
+    var oedeme= nsGetRadio('ns-oedeme');
+    var haem  = nsGetRadio('ns-haem');
+
+    var hasData = (!isNaN(prot) || !isNaN(alb) || !isNaN(age));
+    var hint = document.getElementById('ns-hint');
+    var area = document.getElementById('ns-result-area');
+    if (!hasData) { hint.style.display='block'; area.style.display='none'; return; }
+    hint.style.display = 'none';
+    area.style.display = 'block';
+
+    // ---- NS-Definition ----
+    var nsConfirmed = (!isNaN(prot) && prot >= 3.5) && (!isNaN(alb) && alb < 30);
+    var nsLikely    = (!isNaN(prot) && prot >= 3.5) || (!isNaN(alb) && alb < 30);
+    var defHtml = '';
+    if (nsConfirmed) {
+      defHtml = '<div class="ns-result-ok"><div class="ns-result-title">✅ Nephrotisches Syndrom — Kriterien erfüllt</div><div class="ns-result-sub">Proteinurie '+(isNaN(prot)?'—':prot)+' g/d + Albumin '+(isNaN(alb)?'—':alb)+' g/L'+(oedeme==='ja'?' + Ödeme':'')+'. Vollständiger Workup indiziert.</div></div>';
+    } else if (nsLikely) {
+      defHtml = '<div class="ns-result-warn"><div class="ns-result-title">⚡ Unvollständige Kriterien — nephrotischer Bereich</div><div class="ns-result-sub">Für vollständige NS-Definition: Proteinurie &gt;3,5 g/d + Albumin &lt;30 g/L + Ödeme. Bitte Laborwerte vervollständigen.</div></div>';
+    }
+    document.getElementById('ns-definition-box').innerHTML = defHtml;
+
+    // ---- Sekundäre Ursachen ----
+    var secWarnings = [];
+    if (dm === 'ja') secWarnings.push('<strong>Diabetische Nephropathie</strong> — häufigste sekundäre NS-Ursache weltweit. Klinische Diagnose oft möglich ohne Biopsie bei: langer DM-Anamnese (&gt;10 J), Retinopathie, graduell zunehmende Proteinurie, keine Hämaturie, kein nephritisches Syndrom. Biopsie bei atypischem Verlauf.');
+    if (sys === 'ja') secWarnings.push('<strong>Systemerkrankung bekannt</strong> — gezielte weiterführende Diagnostik (SLE → LN-Biopsie; Amyloidose → IFE, Amyloid-Biopsie Rektum/Bauchfett oder Niere).');
+    if (malig === 'ja') secWarnings.push('<strong>Aktives Malignom</strong> — sekundäre MN (solide Tumoren: Lunge, Kolon, Prostata) oder MCD (Hodgkin-Lymphom!) möglich. Therapie des Tumors kann NS zur Remission bringen.');
+    if (drug && drug !== '') {
+      var drugMap = {nsaid:'NSAID/COX-2-Hemmer (MCD, MN)',gold:'Gold/Penicillamin (MN)',lithium:'Lithium (FSGS)',heroin:'Heroin (FSGS, kollabsierend)',bucillamin:'Bucillamin (MN)',ifn:'Interferon α/β (FSGS, MN)',vegf:'VEGF-Inhibitor (FSGS, TMA)',cni:'CNI-Toxizität (FSGS, TMA)',bisphosphonat:'Bisphosphonat — Zoledronsäure (kollabsierende FSGS)',captopril:'Captopril hochdosiert (MN)'};
+      secWarnings.push('<strong>Medikament '+drugMap[drug]+'</strong> — Absetzen des Medikaments als erste Maßnahme, Verlauf beobachten.');
+    }
+    var secHtml = '';
+    if (secWarnings.length > 0) {
+      secHtml = '<div class="ns-result-warn"><div class="ns-result-title">⚠️ Hinweise auf mögliche sekundäre NS-Ursache</div><div class="ns-result-sub"><ul>'+secWarnings.map(function(w){ return '<li>'+w+'</li>'; }).join('')+'</ul></div></div>';
+    }
+    document.getElementById('ns-secondary-box').innerHTML = secHtml;
+
+    // ---- Biopsie-Empfehlung ----
+    var biopsyHtml = '';
+    var isChild = (!isNaN(age) && age < 12);
+    var hasSecondary = (dm==='ja' || sys==='ja' || malig==='ja' || (drug && drug!==''));
+
+    if (isChild && !hasSecondary && haem !== 'ja') {
+      biopsyHtml = '<div class="ns-result-ok"><div class="ns-result-title">🟢 Kind &lt;12 Jahre — empirische Steroidtherapie, keine Biopsie als Erstmaßnahme</div><div class="ns-result-sub">Bei Kindern &lt;12 J ohne Hämaturie und ohne Hinweis auf sekundäre Ursache ist die häufigste Diagnose MCD (~90%). KDIGO-Empfehlung: empirischer Therapieversuch mit Prednison 2 mg/kg/d (max 60 mg/d) × 4–6 Wochen.<br><strong>Biopsie bei:</strong> Steroidresistenz (keine Remission nach 6–8 Wochen), Steroidabhängigkeit, häufige Rezidive, Hämaturie, Hypertonie, eingeschränkte Nierenfunktion, Alter &lt;1 J oder &gt;12 J.</div></div>';
+    } else if (pla2r === 'pos_hoch' && !hasSecondary && (!haem || haem === 'nein') && !isChild) {
+      biopsyHtml = '<div class="ns-result-ok"><div class="ns-result-title">🟢 PLA2R-AK hoch-positiv — Biopsie nicht zwingend erforderlich (KDIGO 2021)</div><div class="ns-result-sub">Diagnose einer <strong>primären membranösen Nephropathie</strong> kann bei hohem PLA2R-Titer + typischer Klinik + Fehlen sekundärer Ursachen ohne Biopsie gestellt werden (KDIGO 2021, Evidenzgrad 2C).<br><br><strong>Praktisches Vorgehen:</strong><ul><li>Risikostratifikation: Proteinurie-Niveau + eGFR-Stabilität bestimmen Watch-&amp;-Wait vs. IS-Beginn</li><li>Proteinurie &lt;3,5 g/d + stabile eGFR → 6 Monate Watch &amp; Wait (Spontanremission ~30%)</li><li>Proteinurie &gt;8 g/d oder eGFR-Abfall → Therapie mit Rituximab nicht verzögern</li><li>PLA2R-Titer-Kontrolle alle 3 Monate als Aktivitätsmarker</li></ul><em>In vielen Zentren wird Biopsie trotzdem für histologisches Grading und Aktivitätsindex durchgeführt — klinische Entscheidung.</em></div></div>';
+    } else if (pla2r === 'pos_niedrig' && !hasSecondary && !isChild) {
+      biopsyHtml = '<div class="ns-result-warn"><div class="ns-result-title">🟡 PLA2R-AK niedrig-positiv — Biopsie empfohlen</div><div class="ns-result-sub">Grenzwertig positiver Titer ist nicht ausreichend gesichert für diagnostischen Verzicht auf Biopsie. Nierenbiopsie empfohlen zur Sicherung der Diagnose und Beurteilung Aktivitätsgrad (Fibrose-Score).</div></div>';
+    } else if (pla2r === 'neg' && !hasSecondary && !isChild) {
+      biopsyHtml = '<div class="ns-result-bad"><div class="ns-result-title">🔴 PLA2R-AK negativ — Biopsie obligat + intensive Sekundärursachen-Suche</div><div class="ns-result-sub">PLA2R-negatives NS beim Erwachsenen: Biopsie unbedingt erforderlich, da differential:<ul><li>Sekundäre membranöse Nephropathie (Malignom → CT Thorax/Abdomen/Becken + PET-CT)</li><li>THSD7A-AK bestimmen</li><li>FSGS, MCD, Amyloidose, andere GN</li><li>Dysproteinämie / Amyloidose → IFE Serum + Urin, FLC</li></ul></div></div>';
+    } else if ((pla2r === '' || pla2r === 'ausstehend') && !isChild) {
+      biopsyHtml = '<div class="ns-result-blue"><div class="ns-result-title">🔵 PLA2R-AK noch ausstehend — Biopsie-Entscheidung nach Ergebnis</div><div class="ns-result-sub">PLA2R-Antikörper-Ergebnis abwarten bevor Biopsie-Entscheidung getroffen wird (spart ggf. Biopsie bei hohem Titer).<br>Bei klinisch dringendem Befund (rascher eGFR-Abfall, nephritisches Sediment) nicht auf Ergebnis warten — Biopsie sofort.</div></div>';
+    } else if (hasSecondary && !isChild) {
+      biopsyHtml = '<div class="ns-result-warn"><div class="ns-result-title">🟡 Sekundäre Ursache wahrscheinlich — ggf. Biopsie nach Sekundärdiagnostik</div><div class="ns-result-sub">Bei bekanntem DM + typischem Bild: Biopsie kann entfallen wenn Befund eindeutig (keine Hämaturie, lange DM-Anamnese, Retinopathie). Bei Systemerkrankungen oder Malignom-assoziierter MN: Biopsie für Subklassifikation sinnvoll.</div></div>';
+    }
+    document.getElementById('ns-biopsy-box').innerHTML = biopsyHtml;
+
+    // ---- Thromboserisiko ----
+    var thromboHtml = '';
+    if (!isNaN(alb)) {
+      if (alb < 20) {
+        thromboHtml = '<div class="ns-result-bad"><div class="ns-result-title">🔴 Hohes Thromboembolie-Risiko — Albumin '+alb+' g/L</div><div class="ns-result-sub">Prophylaktische Antikoagulation empfohlen (insb. bei primärer MN).<ul><li>NMH (Enoxaparin 40 mg/d s.c.) oder Apixaban 2,5 mg 2×/d oder VKA (INR 2–3)</li><li>Nierenvenen-Doppler-Sono: Ausschluss renale Venenthrombose</li><li>AT-III-Spiegel bestimmen (fällt bei NS, vermindert NMH-Wirksamkeit)</li></ul></div></div>';
+      } else if (alb < 25) {
+        thromboHtml = '<div class="ns-result-warn"><div class="ns-result-title">🟡 Erhöhtes Thromboembolie-Risiko — Albumin '+alb+' g/L</div><div class="ns-result-sub">Antikoagulation individuell abwägen — bei primärer MN oder zusätzlichen Risikofaktoren empfohlen. Doppler-Sono Nierenvenen erwägen.</div></div>';
+      }
+    }
+    document.getElementById('ns-thrombo-box').innerHTML = thromboHtml;
+
+    // ---- Next Steps Algorithmus ----
+    var algoSteps = [];
+    if (!isNaN(age) && age < 12 && !hasSecondary && haem !== 'ja') {
+      algoSteps = [
+        { n:1, t:'Diagnose sichern', b:'NS-Kriterien (Proteinurie + Albumin + Ödeme) + Basisdiagnostik (BB, Kreatinin, Urinstatus, Lipide)' },
+        { n:2, t:'Sekundäre Ursachen ausschließen', b:'HBV, HCV, ANA, C3/C4, Urinstatus (keine Hämaturie erwartet)' },
+        { n:3, t:'Empirische Steroidtherapie starten', b:'Prednison 2 mg/kg/d (max 60 mg/d) — bei Ansprechen (Remission in 4–6 Wochen) → Diagnose MCD bestätigt' },
+        { n:4, t:'Monitoring', b:'Urin-Stix täglich (Eltern schulen), Gewicht, Blutdruck — wöchentlich in Akutphase' }
+      ];
+    } else {
+      algoSteps = [
+        { n:1, t:'Basisdiagnostik vervollständigen', b:'Urin-PCR, Albumin, Lipide, Kreatinin/eGFR, Gerinnung (AT III!), Blutbild' },
+        { n:2, t:'PLA2R-AK bestimmen (falls noch nicht)', b:'Ergebnis entscheidet über Biopsie-Notwendigkeit bei membranösem Muster' },
+        { n:3, t:'Sekundäre Ursachen ausschließen', b:'HBV, HCV, HIV, ANA/dsDNA/C3/C4, IFE Serum+Urin, FLC — bei PLA2R-negativ zusätzlich Malignomsuche (CT + ggf. PET-CT)' },
+        { n:4, t:'Biopsie-Entscheidung', b:'PLA2R hoch-positiv + keine Sekundärursache → ggf. Biopsie entbehrlich. Alle anderen → Biopsie' },
+        { n:5, t:'Komplikationen managen', b:'Thromboseprophylaxe, Diuretika bei Ödemen, Statin, Infektionsprophylaxe, Impfungen' },
+        { n:6, t:'Therapie nach Biopsie-Ergebnis', b:'→ GN-Tab: Membranöse NP / MCD / FSGS / Lupusnephritis' }
+      ];
+    }
+    var algoHtml = '<div class="ns-card" style="margin-bottom:0;"><div class="ns-card-title">📋 Empfohlene nächste Schritte</div>';
+    algoSteps.forEach(function(s){
+      algoHtml += '<div class="ns-step"><div class="ns-step-num">'+s.n+'</div><div class="ns-step-body"><div class="ns-step-title">'+s.t+'</div>'+s.b+'</div></div>';
+    });
+    algoHtml += '</div>';
+    document.getElementById('ns-algo-box').innerHTML = algoHtml;
+  };
+
+  window.nsAutoImport = function() {
+    // Future: import eGFR/age/sex from CKD tab
+  };
+
+})();
+</script>
+
+</div><!-- end tab-ns -->
+
 <div class="shared-footer">
   ⚕️ Nur zur ärztlichen Unterstützung — kein Ersatz für klinisches Urteil &bull;
   CKD: KDIGO 2024 &bull; CKD-EPI 2021 &bull;
@@ -5945,7 +6464,8 @@ window.gichtAutoImport = function() {
   Antiaggregation: ESC 2023 &bull; ACC/AHA 2016 &bull; AHA/ASA 2021 &bull; VOYAGER/COMPASS 2024 &bull;
   Gicht: ACR 2020 &bull; KDIGO 2024 &bull;
   TTP/HUS: ISTH 2021 &bull; ERBP/NDT 2022 &bull; JAMA 2025 &bull; Lancet 2022 &bull;
-  GN: KDIGO 2012/2021 &bull; S3-Leitlinie GN 2025 (AWMF 090-003l)
+  GN: KDIGO 2012/2021 &bull; S3-Leitlinie GN 2025 (AWMF 090-003l) &bull;
+  NS: KDIGO 2021 Glomerular Diseases &bull; MENTOR-Trial 2019 (NEJM)
 </div>
 
 <!-- ============================================================
@@ -7669,6 +8189,10 @@ function switchToolTab(tabName) {
   document.getElementById('tab-gn').style.display = tabName === 'gn' ? 'block' : 'none';
   if (tabName === 'gn' && window.gnAutoImport) {
     window.gnAutoImport();
+  }
+  document.getElementById('tab-ns').style.display = tabName === 'ns' ? 'block' : 'none';
+  if (tabName === 'ns' && window.nsAutoImport) {
+    window.nsAutoImport();
   }
   document.getElementById('tab-mbd').style.display = tabName === 'mbd' ? 'block' : 'none';
   if (tabName === 'mbd' && window.mbdAutoImport) {
