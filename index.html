@@ -1369,7 +1369,7 @@ label .lip-optional {
   <button class="nav-tab-btn" data-tab="antikoag" onclick="switchToolTab('antikoag')">💉 Antikoagulation</button>
   <button class="nav-tab-btn" data-tab="aki" onclick="switchToolTab('aki')">🚨 AKI</button>
   <button class="nav-tab-btn" data-tab="gicht" onclick="switchToolTab('gicht')">🦴 Gicht</button>
-  <button class="nav-tab-btn" data-tab="tma" onclick="switchToolTab('tma')">🩸 TTP / HUS / DIC</button>
+  <button class="nav-tab-btn" data-tab="tma" onclick="switchToolTab('tma')">🩸 TTP / HUS / HELLP</button>
   <button class="nav-tab-btn" data-tab="gn" onclick="switchToolTab('gn')">🔬 Glomerulonephritis</button>
   <button class="nav-tab-btn" data-tab="ns" onclick="switchToolTab('ns')">🫧 Nephrotisches Syndrom</button>
 </div>
@@ -4586,7 +4586,7 @@ window.gichtAutoImport = function() {
 </div><!-- end tab-gicht -->
 
 <!-- ============================================================
-     TMA / TTP / HUS / DIC / ITP
+     TMA / TTP / HUS / HELLP / DIC / ITP
      ============================================================ -->
 <div id="tab-tma">
 <style>
@@ -4635,8 +4635,8 @@ window.gichtAutoImport = function() {
 </style>
 
 <div class="tma-container">
-  <h2 style="margin:0 0 3px;font-size:1.1rem;color:#c62828;">🩸 TMA · TTP · HUS · DIC · ITP</h2>
-  <p style="margin:0 0 14px;font-size:.8rem;color:#78909c;">Thrombotische Mikroangiopathien — Differentialdiagnose, Scores &amp; Therapiealgorithmen</p>
+  <h2 style="margin:0 0 3px;font-size:1.1rem;color:#c62828;">🩸 TMA · TTP · HUS · HELLP · DIC · ITP</h2>
+  <p style="margin:0 0 14px;font-size:.8rem;color:#78909c;">Thrombotische Mikroangiopathien &amp; schwangerschaftsassoziierte Komplikationen — Differentialdiagnose, Scores &amp; Therapiealgorithmen</p>
 
   <div class="tma-subtabs">
     <button class="tma-stab-btn active" onclick="tmaShowTab('diag',this)">🔍 Diagnostik &amp; Scores</button>
@@ -4783,6 +4783,59 @@ window.gichtAutoImport = function() {
             <label><input type="radio" name="tma-preg" value="nein" onchange="tmaCalc()"> Nein</label>
           </div>
         </div>
+        <div class="tma-field" id="tma-preg-fields" style="display:none;">
+          <label class="tma-label">Schwangerschaftswoche (SSW)</label>
+          <input class="tma-input" id="tma-ssw" type="number" min="1" max="42" placeholder="z.B. 34" oninput="tmaCalc()">
+        </div>
+        <div class="tma-field" id="tma-preg-fields2" style="display:none;">
+          <label class="tma-label">Hypertonie ≥140/90 mmHg</label>
+          <div class="tma-radio-group">
+            <label><input type="radio" name="tma-htn" value="ja" onchange="tmaCalc()"> Ja</label>
+            <label><input type="radio" name="tma-htn" value="nein" onchange="tmaCalc()"> Nein</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HELLP-spezifische Laborwerte (nur bei Schwangerschaft sichtbar) -->
+    <div class="tma-card" id="tma-hellp-labs" style="display:none;">
+      <div class="tma-card-title">🤰 HELLP-Diagnostik (Schwangerschaft)</div>
+      <div class="tma-grid">
+        <div class="tma-field">
+          <label class="tma-label">AST (U/L) <span style="font-weight:400;color:#999">— Norm ≤35 U/L</span></label>
+          <input class="tma-input" id="tma-ast" type="number" min="0" placeholder="z.B. 120" oninput="tmaCalc()">
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">ALT (U/L) <span style="font-weight:400;color:#999">— Norm ≤35 U/L</span></label>
+          <input class="tma-input" id="tma-alt" type="number" min="0" placeholder="z.B. 95" oninput="tmaCalc()">
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">Bilirubin gesamt (mg/dl)</label>
+          <input class="tma-input" id="tma-bili" type="number" min="0" step="0.1" placeholder="z.B. 1.4" oninput="tmaCalc()">
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">Proteinurie</label>
+          <div class="tma-radio-group">
+            <label><input type="radio" name="tma-prot" value="ja" onchange="tmaCalc()"> Ja</label>
+            <label><input type="radio" name="tma-prot" value="nein" onchange="tmaCalc()"> Nein</label>
+          </div>
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">Epigastrische Schmerzen / Übelkeit</label>
+          <div class="tma-radio-group">
+            <label><input type="radio" name="tma-epigast" value="ja" onchange="tmaCalc()"> Ja</label>
+            <label><input type="radio" name="tma-epigast" value="nein" onchange="tmaCalc()"> Nein</label>
+          </div>
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">ADAMTS13 Ergebnis (wenn vorhanden)</label>
+          <select class="tma-select" id="tma-adamts13" onchange="tmaCalc()">
+            <option value="">— ausstehend / nicht bestimmt —</option>
+            <option value="lt10">≤10% (schwere Defizienz → TTP)</option>
+            <option value="10-50">10–50% (intermediär)</option>
+            <option value="gt50">&gt;50% (normal → HELLP / aHUS wahrscheinlicher)</option>
+          </select>
+        </div>
       </div>
     </div>
 
@@ -4808,6 +4861,11 @@ window.gichtAutoImport = function() {
           <div id="tma-dic-total" class="tma-total"></div>
           <div id="tma-dic-interp" style="margin-top:8px;font-size:.81rem;line-height:1.5;"></div>
         </div>
+      </div>
+
+      <div id="tma-hellp-result-card" class="tma-card" style="display:none;">
+        <div class="tma-card-title">🤰 HELLP-Klassifikation (Mississippi / ACOG)</div>
+        <div id="tma-hellp-result"></div>
       </div>
 
       <div class="tma-card">
@@ -4967,6 +5025,55 @@ window.gichtAutoImport = function() {
       </div>
     </div>
 
+    <!-- HELLP -->
+    <div class="tma-section-sep">🤰 HELLP-Syndrom — Schwangerschaftsassoziiert</div>
+    <div class="tma-card">
+      <div class="tma-ent-line"><span class="tma-ent-key">Diagnose-Trias (ACOG):</span> Hämolyse (LDH ↑, Haptoglobin ↓, Schistozyten) + Leberenzyme ≥2× ULN (AST/ALT) + Thrombozyten &lt;100×10⁹/L</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">Auftreten:</span> Meist 2./3. Trimenon (24.–37. SSW), postpartal in 20–30% der Fälle; kann ohne vorherige Hypertonie auftreten</div>
+
+      <div class="tma-section-sep" style="margin-top:12px;">Mississippi Klassifikation (nach Platelet-Count)</div>
+      <table class="tma-dose-table">
+        <tr><th>Klasse</th><th>Thrombozyten</th><th>Bedeutung</th></tr>
+        <tr><td><strong>Klasse 1</strong></td><td>≤50×10⁹/L</td><td>Schwer — höchstes Risiko für maternale Morbidität</td></tr>
+        <tr><td><strong>Klasse 2</strong></td><td>51–100×10⁹/L</td><td>Moderat</td></tr>
+        <tr><td><strong>Klasse 3</strong></td><td>101–149×10⁹/L</td><td>Milde HELLP (früher: Partial-HELLP)</td></tr>
+      </table>
+
+      <div class="tma-section-sep" style="margin-top:12px;">Therapie (Entbindung ist die einzige kurative Maßnahme)</div>
+      <div class="tma-ok">
+        ✅ <strong>Entbindung:</strong> Ab 34+0 SSW sofortige Entbindung indiziert. &lt;34 SSW: Abwägung fetale Reife vs. maternales Risiko mit Perinatologie<br>
+        ✅ <strong>Magnesiumsulfat:</strong> 4 g i.v. Bolus, dann 1–2 g/h Perfusor — Eklampsieprophylaxe bei Prä- / Eklampsie<br>
+        ✅ <strong>Kortikosteroide (fetale Lungenreife):</strong> Betamethason 2× 12 mg i.m. im Abstand 24 h — bei &lt;34 SSW; maternale HELLP-Verbesserung möglich, aber inkonsistent<br>
+        ✅ <strong>Blutdruckkontrolle:</strong> Labetalol i.v. oder Nifedipin p.o. — Ziel RR &lt;160/110 mmHg (Schlaganfallprävention!)
+      </div>
+
+      <div class="tma-section-sep" style="margin-top:12px;">Thrombozyten-Transfusion</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">Kaiserschnitt:</span> Plt &lt;50×10⁹/L → Transfusion vor OP</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">Vaginale Entbindung:</span> Plt &lt;30×10⁹/L → Transfusion</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">Kein Threshold für prophylaktische Transfusion bei stabilem Verlauf</span></div>
+
+      <div class="tma-section-sep" style="margin-top:12px;">⚖️ HELLP vs. TTP/aHUS — Differenzierung</div>
+      <table class="tma-dose-table">
+        <tr><th>Merkmal</th><th>HELLP</th><th>TTP</th><th>aHUS</th></tr>
+        <tr><td>Thrombozyten</td><td>Selten &lt;20×10⁹/L</td><td>Oft &lt;20×10⁹/L</td><td>Variabel</td></tr>
+        <tr><td>AST/ALT</td><td>↑↑ (≥2× ULN)</td><td>Normal</td><td>Normal/leicht ↑</td></tr>
+        <tr><td>LDH/AST-Ratio</td><td>~2:1</td><td>&gt;22:1</td><td>Variabel</td></tr>
+        <tr><td>Kreatinin</td><td>Meist normal/leicht ↑</td><td>Meist &lt;2 mg/dl</td><td>Oft stark ↑</td></tr>
+        <tr><td>Hypertonie</td><td>Meist (80%)</td><td>Selten</td><td>Häufig</td></tr>
+        <tr><td>Neurologik</td><td>Selten</td><td>Häufig (39–80%)</td><td>Selten</td></tr>
+        <tr><td>ADAMTS13</td><td>&gt;10% (normal)</td><td>&lt;10%</td><td>&gt;10%</td></tr>
+        <tr><td>Schwangerschaft</td><td>2./3. Trimenon</td><td>Jedes Trimenon</td><td>Eher postpartal</td></tr>
+        <tr><td>Therapie</td><td>Entbindung</td><td>TPE + Caplacizumab</td><td>Eculizumab</td></tr>
+      </table>
+      <div class="tma-warn">
+        ⚡ <strong>ADAMTS13 ist der Schlüsseltest:</strong> &lt;10% → TTP (nicht warten — empirische TPE!); &gt;10% → HELLP oder aHUS. Bei atypischen Merkmalen (frühe SSW, kein RR↑, starke Thrombopenie &lt;20k) an TTP denken!
+      </div>
+
+      <div class="tma-section-sep" style="margin-top:12px;">AFLP (Akute Fettle Leber der Schwangerschaft) — wichtige DD</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">Differenzierung:</span> AFLP = Hypoglykämie + Hyperammonämie + ausgeprägte Koagulopathie (INR ↑) + Hyperbilirubinämie — Swansea-Kriterien (≥6 von 14)</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">Therapie:</span> Intensivtherapie + sofortige Entbindung; ggf. Lebertransplantation bei fulminantem Verlauf</div>
+    </div>
+
     <!-- ITP -->
     <div class="tma-section-sep">🟣 ITP (Immunthrombozytopenie) — Isolierte Thrombopenie</div>
     <div class="tma-card">
@@ -5002,6 +5109,10 @@ window.gichtAutoImport = function() {
       <div class="tma-ent-line"><span class="tma-ent-key">ISTH DIC Score:</span> Taylor et al., J Thromb Haemost 2001</div>
       <div class="tma-ent-line"><span class="tma-ent-key">Caplacizumab HERCULES:</span> Scully et al., N Engl J Med 2019</div>
       <div class="tma-ent-line"><span class="tma-ent-key">Eculizumab aHUS:</span> Legendre et al., N Engl J Med 2013; Fakhouri et al., J Am Soc Nephrol 2022</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">HELLP-Syndrom:</span> ACOG Practice Bulletin Nr. 222 (2020) — Gestational Hypertension and Preeclampsia</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">HELLP &amp; Leberkrankheit:</span> Reau et al. — Liver Disease During Pregnancy, Am J Gastroenterol 2022</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">HELLP vs. TTP-Differenzierung:</span> Pourrat et al., Eur J Obstet Gynecol 2015; Martin &amp; Tucker, Int J Gynecol Obstet 2022 (LDH/AST-Ratio)</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">AFLP (Swansea-Kriterien):</span> Achalasia &amp; AFLP, ACG/AASLD 2016</div>
     </div>
 
     <div class="tma-card">
@@ -5080,6 +5191,14 @@ window.gichtAutoImport = function() {
     var tx     = getRadio('tma-tx');
     var drug   = selVal('tma-drug');
     var preg   = getRadio('tma-preg');
+
+    // Show/hide HELLP-specific fields when pregnancy selected
+    var pregFields = document.getElementById('tma-preg-fields');
+    var pregFields2 = document.getElementById('tma-preg-fields2');
+    var hellpLabs = document.getElementById('tma-hellp-labs');
+    if (pregFields) pregFields.style.display = preg === 'ja' ? '' : 'none';
+    if (pregFields2) pregFields2.style.display = preg === 'ja' ? '' : 'none';
+    if (hellpLabs) hellpLabs.style.display = preg === 'ja' ? '' : 'none';
 
     var filledCount = [plt, krea, ldh,
       hapto && hapto !== '' ? 1 : null,
@@ -5222,8 +5341,33 @@ window.gichtAutoImport = function() {
         text:'Calcineurin-Inhibitor reduzieren / wechseln. Eculizumab erwägen. Transplantationsmedizin einbinden.' });
     }
     if (preg === 'ja') {
-      diagList.push({ color:'#880e4f', icon:'🌸', label:'Schwangerschafts-assoziierte TMA (HELLP / TTP / aHUS)',
-        text:'Differenzierung HELLP / TTP / aHUS essenziell: HELLP → Entbindung; TTP → TPE; aHUS → Eculizumab. Geburtshilfe und Hämostaseologie einbinden.' });
+      var adamts13 = selVal('tma-adamts13');
+      var ast = numVal('tma-ast');
+      var alt = numVal('tma-alt');
+      var htn = getRadio('tma-htn');
+      var liverElev = (ast !== null && ast >= 70) || (alt !== null && alt >= 70);
+      var ldh_ast_ratio = (ldh !== null && ast !== null && ast > 0) ? ldh / ast : null;
+
+      if (adamts13 === 'lt10') {
+        // TTP dominates
+        diagList.push({ color:'#c62828', icon:'🔴', label:'TTP in der Schwangerschaft (ADAMTS13 ≤10%)',
+          text:'ADAMTS13 ≤10% → immunvermittelte TTP. Sofortige TPE + Caplacizumab. Entbindung erst nach Stabilisierung mit Geburtshilfe abstimmen.' });
+      } else if (adamts13 === 'gt50' && liverElev && plt !== null && plt < 100) {
+        // HELLP very likely
+        diagList.push({ color:'#ad1457', icon:'🤰', label:'HELLP-Syndrom — Diagnosekriterien erfüllt',
+          text:'Hämolyse + Leberenzyme ≥2× ULN + Plt <100×10⁹/L + ADAMTS13 normal → HELLP. Entbindung ist die kurative Maßnahme. Geburtshilfe/Perinatologie SOFORT einbinden!' });
+      } else if (liverElev && plt !== null && plt < 100 && htn === 'ja') {
+        // Likely HELLP, no ADAMTS13
+        diagList.push({ color:'#ad1457', icon:'🤰', label:'HELLP-Syndrom — wahrscheinlich',
+          text:'Trias: Hämolyse + LFP ↑↑ + Plt <100 + Hypertonie → HELLP wahrscheinlich. ADAMTS13 sofort abnehmen zum TTP-Ausschluss! Geburtshilfe einbinden.' });
+      } else if (!liverElev && plt !== null && plt < 30 && plasmic >= 5) {
+        // TTP in pregnancy (no liver elevation)
+        diagList.push({ color:'#c62828', icon:'🔴', label:'TTP in der Schwangerschaft — PLASMIC ≥5, keine Leberbeteiligung',
+          text:'Keine typische Leberbeteiligung → TTP wahrscheinlicher als HELLP. ADAMTS13 sofort, empirische TPE erwägen. Hämostaseologie + Geburtshilfe.' });
+      } else {
+        diagList.push({ color:'#880e4f', icon:'🌸', label:'Schwangerschafts-assoziierte TMA — Differenzierung erforderlich',
+          text:'HELLP / TTP / aHUS — ADAMTS13 abnehmen! HELLP → Entbindung; TTP → TPE + Caplacizumab; aHUS → Eculizumab. LFP + LDH/AST-Ratio helfen bei DD. Geburtshilfe und Hämostaseologie einbinden.' });
+      }
     }
     if (plasmic >= 6 || (plasmic === 5 && maha)) {
       diagList.push({ color:'#c62828', icon:'🔴', label:'Immunvermittelte TTP (iTTP) — wahrscheinlich',
@@ -5248,6 +5392,55 @@ window.gichtAutoImport = function() {
         diffHtml += '</div>';
       });
     }
+    // ----- HELLP Klassifikation -----
+    var hellpCard = document.getElementById('tma-hellp-result-card');
+    var hellpEl   = document.getElementById('tma-hellp-result');
+    if (preg === 'ja' && plt !== null) {
+      var astV  = numVal('tma-ast');
+      var altV  = numVal('tma-alt');
+      var biliV = numVal('tma-bili');
+      var liverE = (astV !== null && astV >= 70) || (altV !== null && altV >= 70);
+      var haemol = haemolysis; // from MAHA section above
+      var ldh_ast = (ldh !== null && astV !== null && astV > 0) ? (ldh / astV).toFixed(1) : null;
+
+      var hellpHtml = '';
+
+      // Mississippi Klasse
+      var missClass = plt <= 50 ? '1 (schwer)' : (plt <= 100 ? '2 (moderat)' : (plt < 150 ? '3 (mild)' : null));
+      if (missClass) {
+        hellpHtml += '<div style="font-size:.9rem;font-weight:800;margin-bottom:8px;color:#ad1457;">Mississippi Klasse ' + missClass + ' — Plt: ' + plt + '×10⁹/L</div>';
+      }
+
+      // HELLP-Diagnose-Kriterien
+      hellpHtml += '<table class="tma-dose-table"><tr><th>Kriterium</th><th>Erfüllt?</th><th>Wert</th></tr>';
+      hellpHtml += '<tr><td>Hämolyse (LDH↑ / Hapto↓)</td><td>' + (haemol ? '✅ Ja' : '⬜ Nein/unklar') + '</td><td>' + (ldh !== null ? 'LDH '+ldh+' U/L' : '—') + '</td></tr>';
+      hellpHtml += '<tr><td>Leberenzyme ≥2× ULN (AST/ALT ≥70)</td><td>' + (liverE ? '✅ Ja' : (astV === null && altV === null ? '⬜ nicht eingegeben' : '❌ Nein')) + '</td><td>' + (astV !== null ? 'AST '+astV : '') + (altV !== null ? ' / ALT '+altV : '') + ' U/L</td></tr>';
+      hellpHtml += '<tr><td>Thrombozyten &lt;100×10⁹/L</td><td>' + (plt < 100 ? '✅ Ja' : '❌ Nein') + '</td><td>Plt: '+plt+'×10⁹/L</td></tr>';
+      hellpHtml += '</table>';
+
+      if (ldh_ast) {
+        var ratio = parseFloat(ldh_ast);
+        var ratioColor = ratio > 22 ? '#c62828' : (ratio > 10 ? '#e65100' : '#2e7d32');
+        hellpHtml += '<div style="margin-top:8px;font-size:.82rem;">LDH/AST-Ratio: <strong style="color:'+ratioColor+';">'+ldh_ast+'</strong> — ';
+        hellpHtml += ratio > 22 ? '⚠️ &gt;22 → <strong>eher TTP/aHUS</strong> (HELLP typisch ~2:1)' : '🟢 &lt;22 → typisch für HELLP';
+        hellpHtml += '</div>';
+      }
+
+      // Overall HELLP verdict
+      var hellpDiag = haemol && liverE && plt < 100;
+      var hellpClass = hellpDiag
+        ? '<div class="tma-danger" style="margin-top:10px;">🔴 <strong>HELLP-Diagnosekriterien erfüllt</strong> — Entbindung indizieren! Geburtshilfe sofort einbinden. ADAMTS13 zur TTP-Abgrenzung abnehmen.</div>'
+        : (plt < 100 && liverE && !haemol
+          ? '<div class="tma-warn" style="margin-top:10px;">🟡 Partielles HELLP möglich — Hämolysezeichen noch nicht vollständig. Verlaufskontrolle.</div>'
+          : '<div class="tma-ok" style="margin-top:10px;">🟢 HELLP-Trias nicht komplett erfüllt — Verlauf beobachten, DD erweitern.</div>');
+      hellpHtml += hellpClass;
+
+      if (hellpEl) hellpEl.innerHTML = hellpHtml;
+      if (hellpCard) hellpCard.style.display = '';
+    } else {
+      if (hellpCard) hellpCard.style.display = 'none';
+    }
+
     document.getElementById('tma-diff-result').innerHTML = diffHtml;
   };
 
