@@ -6121,18 +6121,21 @@ window.gichtAutoImport = function() {
       <div class="ns-row"><span class="ns-key">Renale Venenthrombose</span><span style="font-size:.82rem;color:#212121;">Besonders bei membranöser Nephropathie (30–40%!) — oft oligosymptomatisch</span></div>
       <div class="ns-row"><span class="ns-key">Screening RVT</span><span style="font-size:.82rem;color:#212121;">Doppler-Sono Nierenvenen bei NS + Flanken-/Rückenschmerz oder unerklärtem eGFR-Abfall, besonders bei primärer MN</span></div>
 
-      <div class="ns-section-label">Antikoagulation — Empfehlungen (KDIGO 2021)</div>
+      <div class="ns-section-label">Antikoagulation — Empfehlungen (KDIGO 2021, Figure 38)</div>
+      <div style="background:#ede7f6;border-radius:8px;padding:7px 12px;font-size:.78rem;margin-bottom:8px;line-height:1.6;">
+        ⚠️ <strong>Albumin-Assay-Unterschied beachten (KDIGO 2021):</strong> BCG-Assay (häufig im Routine-Labor) misst ~5 g/L höher als BCP/Immunonephelometrie. Schwellenwert <strong>25 g/L (BCG) = 20 g/L (BCP)</strong> — immer Assay-Methode beachten!
+      </div>
       <table class="ns-table">
         <tr><th>Situation</th><th>Empfehlung</th><th>Präparat</th></tr>
-        <tr><td><span class="ns-badge ns-badge-red">Albumin &lt;20 g/L + primäre MN</span></td><td>Prophylaktische Antikoagulation empfohlen</td><td>NMH oder Vitamin-K-Antagonist (Ziel INR 2–3)</td></tr>
-        <tr><td><span class="ns-badge ns-badge-amber">Albumin 20–25 g/L</span></td><td>Individuell abwägen (Blutungsrisiko vs. Thromboserisiko)</td><td>NMH oder p.o. Antikoagulanz</td></tr>
-        <tr><td><span class="ns-badge ns-badge-amber">Albumin &lt;25 g/L + andere NS-Entitäten</span></td><td>Erwägen bei weiteren Risikofaktoren (Immobilität, Übergewicht, Voranamnese)</td><td>NMH oder Apixaban/Rivaroxaban</td></tr>
-        <tr><td><span class="ns-badge ns-badge-green">Albumin &gt;25 g/L, mobile Patienten</span></td><td>Keine prophylaktische Antikoagulation</td><td>—</td></tr>
-        <tr><td><span class="ns-badge ns-badge-red">Bestehende TVT/LE</span></td><td>Therapeutische Antikoagulation mind. 6 Monate</td><td>NMH oder DOAC; VKA möglich</td></tr>
+        <tr><td><span class="ns-badge ns-badge-red">Albumin &lt;25 g/L (BCG) / &lt;20 g/L (BCP) + primäre MN</span></td><td>Prophylaktische Antikoagulation empfohlen (MN hat besonders hohes Thromboserisiko)</td><td>NMH oder VKA (INR 2–3) oder Apixaban</td></tr>
+        <tr><td><span class="ns-badge ns-badge-amber">Albumin 25–32 g/L (BCG) / grenzwertig</span></td><td>Individuell abwägen — Blutungsrisiko (gntools.unc.edu) vs. Thromboserisiko</td><td>NMH oder p.o. Antikoagulanz</td></tr>
+        <tr><td><span class="ns-badge ns-badge-amber">Albumin &lt;25 g/L + andere NS-Entitäten</span></td><td>Erwägen bei weiteren Risikofaktoren (Immobilität, Adipositas, Vorgeschichte TVT/LE)</td><td>NMH oder Apixaban/Rivaroxaban</td></tr>
+        <tr><td><span class="ns-badge ns-badge-green">Albumin &gt;32 g/L (BCG), mobil, keine RF</span></td><td>Keine prophylaktische Antikoagulation</td><td>—</td></tr>
+        <tr><td><span class="ns-badge ns-badge-red">Bestehende TVT / LE</span></td><td>Therapeutische Antikoagulation mind. 6 Monate</td><td>NMH oder DOAC; VKA möglich</td></tr>
         <tr><td><span class="ns-badge ns-badge-red">Renale Venenthrombose</span></td><td>Therapeutische Antikoagulation 6–12 Monate</td><td>NMH initial, dann DOAC oder VKA</td></tr>
       </table>
       <div style="background:#fff3e0;border:1.5px solid #fb8c00;border-radius:8px;padding:8px 12px;font-size:.79rem;margin-top:8px;line-height:1.6;">
-        ⚠️ <strong>DOAC bei NS:</strong> Albumin-Bindung der DOACs variiert — bei sehr niedrigem Albumin veränderte Pharmakokinetik möglich. Apixaban gilt als relativ sicherer (höhere Proteinbindung = weniger freies Medikament). Einzelfallentscheidung mit Antikoagulations-Expertise.
+        ⚠️ <strong>DOAC bei NS:</strong> Albumin-Bindung verändert Pharmakokinetik bei sehr niedrigem Albumin. Apixaban gilt als relativ sicherer. AT-III bei schwerem NS bestimmen (↓ AT-III → reduzierte NMH-Wirksamkeit → ggf. Dosiserhöhung). Arterielles Thromboserisiko separat nach Framingham-Score abschätzen (Alter, DM, RR, Rauchen, eGFR).
       </div>
     </div>
 
@@ -6292,7 +6295,9 @@ window.gichtAutoImport = function() {
       </div>
 
       <div style="background:#ede7f6;border-radius:8px;padding:10px 14px;margin-top:8px;font-size:.8rem;line-height:1.6;">
-        <strong>THSD7A-Antikörper:</strong> Bei 3–5% der primären MN (PLA2R-negativ). Starke Assoziation mit Malignomen (v.a. Kolon, Lunge) → bei THSD7A-positiver MN immer intensive Tumorsuche, ggf. PET-CT.
+        <strong>THSD7A-Antikörper:</strong> ~3–5% der primären MN (PLA2R-negativ). Starke Assoziation mit Malignomen (v.a. Kolon, Lunge) → intensive Tumorsuche obligat, ggf. PET-CT.<br>
+        <strong>Weitere MN-AK (zunehmend verfügbar):</strong> NELL-1 (PLA2R-negativ, ~16% in manchen Kohorten), Exostosin 1/2 (Assoziation Lupus/Autoimmun), SEMA3B (Kinder), EXT1/EXT2 → Diagnostik in Spezialzentren.<br>
+        <strong>IS-NICHT-indiziert (KDIGO PP 3.3.2/3.3.3):</strong> Proteinurie &lt;3,5 g/d + Albumin &gt;30 g/L + eGFR &gt;60 ml/min → keine IS. Auch bei NS + normaler eGFR: keine IS erforderlich <em>außer</em> Risikofaktoren für Progression oder schwere NS-Komplikationen (ANV, Infektionen, Thromboembolie).
       </div>
     </div>
 
@@ -6411,10 +6416,15 @@ window.gichtAutoImport = function() {
     // ---- Thromboserisiko ----
     var thromboHtml = '';
     if (!isNaN(alb)) {
-      if (alb < 20) {
-        thromboHtml = '<div class="ns-result-bad"><div class="ns-result-title">🔴 Hohes Thromboembolie-Risiko — Albumin '+alb+' g/L</div><div class="ns-result-sub">Prophylaktische Antikoagulation empfohlen (insb. bei primärer MN).<ul><li>NMH (Enoxaparin 40 mg/d s.c.) oder Apixaban 2,5 mg 2×/d oder VKA (INR 2–3)</li><li>Nierenvenen-Doppler-Sono: Ausschluss renale Venenthrombose</li><li>AT-III-Spiegel bestimmen (fällt bei NS, vermindert NMH-Wirksamkeit)</li></ul></div></div>';
-      } else if (alb < 25) {
-        thromboHtml = '<div class="ns-result-warn"><div class="ns-result-title">🟡 Erhöhtes Thromboembolie-Risiko — Albumin '+alb+' g/L</div><div class="ns-result-sub">Antikoagulation individuell abwägen — bei primärer MN oder zusätzlichen Risikofaktoren empfohlen. Doppler-Sono Nierenvenen erwägen.</div></div>';
+      if (alb < 25) {
+        var sevRisk = alb < 20;
+        // KDIGO 2021: BCG threshold 25 g/L = BCP threshold 20 g/L
+        thromboHtml = '<div class="'+(sevRisk?'ns-result-bad':'ns-result-warn')+'">' +
+          '<div class="ns-result-title">'+(sevRisk?'🔴 Hohes':'🟡 Erhöhtes')+' Thromboembolie-Risiko — Albumin '+alb+' g/L</div>' +
+          '<div class="ns-result-sub">'+(sevRisk
+            ? 'Prophylaktische Antikoagulation empfohlen, insb. bei primärer MN (KDIGO 2021 Fig. 38).<ul><li>NMH (Enoxaparin 40 mg/d s.c.) oder Apixaban 2,5 mg 2×/d oder VKA (INR 2–3)</li><li>AT-III-Spiegel bestimmen — ↓ AT-III vermindert NMH-Wirksamkeit, ggf. Dosiserhöhung</li><li>Nierenvenen-Doppler-Sono: Ausschluss renale Venenthrombose (RVT)</li><li>⚠️ BCG-Assay: Schwelle &lt;25 g/L; BCP/Immunonephelometrie: Schwelle &lt;20 g/L — Methode beachten!</li></ul>'
+            : 'Antikoagulation individuell abwägen (Thrombose- vs. Blutungsrisiko). Bei primärer MN oder Risikofaktoren (Immobilität, Adipositas, Vorgeschichte) antikoagulieren. Nierenvenen-Doppler erwägen.'
+          ) + '</div></div>';
       }
     }
     document.getElementById('ns-thrombo-box').innerHTML = thromboHtml;
@@ -6425,7 +6435,7 @@ window.gichtAutoImport = function() {
       algoSteps = [
         { n:1, t:'Diagnose sichern', b:'NS-Kriterien (Proteinurie + Albumin + Ödeme) + Basisdiagnostik (BB, Kreatinin, Urinstatus, Lipide)' },
         { n:2, t:'Sekundäre Ursachen ausschließen', b:'HBV, HCV, ANA, C3/C4, Urinstatus (keine Hämaturie erwartet)' },
-        { n:3, t:'Empirische Steroidtherapie starten', b:'Prednison 2 mg/kg/d (max 60 mg/d) — bei Ansprechen (Remission in 4–6 Wochen) → Diagnose MCD bestätigt' },
+        { n:3, t:'Empirische Steroidtherapie starten', b:'Prednison 60 mg/m²/d (oder 2 mg/kg/d, max 60 mg) täglich × 4 Wochen → dann 40 mg/m² (max 50 mg) jeden 2. Tag × 4 Wochen (KDIGO 2021). Alternativ: 6+6-Wochen-Schema. Ansprechen = vollständige Remission (PCR &lt;200 mg/g) → MCD bestätigt.' },
         { n:4, t:'Monitoring', b:'Urin-Stix täglich (Eltern schulen), Gewicht, Blutdruck — wöchentlich in Akutphase' }
       ];
     } else {
