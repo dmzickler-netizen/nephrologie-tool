@@ -6963,8 +6963,22 @@ function generateTexts(age, sex, scr, cys, uacr, bpSys, bpDia, extraInfo,
       recList.push('RAS-Blockade erwägen (ACE-Hemmer oder AT1-Antagonist) bei Hypertonie / Diabetes');
     }
 
-    if (diseases.includes('diabetisch') || (uacr && uacr >= 30 && primaryEGFR >= 20)) {
-      recList.push('SGLT2-Inhibitor: Dapagliflozin (Forxiga®) 10 mg/d — ab eGFR ≥ 20 ml/min, nephroprotektiv unabhängig von BZ-Wirkung');
+    if (primaryEGFR >= 20) {
+      if (diseases.includes('diabetisch')) {
+        recList.push('SGLT2-Inhibitor: Dapagliflozin (Forxiga®) 10 mg/d oder Empagliflozin (Jardiance®) 10 mg/d — nephroprotektiv + BZ-senkend; BZ-Wirkung ab eGFR < 45 reduziert, nephroprotektiver Effekt bis Dialyse (DAPA-CKD, EMPA-KIDNEY)');
+      } else {
+        recList.push('SGLT2-Inhibitor: Dapagliflozin (Forxiga®) 10 mg/d — nephroprotektiv auch ohne Diabetes (DAPA-CKD 2020, EMPA-KIDNEY 2022); ab eGFR ≥ 20 ml/min; BZ-Wirkung ab eGFR < 45 gering, nephroprotektiver Effekt erhalten');
+      }
+    }
+
+    // Lebensstil — immer empfohlen
+    recList.push('Lebensstil: ≥ 150 min/Woche moderate körperliche Aktivität (Ausdauersport: Gehen, Radfahren, Schwimmen) — KDIGO 2024; reduziert kardiovaskuläres Risiko und CKD-Progressionsrate');
+    recList.push('Lebensstil: Nikotinkarenz — Rauchen beschleunigt CKD-Progression und erhöht kardiovaskuläre Mortalität erheblich');
+    recList.push('Lebensstil: Normgewicht anstreben (BMI-Ziel 20–25 kg/m²) — Adipositas erhöht intraglomerulären Druck (Hyperfiltration) und Proteinurie');
+    if (['G3a','G3b','G4','G5'].includes(stage)) {
+      recList.push('Ernährung: Proteinrestriktion 0,6–0,8 g/kg KG/d (ab Stadium G3, KDIGO 2024) — reduziert Harnstoffbelastung und Progression; unter Kontrolle des Ernährungsstatus');
+    } else {
+      recList.push('Ernährung: Proteinzufuhr ≤ 0,8 g/kg KG/d; Kochsalzrestriktion < 5 g NaCl/d (< 2 g Natrium/d)');
     }
 
     // Finerenon — K⁺ and eGFR dependent (K⁺ < 5, eGFR > 25, diabetische NP CKD 3-4 + Albuminurie)
@@ -7001,7 +7015,7 @@ function generateTexts(age, sex, scr, cys, uacr, bpSys, bpDia, extraInfo,
 
     if (stage === 'G3a' || stage === 'G3b') {
       recList.push('Laborkontrollen: BB, Elektrolyte (inkl. Kalium!), Kreatinin, Phosphat, PTH, 25-OH-Vit D, Harnsäure — alle 3–6 Monate');
-      recList.push('Ernährung: Protein 0,8 g/kg/d; NaCl < 5 g/d; Phosphat < 1.000 mg/d; Kaliumrestriktion ab K⁺ > 5,0 mmol/l');
+      recList.push('Ernährung zusätzlich: Phosphat < 1.000 mg/d; Kaliumrestriktion ab K⁺ > 5,0 mmol/l');
     }
 
     if (stage === 'G3b' || stage === 'G4') {
@@ -7098,31 +7112,63 @@ function generateTexts(age, sex, scr, cys, uacr, bpSys, bpDia, extraInfo,
 function buildTherapyPanel(gfrStage, albStage, egfr, uacr, diseases, riskInfo) {
   if (!gfrStage) return;
 
-  let html = '<div class="therapy-section">';
+  const isDiabetic   = diseases.includes('diabetisch');
+  const isHypertensiv = diseases.includes('hypertensiv');
+  const isAdvanced   = ['G3a','G3b','G4','G5'].includes(gfrStage.stage);
+  const isG3bPlus    = ['G3b','G4','G5'].includes(gfrStage.stage);
 
-  // Nephroprotection
+  let html = '<div class="therapy-section">';
+  html += `<p style="font-size:0.82em;color:#666;margin:0 0 10px 0;line-height:1.4;">📋 Patientenspezifische Übersicht — Maßnahmen für Stadium <strong>${gfrStage.stage}${albStage ? albStage.stage : ''}</strong>${diseases.length ? ' bei ' + diseases.map(diseaseLabel).join(', ') : ''}</p>`;
+
+  // ── 1. Nephroprotektive Basistherapie ──────────────────────────────────
   html += `<div class="therapy-block">
     <h3>🛡️ Nephroprotektive Basistherapie</h3>
     <ul>`;
 
+  // RAS-Blockade
   if (uacr >= 30) {
-    html += `<li>RAS-Blockade: <span class="drug-tag primary">ACE-Hemmer</span> oder <span class="drug-tag primary">ARB</span> — max. tolerierte Dosis, Ziel ACR-Reduktion ≥30%</li>`;
-  }
-  if (diseases.includes('diabetisch') || uacr >= 30 && egfr >= 20) {
-    html += `<li>SGLT2-Inhibitor: <span class="drug-tag primary">Dapagliflozin 10 mg</span> oder <span class="drug-tag primary">Empagliflozin 10 mg</span> (ab eGFR ≥20)</li>`;
-  }
-  html += `<li>Blutdruckziel: <span class="drug-tag">&lt;130/80 mmHg</span> (ESC 2024 / KDIGO 2021)</li>
-    <li>Kochsalzrestriktion: <span class="drug-tag">&lt;5 g NaCl/d</span></li>`;
-
-  if (diseases.includes('diabetisch')) {
-    html += `<li>Finerenon: <span class="drug-tag primary">Kerendia 10–20 mg/d</span> bei eGFR ≥25 + ACR ≥30</li>`;
-    html += `<li>GLP-1-RA: <span class="drug-tag">Semaglutid</span> — KV-Schutz, FLOW-Studie</li>`;
+    html += `<li><strong>RAS-Blockade:</strong> <span class="drug-tag primary">ACE-Hemmer</span> oder <span class="drug-tag primary">ARB</span> — max. tolerierte Dosis; Ziel: ACR-Reduktion ≥30% (KDIGO 2024)</li>`;
+  } else if (isDiabetic || isHypertensiv) {
+    html += `<li><strong>RAS-Blockade erwägen:</strong> <span class="drug-tag">ACE-Hemmer</span> oder <span class="drug-tag">ARB</span> — bei Hypertonie / Diabetes auch ohne Albuminurie (KDIGO 2021)</li>`;
   }
 
-  html += '</ul></div>';
+  // SGLT2i — nephroprotektiv für ALLE CKD ab eGFR ≥20 (DAPA-CKD, EMPA-KIDNEY)
+  if (egfr >= 20) {
+    if (isDiabetic) {
+      html += `<li><strong>SGLT2-Inhibitor:</strong> <span class="drug-tag primary">Dapagliflozin 10 mg/d</span> oder <span class="drug-tag primary">Empagliflozin 10 mg/d</span> — nephroprotektiv + BZ-senkend; weiter bis Dialyse (DAPA-CKD, EMPA-KIDNEY)</li>`;
+    } else {
+      html += `<li><strong>SGLT2-Inhibitor:</strong> <span class="drug-tag primary">Dapagliflozin 10 mg/d</span> — nephroprotektiv auch ohne Diabetes (DAPA-CKD 2020, EMPA-KIDNEY 2022); ab eGFR ≥20, BZ-Wirkung ab eGFR &lt;45 gering</li>`;
+    }
+  }
 
-  // Stage-specific
-  if (['G3a','G3b','G4','G5'].includes(gfrStage.stage)) {
+  html += `<li><strong>Blutdruckziel:</strong> <span class="drug-tag">&lt;130/80 mmHg</span> (ESC 2024 / KDIGO 2021)</li>
+    <li><strong>Kochsalzrestriktion:</strong> <span class="drug-tag">&lt;5 g NaCl/d</span> (&lt;2 g Natrium/d)</li>`;
+
+  if (isDiabetic) {
+    html += `<li><strong>Finerenon:</strong> <span class="drug-tag primary">Kerendia 10–20 mg/d</span> — bei eGFR ≥25 + ACR ≥30 mg/g + K⁺ &lt;5,0 mmol/l (FIDELIO-DKD, FIGARO-DKD)</li>`;
+    html += `<li><strong>GLP-1-RA:</strong> <span class="drug-tag primary">Semaglutid</span> — kardiorenaler Schutz (FLOW-Studie 2024); keine renale Dosisanpassung nötig</li>`;
+  }
+
+  html += `</ul></div>`;
+
+  // ── 2. Lebensstil ─────────────────────────────────────────────────────
+  html += `<div class="therapy-block">
+    <h3>🏃 Lebensstil</h3>
+    <ul>
+      <li><strong>Ausdauersport:</strong> ≥150 min/Woche moderate Aktivität (Gehen, Schwimmen, Radfahren) oder ≥75 min intensive Aktivität — KDIGO 2024; reduziert KV-Risiko und Progressionsrate</li>
+      <li><strong>Rauchen einstellen</strong> — beschleunigt CKD-Progression, erhöht KV-Mortalität erheblich</li>
+      <li><strong>Körpergewicht:</strong> Ziel BMI 20–25 kg/m² — Adipositas erhöht intraglomerulären Druck (hyperfiltration) und Proteinurie</li>`;
+
+  if (isAdvanced) {
+    html += `<li><strong>Eiweißrestriktion:</strong> 0,6–0,8 g Protein/kg KG/d (ab Stadium G3; KDIGO 2024) — vermindert Progression; Hyperproteinurie unter hoher Zufuhr ↑</li>`;
+  } else {
+    html += `<li><strong>Eiweißzufuhr:</strong> ≤0,8 g/kg KG/d — Übermaß vermeiden (erhöhte Proteinzufuhr fördert Hyperfiltration)</li>`;
+  }
+
+  html += `    </ul></div>`;
+
+  // ── 3. Labormonitoring ────────────────────────────────────────────────
+  if (isAdvanced) {
     html += `<div class="therapy-block">
       <h3>🔬 Labormonitoring (Stadium ${gfrStage.stage})</h3>
       <ul>
@@ -7133,7 +7179,8 @@ function buildTherapyPanel(gfrStage, albStage, egfr, uacr, diseases, riskInfo) {
       </ul></div>`;
   }
 
-  if (gfrStage.stage === 'G3b' || gfrStage.stage === 'G4') {
+  // ── 4. Anämie / CKD-MBD ──────────────────────────────────────────────
+  if (isG3bPlus) {
     html += `<div class="therapy-block">
       <h3>💉 Anämie / CKD-MBD</h3>
       <ul>
@@ -7146,9 +7193,10 @@ function buildTherapyPanel(gfrStage, albStage, egfr, uacr, diseases, riskInfo) {
       </ul></div>`;
   }
 
-  if (gfrStage.stage === 'G4') {
+  // ── 5. Vorbereitung Nierenersatz ──────────────────────────────────────
+  if (gfrStage.stage === 'G4' || gfrStage.stage === 'G5') {
     html += `<div class="therapy-block" style="border-color:#f44336;">
-      <h3>⚠️ Vorbereitung Nierenersatz (G4)</h3>
+      <h3>⚠️ Vorbereitung Nierenersatz (${gfrStage.stage})</h3>
       <ul>
         <li>Aufklärung Hämodialyse / Peritonealdialyse / Transplantation</li>
         <li>Shuntanlage planen ab eGFR &lt;20 ml/min (6–12 Monate vor Bedarf)</li>
@@ -7157,55 +7205,88 @@ function buildTherapyPanel(gfrStage, albStage, egfr, uacr, diseases, riskInfo) {
       </ul></div>`;
   }
 
-  // Disease specific highlights
+  // ── 6. Krankheitsspezifische Therapie ─────────────────────────────────
   if (diseases.includes('igan')) {
     html += `<div class="therapy-block" style="border-color:#9c27b0;">
-      <h3>🔵 IgA-Nephropathie</h3>
+      <h3>🔵 IgA-Nephropathie — spezifische Therapie</h3>
       <ul>
-        <li><span class="drug-tag primary">Sparsentan</span> (PROTECT) — dual AT1/ET-A-Antagonist</li>
-        <li><span class="drug-tag primary">Budesonid (Nefecon)</span> — bei ACR ≥300, eGFR ≥30</li>
-        <li><span class="drug-tag">Kortikosteroide</span> nur bei Rapid-Progressive IgA-N</li>
+        <li><span class="drug-tag primary">Sparsentan (Filspari)</span> — dual AT1/ET-A-Antagonist (PROTECT-Studie); bei ACR ≥500</li>
+        <li><span class="drug-tag primary">Budesonid (Kinpeygo/Nefecon)</span> — intestinal freigesetzt; bei ACR ≥300 + eGFR ≥30 (NefIgArd)</li>
+        <li><span class="drug-tag">Kortikosteroide systemisch</span> nur bei Rapid-Progressiver IgA-N oder aktiver Entzündung</li>
       </ul></div>`;
   }
 
   if (diseases.includes('lupus')) {
     html += `<div class="therapy-block" style="border-color:#e91e63;">
-      <h3>🔴 Lupusnephritis</h3>
+      <h3>🔴 Lupusnephritis — spezifische Therapie</h3>
       <ul>
-        <li><span class="drug-tag primary">Hydroxychloroquin</span> 200–400 mg/d (Basis)</li>
-        <li>Induktion: <span class="drug-tag primary">MMF 2–3 g/d</span> oder <span class="drug-tag">Cyclophosphamid</span></li>
-        <li><span class="drug-tag primary">Voclosporin</span> + MMF (AURORA), <span class="drug-tag">Belimumab</span> (BLISS-LN)</li>
+        <li><span class="drug-tag primary">Hydroxychloroquin</span> 200–400 mg/d — immer als Basis</li>
+        <li>Induktion: <span class="drug-tag primary">MMF 2–3 g/d</span> oder <span class="drug-tag">Cyclophosphamid i.v.</span> (EUROLUPUS)</li>
+        <li><span class="drug-tag primary">Voclosporin</span> + MMF (AURORA-Studie); <span class="drug-tag">Belimumab</span> + SoC (BLISS-LN)</li>
       </ul></div>`;
   }
 
   if (diseases.includes('adpkd')) {
     html += `<div class="therapy-block" style="border-color:#00796b;">
-      <h3>🟢 ADPKD</h3>
+      <h3>🟢 ADPKD — spezifische Therapie</h3>
       <ul>
-        <li><span class="drug-tag primary">Tolvaptan (Jinarc)</span> bei raschem Progress (Mayo 1C–1E)</li>
-        <li>Blutdruckziel &lt;110/75 mmHg; ACE-Hemmer/ARB bevorzugt</li>
-        <li>Flüssigkeit &gt;3 l/d unter Tolvaptan</li>
+        <li><span class="drug-tag primary">Tolvaptan (Jinarc)</span> bei raschem Progress (Mayo-Klasse 1C–1E oder PROPKD ≥6)</li>
+        <li>Blutdruckziel <strong>&lt;110/75 mmHg</strong>; ACE-Hemmer/ARB bevorzugt (HALT-PKD)</li>
+        <li>Flüssigkeit &gt;3 l/d unter Tolvaptan; Leberwerte beachten</li>
       </ul></div>`;
   }
 
   if (diseases.includes('vaskulitis')) {
     html += `<div class="therapy-block" style="border-color:#ff5722;">
-      <h3>🔶 ANCA-Vaskulitis</h3>
+      <h3>🔶 ANCA-Vaskulitis — spezifische Therapie</h3>
       <ul>
-        <li>Induktion: <span class="drug-tag primary">Rituximab</span> oder <span class="drug-tag">Cyclophosphamid</span> + Steroide</li>
-        <li>Erhaltung: <span class="drug-tag primary">Rituximab 500 mg</span> alle 6 Mo × 24 Mo</li>
-        <li><span class="drug-tag primary">Avacopan (Tavneos)</span> — Steroid-sparend</li>
+        <li>Induktion: <span class="drug-tag primary">Rituximab 375 mg/m²</span> ×4 oder <span class="drug-tag">Cyclophosphamid i.v.</span> + Steroide</li>
+        <li>Erhaltung: <span class="drug-tag primary">Rituximab 500 mg</span> alle 6 Mo × 24 Mo (RITAZAREM)</li>
+        <li><span class="drug-tag primary">Avacopan (Tavneos)</span> 30 mg 2×/d — Steroid-sparend (ADVOCATE)</li>
         <li>PCP-Prophylaxe: <span class="drug-tag warning">Cotrimoxazol 480 mg/d</span></li>
       </ul></div>`;
   }
 
+  if (diseases.includes('fsgs')) {
+    html += `<div class="therapy-block" style="border-color:#ff9800;">
+      <h3>🟠 FSGS — spezifische Therapie</h3>
+      <ul>
+        <li>Primäre FSGS: <span class="drug-tag primary">Prednison</span> 1 mg/kg/d × 4–16 Wochen (cave Steroidresistenz)</li>
+        <li>Steroidresistente FSGS: <span class="drug-tag">Cyclosporin A</span>, <span class="drug-tag">Tacrolimus</span></li>
+        <li>Sekundäre FSGS: Ursache behandeln (z.B. Adipositas, HIV, Heroin)</li>
+      </ul></div>`;
+  }
+
+  if (diseases.includes('mgn')) {
+    html += `<div class="therapy-block" style="border-color:#795548;">
+      <h3>🟤 Membranöse Nephropathie — spezifische Therapie</h3>
+      <ul>
+        <li>PLA2R-positiv + spontane Remission abwarten (bis 12 Mo bei stabiler Funktion)</li>
+        <li><span class="drug-tag primary">Rituximab</span> 1–4 g — First-line bei Therapiebedarf (MENTOR-Studie)</li>
+        <li>Alternativ: <span class="drug-tag">Cyclophosphamid + Steroide</span> (Ponticelli-Schema)</li>
+        <li>Thromboseprophylaxe bei Albumin &lt;25 g/l erwägen (NMH oder DOAC)</li>
+      </ul></div>`;
+  }
+
+  if (diseases.includes('transplantat')) {
+    html += `<div class="therapy-block" style="border-color:#607d8b;">
+      <h3>🔷 Transplantat-Nephropathie — Besonderheiten</h3>
+      <ul>
+        <li>Immunsuppression optimieren (Tacrolimus-Spiegel, MMF-Dosis)</li>
+        <li>BKV-Nephropathie ausschließen (BKV-PCR im Blut)</li>
+        <li>CNI-Nephrotoxizität: Tacrolimus-Spiegelreduktion erwägen</li>
+        <li>SGLT2i: zunehmend auch post-Transplant eingesetzt (off-label)</li>
+      </ul></div>`;
+  }
+
+  // ── 7. Nephrotoxika vermeiden ─────────────────────────────────────────
   html += `<div class="therapy-block">
     <h3>🚫 Nephrotoxika vermeiden</h3>
     <ul>
-      <li><span class="drug-tag danger">NSAR</span> kontraindiziert bei CKD G3+</li>
-      <li>Kontrastmittel: Hydrierung; nach Exposition Kreatinin-Kontrolle</li>
-      <li>Aminoglykoside: nur bei zwingender Indikation mit TDM</li>
-      <li>Dosisanpassung aller renal eliminierten Medikamente (z.B. Metformin ↓ ab G3a, stop G3b–4)</li>
+      <li><span class="drug-tag danger">NSAR</span> — kontraindiziert ab CKD G3+; bei akutem Gebrauch: Kreatinin-Kontrolle</li>
+      <li><span class="drug-tag danger">Kontrastmittel</span> — Hydrierung (NaCl 0,9%); Kreatinin nach 48 h kontrollieren</li>
+      <li>Aminoglykoside: nur bei zwingender Indikation mit TDM und Spiegelkontrolle</li>
+      <li>Dosisanpassung: Metformin ↓ ab G3a, stop ab G3b–G4; alle renal eliminierten Medikamente prüfen</li>
     </ul></div>`;
 
   html += '</div>';
