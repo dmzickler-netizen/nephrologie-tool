@@ -4703,6 +4703,14 @@ window.gichtAutoImport = function() {
           <input class="tma-input" id="tma-fibrin" type="number" min="0" step="0.1" placeholder="z.B. 0.8" oninput="tmaCalc()">
         </div>
         <div class="tma-field">
+          <label class="tma-label">AST (U/L) <span style="font-weight:400;color:#999">— Norm ≤35</span></label>
+          <input class="tma-input" id="tma-ast" type="number" min="0" placeholder="z.B. 120" oninput="tmaCalc()">
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">ALT (U/L) <span style="font-weight:400;color:#999">— Norm ≤35</span></label>
+          <input class="tma-input" id="tma-alt" type="number" min="0" placeholder="z.B. 95" oninput="tmaCalc()">
+        </div>
+        <div class="tma-field">
           <label class="tma-label">D-Dimere / Fibrinspaltprodukte</label>
           <select class="tma-select" id="tma-ddimer" onchange="tmaCalc()">
             <option value="">— bitte wählen —</option>
@@ -4798,18 +4806,10 @@ window.gichtAutoImport = function() {
       </div>
     </div>
 
-    <!-- HELLP-spezifische Laborwerte (nur bei Schwangerschaft sichtbar) -->
+    <!-- HELLP-spezifische Felder (nur bei Schwangerschaft sichtbar) -->
     <div class="tma-card" id="tma-hellp-labs" style="display:none;">
-      <div class="tma-card-title">🤰 HELLP-Diagnostik (Schwangerschaft)</div>
+      <div class="tma-card-title">🤰 HELLP-Diagnostik — Zusatzfelder (Schwangerschaft)</div>
       <div class="tma-grid">
-        <div class="tma-field">
-          <label class="tma-label">AST (U/L) <span style="font-weight:400;color:#999">— Norm ≤35 U/L</span></label>
-          <input class="tma-input" id="tma-ast" type="number" min="0" placeholder="z.B. 120" oninput="tmaCalc()">
-        </div>
-        <div class="tma-field">
-          <label class="tma-label">ALT (U/L) <span style="font-weight:400;color:#999">— Norm ≤35 U/L</span></label>
-          <input class="tma-input" id="tma-alt" type="number" min="0" placeholder="z.B. 95" oninput="tmaCalc()">
-        </div>
         <div class="tma-field">
           <label class="tma-label">Bilirubin gesamt (mg/dl)</label>
           <input class="tma-input" id="tma-bili" type="number" min="0" step="0.1" placeholder="z.B. 1.4" oninput="tmaCalc()">
@@ -4893,7 +4893,7 @@ window.gichtAutoImport = function() {
     <div class="tma-card">
       <div class="tma-grid">
         <div>
-          <div class="tma-ent-line"><span class="tma-ent-key">Blut:</span> BB + Diff, Retikulozyten, LDH, Haptoglobin, Bilirubin (dir./indir.), DAT (Coombs), Kreatinin, LFP, Troponin, BNP, Urinstatus</div>
+          <div class="tma-ent-line"><span class="tma-ent-key">Blut:</span> BB + Diff, Retikulozyten, LDH, Haptoglobin, Bilirubin (dir./indir.), DAT (Coombs), Kreatinin, <strong>AST/ALT (LFP)</strong>, Troponin, BNP, Urinstatus</div>
           <div class="tma-ent-line"><span class="tma-ent-key">Gerinnung:</span> PT, aPTT, Fibrinogen, D-Dimere, Anti-Xa (wenn Heparin)</div>
           <div class="tma-ent-line"><span class="tma-ent-key">Blutausstrich:</span> Schistozyten quantifizieren — Norm &lt;0,1%; ab 0,1–0,5% diagnostisch relevant</div>
         </div>
@@ -5192,6 +5192,8 @@ window.gichtAutoImport = function() {
     var tx     = getRadio('tma-tx');
     var drug   = selVal('tma-drug');
     var preg   = getRadio('tma-preg');
+    var ast    = numVal('tma-ast');
+    var alt    = numVal('tma-alt');
 
     // Show/hide HELLP-specific fields when pregnancy selected
     var pregFields = document.getElementById('tma-preg-fields');
@@ -5321,6 +5323,20 @@ window.gichtAutoImport = function() {
     // ----- Differentialdiagnose -----
     var diagList = [];
 
+    // LDH/AST ratio — allgemein anzeigen wenn beide vorhanden
+    var liverElevGen = (ast !== null && ast >= 70) || (alt !== null && alt >= 70);
+    if (liverElevGen && preg !== 'ja') {
+      var ldh_ast_gen = (ldh !== null && ast !== null && ast > 0) ? (ldh / ast).toFixed(1) : null;
+      var liverMsg = 'AST' + (ast !== null ? ' '+ast : '') + (alt !== null ? ' / ALT '+alt : '') + ' U/L — Leberbeteiligung.';
+      if (ldh_ast_gen) {
+        var r = parseFloat(ldh_ast_gen);
+        liverMsg += ' LDH/AST-Ratio: <strong>' + ldh_ast_gen + '</strong> — ' + (r > 22 ? '⚠️ &gt;22 → eher TTP/aHUS oder DITMA' : '🟡 &lt;22 → HELLP-ähnlich oder ischämisch/DIC');
+      }
+      liverMsg += ' Bei Frauen im gebärfähigen Alter: Schwangerschaft / HELLP ausschließen!';
+      diagList.push({ color:'#e65100', icon:'🫀', label:'Leberenzyme erhöht — DD beachten',
+        text: liverMsg });
+    }
+
     if (dic >= 5) {
       diagList.push({ color:'#37474f', icon:'⚫', label:'DIC (Disseminierte Intravasale Koagulation)',
         text:'ISTH DIC Score ≥5. Grunderkrankung identifizieren und behandeln. Substitution bei aktiver Blutung.' });
@@ -5343,8 +5359,6 @@ window.gichtAutoImport = function() {
     }
     if (preg === 'ja') {
       var adamts13 = selVal('tma-adamts13');
-      var ast = numVal('tma-ast');
-      var alt = numVal('tma-alt');
       var htn = getRadio('tma-htn');
       var liverElev = (ast !== null && ast >= 70) || (alt !== null && alt >= 70);
       var ldh_ast_ratio = (ldh !== null && ast !== null && ast > 0) ? ldh / ast : null;
@@ -5397,8 +5411,8 @@ window.gichtAutoImport = function() {
     var hellpCard = document.getElementById('tma-hellp-result-card');
     var hellpEl   = document.getElementById('tma-hellp-result');
     if (preg === 'ja' && plt !== null) {
-      var astV  = numVal('tma-ast');
-      var altV  = numVal('tma-alt');
+      var astV  = ast;
+      var altV  = alt;
       var biliV = numVal('tma-bili');
       var liverE = (astV !== null && astV >= 70) || (altV !== null && altV >= 70);
       var haemol = haemolysis; // from MAHA section above
