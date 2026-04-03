@@ -90,6 +90,7 @@ body { background: #f4f6f8; font-family: -apple-system, BlinkMacSystemFont, "Seg
     <button class="goae-preset-btn" onclick="goaePreset('htn', this)">💊 Hypertonie-Kontrolle</button>
     <button class="goae-preset-btn" onclick="goaePreset('sono', this)">🔍 Sono-Kontrolle</button>
     <button class="goae-preset-btn" onclick="goaePreset('biopsy', this)">🩸 Post-Biopsie</button>
+    <button class="goae-preset-btn" onclick="goaePreset('dialyse', this)">🫘 Dialyse-Aufklärung</button>
     <button class="goae-preset-btn" onclick="goaePreset('konsil', this)">📞 Konsil</button>
     <button class="goae-preset-btn" style="border-color:#c62828;color:#c62828;" onclick="goaeClear()">✕ Leeren</button>
   </div>
@@ -154,7 +155,7 @@ var goaeDB = [
   { nr:650, name:'Blutdruckmessung',                      short:'RR-Messung',                   kat:'Blutdruck / ABPM',        typ:'T', p:40,   excl:[],       tip:'Einzelmessung; mehrfache Messungen gehen nur 1× an.' },
   { nr:651, name:'Langzeit-RR-Messung (Anlegen)',         short:'ABPM Anlegen + Aufzeichnung',  kat:'Blutdruck / ABPM',        typ:'T', p:265,  excl:[],       tip:'Anlegen des ABPM-Geräts + Aufzeichnung >18h. Auswertung am Folgetag (Nr. 652).' },
   { nr:652, name:'Langzeit-RR Auswertung',                short:'ABPM Auswertung',              kat:'Blutdruck / ABPM',        typ:'T', p:265,  excl:[],       tip:'Computergestützte Auswertung und schriftl. Befundung des ABPM.' },
-  { nr:34,  name:'Erörterung Therapieplanung >20 min',    short:'Therapieerörterung Schwerkranke', kat:'Nephrologie spezifisch', typ:'P', p:291, excl:[],      tip:'Eingehende Erörterung >20 min bei CKD, Dialyse-Einleitung, Transplantation. Dauer dokumentieren.' },
+  { nr:34,  name:'Erörterung lebensverändernde Erkrankung >20 min', short:'Erörterung Auswirkungen auf Lebensgestaltung', kat:'Nephrologie spezifisch', typ:'P', p:291, excl:[],      tip:'GOÄ-Text: „Erörterung der Auswirkungen einer Erkrankung auf die Lebensgestaltung" (mind. 20 min). Kernposition bei Dialyse-Aufklärung, Transplantations-Gespräch, Palliativentscheidung. Uhrzeit + Dauer dokumentieren.' },
   { nr:626, name:'Beurteilung Dialysepflichtigkeit',      short:'Dialyseindikation/-beurteilung', kat:'Nephrologie spezifisch', typ:'P', p:292, excl:[],      tip:'Erstmalige oder nach Intervall erneute Einschätzung. Bei CKD G4/G5 im Verlauf ansetzbar.' },
   { nr:315, name:'Perkutane Nierenbiopsie (USS-gezielt)', short:'Nierenbiopsie perkutan',       kat:'Intervention',            typ:'T', p:1600, excl:[],       tip:'Ultraschallgeführt. Üblich ×1,8 bis ×2,3. Zusätzlich Nr. 410 für Sono ansetzbar.' },
   { nr:75,  name:'Kurze Bescheinigung / Attest',          short:'Attest kurz',                  kat:'Dokumentation',           typ:'P', p:60,   excl:[76,80],  tip:'Einfaches Attest oder Kurzbescheinigung.' },
@@ -222,6 +223,7 @@ function goaePreset(type, btn) {
     htn:    [3,6,650,410,76],
     sono:   [3,5,410],
     biopsy: [3,7,315,410],
+    dialyse:[3,34,626,76],
     konsil: [60,76]
   };
   (map[type]||[]).forEach(function(n){ goaeSelected.add(n); });
