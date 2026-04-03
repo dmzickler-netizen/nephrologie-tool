@@ -192,12 +192,12 @@ var goaeDB = [
   { nr:659, name:'Langzeit-EKG 24h (Holter)',             short:'Holter-EKG 24h',               kat:'Diagnostik & Therapie',   typ:'T', p:750,  excl:[],       freq:'1–2×/Jahr', tip:'VHF-Screening bei CKD — AF-Prävalenz erhöht. Synkopen, Palpitationen. Anlegen + Auswertung = eine Position.' },
   { nr:3710,name:'Blutgasanalyse (pH, pO₂, pCO₂, HCO₃)',short:'BGA komplett',                 kat:'BGA / Labor',             typ:'T', p:250,  excl:[],       freq:'unbegrenzt / je Messung', tip:'GOÄ Nr. 3710: vollständige Blutgasanalyse inkl. Elektrolyte. Auf ITS mehrfach täglich ansetzbar und begründbar. POCT-Gerät = technische Leistung. Auch arterielle BGA = gleiche Position.' },
   { nr:3714,name:'pO₂ oder pCO₂ (Einzelparameter)',      short:'BGA Einzelmessung',            kat:'BGA / Labor',             typ:'T', p:80,   excl:[3710],   freq:'unbegrenzt / je Messung', tip:'Nur wenn nicht als vollständige BGA (Nr. 3710) — z.B. reine Oxygenierungskontrolle.' },
-  { nr:429, name:'Kardiopulmonale Reanimation',           short:'Reanimation CPR',              kat:'ITS-Prozeduren',          typ:'P', p:1500, excl:[],       freq:'je Ereignis', tip:'GOÄ Nr. 429: vollständige Reanimationsleistung (Herzdruckmassage + Beatmung + Defibrillation). Separate Berechnung der medikamentösen Maßnahmen. Dokumentation Verlauf + Dauer obligat.' },
-  { nr:427, name:'Endotracheale Intubation',              short:'Intubation (ETI)',              kat:'ITS-Prozeduren',          typ:'P', p:600,  excl:[],       freq:'je Einleitung', tip:'Selbstständige Intubationsleistung. Neben Nr. 429 (Reanimation) und Nr. 602 (Monitoring) ansetzbar. Laryngoskopie + Fixierung dokumentieren.' },
-  { nr:261, name:'Venenpunktion mit Katheteranlage',      short:'ZVK-Anlage (Nr. 261)',         kat:'ITS-Prozeduren',          typ:'T', p:300,  excl:[],       freq:'je Anlage', tip:'GOÄ Nr. 261 für einfache Kathetereinlage; bei Subclavia/Jugularis-ZVK oft als Nr. 260 oder § 6-Analogabrechnung. Sonografische Führung dokumentieren.' },
-  { nr:284, name:'Arterienverweilkatheter',               short:'Arterienkatheter (A-line)',     kat:'ITS-Prozeduren',          typ:'T', p:370,  excl:[],       freq:'je Anlage', tip:'GOÄ Nr. 284: intraarterieller Verweilkatheter. Radialisarterien-Katheter für invasives Monitoring. Ggf. § 6-Analog begründen. Neben nr. 602/3710 ansetzbar.' },
-  { nr:307, name:'Pleurapunktion (therapeutisch)',        short:'Pleurapunktion',               kat:'ITS-Prozeduren',          typ:'T', p:250,  excl:[],       freq:'je Punktion', tip:'GOÄ Nr. 307. Bei pleuralen Ergüssen im Rahmen nephrotisches Syndrom, Herzinsuffizienz. Sonografische Lagekontrolle (Nr. 410) zusätzlich ansetzbar.' },
-  { nr:320, name:'Aszitespunktion',                       short:'Aszitespunktion / Parazentese', kat:'ITS-Prozeduren',          typ:'T', p:250,  excl:[],       freq:'je Punktion', tip:'GOÄ Nr. 320. Hepatorenales Syndrom, dekompensierten Zirrhose, nephrotisches Syndrom. Nr. 410 für Sono-Steuerung zusätzlich.' },
+  { nr:261, name:'Venenpunktion mit Katheteranlage (ZVK)', short:'ZVK-Anlage',                  kat:'Invasive Eingriffe',      typ:'T', p:300,  excl:[],       freq:'je Anlage', tip:'GOÄ Nr. 261; bei Subclavia/Jugularis-ZVK ggf. als § 6-Analogabrechnung. Sono-Führung dokumentieren. Auch: Shaldon-Katheter für Dialyse.' },
+  { nr:284, name:'Arterienverweilkatheter (A-line)',      short:'Arterienkatheter',              kat:'Invasive Eingriffe',      typ:'T', p:370,  excl:[],       freq:'je Anlage', tip:'GOÄ Nr. 284: intraarterieller Verweilkatheter für invasives Monitoring. Neben Nr. 3710 (BGA) ansetzbar.' },
+  { nr:307, name:'Pleurapunktion (therapeutisch)',        short:'Pleurapunktion',                kat:'Invasive Eingriffe',      typ:'T', p:250,  excl:[],       freq:'je Punktion', tip:'GOÄ Nr. 307. Nephrotisches Syndrom, Herzinsuffizienz, Parapneumonisch. Sono-Steuerung (Nr. 410) zusätzlich ansetzbar.' },
+  { nr:320, name:'Aszitespunktion / Parazentese',         short:'Aszitespunktion',               kat:'Invasive Eingriffe',      typ:'T', p:250,  excl:[],       freq:'je Punktion', tip:'GOÄ Nr. 320. Hepatorenales Syndrom, dekompensierte Zirrhose, nephrotisches Syndrom. Nr. 410 für Sono-Steuerung zusätzlich.' },
+  { nr:429, name:'Kardiopulmonale Reanimation',           short:'Reanimation CPR',               kat:'ITS-Notfall',             typ:'P', p:1500, excl:[],       freq:'je Ereignis', tip:'GOÄ Nr. 429: vollständige Reanimationsleistung (HDM + Beatmung + Defibrillation). Dokumentation Ablauf + Dauer obligat.' },
+  { nr:427, name:'Endotracheale Intubation',              short:'Intubation (ETI)',               kat:'ITS-Notfall',             typ:'P', p:600,  excl:[],       freq:'je Einleitung', tip:'Selbstständige Intubationsleistung. Neben Nr. 429 ansetzbar. Laryngoskopie + Lagekontrolle dokumentieren.' },
   { nr:650, name:'Blutdruckmessung',                      short:'RR-Messung',                   kat:'Blutdruck / ABPM',        typ:'T', p:40,   excl:[],       tip:'Einzelmessung; mehrfache Messungen gehen nur 1× an.' },
   { nr:651, name:'Langzeit-RR-Messung (Anlegen)',         short:'ABPM Anlegen + Aufzeichnung',  kat:'Blutdruck / ABPM',        typ:'T', p:265,  excl:[],       freq:'1–2×/Jahr', tip:'Anlegen des ABPM-Geräts + Aufzeichnung >18h. Auswertung am Folgetag (Nr. 652).' },
   { nr:652, name:'Langzeit-RR Auswertung',                short:'ABPM Auswertung',              kat:'Blutdruck / ABPM',        typ:'T', p:265,  excl:[],       freq:'1–2×/Jahr', tip:'Computergestützte Auswertung und schriftl. Befundung des ABPM.' },
@@ -205,7 +205,11 @@ var goaeDB = [
   { nr:35,  name:'Erörterung Lebenssituation (bis 30 min)',short:'Erörterung Lebenssituation',  kat:'Nephrologie spezifisch', typ:'P', p:200,  excl:[34],     freq:'Dauer dokumentieren', tip:'Kürzere Erörterung psychosozialer Krankheitsfolgen mit Patient oder Bezugspersonen. Nicht neben Nr. 34 ansetzbar — je nach Gesprächsdauer entscheiden.' },
   { nr:626, name:'Beurteilung Dialysepflichtigkeit',      short:'Dialyseindikation/-beurteilung', kat:'Nephrologie spezifisch', typ:'P', p:292, excl:[],      freq:'1×/Quartal begründbar', tip:'Erstmalige oder nach Intervall erneute Einschätzung. Bei CKD G4/G5 im Verlauf ansetzbar.' },
   { nr:826, name:'Koordination interdisziplinäre Behandlung', short:'Interdiszip. Koordination', kat:'Nephrologie spezifisch', typ:'P', p:160, excl:[],      tip:'Absprache mit anderen Fachgebieten zur Gesamttherapieplanung (z.B. Hämatologie + Nephrologie bei MGUS/Myelom-Niere, Transplant-Team).' },
-  { nr:315, name:'Perkutane Nierenbiopsie (USS-gezielt)', short:'Nierenbiopsie perkutan',       kat:'Intervention',            typ:'T', p:1600, excl:[],       tip:'Ultraschallgeführt. Üblich ×1,8 bis ×2,3. Zusätzlich Nr. 410 für Sono ansetzbar.' },
+  { nr:315, name:'Perkutane Nierenbiopsie (USS-gezielt)', short:'Nierenbiopsie perkutan',       kat:'Invasive Eingriffe',      typ:'T', p:1600, excl:[],       tip:'Ultraschallgeführt. Üblich ×1,8 bis ×2,3. Zusätzlich Nr. 410 für Sono ansetzbar.' },
+  { nr:789, name:'Hämodialyse / Hämofiltration (HD)',     short:'Hämodialyse (je Sitzung)',      kat:'Dialyse / Nierenersatz',  typ:'T', p:1800, excl:[],       freq:'je Sitzung', tip:'GOÄ Nr. 789: ärztliche Leistung HD/HF. Technische Kosten (Gerät, Verbrauchsmaterial) separat oder in DRG. Dokumentation Verlauf, Gewichtsverlust, RR, Komplikationen.' },
+  { nr:790, name:'Peritonealdialyse (PD)',                short:'Peritonealdialyse',             kat:'Dialyse / Nierenersatz',  typ:'T', p:1200, excl:[],       freq:'je Sitzung', tip:'GOÄ Nr. 790: PD-Sitzung inkl. Überwachung, Bilanzierung, Austauschbilanz. APD/CAPD. Bei ambulanter PD-Schulung höherer Faktor begründbar.' },
+  { nr:7890,display:'789a', name:'CRRT (Hämofiltration kontinuierlich, analog 789)', short:'CRRT kontinuierlich',   kat:'Dialyse / Nierenersatz',  typ:'T', p:2500, excl:[],       freq:'je 24h / je Schicht', tip:'§ 6 Abs. 2 GOÄ analog Nr. 789. Kontinuierliche Hämofiltration (CVVH/CVVHDF) auf ITS. Höherer Aufwand als intermittierende HD begründbar. Dokumentation Maschinen-Parameter + ärztliche Überwachungsintervalle.' },
+  { nr:792, name:'Therapeutischer Plasmaaustausch (TPE)', short:'Plasmapherese / TPE',           kat:'Dialyse / Nierenersatz',  typ:'T', p:2500, excl:[],       freq:'je Sitzung', tip:'GOÄ Nr. 792: Plasmapherese. Kerntherapie bei iTTP, anti-GBM, ANCA-Vaskulitis (Hämoptoe), Krioglobulinämie. Plasma-Menge und Ersatzlösung dokumentieren.' },
   { nr:75,  name:'Kurze Bescheinigung / Attest',          short:'Attest kurz',                  kat:'Dokumentation',           typ:'P', p:60,   excl:[76,80],  tip:'Einfaches Attest oder Kurzbescheinigung.' },
   { nr:76,  name:'Ausführlicher Arztbericht',             short:'Arztbrief / Befundbericht',    kat:'Dokumentation',           typ:'P', p:480,  excl:[75,80],  tip:'⭐ Wird sehr häufig vergessen! Nach jeder nephrol. Konsultation mit Arztbrief ansetzbar.' },
   { nr:80,  name:'Gutachten / schriftl. Äußerung',        short:'Gutachten (umfangreich)',      kat:'Dokumentation',           typ:'P', p:800,  excl:[75,76],  tip:'Umfangreiche gutachterliche Stellungnahme.' },
@@ -268,6 +272,24 @@ function goaeOptAdd(nr, remove) {
   goaeRender();
 }
 
+var goaeCurrentCtx = 'ambulanz';
+
+var goaeCatCtx = {
+  'Beratung & Untersuchung':  ['ambulanz','station','its'],
+  'Klinische Untersuchung':   ['ambulanz','station','its'],
+  'Nephrologie spezifisch':   ['ambulanz','station','its'],
+  'Sonographie':              ['ambulanz','station','its'],
+  'Echo / Gefäß-Duplex':      ['ambulanz','station','its'],
+  'Blutdruck / ABPM':         ['ambulanz','station'],
+  'Diagnostik & Therapie':    ['ambulanz','station','its'],
+  'BGA / Labor':              ['ambulanz','station','its'],
+  'Dokumentation':            ['ambulanz','station','its'],
+  'Konsil':                   ['ambulanz','station','its'],
+  'Invasive Eingriffe':       ['station','its'],
+  'ITS-Notfall':              ['its'],
+  'Dialyse / Nierenersatz':   ['station','its']
+};
+
 var goaeCtxPresets = {
   ambulanz: [
     {key:'folge',   label:'📋 Folgebesuch'},
@@ -279,22 +301,26 @@ var goaeCtxPresets = {
     {key:'konsil',  label:'📞 Konsil'}
   ],
   station: [
-    {key:'aufnahme',label:'🏥 Aufnahme-Untersuchung'},
-    {key:'visite',  label:'📋 Tagesvisite'},
-    {key:'entlass', label:'🚪 Entlassungsuntersuchung'},
-    {key:'epikrise',label:'📝 Epikrise / Gutachten'},
-    {key:'dialyse', label:'🫘 Dialyse-Aufklärung'},
-    {key:'konsil',  label:'📞 Konsil'}
+    {key:'aufnahme',  label:'🏥 Aufnahme-Untersuchung'},
+    {key:'visite',    label:'📋 Tagesvisite'},
+    {key:'entlass',   label:'🚪 Entlassungsuntersuchung'},
+    {key:'epikrise',  label:'📝 Epikrise / Gutachten'},
+    {key:'hd_sitzung',label:'💧 HD-Sitzung'},
+    {key:'tpe_sitzung',label:'🔄 TPE-Sitzung'},
+    {key:'dialyse',   label:'🫘 Dialyse-Aufklärung'},
+    {key:'konsil',    label:'📞 Konsil'}
   ],
   its: [
-    {key:'its_aufnahme',label:'🚨 ITS-Aufnahme'},
-    {key:'its_visite',  label:'📋 ITS-Visite + BGA'},
-    {key:'its_reani',   label:'❤️ Reanimation'},
-    {key:'its_zvk',     label:'🩸 ZVK-Anlage'},
-    {key:'its_pleura',  label:'🫁 Pleurapunktion'},
-    {key:'its_ecu',     label:'🔵 Eculizumab-Gespräch (aHUS)'},
-    {key:'dialyse',     label:'🫘 Dialyse-Aufklärung'},
-    {key:'konsil',      label:'📞 Konsil'}
+    {key:'its_aufnahme', label:'🚨 ITS-Aufnahme'},
+    {key:'its_visite',   label:'📋 ITS-Visite + BGA'},
+    {key:'its_reani',    label:'❤️ Reanimation'},
+    {key:'its_zvk',      label:'🩸 ZVK-Anlage'},
+    {key:'its_pleura',   label:'🫁 Pleurapunktion'},
+    {key:'crrt_sitzung', label:'💧 CRRT (kontinuierlich)'},
+    {key:'tpe_sitzung',  label:'🔄 TPE-Sitzung (TTP/HUS)'},
+    {key:'its_ecu',      label:'🔵 Eculizumab-Gespräch (aHUS)'},
+    {key:'dialyse',      label:'🫘 Dialyse-Aufklärung'},
+    {key:'konsil',       label:'📞 Konsil'}
   ]
 };
 var goaeCtxNotes = {
@@ -303,6 +329,7 @@ var goaeCtxNotes = {
   its:      'Intensivmedizin · Wahlleistungsarzt · ggf. Analogabrechnung bei ITS-spezifischen Leistungen'
 };
 function goaeSetCtx(ctx, btn) {
+  goaeCurrentCtx = ctx;
   document.querySelectorAll('.goae-ctx-btn').forEach(function(b){ b.classList.remove('active'); });
   if (btn) btn.classList.add('active');
   var note = document.getElementById('goae-ctx-note');
@@ -316,6 +343,7 @@ function goaeSetCtx(ctx, btn) {
   });
   html += '<button class="goae-preset-btn" style="border-color:#c62828;color:#c62828;" onclick="goaeClear()">✕ Leeren</button>';
   bar.innerHTML = html;
+  goaeRender();
 }
 
 function goaeClear() {
@@ -336,18 +364,20 @@ function goaePreset(type, btn) {
     biopsy: [3,7,315,410],
     dialyse:[3,34,626,76],
     konsil: [60,76],
-    // Stationär
-    aufnahme:[8,34,410,76],
-    visite:  [3,6,410],
-    epikrise:[3,80],
-    entlass: [3,7,76],
-    // ITS
-    its_aufnahme:[8,34,410,420,3710,76],
-    its_visite:  [3,7,410,3710],
-    its_reani:   [429,427,3710,76],
-    its_zvk:     [3,261,284,3710,410],
-    its_pleura:  [3,307,410,3710],
-    its_ecu:     [3,34,420,4201,76]
+    // Stationär + ITS
+    aufnahme:     [8,34,410,76],
+    visite:       [3,6,410],
+    epikrise:     [3,80],
+    entlass:      [3,7,76],
+    hd_sitzung:   [3,789,410,76],
+    tpe_sitzung:  [3,792,410,76],
+    its_aufnahme: [8,34,410,420,3710,76],
+    its_visite:   [3,7,410,3710],
+    its_reani:    [429,427,3710,76],
+    its_zvk:      [3,261,284,3710,410],
+    its_pleura:   [3,307,410,3710],
+    crrt_sitzung: [3,7890,3710,76],
+    its_ecu:      [3,34,420,4201,76]
   };
   (map[type]||[]).forEach(function(n){ goaeSelected.add(n); });
   goaeRender();
@@ -371,6 +401,8 @@ function goaeRender() {
 
   var leftHtml = '';
   Object.keys(cats).forEach(function(kat) {
+    var allowed = goaeCatCtx[kat];
+    if (allowed && allowed.indexOf(goaeCurrentCtx) === -1) return;
     var positions = cats[kat];
     var catTotal = 0;
     positions.forEach(function(pos){
