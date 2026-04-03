@@ -1395,15 +1395,15 @@ label .lip-optional {
       <div class="form-row">
         <div class="form-group">
           <label>Alter</label>
-          <input type="number" id="age" placeholder="z.B. 65" min="18" max="110">
+          <input type="number" id="age" placeholder="z.B. 65" min="18" max="110" oninput="calculate()">
           <span class="unit">Jahre</span>
         </div>
         <div class="form-group">
           <label>Geschlecht</label>
           <div class="diab-toggle-group">
-            <input type="radio" name="sex" id="sex-male" value="male">
+            <input type="radio" name="sex" id="sex-male" value="male" onchange="calculate()">
             <label for="sex-male">Männlich</label>
-            <input type="radio" name="sex" id="sex-female" value="female">
+            <input type="radio" name="sex" id="sex-female" value="female" onchange="calculate()">
             <label for="sex-female">Weiblich</label>
           </div>
         </div>
@@ -1412,12 +1412,12 @@ label .lip-optional {
       <div class="form-row">
         <div class="form-group">
           <label>Kreatinin</label>
-          <input type="number" id="creatinine" placeholder="z.B. 1.8" step="0.01" min="0">
+          <input type="number" id="creatinine" placeholder="z.B. 1.8" step="0.01" min="0" oninput="calculate()">
           <span class="unit">mg/dl</span>
         </div>
         <div class="form-group">
           <label>Cystatin C</label>
-          <input type="number" id="cystatinc" placeholder="z.B. 1.4" step="0.01" min="0">
+          <input type="number" id="cystatinc" placeholder="z.B. 1.4" step="0.01" min="0" oninput="calculate()">
           <span class="unit">mg/l (optional)</span>
         </div>
       </div>
@@ -1425,7 +1425,7 @@ label .lip-optional {
       <div class="form-row">
         <div class="form-group">
           <label>uACR</label>
-          <input type="number" id="uacr" placeholder="z.B. 45" step="1" min="0">
+          <input type="number" id="uacr" placeholder="z.B. 45" step="1" min="0" oninput="calculate()">
           <span class="unit">mg/g Kreatinin</span>
         </div>
         <div class="form-group">
@@ -1542,7 +1542,7 @@ label .lip-optional {
       </div>
 
       <div style="display:flex; gap:10px; margin-top:16px;">
-        <button class="btn-calc" style="margin-top:0; flex:1;" onclick="calculate()">🧮 Staging berechnen &amp; Arztbrief generieren</button>
+        <button class="btn-calc" style="margin-top:0; flex:1;" onclick="calculate()">📄 Arztbrief &amp; Staging aktualisieren</button>
         <button onclick="clearCKD()" title="Alle Eingaben leeren" style="flex:0 0 auto; padding:0 16px; height:50px; background:#78909c; color:#fff; border:none; border-radius:10px; font-size:.85rem; font-weight:600; cursor:pointer; white-space:nowrap; letter-spacing:.3px;">🗑️ Leeren</button>
       </div>
     </div>
@@ -1552,7 +1552,7 @@ label .lip-optional {
       <div class="card" style="margin-bottom:16px;">
         <h2>📊 eGFR-Ergebnis (CKD-EPI 2021)</h2>
         <div id="results-panel">
-          <div class="placeholder-text">Bitte Daten eingeben und Berechnung starten.</div>
+          <div class="placeholder-text">⏳ Noch benötigt: <strong>Alter, Geschlecht, Kreatinin</strong></div>
         </div>
       </div>
 
@@ -8530,9 +8530,14 @@ function calculate() {
   const ph          = parseFloat(document.getElementById('ph').value) || null;
   const vordiagnosen = document.getElementById('vordiagnosen').value.trim();
 
-  // Validation
+  // Validation — kein alert(), stattdessen Hinweis im results-panel
   if (!age || !sex || !scr) {
-    alert('Bitte Alter, Geschlecht und Kreatinin eingeben.');
+    var missing = [];
+    if (!age) missing.push('Alter');
+    if (!sex) missing.push('Geschlecht');
+    if (!scr) missing.push('Kreatinin');
+    document.getElementById('results-panel').innerHTML =
+      '<div class="placeholder-text">⏳ Noch benötigt: <strong>' + missing.join(', ') + '</strong></div>';
     return;
   }
 
