@@ -7597,6 +7597,19 @@ window.gichtAutoImport = function() {
 .abx-egfr-btn:hover { background: #e8f5e9; }
 .abx-egfr-btn.hd { border-color: #6a1b9a; color: #6a1b9a; }
 .abx-egfr-btn.hd.active { background: #6a1b9a; color: #fff; }
+.abx-egfr-btn.crrt { border-color: #00695c; color: #00695c; }
+.abx-egfr-btn.crrt.active { background: #00695c; color: #fff; }
+.abx-egfr-btn.crrt:hover { background: #e0f2f1; }
+.abx-egfr-btn.pd { border-color: #e65100; color: #e65100; }
+.abx-egfr-btn.pd.active { background: #e65100; color: #fff; }
+.abx-egfr-btn.pd:hover { background: #fff3e0; }
+.abx-table tr.hl-hd { background: #ede7f6; }
+.abx-table tr.hl-hd td:first-child { border-left: 3px solid #6a1b9a; }
+.abx-table tr.hl-crrt { background: #e0f2f1; }
+.abx-table tr.hl-crrt td:first-child { border-left: 3px solid #00695c; }
+.abx-table tr.hl-pd { background: #fff3e0; }
+.abx-table tr.hl-pd td:first-child { border-left: 3px solid #e65100; }
+.abx-egfr-badge { display:inline-flex; align-items:center; gap:6px; background:#e8f5e9; border:1px solid #a5d6a7; border-radius:8px; padding:4px 10px; font-size:.82rem; color:#1b5e20; font-weight:600; }
 .abx-gruppe-filter { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
 .abx-grp-btn { padding: 4px 12px; border: 1.5px solid #ccc; background: #fafafa; color: #555; border-radius: 14px; cursor: pointer; font-size: .8rem; font-weight: 600; transition: all .15s; }
 .abx-grp-btn.active { background: #1b5e20; color: #fff; border-color: #1b5e20; }
@@ -7641,13 +7654,20 @@ window.gichtAutoImport = function() {
       <input type="text" id="abx-search" placeholder="z.B. Meropenem, Vancomycin, Pip/Taz …" oninput="abxRender()">
     </div>
     <div class="abx-field">
-      <label>eGFR-Stufe hervorheben</label>
-      <div class="abx-egfr-btns" id="abx-egfr-btns">
-        <button class="abx-egfr-btn" onclick="abxSetEgfr('>50',this)">&gt;50</button>
-        <button class="abx-egfr-btn" onclick="abxSetEgfr('30-50',this)">30–50</button>
-        <button class="abx-egfr-btn" onclick="abxSetEgfr('15-30',this)">15–30</button>
-        <button class="abx-egfr-btn" onclick="abxSetEgfr('<15',this)">&lt;15</button>
-        <button class="abx-egfr-btn hd" onclick="abxSetEgfr('HD',this)">HD</button>
+      <label>Nierenfunktion / Nierenersatzverfahren hervorheben</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <div class="abx-egfr-btns" id="abx-egfr-btns">
+          <button class="abx-egfr-btn" data-val=">50" onclick="abxSetEgfr('>50',this)">&gt;50</button>
+          <button class="abx-egfr-btn" data-val="30-50" onclick="abxSetEgfr('30-50',this)">30–50</button>
+          <button class="abx-egfr-btn" data-val="15-30" onclick="abxSetEgfr('15-30',this)">15–30</button>
+          <button class="abx-egfr-btn" data-val="<15" onclick="abxSetEgfr('<15',this)">&lt;15</button>
+          <button class="abx-egfr-btn hd" data-val="HD" onclick="abxSetEgfr('HD',this)">HD</button>
+          <button class="abx-egfr-btn crrt" data-val="CRRT" onclick="abxSetEgfr('CRRT',this)">CRRT</button>
+          <button class="abx-egfr-btn pd" data-val="PD" onclick="abxSetEgfr('PD',this)">PD</button>
+        </div>
+        <div id="abx-egfr-badge" style="display:none;" class="abx-egfr-badge">
+          <span>📊 eGFR aus CKD-Tab:</span><span id="abx-egfr-badge-val"></span>
+        </div>
       </div>
     </div>
   </div>
@@ -7677,371 +7697,441 @@ window.gichtAutoImport = function() {
 var abxCurrentEgfr = '';
 var abxCurrentGruppe = '';
 
-var EGFR_STUFEN = ['>50','30-50','15-30','<15','HD'];
+var EGFR_STUFEN = ['>50','30-50','15-30','<15','HD','CRRT','PD'];
 
 var abxData = [
   // ===== PENICILLINE / BLI =====
   {
-    name: 'Amoxicillin/Clavulansäure',
-    brand: 'Augmentan®',
-    gruppe: 'Penicillin/BLI',
+    name: 'Amoxicillin/Clavulansäure', brand: 'Augmentan®', gruppe: 'Penicillin/BLI',
     indikation: 'HWI, CAP, ABECB, Sinusitis, Weichteilinfektionen, Bisse',
     dosierung: {
       '>50':   { dosis: '875/125 mg q8h p.o. | 2,2 g q8h i.v.', hinweis: '' },
-      '30-50': { dosis: '875/125 mg q12h p.o. | 2,2 g q12h i.v.', hinweis: 'maximale Tagesdosis beachten' },
+      '30-50': { dosis: '875/125 mg q12h p.o. | 2,2 g q12h i.v.', hinweis: '' },
       '15-30': { dosis: '500/125 mg q12h p.o. | 1,1 g q12h i.v.', hinweis: '' },
       '<15':   { dosis: '500/125 mg q24h p.o. | 1,1 g q24h i.v.', hinweis: '' },
-      'HD':    { dosis: '500/125 mg nach HD p.o.', hinweis: 'nach jeder HD-Sitzung supplementieren; Clavulansäure akkumuliert' }
+      'HD':    { dosis: '500/125 mg nach HD p.o.', hinweis: 'nach jeder HD supplementieren; Clavulansäure akkumuliert' },
+      'CRRT':  { dosis: '2,2 g q8h i.v.', hinweis: 'Standard-Dosierung; CRRT-Clearance ähnlich eGFR 30–50' },
+      'PD':    { dosis: '500/125 mg q12–24h p.o. | 1,1 g q24h i.v.', hinweis: 'geringe PD-Clearance; wie <15 dosieren' }
     },
     tdm: false, cave: 'Clavulansäure akkumuliert bei CKD → erhöhtes GI-Nebenwirkungs-Risiko'
   },
   {
-    name: 'Ampicillin/Sulbactam',
-    brand: 'Unacid®',
-    gruppe: 'Penicillin/BLI',
+    name: 'Ampicillin/Sulbactam', brand: 'Unacid®', gruppe: 'Penicillin/BLI',
     indikation: 'HAP, Aspirationspneumonie, intraabdominell, Acinetobacter',
     dosierung: {
       '>50':   { dosis: '3 g (2+1) q6h i.v.', hinweis: '' },
       '30-50': { dosis: '3 g q8h i.v.', hinweis: '' },
       '15-30': { dosis: '3 g q12h i.v.', hinweis: '' },
       '<15':   { dosis: '1,5–3 g q12–24h i.v.', hinweis: '' },
-      'HD':    { dosis: '1,5–3 g q12–24h i.v.', hinweis: 'nach HD: 1,5 g supplementieren' }
+      'HD':    { dosis: '1,5–3 g q12–24h i.v.', hinweis: 'nach HD: 1,5 g supplementieren' },
+      'CRRT':  { dosis: '3 g q8h i.v.', hinweis: 'CRRT erhöht Clearance; Standard-/leicht erhöhte Dosis' },
+      'PD':    { dosis: '1,5–3 g q12–24h i.v.', hinweis: 'wie HD; geringe PD-Clearance' }
     },
     tdm: false, cave: ''
   },
   {
-    name: 'Piperacillin/Tazobactam',
-    brand: 'Tazobac®',
-    gruppe: 'Penicillin/BLI',
+    name: 'Piperacillin/Tazobactam', brand: 'Tazobac®', gruppe: 'Penicillin/BLI',
     indikation: 'Sepsis, HAP, Pseudomonas, intraabdominell, febrile Neutropenie',
     dosierung: {
       '>50':   { dosis: '4,5 g q6–8h i.v.', hinweis: 'q6h bei schwerer Infektion / Pseudomonas' },
       '30-50': { dosis: '4,5 g q8h i.v.', hinweis: '' },
       '15-30': { dosis: '4,5 g q8h i.v. (max. 3×/d)', hinweis: '' },
       '<15':   { dosis: '4,5 g q12h i.v.', hinweis: '' },
-      'HD':    { dosis: '2,25–4,5 g q12h i.v.', hinweis: 'nach HD: 0,75 g supplementieren' }
+      'HD':    { dosis: '2,25–4,5 g q12h i.v.', hinweis: 'nach HD: 0,75 g supplementieren' },
+      'CRRT':  { dosis: '4,5 g q8h i.v.', hinweis: 'CRRT entfernt signifikant; Dosierung wie normale Nierenfunktion empfohlen' },
+      'PD':    { dosis: '4,5 g q12h i.v.', hinweis: 'geringe PD-Elimination; wie <15 ml/min' }
     },
-    tdm: false, cave: 'Hyokaliämie möglich; bei CRRT: 4,5 g q8h'
+    tdm: false, cave: 'Hypokaliämie möglich'
   },
 
   // ===== CEPHALOSPORINE =====
   {
-    name: 'Cefazolin',
-    brand: 'Cefazolin®',
-    gruppe: 'Cephalosporin',
+    name: 'Cefazolin', brand: 'Cefazolin®', gruppe: 'Cephalosporin',
     indikation: 'Perioperative Prophylaxe, Haut-/Weichteilinfektion, MSSA-Bakteriämie',
     dosierung: {
       '>50':   { dosis: '2 g q8h i.v. | Prophylaxe: 2 g Einmaldosis', hinweis: '' },
       '30-50': { dosis: '1–2 g q12h i.v.', hinweis: '' },
       '15-30': { dosis: '1–2 g q24h i.v.', hinweis: '' },
       '<15':   { dosis: '1 g q24h i.v.', hinweis: '' },
-      'HD':    { dosis: '1–2 g nach HD', hinweis: 'nach jeder Dialyse; alternativ 0,5 g q12h' }
+      'HD':    { dosis: '1–2 g nach HD', hinweis: 'nach jeder Dialyse; alternativ 0,5 g q12h' },
+      'CRRT':  { dosis: '2 g q12h i.v.', hinweis: 'CRRT entfernt moderat; Dosisintervall wie eGFR 30–50' },
+      'PD':    { dosis: '1 g q24h i.v. | oder i.p. 250 mg/l Dialysat (Peritonitis)', hinweis: 'bei PD-Peritonitis: i.p. Gabe bevorzugen' }
     },
     tdm: false, cave: ''
   },
   {
-    name: 'Cefuroxim',
-    brand: 'Zinacef®',
-    gruppe: 'Cephalosporin',
+    name: 'Cefuroxim', brand: 'Zinacef®', gruppe: 'Cephalosporin',
     indikation: 'CAP, HWI, Haut-/Weichteilinfektion (2. Generation)',
     dosierung: {
       '>50':   { dosis: '750 mg–1,5 g q8h i.v. | 500 mg q12h p.o.', hinweis: '' },
       '30-50': { dosis: '750 mg–1,5 g q12h i.v. | 500 mg q12h p.o.', hinweis: '' },
       '15-30': { dosis: '750 mg q12–24h i.v.', hinweis: '' },
       '<15':   { dosis: '750 mg q24h i.v.', hinweis: '' },
-      'HD':    { dosis: '750 mg nach HD', hinweis: 'nach jeder Dialyse' }
+      'HD':    { dosis: '750 mg nach HD', hinweis: 'nach jeder Dialyse' },
+      'CRRT':  { dosis: '750 mg–1,5 g q12h i.v.', hinweis: 'wie eGFR 15–50' },
+      'PD':    { dosis: '750 mg q24h i.v.', hinweis: 'wie <15 ml/min; geringe PD-Clearance' }
     },
     tdm: false, cave: ''
   },
   {
-    name: 'Ceftriaxon',
-    brand: 'Rocephin®',
-    gruppe: 'Cephalosporin',
+    name: 'Ceftriaxon', brand: 'Rocephin®', gruppe: 'Cephalosporin',
     indikation: 'CAP, Meningitis, Sepsis, HWI, Gonorrhoe (3. Generation)',
     dosierung: {
       '>50':   { dosis: '1–2 g q24h i.v. | Meningitis: 2 g q12h', hinweis: '' },
       '30-50': { dosis: '1–2 g q24h i.v.', hinweis: 'keine Anpassung nötig' },
       '15-30': { dosis: '1–2 g q24h i.v.', hinweis: 'keine Anpassung nötig' },
       '<15':   { dosis: '1–2 g q24h i.v.', hinweis: 'keine Anpassung nötig' },
-      'HD':    { dosis: '1–2 g q24h i.v.', hinweis: 'keine Anpassung (biliäre Elimination ~50%)' }
+      'HD':    { dosis: '1–2 g q24h i.v.', hinweis: 'keine Anpassung (biliäre Elimination ~50%)' },
+      'CRRT':  { dosis: '1–2 g q24h i.v.', hinweis: 'keine Anpassung; biliäre Elimination dominiert' },
+      'PD':    { dosis: '1–2 g q24h i.v.', hinweis: 'keine Anpassung' }
     },
-    tdm: false, cave: 'Cave: Kalzium-Präzipitate bei paralleler Ca-Infusion (v.a. Neugeborene); biliäre Elimination daher kaum renale Anpassung nötig'
+    tdm: false, cave: 'Cave: Kalzium-Präzipitate bei paralleler Ca-Infusion; biliäre Elimination → kaum renale Anpassung nötig'
   },
   {
-    name: 'Ceftazidim',
-    brand: 'Fortum®',
-    gruppe: 'Cephalosporin',
+    name: 'Ceftazidim', brand: 'Fortum®', gruppe: 'Cephalosporin',
     indikation: 'Pseudomonas, HAP, febrile Neutropenie, ZNS-Infektionen (3. Gen.)',
     dosierung: {
       '>50':   { dosis: '2 g q8h i.v.', hinweis: '' },
       '30-50': { dosis: '2 g q12h i.v.', hinweis: '' },
       '15-30': { dosis: '2 g q24h i.v.', hinweis: '' },
       '<15':   { dosis: '1–2 g q24–48h i.v.', hinweis: '' },
-      'HD':    { dosis: '1 g nach HD', hinweis: 'nach jeder Dialyse; HD entfernt ~50%' }
+      'HD':    { dosis: '1 g nach HD', hinweis: 'nach jeder Dialyse; HD entfernt ~50%' },
+      'CRRT':  { dosis: '2 g q12h i.v.', hinweis: 'CRRT entfernt signifikant; Dosisintervall anpassen' },
+      'PD':    { dosis: '1 g q24h i.v. | i.p.: 250 mg/l Dialysat (Peritonitis)', hinweis: 'bei PD-Peritonitis: i.p. Gabe bevorzugen' }
     },
-    tdm: false, cave: 'Neurotoxizität (Enzephalopathie, Myoklonus) bei Akkumulation bei CKD'
+    tdm: false, cave: 'Neurotoxizität (Enzephalopathie, Myoklonus) bei Akkumulation — auch unter CRRT möglich!'
   },
   {
-    name: 'Cefepim',
-    brand: 'Maxipime®',
-    gruppe: 'Cephalosporin',
+    name: 'Cefepim', brand: 'Maxipime®', gruppe: 'Cephalosporin',
     indikation: 'Pseudomonas, HAP, febrile Neutropenie, Gram-negative Sepsis (4. Gen.)',
     dosierung: {
       '>50':   { dosis: '2 g q8h i.v. | leichte Infektion: 1 g q12h', hinweis: '' },
       '30-50': { dosis: '2 g q12h i.v.', hinweis: '' },
       '15-30': { dosis: '2 g q24h i.v. | oder 1 g q12h', hinweis: '' },
       '<15':   { dosis: '1 g q24h i.v.', hinweis: '' },
-      'HD':    { dosis: '0,5–1 g nach HD', hinweis: 'nach jeder Dialyse supplementieren; HD entfernt ~68%' }
+      'HD':    { dosis: '0,5–1 g nach HD', hinweis: 'nach jeder Dialyse; HD entfernt ~68%' },
+      'CRRT':  { dosis: '2 g q12h i.v.', hinweis: 'CRRT entfernt signifikant; Talspiegel-Monitoring empfohlen' },
+      'PD':    { dosis: '1 g q24h i.v.', hinweis: 'wie HD; geringe PD-Clearance' }
     },
-    tdm: false, cave: '⚠️ NEUROTOXIZITÄT: Enzephalopathie, nicht-konvulsiver Status epilepticus bei CKD-Akkumulation — besonders gefährdet: ältere Patienten, schneller eGFR-Abfall'
+    tdm: false, cave: '⚠️ NEUROTOXIZITÄT (Enzephalopathie, nicht-konvulsiver Status epilepticus) bei Akkumulation — auch bei CRRT! Engmaschige neurologische Überwachung'
   },
 
   // ===== CARBAPENEME =====
   {
-    name: 'Meropenem',
-    brand: 'Meronem®',
-    gruppe: 'Carbapenem',
+    name: 'Meropenem', brand: 'Meronem®', gruppe: 'Carbapenem',
     indikation: 'Schwere Sepsis, ESBL, Pseudomonas, HAP, intraabdominell, Meningitis',
     dosierung: {
       '>50':   { dosis: '1 g q8h i.v. | schwere/Meningitis: 2 g q8h', hinweis: '' },
       '30-50': { dosis: '1 g q12h i.v. | schwere: 2 g q12h', hinweis: '' },
       '15-30': { dosis: '1 g q12h i.v.', hinweis: '' },
       '<15':   { dosis: '500 mg–1 g q12–24h i.v.', hinweis: '' },
-      'HD':    { dosis: '500 mg–1 g q24h i.v.', hinweis: 'nach HD supplementieren; bei CRRT 1 g q8–12h' }
+      'HD':    { dosis: '500 mg–1 g q24h i.v.', hinweis: 'nach HD supplementieren' },
+      'CRRT':  { dosis: '1 g q8–12h i.v. | schwere Infektion: 2 g q8–12h', hinweis: 'CRRT entfernt signifikant; Standard-Dosierung meist ausreichend' },
+      'PD':    { dosis: '500 mg–1 g q12–24h i.v.', hinweis: 'wie <15 ml/min; geringe PD-Clearance' }
     },
     tdm: false, cave: ''
   },
   {
-    name: 'Imipenem/Cilastatin',
-    brand: 'Zienam®',
-    gruppe: 'Carbapenem',
+    name: 'Imipenem/Cilastatin', brand: 'Zienam®', gruppe: 'Carbapenem',
     indikation: 'Schwere Sepsis, ESBL, polymikrobielle Infektionen, Nokardiose',
     dosierung: {
       '>50':   { dosis: '500 mg q6h i.v. | oder 1 g q8h', hinweis: '' },
       '30-50': { dosis: '500 mg q8h i.v.', hinweis: '' },
       '15-30': { dosis: '500 mg q12h i.v.', hinweis: '' },
       '<15':   { dosis: '250–500 mg q12h i.v.', hinweis: '' },
-      'HD':    { dosis: '250 mg q12h i.v.', hinweis: 'nach HD supplementieren' }
+      'HD':    { dosis: '250 mg q12h i.v.', hinweis: 'nach HD supplementieren' },
+      'CRRT':  { dosis: '500 mg q8h i.v.', hinweis: 'CRRT entfernt ~30–50%; wie eGFR 30–50 dosieren' },
+      'PD':    { dosis: '250 mg q12h i.v.', hinweis: 'wie HD; geringe PD-Clearance' }
     },
     tdm: false, cave: '⚠️ Krampfanfallrisiko bei hohen Dosen / Akkumulation (Epilepsie-Vorgeschichte: Meropenem bevorzugen)'
   },
   {
-    name: 'Ertapenem',
-    brand: 'Invanz®',
-    gruppe: 'Carbapenem',
+    name: 'Ertapenem', brand: 'Invanz®', gruppe: 'Carbapenem',
     indikation: 'Ambulant erworbene Infektionen, ESBL, intraabdominell (KEIN Pseudomonas!)',
     dosierung: {
       '>50':   { dosis: '1 g q24h i.v./i.m.', hinweis: '' },
       '30-50': { dosis: '1 g q24h i.v.', hinweis: 'ab eGFR >30: keine Anpassung' },
       '15-30': { dosis: '500 mg q24h i.v.', hinweis: '' },
       '<15':   { dosis: '500 mg q24h i.v.', hinweis: '' },
-      'HD':    { dosis: '500 mg q24h i.v.', hinweis: 'nach HD: 150 mg supplementieren (HD entfernt ~30%)' }
+      'HD':    { dosis: '500 mg q24h i.v.', hinweis: 'nach HD: 150 mg supplementieren (HD entfernt ~30%)' },
+      'CRRT':  { dosis: '500 mg q24h i.v.', hinweis: 'CRRT entfernt moderat; wie eGFR <30 dosieren' },
+      'PD':    { dosis: '500 mg q24h i.v.', hinweis: 'wie HD; geringe PD-Clearance' }
     },
-    tdm: false, cave: 'Kein Pseudomonas-Spektrum; 1× tägliche Gabe vereinfacht ambulante Therapie'
+    tdm: false, cave: 'Kein Pseudomonas-Spektrum; 1× tägliche Gabe vereinfacht Therapie'
   },
 
   // ===== FLUORCHINOLONE =====
   {
-    name: 'Ciprofloxacin',
-    brand: 'Ciprobay®',
-    gruppe: 'Fluorchinolon',
+    name: 'Ciprofloxacin', brand: 'Ciprobay®', gruppe: 'Fluorchinolon',
     indikation: 'HWI, Reisediarrhö, Pseudomonas (Gruppe 2), Knochen-/Gelenkinfektion',
     dosierung: {
       '>50':   { dosis: '400 mg q8–12h i.v. | 500–750 mg q12h p.o.', hinweis: '' },
       '30-50': { dosis: '400 mg q12h i.v. | 500 mg q12h p.o.', hinweis: '' },
       '15-30': { dosis: '200–400 mg q12h i.v. | 250–500 mg q12h p.o.', hinweis: '' },
-      '<15':   { dosis: '200–400 mg q12h i.v. | 250–500 mg q12h p.o.', hinweis: 'Dosis reduzieren' },
-      'HD':    { dosis: '200 mg q12h i.v.', hinweis: 'nach HD: zusätzlich 200 mg; HD entfernt ~10% (wenig)' }
+      '<15':   { dosis: '200–400 mg q12h i.v. | 250–500 mg q12h p.o.', hinweis: '' },
+      'HD':    { dosis: '200 mg q12h i.v.', hinweis: 'nach HD: zusätzlich 200 mg; HD entfernt ~10%' },
+      'CRRT':  { dosis: '400 mg q12h i.v.', hinweis: 'CRRT entfernt ~15–20%; wie eGFR 15–50' },
+      'PD':    { dosis: '200–400 mg q12h i.v.', hinweis: 'geringe PD-Clearance; Dosierung wie HD' }
     },
     tdm: false, cave: 'QTc-Verlängerung; Sehnenrupturrisiko; Interaktionen (Antazida, Eisenpräparate, Warfarin)'
   },
   {
-    name: 'Levofloxacin',
-    brand: 'Tavanic®',
-    gruppe: 'Fluorchinolon',
+    name: 'Levofloxacin', brand: 'Tavanic®', gruppe: 'Fluorchinolon',
     indikation: 'CAP, ABECB, HWI, atypische Erreger, Legionella (Gruppe 3)',
     dosierung: {
       '>50':   { dosis: '500 mg q24h i.v./p.o. | schwere CAP: 500 mg q12h', hinweis: '' },
       '30-50': { dosis: '500 mg 1× ED, dann 250 mg q24h', hinweis: '' },
       '15-30': { dosis: '500 mg 1× ED, dann 125–250 mg q24h', hinweis: '' },
       '<15':   { dosis: '500 mg 1× ED, dann 125 mg q24h', hinweis: '' },
-      'HD':    { dosis: '500 mg 1× ED, dann 125 mg q24h', hinweis: 'nach HD keine zusätzliche Supplementierung' }
+      'HD':    { dosis: '500 mg 1× ED, dann 125 mg q24h', hinweis: 'keine zusätzliche Supplementierung nach HD' },
+      'CRRT':  { dosis: '500 mg 1× ED, dann 250 mg q24h', hinweis: 'CRRT entfernt ~15%; etwas höhere Erhaltungsdosis als bei HD' },
+      'PD':    { dosis: '500 mg 1× ED, dann 125 mg q24h', hinweis: 'wie HD; geringe PD-Clearance' }
     },
     tdm: false, cave: 'QTc-Verlängerung; bessere Pneumokokken-Wirksamkeit als Ciprofloxacin'
   },
   {
-    name: 'Moxifloxacin',
-    brand: 'Avalox®',
-    gruppe: 'Fluorchinolon',
+    name: 'Moxifloxacin', brand: 'Avalox®', gruppe: 'Fluorchinolon',
     indikation: 'CAP, ABECB, intraabdominell, Anaerobier (Gruppe 4)',
     dosierung: {
       '>50':   { dosis: '400 mg q24h i.v./p.o.', hinweis: 'keine renale Anpassung' },
       '30-50': { dosis: '400 mg q24h i.v./p.o.', hinweis: 'keine Anpassung (hepatisch)' },
       '15-30': { dosis: '400 mg q24h i.v./p.o.', hinweis: 'keine Anpassung' },
       '<15':   { dosis: '400 mg q24h i.v./p.o.', hinweis: 'keine Anpassung' },
-      'HD':    { dosis: '400 mg q24h i.v./p.o.', hinweis: 'keine Anpassung (biliäre/intestinale Elimination)' }
+      'HD':    { dosis: '400 mg q24h i.v./p.o.', hinweis: 'keine Anpassung (biliäre/intestinale Elimination)' },
+      'CRRT':  { dosis: '400 mg q24h i.v./p.o.', hinweis: 'keine Anpassung; hepatische Elimination dominiert' },
+      'PD':    { dosis: '400 mg q24h i.v./p.o.', hinweis: 'keine Anpassung' }
     },
     tdm: false, cave: '⚠️ QTc-Verlängerung (stärker als Cipro/Levo); kontraindiziert bei bekannter QT-Verlängerung'
   },
 
   // ===== GLYKOPEPTIDE =====
   {
-    name: 'Vancomycin',
-    brand: 'Vancomycin®',
-    gruppe: 'Glykopeptid',
+    name: 'Vancomycin', brand: 'Vancomycin®', gruppe: 'Glykopeptid',
     indikation: 'MRSA, Koagulase-neg. Staph., Enterokokken, penicillinresistente Grampositive',
     dosierung: {
       '>50':   { dosis: '15–20 mg/kg q8–12h i.v.', hinweis: 'TDM obligat; AUC/MIC-Ziel 400–600 mg·h/l' },
       '30-50': { dosis: '15–20 mg/kg q12–24h i.v.', hinweis: 'verlängertes Intervall; TDM vor jeder Gabe' },
       '15-30': { dosis: '15–20 mg/kg q24–48h i.v.', hinweis: 'Intervall nach Spiegel; TDM obligat' },
       '<15':   { dosis: '15–20 mg/kg q48–72h i.v.', hinweis: 'stark verlängerte Intervalle; nur nach TDM' },
-      'HD':    { dosis: '15–20 mg/kg nach HD', hinweis: 'high-flux HD entfernt 30–40%; Spiegel vor nächster Gabe messen; bei low-flux kaum Entfernung' }
+      'HD':    { dosis: '15–20 mg/kg nach HD', hinweis: 'high-flux HD entfernt 30–40%; Spiegel vor nächster Gabe; low-flux: kaum Entfernung' },
+      'CRRT':  { dosis: '15–20 mg/kg Ladedosis, dann 10–15 mg/kg q24–48h', hinweis: '⚠️ Hohe Variabilität je nach CRRT-Modus + Flussrate! TDM zwingend obligat; Ziel-Talspiegel 15–20 mg/l' },
+      'PD':    { dosis: '15–20 mg/kg q4–7d i.v. | bei PD-Peritonitis: 30 mg/kg i.p. im Wechselbeutel', hinweis: 'sehr geringe PD-Clearance (~10–15 ml/min); Spiegel wöchentlich; i.p. Gabe bei Peritonitis bevorzugt' }
     },
-    tdm: true, cave: 'Nephrotoxizität (besonders mit Aminoglykosiden/Schleifendiuretika); Ototoxizität; Red-Man-Syndrom (langsame Infusion über ≥60 min)'
+    tdm: true, cave: 'Nephrotoxizität (besonders mit Aminoglykosiden/Schleifendiuretika); Ototoxizität; Red-Man-Syndrom (Infusion ≥60 min)'
   },
   {
-    name: 'Teicoplanin',
-    brand: 'Targocid®',
-    gruppe: 'Glykopeptid',
+    name: 'Teicoplanin', brand: 'Targocid®', gruppe: 'Glykopeptid',
     indikation: 'MRSA, Gram-positive Infektionen (Alternative zu Vancomycin)',
     dosierung: {
       '>50':   { dosis: 'Loading: 6–10 mg/kg q12h × 3 Dosen, dann 6–10 mg/kg q24h i.v.', hinweis: 'TDM empfohlen' },
-      '30-50': { dosis: 'Loading wie normal, ab Tag 4: 6–10 mg/kg q48h', hinweis: 'TDM: Talspiegel >10 mg/l' },
+      '30-50': { dosis: 'Loading wie normal, ab Tag 4: 6–10 mg/kg q48h', hinweis: 'Talspiegel >10 mg/l' },
       '15-30': { dosis: 'Loading wie normal, ab Tag 4: 6–10 mg/kg q72h', hinweis: 'TDM obligat' },
       '<15':   { dosis: 'Loading wie normal, ab Tag 4–7: 6–10 mg/kg q72h', hinweis: 'nach Spiegel titrieren' },
-      'HD':    { dosis: '6–10 mg/kg q72h i.v.', hinweis: 'kaum dialysierbar; Dosierung nach Talspiegel' }
+      'HD':    { dosis: '6–10 mg/kg q72h i.v.', hinweis: 'kaum dialysierbar; Talspiegel-basierte Dosierung' },
+      'CRRT':  { dosis: 'Loading wie normal, dann 6–10 mg/kg q24–48h', hinweis: 'CRRT entfernt wenig; TDM obligat; Intervall nach Spiegel' },
+      'PD':    { dosis: '6–10 mg/kg q48–72h i.v.', hinweis: 'kaum PD-dialysierbar; wie <15 ml/min dosieren; TDM' }
     },
-    tdm: true, cave: 'Talspiegel: >10 mg/l (Prophylaxe/leicht), >20 mg/l (Endokarditis/Knochen/Sepsis); langsame Elimination erleichtert CKD-Dosierung'
+    tdm: true, cave: 'Talspiegel: >10 mg/l (leicht), >20 mg/l (Endokarditis/Knochen/Sepsis)'
   },
 
   // ===== AMINOGLYKOSIDE =====
   {
-    name: 'Gentamicin',
-    brand: 'Gentamicin®',
-    gruppe: 'Aminoglykosid',
+    name: 'Gentamicin', brand: 'Gentamicin®', gruppe: 'Aminoglykosid',
     indikation: 'Synergistisch bei Endokarditis, Gram-negative Sepsis, Tularämie',
     dosierung: {
-      '>50':   { dosis: '5–7 mg/kg q24h i.v. (Extended-Interval)', hinweis: 'TDM: Spiegel 1h nach Ende: 15–20 mg/l; Talspiegel vor Gabe: <1 mg/l' },
-      '30-50': { dosis: '4–5 mg/kg q24–36h i.v.', hinweis: 'TDM vor jeder Gabe; Talspiegel <1 mg/l sicherstellen' },
-      '15-30': { dosis: '3–4 mg/kg q48h i.v.', hinweis: 'TDM obligat; Intervall verlängern bis Talspiegel <1 mg/l' },
-      '<15':   { dosis: '2–3 mg/kg q48–72h i.v.', hinweis: 'nur nach TDM-Ergebnis; möglichst vermeiden' },
-      'HD':    { dosis: '1,5–2 mg/kg nach HD', hinweis: 'HD entfernt ~50%; TDM nach jeder Gabe; Talspiegel vor HD messen' }
+      '>50':   { dosis: '5–7 mg/kg q24h i.v. (Extended-Interval)', hinweis: 'TDM: Peak 1h: 15–20 mg/l; Talspiegel <1 mg/l' },
+      '30-50': { dosis: '4–5 mg/kg q24–36h i.v.', hinweis: 'TDM vor jeder Gabe; Talspiegel <1 mg/l' },
+      '15-30': { dosis: '3–4 mg/kg q48h i.v.', hinweis: 'TDM obligat; Intervall bis Talspiegel <1 mg/l' },
+      '<15':   { dosis: '2–3 mg/kg q48–72h i.v.', hinweis: 'nur nach TDM; möglichst vermeiden' },
+      'HD':    { dosis: '1,5–2 mg/kg nach HD', hinweis: 'HD entfernt ~50%; TDM nach jeder Gabe' },
+      'CRRT':  { dosis: '2–3 mg/kg q24–36h i.v.', hinweis: '⚠️ CRRT erhöht Clearance signifikant; TDM zwingend obligat; Talspiegel <1 mg/l vor jeder Gabe sicherstellen!' },
+      'PD':    { dosis: '1,5–2 mg/kg q24–48h i.v.', hinweis: 'geringe PD-Clearance; TDM obligat; möglichst vermeiden' }
     },
-    tdm: true, cave: '⚠️ Nephrotoxizität + Ototoxizität (kumulativ, irreversibel!); möglichst kurze Therapiedauer (<5 Tage); Kombination mit Vancomycin vermeiden; auf Hydrationsstatus achten'
+    tdm: true, cave: '⚠️ Nephrotoxizität + Ototoxizität (kumulativ, irreversibel!); kurze Therapiedauer (<5 Tage); Kombination mit Vancomycin vermeiden'
   },
   {
-    name: 'Tobramycin',
-    brand: 'Gernebcin®',
-    gruppe: 'Aminoglykosid',
+    name: 'Tobramycin', brand: 'Gernebcin®', gruppe: 'Aminoglykosid',
     indikation: 'Pseudomonas (besser als Gentamicin), gram-negative Infektionen',
     dosierung: {
       '>50':   { dosis: '5–7 mg/kg q24h i.v. (Extended-Interval)', hinweis: 'TDM; Peak 15–20 mg/l; Talspiegel <1 mg/l' },
       '30-50': { dosis: '4–5 mg/kg q24–36h i.v.', hinweis: 'TDM obligat' },
       '15-30': { dosis: '3–4 mg/kg q48h i.v.', hinweis: 'TDM obligat' },
       '<15':   { dosis: '2–3 mg/kg q48–72h i.v.', hinweis: 'TDM; möglichst vermeiden' },
-      'HD':    { dosis: '1,5–2 mg/kg nach HD', hinweis: 'HD entfernt ~50%; TDM nach Gabe' }
+      'HD':    { dosis: '1,5–2 mg/kg nach HD', hinweis: 'HD entfernt ~50%; TDM nach Gabe' },
+      'CRRT':  { dosis: '2–3 mg/kg q24–36h i.v.', hinweis: 'wie Gentamicin; TDM zwingend; Talspiegel <1 mg/l vor Gabe' },
+      'PD':    { dosis: '1,5–2 mg/kg q24–48h i.v.', hinweis: 'geringe PD-Clearance; TDM obligat' }
     },
-    tdm: true, cave: 'Gleiche Toxizität wie Gentamicin (Nephro-/Ototoxizität); bevorzugt bei Pseudomonas-Verdacht'
+    tdm: true, cave: 'Gleiche Toxizität wie Gentamicin; bevorzugt bei Pseudomonas-Verdacht'
   },
 
   // ===== SONSTIGE =====
   {
-    name: 'Metronidazol',
-    brand: 'Flagyl® / Clont®',
-    gruppe: 'Sonstige',
+    name: 'Metronidazol', brand: 'Flagyl® / Clont®', gruppe: 'Sonstige',
     indikation: 'Anaerobier, C. difficile (p.o.), Trichomoniasis, Amöben, Giardia',
     dosierung: {
       '>50':   { dosis: '500 mg q8h i.v./p.o. | C. diff: 400 mg q8h p.o.', hinweis: '' },
       '30-50': { dosis: '500 mg q8h i.v./p.o.', hinweis: 'keine Anpassung' },
       '15-30': { dosis: '500 mg q8h i.v./p.o.', hinweis: 'keine Anpassung' },
-      '<15':   { dosis: '500 mg q8–12h i.v./p.o.', hinweis: 'Metaboliten akkumulieren; bei Langzeittherapie überwachen' },
-      'HD':    { dosis: '500 mg q8h i.v./p.o.', hinweis: 'nach HD keine zusätzliche Supplementierung nötig; hepatisch metabolisiert' }
+      '<15':   { dosis: '500 mg q8–12h i.v./p.o.', hinweis: 'Metaboliten akkumulieren; Langzeittherapie überwachen' },
+      'HD':    { dosis: '500 mg q8h i.v./p.o.', hinweis: 'nach HD keine zusätzliche Supplementierung; hepatisch' },
+      'CRRT':  { dosis: '500 mg q8h i.v./p.o.', hinweis: 'keine Anpassung nötig; hepatische Elimination dominiert' },
+      'PD':    { dosis: '500 mg q8h i.v./p.o.', hinweis: 'keine Anpassung; geringe PD-Clearance' }
     },
-    tdm: false, cave: 'Aktive Metaboliten akkumulieren bei CKD (klinische Relevanz unklar); periphere Neuropathie bei Langzeittherapie; kein Alkohol'
+    tdm: false, cave: 'Aktive Metaboliten akkumulieren bei CKD; periphere Neuropathie bei Langzeittherapie; kein Alkohol'
   },
   {
-    name: 'Clindamycin',
-    brand: 'Sobelin®',
-    gruppe: 'Sonstige',
+    name: 'Clindamycin', brand: 'Sobelin®', gruppe: 'Sonstige',
     indikation: 'Gram-positive, Anaerobier, Weichteilinfektionen, Knochen, MRSA-Haut (p.o.)',
     dosierung: {
       '>50':   { dosis: '600–900 mg q8h i.v. | 300–450 mg q8h p.o.', hinweis: '' },
-      '30-50': { dosis: '600–900 mg q8h i.v. | 300–450 mg q8h p.o.', hinweis: 'keine Anpassung' },
+      '30-50': { dosis: '600–900 mg q8h i.v.', hinweis: 'keine Anpassung' },
       '15-30': { dosis: '600–900 mg q8h i.v.', hinweis: 'keine Anpassung' },
       '<15':   { dosis: '600–900 mg q8h i.v.', hinweis: 'keine Anpassung (hepatisch)' },
-      'HD':    { dosis: '600–900 mg q8h i.v.', hinweis: 'keine Anpassung; kaum dialysierbar' }
+      'HD':    { dosis: '600–900 mg q8h i.v.', hinweis: 'keine Anpassung; kaum dialysierbar' },
+      'CRRT':  { dosis: '600–900 mg q8h i.v.', hinweis: 'keine Anpassung; hepatische Elimination dominiert' },
+      'PD':    { dosis: '600–900 mg q8h i.v.', hinweis: 'keine Anpassung' }
     },
     tdm: false, cave: '⚠️ Hohes C.-difficile-Risiko; bei Diarrhö sofort absetzen'
   },
   {
-    name: 'Cotrimoxazol (TMP/SMX)',
-    brand: 'Bactrim® / Cotrim®',
-    gruppe: 'Sonstige',
+    name: 'Cotrimoxazol (TMP/SMX)', brand: 'Bactrim® / Cotrim®', gruppe: 'Sonstige',
     indikation: 'HWI (unkompliziert), PCP-Prophylaxe/-Therapie, Nokardiose, MRSA-HWI',
     dosierung: {
       '>50':   { dosis: 'HWI: 160/800 mg q12h p.o. | PCP-Therapie: 5 mg/kg TMP q6h i.v.', hinweis: '' },
-      '30-50': { dosis: 'HWI: 160/800 mg q12h p.o. (verkürzte Therapiedauer)', hinweis: 'eGFR 30–50: volle Dosis für 7–10d möglich' },
-      '15-30': { dosis: '50% Dosis oder q24h | PCP: reduzierte Dosis unter TDM', hinweis: 'erhöhtes Hyperkaliämie-Risiko' },
-      '<15':   { dosis: 'KONTRAINDIZIERT bei HWI', hinweis: 'nur bei PCP (lebensrettend) unter engem Monitoring möglich' },
-      'HD':    { dosis: 'KONTRAINDIZIERT für Standardtherapie', hinweis: 'TMP partiell dialysierbar; nur bei PCP in Notfallsituation' }
+      '30-50': { dosis: '160/800 mg q12h p.o.', hinweis: 'volle Dosis für 7–10d möglich' },
+      '15-30': { dosis: '50% Dosis oder q24h | PCP: reduziert unter TDM', hinweis: 'erhöhtes Hyperkaliämie-Risiko' },
+      '<15':   { dosis: 'KONTRAINDIZIERT bei HWI', hinweis: 'nur PCP (lebensrettend) unter engem Monitoring' },
+      'HD':    { dosis: 'KONTRAINDIZIERT Standardtherapie', hinweis: 'TMP partiell dialysierbar; nur PCP in Notfall' },
+      'CRRT':  { dosis: 'PCP: 5 mg/kg TMP q8–12h i.v.', hinweis: 'CRRT erhöht Clearance; bei PCP Standard-Dosierung möglich; HWI-Therapie nicht geeignet; TDM/K⁺-Monitoring!' },
+      'PD':    { dosis: 'KONTRAINDIZIERT bei HWI', hinweis: 'nur PCP in Notfall; wie HD dosieren; Hyperkaliämie-Risiko hoch' }
     },
-    tdm: false, cave: '⚠️ HYPERKALIÄMIE (TMP blockiert ENaC = pseudohypaldosteronism); ⚠️ Falscher Kreatinin-Anstieg (TMP hemmt tubuläre Kreatin-Sekretion, kein echter GFR-Abfall); cave: Folsäuremangel, Knochenmarksuppression'
+    tdm: false, cave: '⚠️ HYPERKALIÄMIE (TMP blockiert ENaC); ⚠️ Falscher Kreatinin-Anstieg (kein echter GFR-Abfall); Folsäuremangel, Knochenmarksuppression'
   },
   {
-    name: 'Nitrofurantoin',
-    brand: 'Furadantin® / Nifurantin®',
-    gruppe: 'Sonstige',
+    name: 'Nitrofurantoin', brand: 'Furadantin® / Nifurantin®', gruppe: 'Sonstige',
     indikation: 'Unkomplizierter HWI (nur untere HWI, kein Gewebepenetration!)',
     dosierung: {
       '>50':   { dosis: '50–100 mg q6h p.o. × 5–7 Tage', hinweis: 'nur bei eGFR >45' },
-      '30-50': { dosis: '50 mg q6h p.o.', hinweis: 'eGFR 45–50 noch möglich; unterhalb nicht empfohlen' },
-      '15-30': { dosis: 'KONTRAINDIZIERT', hinweis: 'kein therapeutischer Urin-Spiegel; Metaboliten-Akkumulation → Polyneuropathie, Lungentoxizität' },
+      '30-50': { dosis: '50 mg q6h p.o.', hinweis: 'eGFR 45–50 noch möglich' },
+      '15-30': { dosis: 'KONTRAINDIZIERT', hinweis: 'kein therapeutischer Urin-Spiegel; Metaboliten-Akkumulation' },
       '<15':   { dosis: 'KONTRAINDIZIERT', hinweis: 'absolut kontraindiziert' },
-      'HD':    { dosis: 'KONTRAINDIZIERT', hinweis: 'absolut kontraindiziert' }
+      'HD':    { dosis: 'KONTRAINDIZIERT', hinweis: 'absolut kontraindiziert' },
+      'CRRT':  { dosis: 'KONTRAINDIZIERT', hinweis: 'absolut kontraindiziert' },
+      'PD':    { dosis: 'KONTRAINDIZIERT', hinweis: 'absolut kontraindiziert' }
     },
-    tdm: false, cave: '⚠️ KONTRAINDIZIERT bei eGFR <45 ml/min; weder wirksam noch sicher; Lungenfibrose, Polyneuropathie bei CKD; CAVE: häufig trotzdem verschrieben!'
+    tdm: false, cave: '⚠️ KONTRAINDIZIERT bei eGFR <45; Lungenfibrose, Polyneuropathie; CAVE: häufig trotzdem verschrieben!'
   },
   {
-    name: 'Fosfomycin i.v.',
-    brand: 'Infectofos®',
-    gruppe: 'Sonstige',
+    name: 'Fosfomycin i.v.', brand: 'Infectofos®', gruppe: 'Sonstige',
     indikation: 'ESBL, komplizierte HWI, Knochen, Kombinationstherapie (immer Kombination!)',
     dosierung: {
       '>50':   { dosis: '8–12 g q6–8h i.v. (200 mg/kg/d)', hinweis: 'immer in Kombination' },
       '30-50': { dosis: '8 g q8–12h i.v.', hinweis: '' },
       '15-30': { dosis: '4–8 g q12h i.v.', hinweis: '' },
       '<15':   { dosis: '2–4 g q12–24h i.v.', hinweis: '' },
-      'HD':    { dosis: '2–4 g nach HD', hinweis: 'HD entfernt ~80%; nach Dialyse supplementieren' }
+      'HD':    { dosis: '2–4 g nach HD', hinweis: 'HD entfernt ~80%; nach Dialyse supplementieren' },
+      'CRRT':  { dosis: '4–8 g q12h i.v.', hinweis: 'CRRT entfernt signifikant (~80% renale Elimination); Na-Bilanz beachten!' },
+      'PD':    { dosis: '2–4 g q12–24h i.v.', hinweis: 'geringe PD-Clearance; wie <15 ml/min; Na-Bilanz beachten!' }
     },
-    tdm: false, cave: '⚠️ Hoher Natriumgehalt (~14,4 mmol Na/g Fosfomycin) → bei Herzinsuffizienz/CKD auf Na-Bilanz achten; immer in Kombination (Resistenzentwicklung)'
+    tdm: false, cave: '⚠️ Hoher Natriumgehalt (~14,4 mmol Na/g) → Na-Bilanz bei HI/CKD; immer in Kombination'
   },
   {
-    name: 'Linezolid',
-    brand: 'Zyvoxid®',
-    gruppe: 'Sonstige',
+    name: 'Linezolid', brand: 'Zyvoxid®', gruppe: 'Sonstige',
     indikation: 'MRSA, VRE, therapierefraktäre gram-positive Infektionen, ZNS-MRSA',
     dosierung: {
       '>50':   { dosis: '600 mg q12h i.v./p.o.', hinweis: '100% orale Bioverfügbarkeit' },
       '30-50': { dosis: '600 mg q12h i.v./p.o.', hinweis: 'keine Anpassung' },
-      '15-30': { dosis: '600 mg q12h i.v./p.o.', hinweis: 'keine Anpassung; Metaboliten akkumulieren (klinische Relevanz unklar)' },
+      '15-30': { dosis: '600 mg q12h i.v./p.o.', hinweis: 'keine Anpassung; Metaboliten akkumulieren' },
       '<15':   { dosis: '600 mg q12h i.v./p.o.', hinweis: 'keine Anpassung; ggf. Monitoring' },
-      'HD':    { dosis: '600 mg q12h i.v./p.o.', hinweis: 'nach HD keine Supplementierung nötig' }
+      'HD':    { dosis: '600 mg q12h i.v./p.o.', hinweis: 'nach HD keine Supplementierung nötig' },
+      'CRRT':  { dosis: '600 mg q12h i.v./p.o.', hinweis: 'keine Anpassung; CRRT entfernt minimal; Metaboliten-Akkumulation möglich' },
+      'PD':    { dosis: '600 mg q12h i.v./p.o.', hinweis: 'keine Anpassung' }
     },
-    tdm: false, cave: '⚠️ Thrombozytopenie bei Therapiedauer >2 Wochen (wöchentliches BB obligat!); serotonerges Syndrom (Vorsicht + Antidepressiva/MAO-Hemmer); Laktatazidose möglich'
+    tdm: false, cave: '⚠️ Thrombozytopenie >2 Wochen (wöchentliches BB!); serotonerges Syndrom; Laktatazidose möglich'
   },
   {
-    name: 'Daptomycin',
-    brand: 'Cubicin®',
-    gruppe: 'Sonstige',
+    name: 'Daptomycin', brand: 'Cubicin®', gruppe: 'Sonstige',
     indikation: 'MRSA-Bakteriämie/-Endokarditis, VRE, komplizierte Hautinfektionen (KEIN Pneumonie!)',
     dosierung: {
       '>50':   { dosis: '6–8 mg/kg q24h i.v. | Endokarditis: 8–10 mg/kg q24h', hinweis: '' },
       '30-50': { dosis: '6–8 mg/kg q24h i.v.', hinweis: 'eGFR >30: keine Anpassung' },
       '15-30': { dosis: '6–8 mg/kg q48h i.v.', hinweis: 'Intervall verlängern' },
       '<15':   { dosis: '6–8 mg/kg q48h i.v.', hinweis: '' },
-      'HD':    { dosis: '6–8 mg/kg q48h i.v.', hinweis: 'nach HD geben; HD entfernt ~11–15%' }
+      'HD':    { dosis: '6–8 mg/kg q48h i.v.', hinweis: 'nach HD geben; HD entfernt ~11–15%' },
+      'CRRT':  { dosis: '6–8 mg/kg q24–48h i.v.', hinweis: 'CRRT-Clearance variabel; TDM erwägen; Intervall nach Nierenfunktion' },
+      'PD':    { dosis: '6–8 mg/kg q48h i.v.', hinweis: 'geringe PD-Clearance; wie HD dosieren' }
     },
-    tdm: false, cave: '⚠️ Myopathie/Rhabdomyolyse → CK wöchentlich; NICHT bei Pneumonie (Inaktivierung durch Surfactant); Interaktion mit Statinen (erhöhtes Myopathie-Risiko → Statin pausieren)'
+    tdm: false, cave: '⚠️ Myopathie/Rhabdomyolyse → CK wöchentlich; NICHT bei Pneumonie (Surfactant-Inaktivierung); Statin pausieren'
+  },
+  {
+    name: 'Tigecyclin', brand: 'Tygacil®', gruppe: 'Sonstige',
+    indikation: 'Reserve-Antibiotikum: komplizierte Haut-/Weichgewebeinfektionen, intraabdominelle Infektionen, MBL-/KPC-Carbapenemase-produzierende Erreger',
+    dosierung: {
+      '>50':   { dosis: '100 mg Ladedosis, dann 50 mg q12h i.v. (Inf. über 30–60 min)', hinweis: '' },
+      '30-50': { dosis: '100 mg Ladedosis, dann 50 mg q12h i.v.', hinweis: 'Keine Dosisanpassung erforderlich' },
+      '15-30': { dosis: '100 mg Ladedosis, dann 50 mg q12h i.v.', hinweis: 'Keine Dosisanpassung erforderlich' },
+      '<15':   { dosis: '100 mg Ladedosis, dann 50 mg q12h i.v.', hinweis: 'Keine Dosisanpassung; schwere Niereninsuffizienz: Daten begrenzt' },
+      'HD':    { dosis: '100 mg Ladedosis, dann 50 mg q12h i.v.', hinweis: 'Keine Dosisanpassung; wird NICHT durch HD eliminiert (hohes Vd)' },
+      'CRRT':  { dosis: '100 mg Ladedosis, dann 50 mg q12h i.v.', hinweis: 'Keine Dosisanpassung; hohes Vd → minimale CRRT-Elimination' },
+      'PD':    { dosis: '100 mg Ladedosis, dann 50 mg q12h i.v.', hinweis: 'Keine Dosisanpassung; geringe PD-Clearance' }
+    },
+    tdm: false, cave: '⚠️ Mortalitätssignal in schweren Infektionen (FDA-Warnung); Übelkeit/Erbrechen häufig; NICHT für Pneumonie-Monotherapie; Tetracyclin-Klasse: keine Kinder, keine Schwangerschaft'
+  },
+  {
+    name: 'Cefpodoxim', brand: 'Orelox® / Podomexef®', gruppe: 'Cephalosporin',
+    indikation: 'Oral: HWI, ambulant erworbene Pneumonie, Haut-/Weichgewebeinfektionen, Exazerbation COPD',
+    dosierung: {
+      '>50':   { dosis: '200 mg q12h p.o. | HWI unkompliziert: 100 mg q12h p.o.', hinweis: '' },
+      '30-50': { dosis: '200 mg q12h p.o.', hinweis: 'eGFR 26–50: Standarddosis' },
+      '15-30': { dosis: '200 mg q24h p.o.', hinweis: 'Intervall auf 24h verlängern (eGFR 10–25)' },
+      '<15':   { dosis: '200 mg q24–48h p.o.', hinweis: 'Dosisreduktion; engmaschige Überwachung' },
+      'HD':    { dosis: '200 mg 3×/Woche p.o. (nach HD)', hinweis: 'HD entfernt ca. 23%; nach Dialyse geben' },
+      'CRRT':  { dosis: '200 mg q24h p.o.', hinweis: 'Wenige Daten; wie eGFR 15–30 dosieren' },
+      'PD':    { dosis: '200 mg q24–48h p.o.', hinweis: 'Wenige Daten; wie <15 ml/min dosieren' }
+    },
+    tdm: false, cave: ''
+  },
+  {
+    name: 'Flucloxacillin', brand: 'Staphylex®', gruppe: 'Penicillin/BLI',
+    indikation: 'MSSA-Infektionen: Endokarditis, Osteomyelitis, Haut-/Weichgewebeinfektionen, Pneumonie',
+    dosierung: {
+      '>50':   { dosis: '1–2 g q4–6h i.v. | Endokarditis/Osteomyelitis: 2 g q4h i.v.', hinweis: '' },
+      '30-50': { dosis: '1–2 g q6h i.v.', hinweis: 'Standarddosis; keine routinemäßige Anpassung' },
+      '15-30': { dosis: '1–2 g q6h i.v.', hinweis: 'Keine strenge Dosisanpassung; hepatische Elimination dominiert' },
+      '<15':   { dosis: '1 g q6h i.v.', hinweis: 'Dosisreduktion möglich; überwiegend hepatisch eliminiert' },
+      'HD':    { dosis: '1 g q6h i.v.', hinweis: 'Kaum dialysierbar; Standardintervall; nicht HD-abhängig dosieren' },
+      'CRRT':  { dosis: '2 g q6h i.v.', hinweis: 'Geringe CRRT-Clearance; Standarddosierung; schwere Inf. höhere Dosen' },
+      'PD':    { dosis: '1 g q6h i.v.', hinweis: 'Geringe PD-Clearance; Standardintervall' }
+    },
+    tdm: false, cave: '⚠️ Cholestatische Hepatitis möglich (bis 2 Monate nach Therapie); LFT überwachen; p.o.-Bioverfügbarkeit 50–70% (nüchtern!)'
+  },
+  {
+    name: 'Azithromycin', brand: 'Zithromax®', gruppe: 'Sonstige',
+    indikation: 'CAP (ambulant), atypische Pneumonie (Legionellen, Mykoplasmen, Chlamydien), Exazerbation COPD, Harnröhren-/Zervizitis (Chlamydien)',
+    dosierung: {
+      '>50':   { dosis: '500 mg q24h i.v./p.o. × 3–5 Tage | CAP-Kombination: 500 mg/d × 3d', hinweis: '' },
+      '30-50': { dosis: '500 mg q24h i.v./p.o.', hinweis: 'Keine Dosisanpassung (überwiegend hepatisch/biliär)' },
+      '15-30': { dosis: '500 mg q24h i.v./p.o.', hinweis: 'Keine Dosisanpassung; Vorsicht: AUC ↑ ~35% bei GFR <10' },
+      '<15':   { dosis: '500 mg q24h i.v./p.o.', hinweis: 'Vorsicht; keine formale Anpassung; begrenzte Daten' },
+      'HD':    { dosis: '500 mg q24h p.o.', hinweis: 'Kaum dialysierbar (hohes Vd); Standarddosis' },
+      'CRRT':  { dosis: '500 mg q24h p.o./i.v.', hinweis: 'Keine relevante CRRT-Clearance; Standarddosis' },
+      'PD':    { dosis: '500 mg q24h p.o.', hinweis: 'Keine relevante PD-Clearance; Standarddosis' }
+    },
+    tdm: false, cave: '⚠️ QTc-Verlängerung (Interaktion mit anderen QT-Verlängernden Medikamenten!); Leberfunktion prüfen; CAVE: Torsades de Pointes; lange Halbwertszeit (68h)'
+  },
+  {
+    name: 'Doxycyclin', brand: 'Vibramycin® / Doxycyclin AL®', gruppe: 'Sonstige',
+    indikation: 'Atypische Pneumonie, Borrelia, Rickettsia, Chlamydien, Syphilis, Malaria-Prophylaxe, akne (Langzeit)',
+    dosierung: {
+      '>50':   { dosis: '200 mg Ladedosis, dann 100 mg q12–24h p.o./i.v.', hinweis: '' },
+      '30-50': { dosis: '200 mg Ladedosis, dann 100 mg q12–24h p.o./i.v.', hinweis: 'Keine Dosisanpassung (nicht renal eliminiert)' },
+      '15-30': { dosis: '200 mg Ladedosis, dann 100 mg q12–24h p.o./i.v.', hinweis: 'Keine Dosisanpassung; bei Niereninsuffizienz sicheres Tetracyclin' },
+      '<15':   { dosis: '200 mg Ladedosis, dann 100 mg q12–24h p.o./i.v.', hinweis: 'Bevorzugtes Tetracyclin bei Niereninsuffizienz (kein Azotämie-Risiko wie ältere Tetracycline)' },
+      'HD':    { dosis: '200 mg Ladedosis, dann 100 mg q12–24h p.o./i.v.', hinweis: 'Keine Dosisanpassung; nicht dialysierbar' },
+      'CRRT':  { dosis: '200 mg Ladedosis, dann 100 mg q12–24h p.o./i.v.', hinweis: 'Keine Dosisanpassung; CRRT-Clearance minimal' },
+      'PD':    { dosis: '200 mg Ladedosis, dann 100 mg q12–24h p.o./i.v.', hinweis: 'Keine Dosisanpassung; PD-Clearance minimal' }
+    },
+    tdm: false, cave: '⚠️ Nicht mit Milch/Antazida/Eisen (Chelat); Ösophagusulzera (aufrecht einnehmen, viel Wasser); Photosensibilisierung; NICHT bei Kindern <8J oder Schwangerschaft'
   }
 ];
 
@@ -8095,15 +8185,25 @@ window.abxRender = function() {
     html += '<div class="abx-card-body' + (isOpen ? ' open' : '') + '" id="abx-body-' + idx + '">';
 
     // Dosierungstabelle
-    html += '<table class="abx-table"><thead><tr><th>eGFR (ml/min/1,73m²)</th><th>Dosierung</th><th>Hinweis</th></tr></thead><tbody>';
+    html += '<table class="abx-table"><thead><tr><th>Nierenfunktion</th><th>Dosierung</th><th>Hinweis</th></tr></thead><tbody>';
     EGFR_STUFEN.forEach(function(stufe) {
       var d = a.dosierung[stufe];
       if (!d) return;
       var isHighlighted = abxCurrentEgfr === stufe;
       var isKI = d.dosis.includes('KONTRAIND');
-      var rowClass = isHighlighted ? ' highlighted' : '';
+      var rowClass = '';
+      if (isHighlighted) {
+        if (stufe === 'HD') rowClass = ' hl-hd';
+        else if (stufe === 'CRRT') rowClass = ' hl-crrt';
+        else if (stufe === 'PD') rowClass = ' hl-pd';
+        else rowClass = ' highlighted';
+      }
       var dosisClass = isKI ? ' abx-ki' : ' abx-dosis';
-      var label = stufe === 'HD' ? '<strong style="color:#6a1b9a;">HD</strong>' : ('eGFR <strong>' + stufe + '</strong>');
+      var label;
+      if (stufe === 'HD') label = '<strong style="color:#6a1b9a;">HD (Hämodialyse)</strong>';
+      else if (stufe === 'CRRT') label = '<strong style="color:#00695c;">CRRT</strong>';
+      else if (stufe === 'PD') label = '<strong style="color:#e65100;">PD (Peritonealdialyse)</strong>';
+      else label = 'eGFR <strong>' + stufe + '</strong>';
       html += '<tr class="' + rowClass + '">';
       html += '<td>' + label + '</td>';
       html += '<td class="' + dosisClass + '">' + d.dosis + '</td>';
@@ -8128,20 +8228,25 @@ window.abxRender = function() {
 window.abxAutoImport = function() {
   // eGFR aus CKD-Tab importieren
   var egfrEl = document.getElementById('egfr-result-val');
+  var badge = document.getElementById('abx-egfr-badge');
+  var badgeVal = document.getElementById('abx-egfr-badge-val');
   if (egfrEl && egfrEl.textContent) {
-    var val = parseFloat(egfrEl.textContent);
+    var raw = egfrEl.textContent.trim();
+    var val = parseFloat(raw);
     if (!isNaN(val)) {
       var stufe = val > 50 ? '>50' : val >= 30 ? '30-50' : val >= 15 ? '15-30' : '<15';
       abxCurrentEgfr = stufe;
       document.querySelectorAll('.abx-egfr-btn').forEach(function(b){ b.classList.remove('active'); });
-      var btn = document.querySelector('.abx-egfr-btn[onclick*="' + stufe.replace('<','\\u003c').replace('>','\\u003e') + '"]');
-      // simpler approach: iterate
       document.querySelectorAll('.abx-egfr-btn').forEach(function(b){
-        if (b.textContent.trim() === stufe || (stufe === '>50' && b.textContent.includes('>50')) || (stufe === '<15' && b.textContent.includes('<15'))) {
-          b.classList.add('active');
-        }
+        if (b.getAttribute('data-val') === stufe) b.classList.add('active');
       });
+      if (badge && badgeVal) {
+        badgeVal.textContent = Math.round(val) + ' ml/min/1,73m² → Stufe ' + stufe;
+        badge.style.display = 'inline-flex';
+      }
     }
+  } else {
+    if (badge) badge.style.display = 'none';
   }
   abxRender();
 };
