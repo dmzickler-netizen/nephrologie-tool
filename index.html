@@ -6011,10 +6011,6 @@ window.gichtAutoImport = function() {
       <div class="ns-grid">
         <div>
           <div class="ns-field">
-            <label class="ns-label">Alter des Patienten (Jahre)</label>
-            <input class="ns-input" id="ns-age" type="number" min="0" max="120" placeholder="z.B. 45" oninput="nsCalc()">
-          </div>
-          <div class="ns-field">
             <label class="ns-label">Proteinurie (g/d oder PCR g/g)</label>
             <input class="ns-input" id="ns-prot" type="number" min="0" step="0.1" placeholder="z.B. 5.2" oninput="nsCalc()">
           </div>
@@ -6254,8 +6250,6 @@ window.gichtAutoImport = function() {
       <div class="ns-card-title">🔬 Häufigste Ursachen nach Altersgruppe</div>
       <table class="ns-table">
         <tr><th>Altersgruppe</th><th>Häufigste Entität</th><th>Vorgehen</th></tr>
-        <tr><td><strong>Kinder &lt;12 J</strong></td><td>MCD (~90%) → empirische Steroidtherapie</td><td>Keine Biopsie bei typischem Ansprechen (≤4 Wochen)</td></tr>
-        <tr><td><strong>Kinder/Jugendliche steroidresistent</strong></td><td>FSGS (~25%), MCD</td><td>Biopsie indiziert</td></tr>
         <tr><td><strong>Junge Erwachsene 18–40 J</strong></td><td>MCD, primäre MN (PLA2R+), FSGS</td><td>Biopsie; PLA2R-AK vorher</td></tr>
         <tr><td><strong>Erwachsene 40–60 J</strong></td><td>Primäre MN (häufigste!), FSGS, diabet. Nephropathie</td><td>PLA2R-AK + Biopsie; Diabetesabklärung</td></tr>
         <tr><td><strong>Ältere &gt;60 J</strong></td><td>MN (sek. durch Malignome!), diabet. Nephropathie, Amyloidose</td><td>Biopsie + intensive Malignomsuche</td></tr>
@@ -6349,7 +6343,6 @@ window.gichtAutoImport = function() {
   };
 
   window.nsCalc = function() {
-    var age   = parseFloat(document.getElementById('ns-age').value);
     var prot  = parseFloat(document.getElementById('ns-prot').value);
     var alb   = parseFloat(document.getElementById('ns-alb').value);
     var pla2r = document.getElementById('ns-pla2r').value;
@@ -6360,7 +6353,7 @@ window.gichtAutoImport = function() {
     var oedeme= nsGetRadio('ns-oedeme');
     var haem  = nsGetRadio('ns-haem');
 
-    var hasData = (!isNaN(prot) || !isNaN(alb) || !isNaN(age));
+    var hasData = (!isNaN(prot) || !isNaN(alb));
     var hint = document.getElementById('ns-hint');
     var area = document.getElementById('ns-result-area');
     if (!hasData) { hint.style.display='block'; area.style.display='none'; return; }
@@ -6395,20 +6388,17 @@ window.gichtAutoImport = function() {
 
     // ---- Biopsie-Empfehlung ----
     var biopsyHtml = '';
-    var isChild = (!isNaN(age) && age < 12);
     var hasSecondary = (dm==='ja' || sys==='ja' || malig==='ja' || (drug && drug!==''));
 
-    if (isChild && !hasSecondary && haem !== 'ja') {
-      biopsyHtml = '<div class="ns-result-ok"><div class="ns-result-title">🟢 Kind &lt;12 Jahre — empirische Steroidtherapie, keine Biopsie als Erstmaßnahme</div><div class="ns-result-sub">Bei Kindern &lt;12 J ohne Hämaturie und ohne Hinweis auf sekundäre Ursache ist die häufigste Diagnose MCD (~90%). KDIGO-Empfehlung: empirischer Therapieversuch mit Prednison 2 mg/kg/d (max 60 mg/d) × 4–6 Wochen.<br><strong>Biopsie bei:</strong> Steroidresistenz (keine Remission nach 6–8 Wochen), Steroidabhängigkeit, häufige Rezidive, Hämaturie, Hypertonie, eingeschränkte Nierenfunktion, Alter &lt;1 J oder &gt;12 J.</div></div>';
-    } else if (pla2r === 'pos_hoch' && !hasSecondary && (!haem || haem === 'nein') && !isChild) {
+    if (pla2r === 'pos_hoch' && !hasSecondary && (!haem || haem === 'nein')) {
       biopsyHtml = '<div class="ns-result-ok"><div class="ns-result-title">🟢 PLA2R-AK hoch-positiv — Biopsie nicht zwingend erforderlich (KDIGO 2021)</div><div class="ns-result-sub">Diagnose einer <strong>primären membranösen Nephropathie</strong> kann bei hohem PLA2R-Titer + typischer Klinik + Fehlen sekundärer Ursachen ohne Biopsie gestellt werden (KDIGO 2021, Evidenzgrad 2C).<br><br><strong>Praktisches Vorgehen:</strong><ul><li>Risikostratifikation: Proteinurie-Niveau + eGFR-Stabilität bestimmen Watch-&amp;-Wait vs. IS-Beginn</li><li>Proteinurie &lt;3,5 g/d + stabile eGFR → 6 Monate Watch &amp; Wait (Spontanremission ~30%)</li><li>Proteinurie &gt;8 g/d oder eGFR-Abfall → Therapie mit Rituximab nicht verzögern</li><li>PLA2R-Titer-Kontrolle alle 3 Monate als Aktivitätsmarker</li></ul><em>In vielen Zentren wird Biopsie trotzdem für histologisches Grading und Aktivitätsindex durchgeführt — klinische Entscheidung.</em></div></div>';
-    } else if (pla2r === 'pos_niedrig' && !hasSecondary && !isChild) {
+    } else if (pla2r === 'pos_niedrig' && !hasSecondary) {
       biopsyHtml = '<div class="ns-result-warn"><div class="ns-result-title">🟡 PLA2R-AK niedrig-positiv — Biopsie empfohlen</div><div class="ns-result-sub">Grenzwertig positiver Titer ist nicht ausreichend gesichert für diagnostischen Verzicht auf Biopsie. Nierenbiopsie empfohlen zur Sicherung der Diagnose und Beurteilung Aktivitätsgrad (Fibrose-Score).</div></div>';
-    } else if (pla2r === 'neg' && !hasSecondary && !isChild) {
-      biopsyHtml = '<div class="ns-result-bad"><div class="ns-result-title">🔴 PLA2R-AK negativ — Biopsie obligat + intensive Sekundärursachen-Suche</div><div class="ns-result-sub">PLA2R-negatives NS beim Erwachsenen: Biopsie unbedingt erforderlich, da differential:<ul><li>Sekundäre membranöse Nephropathie (Malignom → CT Thorax/Abdomen/Becken + PET-CT)</li><li>THSD7A-AK bestimmen</li><li>FSGS, MCD, Amyloidose, andere GN</li><li>Dysproteinämie / Amyloidose → IFE Serum + Urin, FLC</li></ul></div></div>';
-    } else if ((pla2r === '' || pla2r === 'ausstehend') && !isChild) {
+    } else if (pla2r === 'neg' && !hasSecondary) {
+      biopsyHtml = '<div class="ns-result-bad"><div class="ns-result-title">🔴 PLA2R-AK negativ — Biopsie obligat + intensive Sekundärursachen-Suche</div><div class="ns-result-sub">PLA2R-negatives NS: Biopsie unbedingt erforderlich, da differential:<ul><li>Sekundäre membranöse Nephropathie (Malignom → CT Thorax/Abdomen/Becken + PET-CT)</li><li>THSD7A-AK bestimmen</li><li>FSGS, MCD, Amyloidose, andere GN</li><li>Dysproteinämie / Amyloidose → IFE Serum + Urin, FLC</li></ul></div></div>';
+    } else if (pla2r === '' || pla2r === 'ausstehend') {
       biopsyHtml = '<div class="ns-result-blue"><div class="ns-result-title">🔵 PLA2R-AK noch ausstehend — Biopsie-Entscheidung nach Ergebnis</div><div class="ns-result-sub">PLA2R-Antikörper-Ergebnis abwarten bevor Biopsie-Entscheidung getroffen wird (spart ggf. Biopsie bei hohem Titer).<br>Bei klinisch dringendem Befund (rascher eGFR-Abfall, nephritisches Sediment) nicht auf Ergebnis warten — Biopsie sofort.</div></div>';
-    } else if (hasSecondary && !isChild) {
+    } else if (hasSecondary) {
       biopsyHtml = '<div class="ns-result-warn"><div class="ns-result-title">🟡 Sekundäre Ursache wahrscheinlich — ggf. Biopsie nach Sekundärdiagnostik</div><div class="ns-result-sub">Bei bekanntem DM + typischem Bild: Biopsie kann entfallen wenn Befund eindeutig (keine Hämaturie, lange DM-Anamnese, Retinopathie). Bei Systemerkrankungen oder Malignom-assoziierter MN: Biopsie für Subklassifikation sinnvoll.</div></div>';
     }
     document.getElementById('ns-biopsy-box').innerHTML = biopsyHtml;
@@ -6430,24 +6420,14 @@ window.gichtAutoImport = function() {
     document.getElementById('ns-thrombo-box').innerHTML = thromboHtml;
 
     // ---- Next Steps Algorithmus ----
-    var algoSteps = [];
-    if (!isNaN(age) && age < 12 && !hasSecondary && haem !== 'ja') {
-      algoSteps = [
-        { n:1, t:'Diagnose sichern', b:'NS-Kriterien (Proteinurie + Albumin + Ödeme) + Basisdiagnostik (BB, Kreatinin, Urinstatus, Lipide)' },
-        { n:2, t:'Sekundäre Ursachen ausschließen', b:'HBV, HCV, ANA, C3/C4, Urinstatus (keine Hämaturie erwartet)' },
-        { n:3, t:'Empirische Steroidtherapie starten', b:'Prednison 60 mg/m²/d (oder 2 mg/kg/d, max 60 mg) täglich × 4 Wochen → dann 40 mg/m² (max 50 mg) jeden 2. Tag × 4 Wochen (KDIGO 2021). Alternativ: 6+6-Wochen-Schema. Ansprechen = vollständige Remission (PCR &lt;200 mg/g) → MCD bestätigt.' },
-        { n:4, t:'Monitoring', b:'Urin-Stix täglich (Eltern schulen), Gewicht, Blutdruck — wöchentlich in Akutphase' }
-      ];
-    } else {
-      algoSteps = [
+    var algoSteps = [
         { n:1, t:'Basisdiagnostik vervollständigen', b:'Urin-PCR, Albumin, Lipide, Kreatinin/eGFR, Gerinnung (AT III!), Blutbild' },
         { n:2, t:'PLA2R-AK bestimmen (falls noch nicht)', b:'Ergebnis entscheidet über Biopsie-Notwendigkeit bei membranösem Muster' },
         { n:3, t:'Sekundäre Ursachen ausschließen', b:'HBV, HCV, HIV, ANA/dsDNA/C3/C4, IFE Serum+Urin, FLC — bei PLA2R-negativ zusätzlich Malignomsuche (CT + ggf. PET-CT)' },
         { n:4, t:'Biopsie-Entscheidung', b:'PLA2R hoch-positiv + keine Sekundärursache → ggf. Biopsie entbehrlich. Alle anderen → Biopsie' },
         { n:5, t:'Komplikationen managen', b:'Thromboseprophylaxe, Diuretika bei Ödemen, Statin, Infektionsprophylaxe, Impfungen' },
         { n:6, t:'Therapie nach Biopsie-Ergebnis', b:'→ GN-Tab: Membranöse NP / MCD / FSGS / Lupusnephritis' }
-      ];
-    }
+    ];
     var algoHtml = '<div class="ns-card" style="margin-bottom:0;"><div class="ns-card-title">📋 Empfohlene nächste Schritte</div>';
     algoSteps.forEach(function(s){
       algoHtml += '<div class="ns-step"><div class="ns-step-num">'+s.n+'</div><div class="ns-step-body"><div class="ns-step-title">'+s.t+'</div>'+s.b+'</div></div>';
