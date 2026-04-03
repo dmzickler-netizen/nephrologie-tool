@@ -65,6 +65,7 @@
 #tab-antikoag { display: none; }
 #tab-gicht { display: none; }
 #tab-tma { display: none; }
+#tab-gn { display: none; }
 .gicht-section { padding:10px 12px; border-radius:10px; margin-bottom:0; }
 .gicht-section-title { font-size:.75rem; font-weight:800; text-transform:uppercase; letter-spacing:.5px; color:#455a64; margin-bottom:8px; }
 .gicht-akut { background:#fff3e0; border:1.5px solid #ffb74d; }
@@ -1368,6 +1369,7 @@ label .lip-optional {
   <button class="nav-tab-btn" data-tab="aki" onclick="switchToolTab('aki')">🚨 AKI</button>
   <button class="nav-tab-btn" data-tab="gicht" onclick="switchToolTab('gicht')">🦴 Gicht</button>
   <button class="nav-tab-btn" data-tab="tma" onclick="switchToolTab('tma')">🩸 TTP / HUS / DIC</button>
+  <button class="nav-tab-btn" data-tab="gn" onclick="switchToolTab('gn')">🔬 Glomerulonephritis</button>
 </div>
 
 <!-- ============================================================
@@ -5256,6 +5258,684 @@ window.gichtAutoImport = function() {
 
 </div><!-- end tab-tma -->
 
+<!-- ============================================================
+     GLOMERULONEPHRITIS
+     ============================================================ -->
+<div id="tab-gn">
+<style>
+#tab-gn .gn-container { max-width:960px; margin:0 auto; padding:16px; }
+#tab-gn .gn-subtabs { display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap; }
+#tab-gn .gn-stab-btn { background:#fff; border:2px solid #1b5e20; color:#1b5e20; border-radius:8px; padding:8px 16px; cursor:pointer; font-weight:700; font-size:.83rem; transition:.15s; }
+#tab-gn .gn-stab-btn.active, #tab-gn .gn-stab-btn:hover { background:#1b5e20; color:#fff; }
+#tab-gn .gn-tab { display:none; }
+#tab-gn .gn-tab.active { display:block; }
+#tab-gn .gn-card { background:#fff; border-radius:12px; padding:16px; box-shadow:0 2px 8px rgba(0,0,0,.08); margin-bottom:14px; }
+#tab-gn .gn-card-title { font-size:.78rem; font-weight:800; text-transform:uppercase; letter-spacing:.5px; color:#455a64; margin-bottom:12px; border-bottom:2px solid #f5f5f5; padding-bottom:6px; display:flex; align-items:center; gap:8px; }
+#tab-gn .gn-entity-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+#tab-gn .gn-entity-card { background:#f9fbe7; border:1.5px solid #c5e1a5; border-radius:10px; padding:14px; cursor:pointer; transition:.15s; }
+#tab-gn .gn-entity-card:hover { border-color:#1b5e20; background:#f1f8e9; }
+#tab-gn .gn-entity-card.active { border-color:#1b5e20; background:#e8f5e9; box-shadow:0 0 0 2px #1b5e2033; }
+#tab-gn .gn-entity-name { font-weight:800; font-size:.9rem; color:#1b5e20; margin-bottom:4px; }
+#tab-gn .gn-entity-sub { font-size:.77rem; color:#546e7a; line-height:1.5; }
+#tab-gn .gn-detail { display:none; }
+#tab-gn .gn-detail.active { display:block; }
+#tab-gn .gn-section { margin-bottom:12px; }
+#tab-gn .gn-section-title { font-size:.74rem; font-weight:800; text-transform:uppercase; letter-spacing:.5px; color:#2e7d32; border-bottom:1.5px solid #c8e6c9; padding-bottom:4px; margin-bottom:8px; }
+#tab-gn .gn-row { font-size:.82rem; line-height:1.65; padding:3px 0; border-bottom:1px solid #f5f5f5; display:flex; gap:8px; }
+#tab-gn .gn-row:last-child { border-bottom:none; }
+#tab-gn .gn-key { font-weight:700; color:#37474f; min-width:120px; flex-shrink:0; }
+#tab-gn .gn-val { color:#212121; }
+#tab-gn .gn-warn { background:#fff8e1; border:1.5px solid #f9a825; border-radius:8px; padding:8px 12px; font-size:.8rem; margin:8px 0; line-height:1.6; }
+#tab-gn .gn-danger { background:#fce4ec; border:1.5px solid #c62828; border-radius:8px; padding:8px 12px; font-size:.8rem; margin:8px 0; line-height:1.6; }
+#tab-gn .gn-ok { background:#e8f5e9; border:1.5px solid #43a047; border-radius:8px; padding:8px 12px; font-size:.8rem; margin:8px 0; line-height:1.6; }
+#tab-gn .gn-table { width:100%; border-collapse:collapse; font-size:.8rem; margin:8px 0; }
+#tab-gn .gn-table th { background:#e8f5e9; padding:5px 8px; text-align:left; font-size:.77rem; font-weight:700; color:#1b5e20; }
+#tab-gn .gn-table td { padding:5px 8px; border-bottom:1px solid #f0f4f0; vertical-align:top; }
+#tab-gn .gn-badge { display:inline-block; padding:2px 8px; border-radius:12px; font-size:.72rem; font-weight:700; margin:2px; }
+#tab-gn .gn-badge-red { background:#fce4ec; color:#c62828; }
+#tab-gn .gn-badge-amber { background:#fff8e1; color:#e65100; }
+#tab-gn .gn-badge-green { background:#e8f5e9; color:#2e7d32; }
+#tab-gn .gn-badge-blue { background:#e3f2fd; color:#1565c0; }
+#tab-gn .gn-algo { background:#f3e5f5; border:1.5px solid #ab47bc; border-radius:8px; padding:10px 14px; font-size:.8rem; margin:8px 0; line-height:1.7; }
+#tab-gn .gn-algo-title { font-weight:800; color:#6a1b9a; margin-bottom:6px; font-size:.82rem; }
+#tab-gn .gn-mest { display:flex; gap:8px; flex-wrap:wrap; margin:6px 0; }
+#tab-gn .gn-mest-item { background:#fff; border:1.5px solid #a5d6a7; border-radius:8px; padding:8px 12px; font-size:.79rem; min-width:100px; }
+#tab-gn .gn-mest-letter { font-size:1.4rem; font-weight:900; color:#1b5e20; line-height:1; }
+#tab-gn .gn-mest-label { font-size:.72rem; color:#546e7a; margin-top:2px; }
+#tab-gn .gn-selector-hint { color:#90a4ae; text-align:center; padding:30px; font-size:.88rem; }
+#tab-gn .gn-back-btn { display:inline-flex; align-items:center; gap:6px; background:#e8f5e9; color:#1b5e20; border:none; border-radius:8px; padding:7px 14px; font-size:.8rem; font-weight:700; cursor:pointer; margin-bottom:12px; }
+#tab-gn .gn-back-btn:hover { background:#c8e6c9; }
+#tab-gn .gn-diag-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px; }
+@media (max-width:660px) {
+  #tab-gn .gn-entity-grid { grid-template-columns:1fr; }
+  #tab-gn .gn-diag-grid { grid-template-columns:1fr; }
+}
+</style>
+
+<div class="gn-container">
+  <h2 style="margin:0 0 3px;font-size:1.1rem;color:#1b5e20;">🔬 Glomerulonephritis</h2>
+  <p style="margin:0 0 14px;font-size:.8rem;color:#78909c;">Diagnose, Differentialdiagnose und Therapiealgorithmen — S3-Leitlinie 2025 &amp; KDIGO GN-Guideline</p>
+
+  <div class="gn-subtabs">
+    <button class="gn-stab-btn active" onclick="gnShowTab('entitaeten',this)">🔬 Entitäten &amp; Therapie</button>
+    <button class="gn-stab-btn" onclick="gnShowTab('diagnostik',this)">🧪 Diagnostischer Algorithmus</button>
+    <button class="gn-stab-btn" onclick="gnShowTab('info',this)">ℹ️ Klassifikationen &amp; Scores</button>
+  </div>
+
+  <!-- ===== ENTITÄTEN ===== -->
+  <div id="gn-entitaeten" class="gn-tab active">
+
+    <div id="gn-selector">
+      <div class="gn-card">
+        <div class="gn-card-title">📋 Entität auswählen</div>
+        <div class="gn-entity-grid">
+
+          <div class="gn-entity-card" onclick="gnShowEntity('igan')">
+            <div class="gn-entity-name">IgA-Nephropathie (IgAN)</div>
+            <div class="gn-entity-sub">Häufigste primäre GN weltweit · MEST-C-Score · Unterstützende Therapie + selektive IS</div>
+          </div>
+
+          <div class="gn-entity-card" onclick="gnShowEntity('mn')">
+            <div class="gn-entity-name">Membranöse Nephropathie (MN)</div>
+            <div class="gn-entity-sub">PLA2R-AK (~70%) · Ponticelli-Schema · Rituximab (MENTOR-Trial) · Spontanremission möglich</div>
+          </div>
+
+          <div class="gn-entity-card" onclick="gnShowEntity('mcd')">
+            <div class="gn-entity-name">Minimal Change Disease (MCD)</div>
+            <div class="gn-entity-sub">Häufigstes nephrotisches Syndrom beim Kind · Prednison-responsiv · Rezidiv-Management</div>
+          </div>
+
+          <div class="gn-entity-card" onclick="gnShowEntity('fsgs')">
+            <div class="gn-entity-name">Fokal-segmentale Glomerulosklerose (FSGS)</div>
+            <div class="gn-entity-sub">Primär vs. sekundär vs. genetisch · Steroide · CNI · Sparsentan (neu)</div>
+          </div>
+
+          <div class="gn-entity-card" onclick="gnShowEntity('anca')">
+            <div class="gn-entity-name">ANCA-Vaskulitis / RPGN</div>
+            <div class="gn-entity-sub">GPA, MPA, EGPA · Rituximab oder CYC · Avacopan · Notfall!</div>
+          </div>
+
+          <div class="gn-entity-card" onclick="gnShowEntity('agbm')">
+            <div class="gn-entity-name">Anti-GBM-Erkrankung (Goodpasture)</div>
+            <div class="gn-entity-sub">Anti-GBM-AK + Hämaturie ± Lungenblutung · Plasmapherese NOTFALL</div>
+          </div>
+
+          <div class="gn-entity-card" onclick="gnShowEntity('lupus')">
+            <div class="gn-entity-name">Lupusnephritis (LN)</div>
+            <div class="gn-entity-sub">ISN/RPS-Klassen I–VI · MMF ± Voclosporin · Belimumab · Klassen III/IV dringend</div>
+          </div>
+
+          <div class="gn-entity-card" onclick="gnShowEntity('mpgn')">
+            <div class="gn-entity-name">MPGN / C3-Glomerulopathie</div>
+            <div class="gn-entity-sub">Immunkomplex-MPGN vs. C3G · Komplementdiagnostik · Eculizumab</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== DETAIL-VIEWS ===== -->
+    <div id="gn-detail-area" style="display:none;">
+
+      <button class="gn-back-btn" onclick="gnBackToSelector()">← Zurück zur Auswahl</button>
+
+      <!-- IgAN -->
+      <div id="gn-igan" class="gn-detail">
+        <div class="gn-card">
+          <div class="gn-card-title">🔬 IgA-Nephropathie (IgAN)</div>
+
+          <div class="gn-diag-grid">
+            <div>
+              <div class="gn-section-title">Diagnostik</div>
+              <div class="gn-row"><span class="gn-key">Biopsie-Befund</span><span class="gn-val">Mesangiale IgA-Deposits (dominant), ggf. IgG/IgM/C3</span></div>
+              <div class="gn-row"><span class="gn-key">Typische Präsentation</span><span class="gn-val">Makrohämaturie synpharyngitisch (24–72h nach Infekt) ODER asymptomatische Mikro-Hämaturie ± Proteinurie</span></div>
+              <div class="gn-row"><span class="gn-key">Labor</span><span class="gn-val">Serum-IgA erhöht (~50%, nicht spezifisch), galactose-defizientes IgA1 (gd-IgA1) — klinisch noch nicht etabliert</span></div>
+              <div class="gn-row"><span class="gn-key">Risikostratifikation</span><span class="gn-val">MEST-C-Score (Oxford-Klassifikation) + klinische Faktoren: Proteinurie, eGFR, Hypertonie</span></div>
+            </div>
+            <div>
+              <div class="gn-section-title">MEST-C Oxford-Klassifikation</div>
+              <div class="gn-mest">
+                <div class="gn-mest-item"><div class="gn-mest-letter">M</div><div class="gn-mest-label">Mesangiale Hyperzellularität (&gt;4 Zellen/Segment)</div></div>
+                <div class="gn-mest-item"><div class="gn-mest-letter">E</div><div class="gn-mest-label">Endokapilläre Proliferation</div></div>
+                <div class="gn-mest-item"><div class="gn-mest-letter">S</div><div class="gn-mest-label">Segmentale Glomerulosklerose</div></div>
+                <div class="gn-mest-item"><div class="gn-mest-letter">T</div><div class="gn-mest-label">Tubuläre Atrophie / interstitielle Fibrose (0/1/2)</div></div>
+                <div class="gn-mest-item"><div class="gn-mest-letter">C</div><div class="gn-mest-label">Crescents (0/1/2)</div></div>
+              </div>
+              <div style="font-size:.75rem;color:#607d8b;margin-top:6px;">T2 oder C2 = hohes Progressionsrisiko → IS-Therapie erwägen</div>
+            </div>
+          </div>
+
+          <div class="gn-section-title" style="margin-top:8px;">Therapiealgorithmus</div>
+          <div class="gn-algo">
+            <div class="gn-algo-title">Schritt 1 — Optimale unterstützende Therapie (alle Patienten, mindestens 3–6 Monate)</div>
+            <div>• <strong>RAS-Blockade:</strong> ACEi oder ARB — Ziel Proteinurie &lt;0,5–1,0 g/d + RR &lt;120/80 mmHg</div>
+            <div>• <strong>SGLT2-Inhibitor:</strong> Dapagliflozin / Empagliflozin — nephroprotektiv unabhängig von Diabetes (DAPA-CKD, EMPA-KIDNEY)</div>
+            <div>• <strong>Fischöl:</strong> Omega-3-Fettsäuren 4 g/d — optional, Evidenz moderat</div>
+            <div>• <strong>Blutdruckkontrolle:</strong> &lt;120/80 mmHg (KDIGO 2024)</div>
+            <div>• <strong>Lebensstil:</strong> Gewichtsreduktion, Rauchen einstellen, Kochsalz &lt;5 g/d</div>
+          </div>
+          <div class="gn-algo">
+            <div class="gn-algo-title">Schritt 2 — Immunsuppression bei Hochrisikokriterien</div>
+            <div><strong>Indikation:</strong> Proteinurie &gt;1 g/d <em>trotz</em> 3–6 Monaten optimaler Supportivtherapie UND eGFR &gt;30 ml/min</div>
+            <div style="margin-top:6px;"><strong>Option A — Targeted-Release Budesonid (Nefecon/Kinpeygo):</strong> 16 mg/d p.o. × 9 Monate → Freisetzung im terminalen Ileum (Peyer-Plaques). Zugelassen EU/USA. Systemische NW reduziert.</div>
+            <div style="margin-top:4px;"><strong>Option B — Systemische Kortikosteroide:</strong> Methylprednisolon 0,6–1 mg/kg/d (max 48 mg/d, Prednisolon-Äquivalent) × 2 Monate, dann Tapering über 4–6 Monate. NW-Profil beachten!</div>
+            <div style="margin-top:4px;"><strong>Option C — Sparsentan:</strong> Dualer ET-A/AT1-Antagonist. Zugelassen für IgAN + FSGS. 400 mg/d p.o. Kein ACEi/ARB gleichzeitig.</div>
+          </div>
+          <div class="gn-algo">
+            <div class="gn-algo-title">Schritt 3 — Crescentische IgAN (C2 / RPGN-artig)</div>
+            <div>• Methylprednisolon-Puls 500 mg/d i.v. × 3 Tage, dann Prednison 1 mg/kg/d p.o.</div>
+            <div>• Cyclophosphamid 2–2,5 mg/kg/d p.o. × 3 Monate ODER 0,5–0,75 g/m² i.v. q4w × 6 Zyklen</div>
+          </div>
+
+          <table class="gn-table">
+            <tr><th>Zielparameter</th><th>Wert</th></tr>
+            <tr><td>Proteinurie (Ziel)</td><td>&lt;0,5 g/d (minimal) — &lt;1 g/d (akzeptabel)</td></tr>
+            <tr><td>Blutdruck</td><td>&lt;120/80 mmHg bei Proteinurie</td></tr>
+            <tr><td>eGFR-Verlauf</td><td>Progression &lt;2 ml/min/Jahr anstreben</td></tr>
+            <tr><td>Kontrollen</td><td>Urin-PCR + eGFR alle 3 Monate</td></tr>
+          </table>
+        </div>
+      </div><!-- end igan -->
+
+      <!-- MN -->
+      <div id="gn-mn" class="gn-detail">
+        <div class="gn-card">
+          <div class="gn-card-title">🔬 Membranöse Nephropathie (MN)</div>
+
+          <div class="gn-diag-grid">
+            <div>
+              <div class="gn-section-title">Diagnostik &amp; Differenzierung</div>
+              <div class="gn-row"><span class="gn-key">Biopsie</span><span class="gn-val">Subepitheliale IgG-Deposits, GBM-Verdickung, Spikes (Silberfärbung)</span></div>
+              <div class="gn-row"><span class="gn-key">PLA2R-AK (primär)</span><span class="gn-val">~70–80% der primären MN — Titer korreliert mit Aktivität und spricht auf IS an</span></div>
+              <div class="gn-row"><span class="gn-key">THSD7A-AK</span><span class="gn-val">~3–5% primäre MN — Assoziation mit Malignomen beachten!</span></div>
+              <div class="gn-row"><span class="gn-key">Spontanremission</span><span class="gn-val">~30% innerhalb 2 Jahren → Watch &amp; Wait 6 Monate bei niedrig-mittlerem Risiko</span></div>
+            </div>
+            <div>
+              <div class="gn-section-title">Sekundäre MN — Ausschluss</div>
+              <div class="gn-row"><span class="gn-key">Malignome</span><span class="gn-val">Solide Tumoren (Lunge, Kolon, Prostata) — Tumorsuche bei THSD7A+ oder Alter &gt;60 J obligat</span></div>
+              <div class="gn-row"><span class="gn-key">Infektionen</span><span class="gn-val">HBV, HCV, Syphilis, Malaria</span></div>
+              <div class="gn-row"><span class="gn-key">Autoimmun</span><span class="gn-val">SLE (Anti-dsDNA, C3/C4), RA</span></div>
+              <div class="gn-row"><span class="gn-key">Medikamente</span><span class="gn-val">NSAIDs, Gold, Penicillamin, Captopril, Bucillamin</span></div>
+            </div>
+          </div>
+
+          <div class="gn-section-title" style="margin-top:8px;">Risikostratifikation (KDIGO 2021)</div>
+          <table class="gn-table">
+            <tr><th>Risikogruppe</th><th>Kriterien</th><th>Vorgehen</th></tr>
+            <tr><td><span class="gn-badge gn-badge-green">Niedrig</span></td><td>Proteinurie &lt;3,5 g/d, eGFR normal, PLA2R-AK niedrig</td><td>Watch &amp; Wait 6 Monate + supportiv</td></tr>
+            <tr><td><span class="gn-badge gn-badge-amber">Moderat</span></td><td>Proteinurie 3,5–8 g/d, stabile eGFR</td><td>Watch &amp; Wait 6 Monate, IS bei Persistenz</td></tr>
+            <tr><td><span class="gn-badge gn-badge-red">Hoch</span></td><td>Proteinurie &gt;8 g/d &gt;6 Mon, eGFR↓, Komplikationen</td><td>IS sofort starten</td></tr>
+          </table>
+
+          <div class="gn-section-title" style="margin-top:10px;">Immunsuppressive Therapie</div>
+          <div class="gn-algo">
+            <div class="gn-algo-title">Option 1 — Rituximab (bevorzugt nach KDIGO 2021 / S3 2025)</div>
+            <div>• Rituximab 1.000 mg i.v. × 2 (im Abstand von 2 Wochen) — MENTOR-Trial: Überlegenheit ggü. CNI gezeigt</div>
+            <div>• Alternativ: 375 mg/m² i.v. wöchentlich × 4</div>
+            <div>• Kontrolle Anti-CD20 (B-Zell-Depletion) + PLA2R-AK-Titer nach 6 Monaten</div>
+            <div>• Wiederholung bei persistierender Proteinurie + B-Zell-Rekonstitution nach 6–12 Monaten</div>
+          </div>
+          <div class="gn-algo">
+            <div class="gn-algo-title">Option 2 — Cyclophosphamid + Steroide (Ponticelli-Schema modifiziert)</div>
+            <div>• Monate 1, 3, 5: Methylprednisolon 1 g/d i.v. × 3 Tage, dann Methylprednisolon 0,4 mg/kg/d p.o. × 27 Tage</div>
+            <div>• Monate 2, 4, 6: Cyclophosphamid 2,0–2,5 mg/kg/d p.o. × 30 Tage</div>
+            <div>• Gesamtdauer: 6 Monate. Gesamtdosis Cyclophosphamid beachten (Blasen-CA-Risiko ≤36 g)</div>
+          </div>
+          <div class="gn-algo">
+            <div class="gn-algo-title">Option 3 — Calcineurin-Inhibitor (CNI) — bei Rituximab-Kontraindikation</div>
+            <div>• Tacrolimus 0,05–0,1 mg/kg/d p.o. (Talspiegel 3–8 ng/ml) oder Cyclosporin 3,5 mg/kg/d</div>
+            <div>• Dauer: mind. 12–24 Monate, langsames Tapering → Rezidivrisiko bei Absetzen!</div>
+          </div>
+          <div class="gn-warn">⚡ Supportiv: RAS-Blockade + Statine + Thromboseprophylaxe (Albumin &lt;25 g/L → Antikoagulation erwägen bei Gerinnungsstatus)</div>
+        </div>
+      </div><!-- end mn -->
+
+      <!-- MCD -->
+      <div id="gn-mcd" class="gn-detail">
+        <div class="gn-card">
+          <div class="gn-card-title">🔬 Minimal Change Disease (MCD)</div>
+
+          <div class="gn-diag-grid">
+            <div>
+              <div class="gn-section-title">Diagnostik</div>
+              <div class="gn-row"><span class="gn-key">LM-Biopsie</span><span class="gn-val">Normal oder minimale Veränderungen — Name gebend</span></div>
+              <div class="gn-row"><span class="gn-key">EM</span><span class="gn-val">Diffuse Fußfortsatzobliteration (Podozytenschaden) — diagnostisch</span></div>
+              <div class="gn-row"><span class="gn-key">IF</span><span class="gn-val">Negativ (kein Ig, kein C3)</span></div>
+              <div class="gn-row"><span class="gn-key">Klinik</span><span class="gn-val">Nephrotisches Syndrom: Proteinurie &gt;3,5 g/d, Ödem, Hypoalbuminämie, Hypercholesterinämie</span></div>
+              <div class="gn-row"><span class="gn-key">Biopsie-Indikation</span><span class="gn-val">Erwachsene immer; Kinder meist empirisch behandelt</span></div>
+            </div>
+            <div>
+              <div class="gn-section-title">Sekundäre MCD — Ausschluss</div>
+              <div class="gn-row"><span class="gn-key">Lymphome</span><span class="gn-val">Hodgkin-Lymphom (wichtigste Assoziation!) — Lymphomsuche obligat bei Erwachsenen</span></div>
+              <div class="gn-row"><span class="gn-key">Medikamente</span><span class="gn-val">NSAIDs, Lithium, Interferon, Ampicillin</span></div>
+              <div class="gn-row"><span class="gn-key">Atopie / Allergie</span><span class="gn-val">Immunologisch assoziiert — T-Zell-Dysregulation</span></div>
+            </div>
+          </div>
+
+          <div class="gn-section-title" style="margin-top:8px;">Therapiealgorithmus</div>
+          <div class="gn-algo">
+            <div class="gn-algo-title">Erstlinie — Kortikosteroide</div>
+            <div>• <strong>Prednison 1 mg/kg/d p.o.</strong> (max 80 mg/d) bis zur Remission (Urin-Protein &lt;300 mg/d), dann</div>
+            <div>• Tapering über mind. 6 Monate total (schnelles Absetzen → Rezidiv!)</div>
+            <div>• Alternativ: <strong>Dexamethason 40 mg/d × 4 Tage alle 4 Wochen × 4–6 Zyklen</strong></div>
+            <div>• Erwachsene: Ansprechen nach 8–16 Wochen (langsamer als Kinder)</div>
+          </div>
+
+          <div class="gn-section-title">Rezidiv-Management</div>
+          <table class="gn-table">
+            <tr><th>Verlauf</th><th>Definition</th><th>Therapie</th></tr>
+            <tr><td>Seltenes Rezidiv</td><td>&lt;2 Rezidive/6 Monate</td><td>Erneut Prednison wie Erstlinie</td></tr>
+            <tr><td>Häufig rezidivierend</td><td>≥2 Rezidive/6 Monate</td><td>Cyclophosphamid ODER Rituximab ODER CNI</td></tr>
+            <tr><td>Steroid-abhängig</td><td>Rezidiv beim Tapering</td><td>CNI (Tacrolimus/Cyclosporin) oder Rituximab</td></tr>
+            <tr><td>Steroid-resistent</td><td>Keine Remission nach 16 Wochen</td><td>Biopsie re-evaluieren (FSGS ausschließen!) + CNI</td></tr>
+          </table>
+
+          <div class="gn-section-title" style="margin-top:10px;">Zweitlinientherapie (Dosen)</div>
+          <div class="gn-row"><span class="gn-key">Cyclophosphamid</span><span class="gn-val">2–2,5 mg/kg/d p.o. × 8–12 Wochen — führt zu lang anhaltender Remission in ~50%</span></div>
+          <div class="gn-row"><span class="gn-key">Rituximab</span><span class="gn-val">375 mg/m² i.v. × 2–4 (wöchentlich) oder 1.000 mg × 2 (2 Wochen Abstand) — zunehmend bevorzugt</span></div>
+          <div class="gn-row"><span class="gn-key">Tacrolimus</span><span class="gn-val">0,05–0,1 mg/kg/d (Talspiegel 4–8 ng/ml) — bei Steroid-Abhängigkeit; Rezidiv-Risiko nach Absetzen</span></div>
+          <div class="gn-row"><span class="gn-key">Cyclosporin</span><span class="gn-val">3–5 mg/kg/d in 2 ED (Talspiegel 100–150 ng/ml)</span></div>
+          <div class="gn-row"><span class="gn-key">MMF</span><span class="gn-val">750–1.500 mg 2×/d — weniger effektiv als CNI, aber besser verträglich; bei CNI-Intoleranz</span></div>
+        </div>
+      </div><!-- end mcd -->
+
+      <!-- FSGS -->
+      <div id="gn-fsgs" class="gn-detail">
+        <div class="gn-card">
+          <div class="gn-card-title">🔬 Fokal-Segmentale Glomerulosklerose (FSGS)</div>
+
+          <div class="gn-diag-grid">
+            <div>
+              <div class="gn-section-title">Klassifikation (Columbia)</div>
+              <div class="gn-row"><span class="gn-key">NOS (not otherwise specified)</span><span class="gn-val">Häufigste Variante — Prognose intermediär</span></div>
+              <div class="gn-row"><span class="gn-key">Tip-Läsion</span><span class="gn-val">Am Tubulus-Pol — beste Prognose, oft steroid-sensitiv</span></div>
+              <div class="gn-row"><span class="gn-key">Perihiläre Läsion</span><span class="gn-val">Assoziation mit Adipositas / sekundärer FSGS</span></div>
+              <div class="gn-row"><span class="gn-key">Zelluläre Läsion</span><span class="gn-val">Entzündlich — schlechteste Prognose</span></div>
+              <div class="gn-row"><span class="gn-key">Kollabsierende Variante</span><span class="gn-val">HIV, Parvovirus B19, COVID-19, Bisphosphonate — sehr schlechte Prognose</span></div>
+            </div>
+            <div>
+              <div class="gn-section-title">Ätiologie (wichtig für Therapie!)</div>
+              <div class="gn-row"><span class="gn-key">Primär (podozytär)</span><span class="gn-val">Zirkulierender Faktor (suPAR?) → IS-Therapie sinnvoll</span></div>
+              <div class="gn-row"><span class="gn-key">Sekundär (adaptiv)</span><span class="gn-val">Adipositas, reduzierte Nephronzahl, vesikoureteraler Reflux → Behandlung Grunderkrankung; KEINE IS!</span></div>
+              <div class="gn-row"><span class="gn-key">Genetisch</span><span class="gn-val">NPHS1/2, ACTN4, WT1, INF2 u.v.m. → KEINE IS! Genetische Testung indiziert bei jungen Patienten / Familienanamnese</span></div>
+              <div class="gn-row"><span class="gn-key">Medikamentös</span><span class="gn-val">Heroin, Anabolika, Interferon, Bisphosphonate → Absetzen</span></div>
+            </div>
+          </div>
+
+          <div class="gn-section-title" style="margin-top:8px;">Therapiealgorithmus (primäre FSGS)</div>
+          <div class="gn-algo">
+            <div class="gn-algo-title">Erstlinie — Kortikosteroide (nur primäre FSGS!)</div>
+            <div>• <strong>Prednison 1 mg/kg/d p.o.</strong> (max 80 mg) × mind. 16 Wochen (länger als MCD!)</div>
+            <div>• Ansprechen (= Remission) nach 4–16 Wochen; Resistenz nach 16 Wochen definiert</div>
+            <div>• Tapering über 6 Monate nach Remission</div>
+          </div>
+          <div class="gn-algo">
+            <div class="gn-algo-title">Steroid-Resistenz / Zweitlinie</div>
+            <div>• <strong>Tacrolimus:</strong> 0,1 mg/kg/d (Talspiegel 5–10 ng/ml) × mind. 12 Monate — Remissionsrate ~40–50%</div>
+            <div>• <strong>Cyclosporin:</strong> 3,5–5 mg/kg/d (Spiegel 100–175 ng/ml) — alternativ</div>
+            <div>• <strong>Rituximab:</strong> Zunehmend eingesetzt — insb. bei Steroid-Abhängigkeit</div>
+          </div>
+          <div class="gn-algo">
+            <div class="gn-algo-title">Sparsentan (Filspari) — NEU zugelassen</div>
+            <div>• Dualer ET-A/AT1-Rezeptor-Antagonist — 400 mg/d p.o.</div>
+            <div>• Zugelassen für primäre IgAN und FSGS (EU/USA)</div>
+            <div>• <strong>NICHT kombinieren mit ACEi oder ARB</strong> (dual RAS-Blockade)</div>
+            <div>• Teratogen: Kontrazeption obligat (REMS-Programm USA)</div>
+          </div>
+          <div class="gn-danger">⚠️ <strong>Genetische FSGS und sekundäre FSGS:</strong> Immunsuppression kontraindiziert — schadet und verzögert kausale Therapie!</div>
+        </div>
+      </div><!-- end fsgs -->
+
+      <!-- ANCA -->
+      <div id="gn-anca" class="gn-detail">
+        <div class="gn-card">
+          <div class="gn-card-title">🔬 ANCA-Vaskulitis / RPGN</div>
+          <div class="gn-danger">⚠️ <strong>Notfall!</strong> Crescentische GN / RPGN — Kreatinin kann sich innerhalb von Tagen verdoppeln. Therapiebeginn binnen 24–48 h!</div>
+
+          <div class="gn-diag-grid">
+            <div>
+              <div class="gn-section-title">Entitäten &amp; Serologie</div>
+              <div class="gn-row"><span class="gn-key">GPA (Wegener)</span><span class="gn-val">PR3-ANCA (c-ANCA) ~75–90% · Granulome · HNO + Lunge + Niere</span></div>
+              <div class="gn-row"><span class="gn-key">MPA</span><span class="gn-val">MPO-ANCA (p-ANCA) ~60–80% · keine Granulome · Lunge-Niere</span></div>
+              <div class="gn-row"><span class="gn-key">EGPA (Churg-Strauss)</span><span class="gn-val">MPO-ANCA ~40% · Asthma · Eosinophilie · selten schwere Nierenbeteiligung</span></div>
+              <div class="gn-row"><span class="gn-key">Biopsie</span><span class="gn-val">Pauci-immune crescentische GN (wenig Ig in IF), fibrinoide Nekrosen</span></div>
+            </div>
+            <div>
+              <div class="gn-section-title">Sofortdiagnostik</div>
+              <div class="gn-row"><span class="gn-key">ANCA (PR3/MPO)</span><span class="gn-val">ELISA + IIF — sofort</span></div>
+              <div class="gn-row"><span class="gn-key">Anti-GBM</span><span class="gn-val">Immer mitbestimmen (Double-Positive = schlechteste Prognose!)</span></div>
+              <div class="gn-row"><span class="gn-key">Biopsie</span><span class="gn-val">Nierenbiopsie so früh wie möglich — Aktivitätsbeurteilung (Fibrose vs. aktive Läsionen)</span></div>
+              <div class="gn-row"><span class="gn-key">Thorax-CT</span><span class="gn-val">Lungenblutung? Infiltrate? → Plasmapherese-Indikation</span></div>
+            </div>
+          </div>
+
+          <div class="gn-section-title" style="margin-top:8px;">Induktionstherapie</div>
+          <div class="gn-algo">
+            <div class="gn-algo-title">Rituximab-basiertes Schema (bevorzugt bei PR3-ANCA, Alter &lt;60 J, Fertilität)</div>
+            <div>• <strong>Rituximab 375 mg/m² i.v. wöchentlich × 4</strong> (alternativ: 1.000 mg × 2 im Abstand 2 Wochen)</div>
+            <div>• <strong>Methylprednisolon 500–1.000 mg/d i.v. × 3</strong>, dann Prednison 1 mg/kg/d (max 80 mg) → Tapering über 5–6 Monate</div>
+            <div>• + <strong>Avacopan 30 mg 2×/d p.o.</strong> — C5aR-Inhibitor als Steroid-sparendes Add-on (zugelassen ADVOCATE-Trial) — ermöglicht schnelleres Steroid-Tapering</div>
+          </div>
+          <div class="gn-algo">
+            <div class="gn-algo-title">Cyclophosphamid-basiertes Schema (bei MPO-ANCA, Alter &gt;60 J, schwerer Nierenfunktionsstörung)</div>
+            <div>• <strong>Cyclophosphamid i.v.:</strong> 15 mg/kg alle 2 Wochen × 3, dann alle 3 Wochen × 3–6 (max 1,2 g/Infusion)</div>
+            <div>• Alternativ p.o.: 2 mg/kg/d × 3–6 Monate (cave: Gesamtdosis-Limit ~36 g, Blasen-CA)</div>
+            <div>• Mesna-Prophylaxe bei i.v.-CYC, Dosisreduktion bei eGFR &lt;30</div>
+            <div>• + Steroide wie oben</div>
+          </div>
+          <div class="gn-algo">
+            <div class="gn-algo-title">Plasmapherese — nur bei spezifischen Indikationen</div>
+            <div>• <strong>Anti-GBM-positiv:</strong> täglich × 14 Tage oder bis AK negativ</div>
+            <div>• <strong>Diffuse alveoläre Hämorrhagie:</strong> täglich × 7–14 Tage</div>
+            <div>• <em>Nicht</em> routinemäßig bei schwerem ANV ohne oben genannte Indikationen (PEXIVAS-Trial)</div>
+          </div>
+
+          <div class="gn-section-title">Erhaltungstherapie (mind. 24 Monate)</div>
+          <div class="gn-row"><span class="gn-key">Rituximab</span><span class="gn-val">500 mg i.v. alle 6 Monate × 2 Jahre (MAINRITSAN-Trial — überlegen ggü. Azathioprin)</span></div>
+          <div class="gn-row"><span class="gn-key">Azathioprin</span><span class="gn-val">2 mg/kg/d p.o. — Alternative bei Rituximab-Kontraindikation (TPMT-Test vorher!)</span></div>
+          <div class="gn-row"><span class="gn-key">MMF</span><span class="gn-val">750–1.500 mg 2×/d — weniger effektiv; Reserveoption</span></div>
+
+          <div class="gn-section-title" style="margin-top:10px;">PCP-Prophylaxe (obligat!)</div>
+          <div class="gn-row"><span class="gn-key">TMP/SMX</span><span class="gn-val">960 mg 3×/Woche p.o. — bei allen Patienten unter Induktionstherapie</span></div>
+        </div>
+      </div><!-- end anca -->
+
+      <!-- Anti-GBM -->
+      <div id="gn-agbm" class="gn-detail">
+        <div class="gn-card">
+          <div class="gn-card-title">🔬 Anti-GBM-Erkrankung (Goodpasture-Syndrom)</div>
+          <div class="gn-danger">🚨 <strong>Absoluter Notfall! Nierenrettende Therapie innerhalb von Stunden!</strong><br>Renale Prognose hängt von Kreatinin bei Diagnose ab: Krea &lt;5 mg/dl → 90% Nierenerhalt; Krea &gt;5 mg/dl oder Anurie → meist kein Nierenerhalt möglich, aber Lungenblutung behandeln!</div>
+
+          <div class="gn-diag-grid">
+            <div>
+              <div class="gn-section-title">Diagnostik</div>
+              <div class="gn-row"><span class="gn-key">Anti-GBM-AK</span><span class="gn-val">Serologisch (ELISA) — sofort! Titer ≠ Schwere, aber wichtig für Therapiesteuerung</span></div>
+              <div class="gn-row"><span class="gn-key">Biopsie</span><span class="gn-val">Lineare IgG-Deposits entlang GBM (IF) — pathognomonisch; crescentische GN</span></div>
+              <div class="gn-row"><span class="gn-key">ANCA</span><span class="gn-val">Immer mitbestimmen — Double-Positive (~30%) = besonders schwer</span></div>
+              <div class="gn-row"><span class="gn-key">Klinik</span><span class="gn-val">Rapid progressive GN ± Lungenblutung (Hämoptysen) — Lungenblutung bei Rauchern häufiger</span></div>
+            </div>
+            <div>
+              <div class="gn-section-title">Prognostische Faktoren</div>
+              <div class="gn-row"><span class="gn-key">Günstiger Verlauf</span><span class="gn-val">Krea &lt;5 mg/dl, &lt;50% Crescent in Biopsie, frühe Therapie</span></div>
+              <div class="gn-row"><span class="gn-key">Ungünstig</span><span class="gn-val">Krea &gt;5 mg/dl, Anurie, &gt;85% Crescent → Nierenprognose infaust, Dialyseabhängigkeit wahrscheinlich</span></div>
+              <div class="gn-row"><span class="gn-key">Lungenblutung</span><span class="gn-val">Lebensbedrohlich → immer therapieren, auch bei infauster Nierenprognose!</span></div>
+            </div>
+          </div>
+
+          <div class="gn-section-title" style="margin-top:8px;">Therapie</div>
+          <div class="gn-algo">
+            <div class="gn-algo-title">Plasmapherese (Kerntherapie)</div>
+            <div>• <strong>4 Liter täglich</strong> mit Albumin als Austauschflüssigkeit (bei Lungenblutung: FFP-Anteil erhöhen)</div>
+            <div>• Dauer: 14 Tage ODER bis Anti-GBM-AK nicht mehr nachweisbar</div>
+            <div>• Beginn sofort nach Diagnose — jede Stunde zählt!</div>
+          </div>
+          <div class="gn-algo">
+            <div class="gn-algo-title">Immunsuppression</div>
+            <div>• <strong>Methylprednisolon 500–1.000 mg/d i.v. × 3</strong>, dann Prednison 1 mg/kg/d (max 60 mg) mit Tapering</div>
+            <div>• <strong>Cyclophosphamid 2–3 mg/kg/d p.o.</strong> × 3 Monate (Dosisreduktion bei Alter &gt;55 J und eGFR &lt;30)</div>
+            <div>• Ziel: Antikörper-Produktion stoppen</div>
+          </div>
+          <div class="gn-warn">⚡ Transplantation frühestens nach 6–12 Monaten Anti-GBM-AK-Negativität (Rezidiv im Transplantat sonst häufig)</div>
+        </div>
+      </div><!-- end agbm -->
+
+      <!-- Lupus Nephritis -->
+      <div id="gn-lupus" class="gn-detail">
+        <div class="gn-card">
+          <div class="gn-card-title">🔬 Lupusnephritis (LN)</div>
+
+          <div class="gn-diag-grid">
+            <div>
+              <div class="gn-section-title">ISN/RPS-Klassifikation (Biopsie)</div>
+              <table class="gn-table">
+                <tr><th>Klasse</th><th>Befund</th><th>Therapiekonsequenz</th></tr>
+                <tr><td><strong>I</strong></td><td>Minimale mesangiale LN</td><td>Keine spezifische Nierentherapie</td></tr>
+                <tr><td><strong>II</strong></td><td>Mesangiale proliferative LN</td><td>Nur bei Proteinurie &gt;1 g/d: niedrig-dosierte IS</td></tr>
+                <tr><td><strong>III</strong></td><td>Fokale LN (&lt;50% Glomeruli)</td><td>IS-Therapie (s.u.)</td></tr>
+                <tr><td><strong>IV</strong></td><td>Diffuse LN (≥50% Glomeruli)</td><td>IS-Therapie intensiv (s.u.) — dringend!</td></tr>
+                <tr><td><strong>V</strong></td><td>Membranöse LN</td><td>IS bei Proteinurie &gt;3 g/d; CNI / Rituximab</td></tr>
+                <tr><td><strong>VI</strong></td><td>Sklerosierend (&gt;90%)</td><td>Keine IS — nur supportiv</td></tr>
+              </table>
+            </div>
+            <div>
+              <div class="gn-section-title">Aktivitätsparameter</div>
+              <div class="gn-row"><span class="gn-key">Serologie</span><span class="gn-val">Anti-dsDNA↑, C3↓, C4↓ — Aktivitätsspiegel</span></div>
+              <div class="gn-row"><span class="gn-key">Urin</span><span class="gn-val">Proteinurie (PCR), aktives Sediment (Erythrozytenzylinder), Hämaturie</span></div>
+              <div class="gn-row"><span class="gn-key">Biopsie</span><span class="gn-val">Activity-Index (0–24) + Chronicity-Index (0–12) — prognostisch</span></div>
+              <div class="gn-row"><span class="gn-key">Zielparameter</span><span class="gn-val">Proteinurie &lt;0,7–1 g/d nach 12 Monaten, Anti-dsDNA-Normalisierung</span></div>
+            </div>
+          </div>
+
+          <div class="gn-section-title" style="margin-top:8px;">Induktionstherapie Klasse III / IV (± V)</div>
+          <div class="gn-algo">
+            <div class="gn-algo-title">Option A — Low-Dose-Schema (Euro-Lupus, bevorzugt in Europa)</div>
+            <div>• <strong>MMF 2–3 g/d p.o.</strong> (Mycophenolsäure 1.440–2.160 mg/d) + Prednison 0,5–1 mg/kg/d (max 60 mg)</div>
+            <div>• Oder: <strong>Cyclophosphamid i.v. 500 mg alle 2 Wochen × 6 Infusionen</strong> (Low-Dose Euro-Lupus)</div>
+            <div>• Dauer Induktion: 6 Monate</div>
+          </div>
+          <div class="gn-algo">
+            <div class="gn-algo-title">Option B — High-Dose (NIH-Schema, bei sehr schwerer Klasse IV)</div>
+            <div>• <strong>Cyclophosphamid i.v. 500–1.000 mg/m² alle 4 Wochen × 6 Infusionen</strong></div>
+            <div>• + Methylprednisolon-Puls 500–1.000 mg/d × 3</div>
+          </div>
+          <div class="gn-algo">
+            <div class="gn-algo-title">Add-on — Voclosporin (Lupkynis) — neu zugelassen</div>
+            <div>• <strong>Voclosporin 23,7 mg 2×/d p.o.</strong> (CNI der neuen Generation) — AURORA-Trial: signifikante Verbesserung der renalen Remission</div>
+            <div>• In Kombination mit MMF + niedrig-dosiertem Steroid</div>
+            <div>• Monitoring: Blutdruck, eGFR, Lipide, Talspiegel nicht routinemäßig nötig</div>
+          </div>
+          <div class="gn-algo">
+            <div class="gn-algo-title">Add-on — Belimumab (Benlysta)</div>
+            <div>• <strong>Belimumab 10 mg/kg i.v. alle 4 Wochen</strong> (nach 3 wöchentlichen Loading-Dosen) oder 200 mg s.c./Woche</div>
+            <div>• BLISS-LN-Trial: Verbesserung renales Ansprechen — zugelassen für aktive LN Klasse III/IV ± V</div>
+          </div>
+
+          <div class="gn-section-title">Erhaltungstherapie (mind. 36 Monate)</div>
+          <div class="gn-row"><span class="gn-key">MMF</span><span class="gn-val">1–2 g/d p.o. — bevorzugt ggü. Azathioprin bei schwerer LN (MAINTAIN-Trial)</span></div>
+          <div class="gn-row"><span class="gn-key">Azathioprin</span><span class="gn-val">1,5–2,5 mg/kg/d p.o. — bei Kinderwunsch (MMF teratogen!) bevorzugt</span></div>
+          <div class="gn-row"><span class="gn-key">Hydroxychloroquin</span><span class="gn-val">200–400 mg/d p.o. — immer! Basistherapie bei allen SLE-Patienten (Rezidivschutz, kardioprotektiv)</span></div>
+          <div class="gn-warn">⚡ MMF ist teratogen — bei Frauen im gebärfähigen Alter sichere Kontrazeption obligat; bei Kinderwunsch auf Azathioprin wechseln!</div>
+        </div>
+      </div><!-- end lupus -->
+
+      <!-- MPGN -->
+      <div id="gn-mpgn" class="gn-detail">
+        <div class="gn-card">
+          <div class="gn-card-title">🔬 MPGN / C3-Glomerulopathie</div>
+
+          <div class="gn-diag-grid">
+            <div>
+              <div class="gn-section-title">Klassifikation (IF-basiert)</div>
+              <div class="gn-row"><span class="gn-key">Immunkomplex-MPGN</span><span class="gn-val">IgG + IgM + C3 positiv → sekundäre Ursache suchen (Infektionen, Dysproteinämie, Autoimmun)</span></div>
+              <div class="gn-row"><span class="gn-key">C3-Glomerulopathie (C3G)</span><span class="gn-val">Isoliert C3-positiv (≥2+ stärker als Ig) → Komplementregulationsdefekt</span></div>
+              <div class="gn-row"><span class="gn-key">C3-Glomerulonephritis</span><span class="gn-val">Subentität der C3G — mesangiale/endokapilläre Muster</span></div>
+              <div class="gn-row"><span class="gn-key">Dense Deposit Disease (DDD)</span><span class="gn-val">EM: sehr dichte osmiophile Deposits entlang GBM — intramembranös</span></div>
+            </div>
+            <div>
+              <div class="gn-section-title">Diagnostik-Algorithmus</div>
+              <div class="gn-row"><span class="gn-key">Komplement</span><span class="gn-val">C3↓, C4 normal (→ alternativer Weg); C3/C4↓ (→ klassischer Weg / Immunkomplex)</span></div>
+              <div class="gn-row"><span class="gn-key">Komplement-Regulation</span><span class="gn-val">Anti-C3bBb (C3NeF), Anti-CFH-AK, CFH-, CFI-, MCP-Spiegel</span></div>
+              <div class="gn-row"><span class="gn-key">Genetik</span><span class="gn-val">CFH, CFI, CFB, C3-Mutationen — bei jungen Patienten / Familienanamnese</span></div>
+              <div class="gn-row"><span class="gn-key">Sekundäre Ursachen</span><span class="gn-val">HCV (kryoglobulinhämische MPGN), HBV, Endokarditis, Monoklonale Gammopathie (MGRS)</span></div>
+            </div>
+          </div>
+
+          <div class="gn-section-title" style="margin-top:8px;">Therapie</div>
+          <div class="gn-algo">
+            <div class="gn-algo-title">Immunkomplex-MPGN — Grunderkrankung behandeln</div>
+            <div>• HCV: antivirale Therapie (DAA) → oft Remission der MPGN</div>
+            <div>• Endokarditis: Antibiose</div>
+            <div>• MGRS: hämatologische Therapie gegen den Klon</div>
+            <div>• Autoimmun (SLE, Sjögren): IS nach Grunderkrankung</div>
+          </div>
+          <div class="gn-algo">
+            <div class="gn-algo-title">C3-Glomerulopathie — Komplementblockade</div>
+            <div>• <strong>Eculizumab (C5-Inhibitor):</strong> Einsatz bei aktivem C3G mit progredienter Nierenfunktionsstörung</div>
+            <div>• Dosierung: Induktion 900 mg wöchentlich × 4, dann 1.200 mg alle 2 Wochen</div>
+            <div>• Meningokokken-Impfung + Prophylaxe obligat (wie bei aHUS)</div>
+            <div>• Ansprechen variabler als bei aHUS — ~50% Teilremission</div>
+            <div>• <strong>Iptacopan (CFB-Inhibitor), Pegcetacoplan (C3-Inhibitor):</strong> in klinischen Studien bei C3G, teilweise bereits verfügbar</div>
+          </div>
+          <div class="gn-algo">
+            <div class="gn-algo-title">Anti-C3NeF-positive C3G / Progressive C3GN</div>
+            <div>• MMF 750–1.500 mg 2×/d + Prednison — bei rasch progredienter Nierenfunktionsstörung</div>
+            <div>• Rituximab: bei Anti-CFH-AK positiv</div>
+          </div>
+        </div>
+      </div><!-- end mpgn -->
+
+    </div><!-- end detail-area -->
+
+  </div><!-- end gn-entitaeten -->
+
+  <!-- ===== DIAGNOSTISCHER ALGORITHMUS ===== -->
+  <div id="gn-diagnostik" class="gn-tab">
+
+    <div class="gn-card">
+      <div class="gn-card-title">🧪 Initiale Nierenbiopsie-Indikation</div>
+      <div class="gn-ok">✅ Biopsie-Indikation bei: Proteinurie &gt;0,5 g/d + Hämaturie (nephritisches Sediment), nephrotisches Syndrom, rapid progressive Nierenfunktionsstörung (RPGN), ungeklärte CKD, Systemerkrankung mit Nierenbeteiligung</div>
+      <div class="gn-warn">⚡ Kontraindikationen: unkontrollierte Hypertonie, Einzelniere (relativ), Gerinnungsstörung, sehr kleine Nieren (end-stage), fehlende Patientenkooperation</div>
+    </div>
+
+    <div class="gn-card">
+      <div class="gn-card-title">🔬 Diagnostischer Algorithmus nach klinischem Muster</div>
+
+      <div class="gn-section-title">Nephrotisches Syndrom (Proteinurie &gt;3,5 g/d + Hypoalbuminämie + Ödeme)</div>
+      <table class="gn-table">
+        <tr><th>Biopsie-Befund</th><th>Häufigste Entität</th><th>Erste Schritte</th></tr>
+        <tr><td>Subepitheliale Deposits + GBM-Spikes</td><td>Membranöse Nephropathie → PLA2R-AK</td><td>PLA2R-AK, Tumorsuche, Infektionen</td></tr>
+        <tr><td>LM normal, EM Fußfortsatzobliteration</td><td>MCD → Lymphomsuche</td><td>PET-CT? Hodgkin-Ausschluss</td></tr>
+        <tr><td>Segmentale Sklerose, Hyalinose</td><td>FSGS → Ätiologie klären</td><td>Genetik, sekundäre Ursachen</td></tr>
+        <tr><td>Mesangiale IgA</td><td>IgAN mit nephrotischer Komponente</td><td>MEST-C, Risikostratifikation</td></tr>
+      </table>
+
+      <div class="gn-section-title" style="margin-top:12px;">Nephritisches Syndrom / RPGN (Hämaturie + Proteinurie + eGFR-Abfall)</div>
+      <table class="gn-table">
+        <tr><th>Serologie</th><th>Diagnose</th><th>Therapie-Dringlichkeit</th></tr>
+        <tr><td>ANCA (PR3/MPO) positiv</td><td>ANCA-Vaskulitis → Biopsie</td><td><span class="gn-badge gn-badge-red">Notfall 24h</span></td></tr>
+        <tr><td>Anti-GBM-AK positiv</td><td>Anti-GBM-Erkrankung</td><td><span class="gn-badge gn-badge-red">Notfall sofort</span></td></tr>
+        <tr><td>Anti-dsDNA↑, C3/C4↓, ANA+</td><td>Lupusnephritis → Biopsie + Klasse</td><td><span class="gn-badge gn-badge-red">Dringend &lt;48h</span></td></tr>
+        <tr><td>C3↓, C4 normal</td><td>C3G / aHUS → Komplement-Panel</td><td><span class="gn-badge gn-badge-amber">Dringend</span></td></tr>
+        <tr><td>Mesangiales IgA</td><td>IgAN (crescentisch)</td><td><span class="gn-badge gn-badge-amber">Rasch</span></td></tr>
+        <tr><td>Negativ (pauci-immune)</td><td>ANCA-negativ RPGN → ANCA-GN möglich</td><td><span class="gn-badge gn-badge-red">Notfall</span></td></tr>
+      </table>
+
+      <div class="gn-section-title" style="margin-top:12px;">Asymptomatische Urin-Anomalie (Mikro-Hämaturie ± geringe Proteinurie)</div>
+      <div class="gn-row"><span class="gn-key">Häufigste GN</span><span class="gn-val">IgAN — Biopsie nur bei Progressionszeichen (Proteinurie &gt;0,5 g/d, eGFR↓, Hypertonie)</span></div>
+      <div class="gn-row"><span class="gn-key">Dünne-Basalmembran-Erkrankung</span><span class="gn-val">Isolierte Mikro-Hämaturie, familiär, EM: diffuse GBM-Verdünnung &lt;250 nm — benigne Prognose</span></div>
+      <div class="gn-row"><span class="gn-key">Alport-Syndrom</span><span class="gn-val">COL4A3/4/5-Mutation — Hämaturie + Proteinurie + Hochtonschwerh. + familiär → Genetik, RAS-Blockade frühzeitig</span></div>
+    </div>
+
+    <div class="gn-card">
+      <div class="gn-card-title">🔬 Standardlabor-Panel bei GN-Verdacht</div>
+      <div class="gn-diag-grid">
+        <div>
+          <div class="gn-section-title">Basis</div>
+          <div class="gn-row"><span class="gn-key">Niere</span><span class="gn-val">Kreatinin, Harnstoff, eGFR, Cystatin C, Elektrolyte</span></div>
+          <div class="gn-row"><span class="gn-key">Urin</span><span class="gn-val">Urinstatus, Sediment (Phasenkontrastmikroskopie!), Urin-PCR (Proteinurie/Kreatinin-Ratio)</span></div>
+          <div class="gn-row"><span class="gn-key">24h-Sammelurin</span><span class="gn-val">Proteinurie quantitativ (alternativ: PCR × 10 ≈ g/d)</span></div>
+          <div class="gn-row"><span class="gn-key">Blutbild</span><span class="gn-val">BB + Diff, Retikulozyten (Hämolyse?), Schistozyten</span></div>
+        </div>
+        <div>
+          <div class="gn-section-title">Immunologie (immer bei GN-Verdacht)</div>
+          <div class="gn-row"><span class="gn-key">ANCA</span><span class="gn-val">PR3-ANCA (c-ANCA) + MPO-ANCA (p-ANCA) — ELISA + IIF</span></div>
+          <div class="gn-row"><span class="gn-key">Anti-GBM</span><span class="gn-val">Immer parallel zu ANCA</span></div>
+          <div class="gn-row"><span class="gn-key">ANA, Anti-dsDNA</span><span class="gn-val">SLE-Ausschluss</span></div>
+          <div class="gn-row"><span class="gn-key">Komplement</span><span class="gn-val">C3, C4, CH50</span></div>
+          <div class="gn-row"><span class="gn-key">Paraprotein</span><span class="gn-val">IFE Serum + Urin, Serum-FLC — MGRS-Ausschluss</span></div>
+          <div class="gn-row"><span class="gn-key">Infektionen</span><span class="gn-val">HBV (HBsAg, Anti-HBc), HCV (Anti-HCV), HIV, ASL-Titer</span></div>
+          <div class="gn-row"><span class="gn-key">PLA2R-AK</span><span class="gn-val">Bei Verdacht membranöse Nephropathie</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end gn-diagnostik -->
+
+  <!-- ===== INFO / KLASSIFIKATIONEN ===== -->
+  <div id="gn-info" class="gn-tab">
+
+    <div class="gn-card">
+      <div class="gn-card-title">📚 Leitlinien &amp; Quellen</div>
+      <div class="gn-row"><span class="gn-key">S3-Leitlinie 2025</span><span class="gn-val">Diagnose und Therapie von Glomerulonephritiden — AWMF 090-003l (Juni 2025)</span></div>
+      <div class="gn-row"><span class="gn-key">KDIGO GN 2012</span><span class="gn-val">KDIGO Clinical Practice Guideline for Glomerulonephritis — Kidney Int Suppl 2012</span></div>
+      <div class="gn-row"><span class="gn-key">KDIGO MN 2021</span><span class="gn-val">KDIGO 2021 Clinical Practice Guideline for MN</span></div>
+      <div class="gn-row"><span class="gn-key">KDIGO Lupus 2021</span><span class="gn-val">KDIGO 2021 Clinical Practice Guideline for Lupus Nephritis</span></div>
+      <div class="gn-row"><span class="gn-key">ANCA (ACR/EULAR 2022)</span><span class="gn-val">ACR/EULAR 2022 Classification Criteria for GPA, MPA, EGPA</span></div>
+      <div class="gn-row"><span class="gn-key">IgAN 2023</span><span class="gn-val">KDIGO 2021 IgAN Guideline + Targeted-release Budesonid (NefIgArd-Trial) + Sparsentan (PROTECT-Trial)</span></div>
+    </div>
+
+    <div class="gn-card">
+      <div class="gn-card-title">💊 Wichtige Medikamente auf einen Blick</div>
+      <table class="gn-table">
+        <tr><th>Medikament</th><th>Standarddosis</th><th>Einsatz bei</th><th>Monitoring</th></tr>
+        <tr><td>Prednison</td><td>0,5–1 mg/kg/d (max 80 mg)</td><td>MCD, FSGS, ANCA (Induktion)</td><td>BZ, RR, Knochendichte</td></tr>
+        <tr><td>Methylprednisolon-Puls</td><td>500–1.000 mg/d × 3 i.v.</td><td>ANCA, Anti-GBM, schwere LN</td><td>RR, BZ, Elektrolyte</td></tr>
+        <tr><td>Cyclophosphamid p.o.</td><td>2–2,5 mg/kg/d</td><td>ANCA, Anti-GBM, IgAN RPGN</td><td>BB wöch., Urinstatus, Gesamtdosis &lt;36 g</td></tr>
+        <tr><td>Cyclophosphamid i.v.</td><td>500–750 mg/m² q2–4w</td><td>ANCA, LN (NIH)</td><td>BB (Nadir 10–14d), Mesna-Prophylaxe</td></tr>
+        <tr><td>Rituximab</td><td>375 mg/m² ×4 ODER 1g ×2</td><td>ANCA, MN, IgAN, LN, MCD/FSGS</td><td>IgG-Spiegel, Infektionen, PCP-Prop.</td></tr>
+        <tr><td>MMF</td><td>1.500–3.000 mg/d in 2 ED</td><td>LN (Induktion+Erhalt), MN</td><td>BB, LFP; teratogen!</td></tr>
+        <tr><td>Azathioprin</td><td>1,5–2,5 mg/kg/d</td><td>ANCA-Erhalt, LN-Erhalt</td><td>TPMT-Test vorher, BB</td></tr>
+        <tr><td>Tacrolimus</td><td>0,05–0,1 mg/kg/d</td><td>MCD, FSGS, LN</td><td>Talspiegel (4–10 ng/ml), eGFR, RR</td></tr>
+        <tr><td>Cyclosporin</td><td>3–5 mg/kg/d</td><td>MCD, FSGS, MN</td><td>Talspiegel (100–200 ng/ml), eGFR, RR</td></tr>
+        <tr><td>Voclosporin</td><td>23,7 mg 2×/d</td><td>LN add-on (AURORA)</td><td>eGFR, RR (kein Talspiegel nötig)</td></tr>
+        <tr><td>Belimumab</td><td>10 mg/kg i.v. q4w</td><td>LN add-on (BLISS-LN)</td><td>Infektionen</td></tr>
+        <tr><td>Avacopan</td><td>30 mg 2×/d p.o.</td><td>ANCA-Vaskulitis add-on</td><td>LFP, Infektionen</td></tr>
+        <tr><td>Eculizumab</td><td>900 mg/w ×4 → 1200 mg q2w</td><td>C3G, aHUS</td><td>Meningokokken-Prophylaxe obligat!</td></tr>
+        <tr><td>Budesonid TR (Nefecon)</td><td>16 mg/d p.o. × 9 Monate</td><td>IgAN (Proteinurie &gt;1 g/d)</td><td>BZ, systemische Kortikosteroid-NW beachten</td></tr>
+        <tr><td>Sparsentan</td><td>400 mg/d p.o.</td><td>IgAN, primäre FSGS</td><td>RR, Leber (kein ACEi/ARB!), Teratogen</td></tr>
+      </table>
+    </div>
+
+    <div class="gn-card">
+      <div class="gn-card-title">⚠️ Allgemeine Therapieprinzipien</div>
+      <div class="gn-row"><span class="gn-key">PCP-Prophylaxe</span><span class="gn-val">TMP/SMX 960 mg 3×/Woche bei allen Patienten unter hochdosierter IS (Prednison &gt;20 mg + Immunsuppressivum)</span></div>
+      <div class="gn-row"><span class="gn-key">Osteoporose-Prophylaxe</span><span class="gn-val">Calcium 1.000 mg/d + Vitamin D 800–1.000 IE/d bei Langzeit-Kortikosteroiden; Bisphosphonate bei T-Score &lt;–2,5</span></div>
+      <div class="gn-row"><span class="gn-key">Magensäureschutz</span><span class="gn-val">PPI bei hochdosiertem Prednison + NSAIDs oder Antikoagulation</span></div>
+      <div class="gn-row"><span class="gn-key">Impfungen</span><span class="gn-val">Pneumokokken (PCV20/PPSV23), Influenza, COVID-19 — VOR Beginn IS soweit möglich. Keine Lebendimpfstoffe unter IS!</span></div>
+      <div class="gn-row"><span class="gn-key">RAS-Blockade</span><span class="gn-val">ACEi oder ARB bei allen GN mit Proteinurie — nephroprotektiv, antiproteinurisch</span></div>
+      <div class="gn-row"><span class="gn-key">Kontrazeption</span><span class="gn-val">MMF, Cyclophosphamid, Sparsentan, Voclosporin: teratogen — sichere Kontrazeption obligat!</span></div>
+      <div class="gn-row"><span class="gn-key">Fertilitätsschutz</span><span class="gn-val">Cyclophosphamid → Gonadotoxisch: Kryokonservierung anbieten vor Therapiebeginn bei jungen Patienten</span></div>
+    </div>
+  </div><!-- end gn-info -->
+
+</div><!-- end gn-container -->
+
+<script>
+(function(){
+  'use strict';
+
+  window.gnShowTab = function(id, btn) {
+    document.querySelectorAll('#tab-gn .gn-tab').forEach(function(t){ t.classList.remove('active'); });
+    document.querySelectorAll('#tab-gn .gn-stab-btn').forEach(function(b){ b.classList.remove('active'); });
+    document.getElementById('gn-'+id).classList.add('active');
+    if (btn) btn.classList.add('active');
+  };
+
+  window.gnShowEntity = function(id) {
+    document.getElementById('gn-selector').style.display = 'none';
+    document.getElementById('gn-detail-area').style.display = 'block';
+    document.querySelectorAll('#tab-gn .gn-detail').forEach(function(d){ d.classList.remove('active'); });
+    var el = document.getElementById('gn-'+id);
+    if (el) el.classList.add('active');
+    // Highlight selected card
+    document.querySelectorAll('#tab-gn .gn-entity-card').forEach(function(c){ c.classList.remove('active'); });
+  };
+
+  window.gnBackToSelector = function() {
+    document.getElementById('gn-selector').style.display = 'block';
+    document.getElementById('gn-detail-area').style.display = 'none';
+    document.querySelectorAll('#tab-gn .gn-detail').forEach(function(d){ d.classList.remove('active'); });
+  };
+
+  window.gnAutoImport = function() {
+    // Future: import eGFR from CKD tab
+  };
+
+})();
+</script>
+
+</div><!-- end tab-gn -->
+
 <div class="shared-footer">
   ⚕️ Nur zur ärztlichen Unterstützung — kein Ersatz für klinisches Urteil &bull;
   CKD: KDIGO 2024 &bull; CKD-EPI 2021 &bull;
@@ -5264,7 +5944,8 @@ window.gichtAutoImport = function() {
   Hypertonie: ESC 2024 &bull;
   Antiaggregation: ESC 2023 &bull; ACC/AHA 2016 &bull; AHA/ASA 2021 &bull; VOYAGER/COMPASS 2024 &bull;
   Gicht: ACR 2020 &bull; KDIGO 2024 &bull;
-  TTP/HUS: ISTH 2021 &bull; ERBP/NDT 2022 &bull; JAMA 2025 &bull; Lancet 2022
+  TTP/HUS: ISTH 2021 &bull; ERBP/NDT 2022 &bull; JAMA 2025 &bull; Lancet 2022 &bull;
+  GN: KDIGO 2012/2021 &bull; S3-Leitlinie GN 2025 (AWMF 090-003l)
 </div>
 
 <!-- ============================================================
@@ -6984,6 +7665,10 @@ function switchToolTab(tabName) {
   document.getElementById('tab-tma').style.display = tabName === 'tma' ? 'block' : 'none';
   if (tabName === 'tma' && window.tmaAutoImport) {
     window.tmaAutoImport();
+  }
+  document.getElementById('tab-gn').style.display = tabName === 'gn' ? 'block' : 'none';
+  if (tabName === 'gn' && window.gnAutoImport) {
+    window.gnAutoImport();
   }
   document.getElementById('tab-mbd').style.display = tabName === 'mbd' ? 'block' : 'none';
   if (tabName === 'mbd' && window.mbdAutoImport) {
