@@ -28,6 +28,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 /* ── Tool sections ── */
 #tool-lae{display:block;}
 #tool-placeholder{display:none;}
+#tool-aki{display:none;}
+#tool-tma{display:none;}
+#tool-abx{display:none;}
 
 /* ============================================================
    LAE — CSS (vollständig aus lae.html, in Datei isoliert)
@@ -156,6 +159,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <!-- ── Haupt-Navigation ── -->
 <div class="nav-tabs-bar">
   <button class="nav-tab-btn active" data-tool="lae" onclick="switchTool('lae')">🫁 Lungenarterienembolie</button>
+  <button class="nav-tab-btn" data-tool="aki" onclick="switchTool('aki')">🚨 AKI</button>
+  <button class="nav-tab-btn" data-tool="tma" onclick="switchTool('tma')">🩸 TTP / HUS</button>
+  <button class="nav-tab-btn" data-tool="abx" onclick="switchTool('abx')">💊 ABx-Dosierung</button>
   <!-- Platzhalter für weitere Tools: -->
   <!-- <button class="nav-tab-btn" data-tool="sepsis" onclick="switchTool('sepsis')">🦠 Sepsis</button> -->
   <!-- <button class="nav-tab-btn" data-tool="ards" onclick="switchTool('ards')">💨 ARDS</button> -->
@@ -642,6 +648,2056 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </div><!-- end lae-wrap -->
 </div><!-- end tool-lae -->
 
+<!-- ══════════════════════════════════════════════════════════
+     TOOL: AKI (AKUTES NIERENVERSAGEN)
+     ══════════════════════════════════════════════════════════ -->
+<div id="tool-aki">
+<style>
+/* Scoped shared classes for AKI tool */
+#tool-aki .container { max-width: 1300px; margin: 0 auto; padding: 24px 16px; }
+#tool-aki .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+#tool-aki .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); border: 1px solid #e8eaf6; }
+#tool-aki .card h2 { font-size: 1rem; font-weight: 700; color: #1a237e; border-bottom: 2px solid #e8eaf6; padding-bottom: 10px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+#tool-aki .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+#tool-aki .form-group { display: flex; flex-direction: column; gap: 4px; }
+#tool-aki .form-group label { font-size: 0.78rem; font-weight: 600; color: #455a64; text-transform: uppercase; letter-spacing: 0.5px; }
+#tool-aki .form-group input, #tool-aki .form-group select { padding: 9px 12px; border: 1.5px solid #cfd8dc; border-radius: 8px; font-size: 0.95rem; transition: border-color 0.2s; background: #fafafa; }
+#tool-aki .form-group input:focus, #tool-aki .form-group select:focus { outline: none; border-color: #3949ab; background: white; }
+#tool-aki .unit { font-size: 0.7rem; color: #90a4ae; margin-top: 1px; }
+#tool-aki .diab-toggle-group { display: flex; gap: .4rem; margin-top: 4px; }
+#tool-aki .diab-toggle-group input[type=radio] { display: none; }
+#tool-aki .diab-toggle-group label { padding: 6px 14px; border-radius: 20px; font-size: .82rem; font-weight: 600; cursor: pointer; border: 1.5px solid #cfd8dc; color: #607d8b; transition: all .15s; user-select: none; }
+#tool-aki .diab-toggle-group input[type=radio]:checked + label { background: #1a237e; border-color: #1a237e; color: #fff; }
+#tool-aki .checkbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px; }
+#tool-aki .checkbox-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1.5px solid #e0e0e0; border-radius: 8px; cursor: pointer; transition: all 0.2s; font-size: 0.85rem; }
+#tool-aki .checkbox-item:hover { border-color: #3949ab; background: #e8eaf6; }
+#tool-aki .checkbox-item input[type="checkbox"] { width: 16px; height: 16px; accent-color: #3949ab; }
+#tool-aki .checkbox-item.checked { border-color: #3949ab; background: #e8eaf6; font-weight: 600; }
+#tool-aki .btn-calc { width: 100%; padding: 14px; background: linear-gradient(135deg, #1a237e, #3949ab); color: white; border: none; border-radius: 10px; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 16px; letter-spacing: 0.5px; transition: transform 0.1s, box-shadow 0.2s; box-shadow: 0 4px 12px rgba(57,73,171,0.4); }
+#tool-aki .btn-calc:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(57,73,171,0.5); }
+#tool-aki .placeholder-text { color: #90a4ae; font-style: italic; text-align: center; padding: 32px 16px; }
+#tool-aki .ckd-acc-header { display:flex; align-items:center; justify-content:space-between; cursor:pointer; user-select:none; padding:7px 0 4px 0; font-size:.72rem; font-weight:700; color:#1a237e; text-transform:uppercase; letter-spacing:.6px; margin:14px 0 0 0; border-bottom:1.5px solid #c5cae9; }
+#tool-aki .ckd-acc-header:hover { color:#283593; }
+#tool-aki .ckd-acc-arrow { font-size:.82rem; transition:transform .18s; display:inline-block; color:#9fa8da; }
+#tool-aki .ckd-acc-header.ckd-acc-open .ckd-acc-arrow { transform:rotate(180deg); }
+#tool-aki .ckd-acc-body { display:none; padding-top:4px; }
+#tool-aki .ckd-acc-body.ckd-acc-open { display:block; }
+/* AKI-specific classes (already namespaced in index.html global CSS) */
+.aki-stage-row { display:flex; align-items:center; gap:14px; padding:12px; border-radius:10px; border-width:2px; border-style:solid; margin-bottom:14px; }
+.aki-stage-circle { width:64px; height:64px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.aki-etio-box { padding:10px 12px; background:#f5f5f5; border-radius:8px; border-left-width:4px; border-left-style:solid; margin-bottom:12px; }
+.aki-rrt-urgent { padding:10px 12px; background:#ffebee; border-radius:8px; border:2px solid #b71c1c; margin-bottom:12px; }
+.aki-rrt-watch  { padding:8px 12px; background:#fff8e1; border-radius:8px; border:1.5px solid #ffd54f; margin-bottom:12px; }
+.aki-mgmt-block { margin-bottom:10px; }
+.aki-mgmt-title { font-size:.72rem; font-weight:700; color:#1a237e; text-transform:uppercase; letter-spacing:.5px; border-bottom:1px solid #e8eaf6; padding-bottom:3px; margin-bottom:5px; }
+.aki-mgmt-list  { margin:0; padding-left:16px; font-size:.82rem; color:#37474f; line-height:1.65; }
+.aki-fe-grid    { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; }
+.aki-fe-card    { padding:8px 10px; background:#f5f5f5; border-radius:8px; border-top-width:3px; border-top-style:solid; }
+.aki-diag-box   { margin-top:12px; padding:10px 12px; background:#e8eaf6; border-radius:8px; }
+.aki-ntox-grid  { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+</style>
+
+<div class="container">
+  <div class="grid-2" style="margin-bottom:20px;">
+
+    <!-- INPUT -->
+    <div class="card">
+      <h2>🚨 AKI-Diagnostik &amp; Graduierung</h2>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Alter</label>
+          <input type="number" id="aki-age" placeholder="z.B. 65" min="18" max="110">
+          <span class="unit">Jahre</span>
+        </div>
+        <div class="form-group">
+          <label>Geschlecht</label>
+          <div class="diab-toggle-group">
+            <input type="radio" name="aki-sex" id="aki-sex-male" value="male">
+            <label for="aki-sex-male">Männlich</label>
+            <input type="radio" name="aki-sex" id="aki-sex-female" value="female">
+            <label for="aki-sex-female">Weiblich</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Gewicht</label>
+          <input type="number" id="aki-weight" placeholder="z.B. 75" min="20" max="300">
+          <span class="unit">kg (für Urinoutput-Berechnung)</span>
+        </div>
+        <div class="form-group"></div>
+      </div>
+
+      <div style="border-top:1px solid #e8eaf6;margin:10px 0 10px;"></div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Baseline-Kreatinin <span style="font-weight:400;color:#90a4ae;">(Ausgangswert)</span></label>
+          <input type="number" id="aki-cr-base" placeholder="z.B. 0.9" step="0.01" min="0">
+          <span class="unit">mg/dl</span>
+        </div>
+        <div class="form-group">
+          <label>Aktuelles Kreatinin</label>
+          <input type="number" id="aki-cr-now" placeholder="z.B. 2.4" step="0.01" min="0">
+          <span class="unit">mg/dl</span>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Kreatinin vor 48h <span style="font-weight:400;color:#90a4ae;">(optional)</span></label>
+          <input type="number" id="aki-cr-48h" placeholder="z.B. 1.1" step="0.01" min="0">
+          <span class="unit">mg/dl</span>
+        </div>
+        <div class="form-group">
+          <label>Zeitfenster Krea-Anstieg</label>
+          <select id="aki-cr-window">
+            <option value="48h">Anstieg innerhalb 48h</option>
+            <option value="7d">Anstieg innerhalb 7 Tage</option>
+            <option value="unknown">Unbekannt</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Urinoutput (letzte Messung)</label>
+          <input type="number" id="aki-uo-rate" placeholder="z.B. 0.3" step="0.05" min="0">
+          <span class="unit">ml/kg/h</span>
+        </div>
+        <div class="form-group">
+          <label>Dauer Oligurie</label>
+          <select id="aki-uo-duration">
+            <option value="">nicht relevant / keine Oligurie</option>
+            <option value="6h">&lt; 12h (≥ 6h)</option>
+            <option value="12h">≥ 12h</option>
+            <option value="24h">≥ 24h (Anurie)</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid #e8eaf6;margin:10px 0 10px;"></div>
+
+      <!-- Diagnostic labs accordion -->
+      <div class="ckd-acc-header" onclick="akiToggleAccordion(this)">
+        <span>🔬 Urin-Diagnostik &amp; FE-Werte</span><span class="ckd-acc-arrow">▾</span>
+      </div>
+      <div class="ckd-acc-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Urin-Natrium (UNa)</label>
+            <input type="number" id="aki-una" placeholder="z.B. 18" step="1" min="0">
+            <span class="unit">mEq/l</span>
+          </div>
+          <div class="form-group">
+            <label>Serum-Natrium (SNa)</label>
+            <input type="number" id="aki-sna" placeholder="z.B. 138" step="1" min="100" max="175">
+            <span class="unit">mEq/l</span>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Urin-Kreatinin (UCr)</label>
+            <input type="number" id="aki-ucr" placeholder="z.B. 80" step="1" min="0">
+            <span class="unit">mg/dl</span>
+          </div>
+          <div class="form-group">
+            <label>Urin-Harnstoff (UUrea)</label>
+            <input type="number" id="aki-uurea" placeholder="z.B. 250" step="1" min="0">
+            <span class="unit">mg/dl</span>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Serum-BUN (Harnstoff-N)</label>
+            <input type="number" id="aki-bun" placeholder="z.B. 28" step="1" min="0">
+            <span class="unit">mg/dl (BUN)</span>
+          </div>
+          <div class="form-group">
+            <label>Urin-Osmolalität</label>
+            <input type="number" id="aki-uosm" placeholder="z.B. 550" step="5" min="0">
+            <span class="unit">mosmol/kg</span>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Ustix-Befund</label>
+            <select id="aki-dipstick">
+              <option value="">nicht durchgeführt</option>
+              <option value="normal">Normal / bland</option>
+              <option value="proteinuria">Proteinurie</option>
+              <option value="hematuria">Hämaturie</option>
+              <option value="heme_no_rbc">Heme+ ohne Erythrozyten (Myo-/Hämoglobinurie)</option>
+              <option value="leukocytes">Leukozyturie</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Urinmikroskopie</label>
+            <select id="aki-microscopy">
+              <option value="">nicht durchgeführt</option>
+              <option value="normal">Normal / hyaline Zylinder</option>
+              <option value="granular">Granuläre Zylinder ("muddy brown")</option>
+              <option value="rbc_casts">Erythrozytenzylinder</option>
+              <option value="wbc_casts">Leukozytenzylinder</option>
+              <option value="rte_cells">Tubulusepithelzellen (RTE)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Clinical context accordion -->
+      <div class="ckd-acc-header" onclick="akiToggleAccordion(this)">
+        <span>🏥 Klinischer Kontext</span><span class="ckd-acc-arrow">▾</span>
+      </div>
+      <div class="ckd-acc-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Volumenstatus</label>
+            <select id="aki-volume">
+              <option value="">unbekannt</option>
+              <option value="depleted">Hypovolämie (Dehydratation, Blutung)</option>
+              <option value="euvolemic">Euvolämie</option>
+              <option value="overloaded">Hypervolämie / Lungenödem</option>
+              <option value="distributive">Distributiv (Sepsis, Anaphylaxie)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Kalium (aktuell)</label>
+            <input type="number" id="aki-k" placeholder="z.B. 5.8" step="0.1" min="1" max="10">
+            <span class="unit">mmol/l</span>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>pH (venös/arteriell)</label>
+            <input type="number" id="aki-ph" placeholder="z.B. 7.22" step="0.01" min="6.8" max="7.8">
+            <span class="unit"></span>
+          </div>
+          <div class="form-group">
+            <label>Bikarbonat</label>
+            <input type="number" id="aki-hco3" placeholder="z.B. 16" step="0.5" min="0">
+            <span class="unit">mmol/l</span>
+          </div>
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:.78rem;font-weight:600;color:#455a64;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Auslöser / Kontext</label>
+          <div class="checkbox-grid">
+            <label class="checkbox-item" onclick="akiToggleCheck(this)"><input type="checkbox" id="aki-ctx-sepsis"> Sepsis / Schock</label>
+            <label class="checkbox-item" onclick="akiToggleCheck(this)"><input type="checkbox" id="aki-ctx-op"> Post-OP</label>
+            <label class="checkbox-item" onclick="akiToggleCheck(this)"><input type="checkbox" id="aki-ctx-contrast"> Kontrastmittel (≤72h)</label>
+            <label class="checkbox-item" onclick="akiToggleCheck(this)"><input type="checkbox" id="aki-ctx-nephrotox"> Nephrotoxin-Exposition</label>
+            <label class="checkbox-item" onclick="akiToggleCheck(this)"><input type="checkbox" id="aki-ctx-rhabdo"> Rhabdomyolyse (CK erhöht)</label>
+            <label class="checkbox-item" onclick="akiToggleCheck(this)"><input type="checkbox" id="aki-ctx-obstruction"> Obstruktion suspekt</label>
+            <label class="checkbox-item" onclick="akiToggleCheck(this)"><input type="checkbox" id="aki-ctx-diuretics"> Diuretika aktiv</label>
+            <label class="checkbox-item" onclick="akiToggleCheck(this)"><input type="checkbox" id="aki-ctx-ckd"> Vorbekannte CKD</label>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:14px;">
+        <button class="btn-calc" style="margin-top:0;flex:1;" onclick="akiCalculate()">🧮 AKI evaluieren</button>
+        <button onclick="akiClear()" style="flex:0 0 auto;padding:0 16px;height:50px;background:#78909c;color:#fff;border:none;border-radius:10px;font-size:.85rem;font-weight:600;cursor:pointer;">🗑️ Leeren</button>
+      </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div>
+      <div class="card" id="aki-result-card">
+        <h2>📊 AKI-Staging &amp; Einschätzung</h2>
+        <div id="aki-results">
+          <div class="placeholder-text">Bitte Daten eingeben und Evaluierung starten.</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /grid-2 -->
+
+  <!-- Row 2: Management -->
+  <div class="grid-2" style="margin-bottom:20px;">
+    <div class="card">
+      <h2>💊 Management-Empfehlungen</h2>
+      <div id="aki-mgmt">
+        <div class="placeholder-text">Wird nach Evaluierung generiert.</div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>⚡ Notfall-Indikationen KRT / RRT</h2>
+      <div id="aki-rrt">
+        <div class="placeholder-text">Wird nach Evaluierung generiert.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function() {
+'use strict';
+
+function akiGetSex(name)  { var el = document.querySelector('input[name="' + name + '"]:checked'); return el ? el.value : ''; }
+function akiSetSex(name, val) { var el = document.getElementById(name + '-' + val); if (el) el.checked = true; }
+
+window.akiToggleAccordion = function(header) {
+  header.classList.toggle('ckd-acc-open');
+  var body = header.nextElementSibling;
+  if (body) body.classList.toggle('ckd-acc-open');
+};
+
+window.akiToggleCheck = function(label) {
+  setTimeout(function() {
+    var cb = label.querySelector('input[type=checkbox]');
+    if (cb.checked) label.classList.add('checked');
+    else label.classList.remove('checked');
+  }, 0);
+};
+
+// ── Auto-import: no-op (no CKD tab in crit-care.html) ────────────
+function akiAutoImport() {
+  // No CKD tab in crit-care.html — user enters values manually
+}
+
+// ── AKI staging ─────────────────────────────────────────────────
+function getStage(crNow, crBase, cr48h, window48h, uoRate, uoDuration) {
+  var stageCr = 0, stageUO = 0, reasons = [];
+
+  if (crNow && crBase && crBase > 0) {
+    var ratio = crNow / crBase;
+    var rise  = crNow - (cr48h && window48h === '48h' ? cr48h : crBase);
+    if (ratio >= 3.0 || crNow >= 4.0) {
+      stageCr = 3;
+      reasons.push('Krea-Ratio ' + ratio.toFixed(2) + 'x Baseline (≥3.0) oder Krea ≥ 4.0 mg/dl → Stadium 3');
+    } else if (ratio >= 2.0) {
+      stageCr = 2;
+      reasons.push('Krea-Ratio ' + ratio.toFixed(2) + 'x Baseline (2.0–2.9) → Stadium 2');
+    } else if (ratio >= 1.5) {
+      stageCr = 1;
+      reasons.push('Krea-Ratio ' + ratio.toFixed(2) + 'x Baseline (1.5–1.9) → Stadium 1');
+    }
+    if (window48h === '48h' && cr48h && crNow > 0) {
+      var rise48 = crNow - cr48h;
+      if (rise48 >= 0.3 && stageCr < 1) {
+        stageCr = 1;
+        reasons.push('Krea-Anstieg +' + rise48.toFixed(2) + ' mg/dl in 48h (≥0.3) → Stadium 1');
+      }
+    }
+  }
+
+  if (uoRate !== null && uoRate !== '' && uoDuration) {
+    var uo = parseFloat(uoRate);
+    if (uoDuration === '24h' && uo < 0.3) {
+      stageUO = 3;
+      reasons.push('Anurie / Urinoutput <0.3 ml/kg/h für ≥24h → Stadium 3');
+    } else if (uoDuration === '12h' && uo < 0.5) {
+      stageUO = 2;
+      reasons.push('Urinoutput <0.5 ml/kg/h für ≥12h → Stadium 2');
+    } else if (uoDuration === '6h' && uo < 0.5) {
+      stageUO = 1;
+      reasons.push('Urinoutput <0.5 ml/kg/h für 6–12h → Stadium 1');
+    }
+  }
+
+  return { stage: Math.max(stageCr, stageUO), stageCr: stageCr, stageUO: stageUO, reasons: reasons };
+}
+
+// ── Etiology hint ────────────────────────────────────────────────
+function getEtiologyHint(una, sna, ucr, crNow, uosm, bun, microscopy, dipstick, diuretics, context) {
+  var fena = null, feurea = null;
+  if (una && sna && ucr && crNow && ucr > 0) {
+    fena = (una * crNow) / (sna * ucr) * 100;
+  }
+  var uurea = parseFloat(document.getElementById('aki-uurea').value);
+  var bunVal = parseFloat(document.getElementById('aki-bun').value);
+  if (!isNaN(uurea) && !isNaN(bunVal) && !isNaN(ucr) && ucr > 0 && !isNaN(crNow)) {
+    feurea = (uurea * crNow) / (bunVal * ucr) * 100;
+  }
+  var bunCrRatio = null;
+  if (!isNaN(bunVal) && crNow > 0) bunCrRatio = bunVal / crNow;
+
+  var scores = { prerenal: 0, atn: 0, obstruction: 0, gin_ain: 0 };
+
+  if (fena !== null) {
+    if (fena < 1)       scores.prerenal += 2;
+    else if (fena > 2)  scores.atn += 2;
+  }
+  if (feurea !== null) {
+    if (feurea < 35)      scores.prerenal += 2;
+    else if (feurea > 50) scores.atn += 2;
+  }
+  if (uosm) {
+    if (uosm > 500) scores.prerenal += 1;
+    if (uosm < 350) scores.atn += 1;
+  }
+  if (bunCrRatio) {
+    if (bunCrRatio > 20) scores.prerenal += 1;
+    if (bunCrRatio <= 15) scores.atn += 1;
+  }
+  if (microscopy === 'granular' || microscopy === 'rte_cells') scores.atn += 3;
+  if (microscopy === 'rbc_casts') scores.gin_ain += 3;
+  if (microscopy === 'wbc_casts') scores.gin_ain += 2;
+  if (dipstick === 'hematuria') scores.gin_ain += 1;
+  if (dipstick === 'heme_no_rbc') scores.atn += 2;
+  if (context.indexOf('sepsis') !== -1) scores.atn += 1;
+  if (context.indexOf('contrast') !== -1) scores.atn += 1;
+  if (context.indexOf('rhabdo') !== -1) scores.atn += 2;
+  if (context.indexOf('nephrotox') !== -1) scores.atn += 2;
+  if (context.indexOf('obstruction') !== -1) scores.obstruction += 3;
+  if (context.indexOf('depleted') !== -1 || context.indexOf('diuretics') !== -1) scores.prerenal += 1;
+
+  var feNote = diuretics
+    ? '<span style="color:#e65100;font-size:.75rem;">⚠️ Diuretika aktiv → FENa weniger verlässlich, FEUrea bevorzugen</span>'
+    : '';
+
+  return { fena: fena, feurea: feurea, bunCrRatio: bunCrRatio, scores: scores, feNote: feNote };
+}
+
+// ── RRT indications ─────────────────────────────────────────────
+function getRRTStatus(k, ph, hco3, stage, uoDuration, volume) {
+  var urgent = [], watch = [];
+  if (k && k > 6.5) urgent.push('Hyperkaliämie K⁺ > 6.5 mmol/l (aktuell: ' + k + ')');
+  else if (k && k > 5.5 && (document.getElementById('aki-ctx-rhabdo').checked || document.getElementById('aki-ctx-sepsis').checked))
+    urgent.push('K⁺ > 5.5 mit aktiver Quelle (Rhabdomyolyse/Sepsis) → K⁺ aktuell: ' + k);
+  if (ph && ph < 7.1 && volume === 'overloaded') urgent.push('pH < 7.1 + Hypervolämie → Bikarbonat-Dialyse indiziert');
+  else if (ph && ph < 7.1) watch.push('pH < 7.1 (aktuell: ' + ph + ') → KRT wenn nicht volum.-korrigierbar');
+  if (uoDuration === '24h') urgent.push('Anurie ≥ 24h + Diuretika-Versagen → KRT');
+  if (stage >= 3) watch.push('AKI Stadium 3 → engmaschig auf KRT-Indikation überwachen');
+  if (volume === 'overloaded' && stage >= 2) watch.push('Hypervolämie + Stadium ≥ 2 → Furosemid-Eskalation, KRT bei Versagen');
+  if (hco3 && hco3 < 15 && ph && ph < 7.2) watch.push('HCO₃⁻ ' + hco3 + ' mmol/l + pH ' + ph + ' → Azidose-Therapie eskalieren');
+  return { urgent: urgent, watch: watch };
+}
+
+// ── Main calculate ───────────────────────────────────────────────
+function akiCalculate() {
+  var age     = parseFloat(document.getElementById('aki-age').value) || null;
+  var sex     = akiGetSex('aki-sex');
+  var weight  = parseFloat(document.getElementById('aki-weight').value) || null;
+  var crBase  = parseFloat(document.getElementById('aki-cr-base').value) || null;
+  var crNow   = parseFloat(document.getElementById('aki-cr-now').value) || null;
+  var cr48h   = parseFloat(document.getElementById('aki-cr-48h').value) || null;
+  var crWin   = document.getElementById('aki-cr-window').value;
+  var uoRate  = document.getElementById('aki-uo-rate').value;
+  var uoDur   = document.getElementById('aki-uo-duration').value;
+  var una     = parseFloat(document.getElementById('aki-una').value) || null;
+  var sna     = parseFloat(document.getElementById('aki-sna').value) || null;
+  var ucr     = parseFloat(document.getElementById('aki-ucr').value) || null;
+  var uosm    = parseFloat(document.getElementById('aki-uosm').value) || null;
+  var microscopy = document.getElementById('aki-microscopy').value;
+  var dipstick   = document.getElementById('aki-dipstick').value;
+  var volume  = document.getElementById('aki-volume').value;
+  var k       = parseFloat(document.getElementById('aki-k').value) || null;
+  var ph      = parseFloat(document.getElementById('aki-ph').value) || null;
+  var hco3    = parseFloat(document.getElementById('aki-hco3').value) || null;
+
+  var ctxSepsis    = document.getElementById('aki-ctx-sepsis').checked;
+  var ctxOp        = document.getElementById('aki-ctx-op').checked;
+  var ctxContrast  = document.getElementById('aki-ctx-contrast').checked;
+  var ctxNephrotox = document.getElementById('aki-ctx-nephrotox').checked;
+  var ctxRhabdo    = document.getElementById('aki-ctx-rhabdo').checked;
+  var ctxObstruct  = document.getElementById('aki-ctx-obstruction').checked;
+  var ctxDiuretics = document.getElementById('aki-ctx-diuretics').checked;
+  var ctxCKD       = document.getElementById('aki-ctx-ckd').checked;
+  var context = [
+    ctxSepsis?'sepsis':'', ctxOp?'op':'', ctxContrast?'contrast':'',
+    ctxNephrotox?'nephrotox':'', ctxRhabdo?'rhabdo':'',
+    ctxObstruct?'obstruction':'', ctxDiuretics?'diuretics':'',
+    ctxCKD?'ckd':'', volume
+  ].join(' ');
+
+  if (!crNow) {
+    document.getElementById('aki-results').innerHTML = '<div style="color:#b71c1c;padding:12px;">Bitte aktuelles Kreatinin eingeben.</div>';
+    return;
+  }
+
+  var stg = getStage(crNow, crBase, cr48h, crWin, uoRate, uoDur);
+  var etio = getEtiologyHint(una, sna, ucr, crNow, uosm, null, microscopy, dipstick, ctxDiuretics ? 'diuretics' : '', context);
+  var rrt = getRRTStatus(k, ph, hco3, stg.stage, uoDur, volume);
+
+  var stageColors = ['#4caf50','#ff9800','#ef5350','#b71c1c'];
+  var stageLabels = ['–','Stadium 1','Stadium 2','Stadium 3'];
+  var stageBg     = ['#e8f5e9','#fff3e0','#ffebee','#fce4ec'];
+  var s = stg.stage;
+  var sc = stageColors[s] || '#b71c1c';
+  var sb2 = stageBg[s] || '#fce4ec';
+  var sl = stageLabels[s] || 'Stadium 3';
+
+  var ratioStr = crBase ? (crNow / crBase).toFixed(2) + 'x' : '—';
+  var riseStr  = cr48h  ? '+' + (crNow - cr48h).toFixed(2) + ' mg/dl (48h)' : '—';
+
+  var feHtml = '';
+  if (etio.fena !== null || etio.feurea !== null) {
+    feHtml = '<div class="aki-fe-grid">';
+    if (etio.fena !== null) {
+      var fenaColor = etio.fena < 1 ? '#1565c0' : etio.fena > 2 ? '#b71c1c' : '#ff8f00';
+      feHtml += '<div class="aki-fe-card" style="border-top-color:' + fenaColor + ';">';
+      feHtml += '<div style="font-size:.72rem;font-weight:700;color:#455a64;text-transform:uppercase;">FENa</div>';
+      feHtml += '<div style="font-size:1.4rem;font-weight:800;color:' + fenaColor + ';">' + etio.fena.toFixed(1) + '<span style="font-size:.85rem;">%</span></div>';
+      feHtml += '<div style="font-size:.75rem;color:#607d8b;">' + (etio.fena < 1 ? '→ V.a. Prärenal' : etio.fena > 2 ? '→ V.a. ATN' : '→ Nicht eindeutig') + '</div>';
+      feHtml += etio.feNote + '</div>';
+    }
+    if (etio.feurea !== null) {
+      var feuColor = etio.feurea < 35 ? '#1565c0' : etio.feurea > 50 ? '#b71c1c' : '#ff8f00';
+      feHtml += '<div class="aki-fe-card" style="border-top-color:' + feuColor + ';">';
+      feHtml += '<div style="font-size:.72rem;font-weight:700;color:#455a64;text-transform:uppercase;">FEHarnstoff</div>';
+      feHtml += '<div style="font-size:1.4rem;font-weight:800;color:' + feuColor + ';">' + etio.feurea.toFixed(1) + '<span style="font-size:.85rem;">%</span></div>';
+      feHtml += '<div style="font-size:.75rem;color:#607d8b;">' + (etio.feurea < 35 ? '→ V.a. Prärenal' : etio.feurea > 50 ? '→ V.a. ATN' : '→ Indifferent') + '</div></div>';
+    }
+    if (etio.bunCrRatio !== null) {
+      var bunColor = etio.bunCrRatio > 20 ? '#1565c0' : '#607d8b';
+      feHtml += '<div class="aki-fe-card" style="border-top-color:' + bunColor + ';">';
+      feHtml += '<div style="font-size:.72rem;font-weight:700;color:#455a64;text-transform:uppercase;">BUN/Krea-Ratio</div>';
+      feHtml += '<div style="font-size:1.4rem;font-weight:800;color:' + bunColor + ';">' + etio.bunCrRatio.toFixed(1) + '</div>';
+      feHtml += '<div style="font-size:.75rem;color:#607d8b;">' + (etio.bunCrRatio > 20 ? '→ V.a. Prärenal' : '→ Eher ATN / normal') + '</div></div>';
+    }
+    if (uosm) {
+      var uosmColor = uosm > 500 ? '#1565c0' : uosm < 350 ? '#b71c1c' : '#ff8f00';
+      feHtml += '<div class="aki-fe-card" style="border-top-color:' + uosmColor + ';">';
+      feHtml += '<div style="font-size:.72rem;font-weight:700;color:#455a64;text-transform:uppercase;">Urin-Osmolalität</div>';
+      feHtml += '<div style="font-size:1.4rem;font-weight:800;color:' + uosmColor + ';">' + uosm + '<span style="font-size:.85rem;"> mosmol/kg</span></div>';
+      feHtml += '<div style="font-size:.75rem;color:#607d8b;">' + (uosm > 500 ? '→ Prärenal' : uosm < 350 ? '→ V.a. ATN' : '→ Indifferent') + '</div></div>';
+    }
+    feHtml += '</div>';
+  }
+
+  var etioBars = '';
+  var emax = Math.max.apply(null, Object.keys(etio.scores).map(function(k2){ return etio.scores[k2]; }).concat([1]));
+  var etioDef = { prerenal: { label: 'Prärenal', color: '#1565c0' }, atn: { label: 'ATN (intrinsic)', color: '#b71c1c' }, obstruction: { label: 'Postrenal (Obstruktion)', color: '#6a1b9a' }, gin_ain: { label: 'GN / AIN', color: '#2e7d32' } };
+  Object.keys(etioDef).forEach(function(k2) {
+    var sc2 = etio.scores[k2];
+    if (sc2 === 0) return;
+    var v = etioDef[k2];
+    var pct = Math.round(sc2 / emax * 100);
+    etioBars += '<div style="margin-bottom:6px;"><div style="display:flex;justify-content:space-between;font-size:.75rem;margin-bottom:2px;"><span style="font-weight:600;color:' + v.color + ';">' + v.label + '</span><span style="color:#607d8b;">' + sc2 + ' Punkte</span></div><div style="background:#e0e0e0;border-radius:4px;height:8px;"><div style="background:' + v.color + ';width:' + pct + '%;height:8px;border-radius:4px;transition:width .3s;"></div></div></div>';
+  });
+
+  var microLabels = { normal: '✅ Normal / hyaline Zylinder — V.a. Prärenal oder Obstruktion', granular: '🔴 Granuläre Zylinder ("muddy brown") + RTE-Zellen — hochspezifisch für ATN', rbc_casts: '🔴 Erythrozytenzylinder — V.a. Glomerulonephritis / Vaskulitis', wbc_casts: '🟡 Leukozytenzylinder — V.a. AIN oder Pyelonephritis', rte_cells: '🟠 Tubulusepithelzellen (RTE) — V.a. ATN' };
+
+  var resHtml = '<div class="aki-stage-row" style="background:' + sb2 + ';border-color:' + sc + ';">'
+    + '<div class="aki-stage-circle" style="background:' + sc + ';"><div style="text-align:center;"><div style="font-size:' + (s === 0 ? '1rem' : '1.6rem') + ';font-weight:900;color:#fff;line-height:1;">' + (s === 0 ? 'kein AKI' : s) + '</div>' + (s > 0 ? '<div style="font-size:.6rem;color:rgba(255,255,255,.85);font-weight:600;">KDIGO</div>' : '') + '</div></div>'
+    + '<div><div style="font-size:1.05rem;font-weight:800;color:' + sc + ';">' + sl + '</div><div style="font-size:.82rem;color:#455a64;margin-top:2px;">Krea jetzt: <strong>' + crNow + ' mg/dl</strong>' + (crBase ? ' | Baseline: <strong>' + crBase + ' mg/dl</strong>' : '') + (crBase ? ' | Ratio: <strong>' + ratioStr + '</strong>' : '') + (cr48h && crWin === '48h' ? ' | 48h-Anstieg: <strong>' + riseStr + '</strong>' : '') + '</div>'
+    + (stg.reasons.length ? '<div style="margin-top:4px;">' + stg.reasons.map(function(r){ return '<div style="font-size:.75rem;color:#607d8b;">• ' + r + '</div>'; }).join('') + '</div>' : '')
+    + '</div></div>'
+    + feHtml
+    + (etioBars ? '<div style="margin:12px 0 8px 0;"><div style="font-size:.72rem;font-weight:700;color:#455a64;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Ätiologie-Wahrscheinlichkeit (Lab + Kontext)</div>' + etioBars + '</div>' : '')
+    + (microscopy && microLabels[microscopy] ? '<div class="aki-diag-box"><div style="font-size:.72rem;font-weight:700;color:#455a64;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Urinmikroskopie</div><div style="font-size:.82rem;color:#37474f;">' + microLabels[microscopy] + '</div></div>' : '')
+    + (ctxObstruct ? '<div style="margin-top:8px;padding:8px 12px;background:#f3e5f5;border-radius:8px;border-left:3px solid #6a1b9a;font-size:.82rem;color:#4a148c;"><strong>🔍 Obstruktion suspekt:</strong> Sonographie Nieren + Harnwege obligat, post-void Restharn. CT nativ bei V.a. Urolithiasis.</div>' : '')
+    + '<div style="margin-top:10px;font-size:.7rem;color:#90a4ae;">KDIGO AKI-Kriterien 2012 · UpToDate 2026</div>';
+
+  document.getElementById('aki-results').innerHTML = resHtml;
+  renderAkiMgmt(stg.stage, volume, k, ph, hco3, ctxSepsis, ctxNephrotox, ctxRhabdo, ctxContrast, ctxDiuretics, ctxCKD);
+  renderAkiRRT(rrt);
+}
+
+// ── Render management ────────────────────────────────────────────
+function renderAkiMgmt(stage, volume, k, ph, hco3, sepsis, nephrotox, rhabdo, contrast, diuretics, ckd) {
+  var el = document.getElementById('aki-mgmt');
+  var html = '<div class="aki-mgmt-block"><div class="aki-mgmt-title">🔑 Sofortmaßnahmen (alle AKI)</div><ul class="aki-mgmt-list"><li>Ursache identifizieren &amp; behandeln (zeitkritisch)</li><li>Nephrotoxine absetzen: NSAIDs, Aminoglykoside, Amphotericin, Tenofovir, Cisplatin</li><li>ACE-Hemmer, ARB, SGLT2-Hemmer pausieren (Ausnahme: Sklerodermie-Krise → fortführen)</li><li>Alle renal eliminierten Medikamente anpassen (bei steigendem Krea → GFR = 0 annehmen)</li><li>Obstruktion ausschließen: Nierensonographie</li><li>Tägliche Kontrolle: Krea, Elektrolyte, Ca, Phosphat; Gewicht; Bilanz; Urinoutput</li></ul></div>';
+
+  if (volume === 'depleted') {
+    html += '<div class="aki-mgmt-block"><div class="aki-mgmt-title">💧 Volumen-Management: Hypovolämie</div><ul class="aki-mgmt-list"><li>Schwere Hypovolämie / Schock: 1–2 l balancierte Kristalloide (Ringer-Laktat, Plasma-Lyte) so schnell wie möglich i.v.</li><li>Leichte/mäßige Hypovolämie: 50–100 ml/h über Verluste hinaus</li><li>Kolloidlösungen (Hydroxyethylstärke) vermeiden — assoziiert mit AKI-Risiko ↑</li><li>Ansprechen: Diurese-Wiederherstellung + Krea-Rückgang zur Baseline innerhalb 24–72h → Prärenal bestätigt</li><li>Kein Ansprechen → ATN wahrscheinlich → weitere Volumengabe zurückhaltend</li></ul></div>';
+  } else if (volume === 'overloaded') {
+    html += '<div class="aki-mgmt-block"><div class="aki-mgmt-title">🌊 Volumen-Management: Hypervolämie</div><ul class="aki-mgmt-list"><li>Furosemid i.v. (nicht oral — Resorption unsicher bei Ödemen)</li><li>Diuretika-naiv: Furosemid 80 mg i.v. → Urinoutput >200 ml/2h = Ansprechen</li><li>Vorbestehende Diuretika: mind. 2× Tagesdosis i.v.; Ziel-Einzeldosis max. 200 mg</li><li>Kein Ansprechen nach 2h → Dosis verdoppeln (max. 200 mg Einzeldosis)</li><li>Kombination Thiazid (Chlorothiazid 500–1000 mg i.v.) bei Diuretika-Resistenz</li><li>Versagen → KRT erwägen (Ultrafiltration)</li></ul></div>';
+  }
+  if (sepsis) {
+    html += '<div class="aki-mgmt-block"><div class="aki-mgmt-title">🦠 Sepsis-assoziiertes AKI</div><ul class="aki-mgmt-list"><li>Sepsis-Quelle schnellstmöglich sanieren (Antibiotika, Fokus-Kontrolle)</li><li>FENa kann &lt;1% sein trotz ATN — Urinmikroskopie entscheidend</li><li>Vasopressor-Therapie (Noradrenalin) zur Aufrechterhaltung MAP ≥65 mmHg</li><li>Konservatives Flüssigkeitsregime nach initialer Resuszitation (SMART, SMART-C)</li></ul></div>';
+  }
+  if (rhabdo) {
+    html += '<div class="aki-mgmt-block"><div class="aki-mgmt-title">💪 Rhabdomyolyse</div><ul class="aki-mgmt-list"><li>Aggressive Volumentherapie: Ringer-Laktat 1–2 l/h initial, Ziel Urinoutput ≥200 ml/h</li><li>Myoglobinurie-Überwachung: Urin dunkelrot/braun → Dipstick Heme+ ohne Erythrozyten</li><li>CK-Verlauf: &gt;10.000 U/l = hohes AKI-Risiko</li><li>Hyperkaliämie und Hyperphosphatämie engmaschig kontrollieren</li><li>NSAIDs, Statine pausieren</li></ul></div>';
+  }
+  if (contrast) {
+    html += '<div class="aki-mgmt-block"><div class="aki-mgmt-title">🔬 Kontrastmittel-assoziiertes AKI (CI-AKI)</div><ul class="aki-mgmt-list"><li>Weitere Kontrastmittelexposition vermeiden (außer Notfall)</li><li>Iodiertes KM bei bestehendem AKI nur bei lebensrettenden Indikationen (STEMI, Aortendissektion)</li><li>Prophylaktische Dialyse zur KM-Elimination NICHT empfohlen</li><li>FENa kann &lt;1% sein (intakte Tubulus-Funktion trotz CI-AKI)</li></ul></div>';
+  }
+  var elecLines = [];
+  if (k && k > 5.5) {
+    elecLines.push('Hyperkaliämie K⁺ ' + k + ' mmol/l: ACE-Hemmer/ARB absetzen, K⁺-arme Diät &lt;2g/d, Kalziumglukonat i.v. (Membranstabilisierung), Insulin + Glukose (10IE + 50ml G50%), Patiromer / Natriumzirkoniumcyclosilikat als Brücke');
+  }
+  if (ph && ph < 7.2) {
+    elecLines.push('Metabolische Azidose pH ' + ph + ': ' + (volume === 'overloaded' ? 'KRT-Indikation prüfen' : 'NaHCO₃ i.v. (3 Amp. in 1l G5%), Ziel HCO₃⁻ >20 mmol/l; Cave: Hypokalzämie, Hypokalämie'));
+  }
+  if (elecLines.length) {
+    html += '<div class="aki-mgmt-block"><div class="aki-mgmt-title">⚡ Elektrolyt- / Säure-Base-Management</div><ul class="aki-mgmt-list">' + elecLines.map(function(l){ return '<li>' + l + '</li>'; }).join('') + '</ul></div>';
+  }
+  if (stage >= 2) {
+    html += '<div class="aki-mgmt-block"><div class="aki-mgmt-title">📊 Stadium ≥ 2 — Erweiterte Maßnahmen</div><ul class="aki-mgmt-list"><li>Nephrologisches Konsil empfohlen</li><li>Foley-Katheter für exakte Bilanzierung erwägen</li><li>Ernährung: Kalorie 25–30 kcal/kg/d; Protein 1.2–1.5 g/kg/d; K⁺ &lt;2g/d, Phosphat &lt;2g/d</li><li>Flüssigkeitsrestriktion 1–1.5 l/d (bei KRT oder drohender KRT)</li><li>CKD-Ambulanz-Vorstellung nach Entlassung</li></ul></div>';
+  }
+  html += '<div class="aki-mgmt-block"><div class="aki-mgmt-title">🚫 Nephrotoxine — Pausieren / Anpassen</div><div class="aki-ntox-grid">'
+    + [['NSAIDs','Absetzen'],['Aminoglykoside','Absetzen / TDM'],['Amphotericin B','Absetzen'],['Tenofovir','Absetzen'],['Vancomycin','TDM täglich'],['ACE-Hemmer / ARB','Pausieren'],['SGLT2-Hemmer','Pausieren'],['Metformin','Pausieren (Laktatazidose)'],['Gabapentin','Dosis ↓'],['Cefepim','Dosis ↓ (Neurotox.)'],['Kontrastmittel','Vermeiden'],['Hydroxyethylstärke','Kontraindiziert']].map(function(d){ return '<div style="padding:4px 8px;background:#fff3e0;border-radius:6px;font-size:.78rem;"><strong>' + d[0] + '</strong> — <span style="color:#bf360c;">' + d[1] + '</span></div>'; }).join('')
+    + '</div></div>';
+  el.innerHTML = html;
+}
+
+// ── Render RRT panel ─────────────────────────────────────────────
+function renderAkiRRT(rrt) {
+  var el = document.getElementById('aki-rrt');
+  var html = '';
+  if (rrt.urgent.length) {
+    html += '<div class="aki-rrt-urgent"><div style="font-size:.78rem;font-weight:800;color:#b71c1c;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">🚨 Dringende KRT-Indikation vorhanden</div>' + rrt.urgent.map(function(u){ return '<div style="font-size:.82rem;color:#7f0000;margin-bottom:3px;">• ' + u + '</div>'; }).join('') + '</div>';
+  }
+  if (rrt.watch.length) {
+    html += '<div class="aki-rrt-watch"><div style="font-size:.78rem;font-weight:700;color:#e65100;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">⚠️ Engmaschige Überwachung — KRT bei Progression</div>' + rrt.watch.map(function(w){ return '<div style="font-size:.82rem;color:#bf360c;margin-bottom:3px;">• ' + w + '</div>'; }).join('') + '</div>';
+  }
+  if (!rrt.urgent.length && !rrt.watch.length) {
+    html += '<div style="padding:10px;background:#e8f5e9;border-radius:8px;border:1.5px solid #4caf50;font-size:.85rem;color:#1b5e20;">✅ Aktuell keine dringliche KRT-Indikation.</div>';
+  }
+  html += '<div style="margin-top:14px;"><div style="font-size:.72rem;font-weight:700;color:#455a64;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">KRT-Indikationen (KDIGO / UpToDate)</div><div style="font-size:.78rem;color:#37474f;line-height:1.8;"><div>• K⁺ <strong>&gt;6.5 mmol/l</strong> oder symptomatisch</div><div>• pH <strong>&lt;7.1</strong> + Hypervolämie oder keine Korrektur möglich</div><div>• Hypervolämie mit <strong>Lungenödem</strong>, Diuretika-refraktär</div><div>• Urämische Symptome: Enzephalopathie, Perikardreiben, Asterixis</div><div>• Anurie <strong>&gt;24h</strong> + Diuretika-Versagen</div><div>• Akute Intoxikation: Methanol, Ethylenglykol, Lithium, Metformin</div></div></div><div style="margin-top:10px;font-size:.7rem;color:#90a4ae;">Quellen: KDIGO AKI 2012 · UpToDate 2026</div>';
+  el.innerHTML = html;
+}
+
+// ── Clear ────────────────────────────────────────────────────────
+function akiClear() {
+  ['aki-age','aki-weight','aki-cr-base','aki-cr-now','aki-cr-48h','aki-una','aki-sna','aki-ucr','aki-uurea','aki-bun','aki-uosm','aki-uo-rate','aki-k','aki-ph','aki-hco3'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  ['aki-cr-window','aki-uo-duration','aki-volume','aki-dipstick','aki-microscopy'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.selectedIndex = 0;
+  });
+  ['aki-ctx-sepsis','aki-ctx-op','aki-ctx-contrast','aki-ctx-nephrotox','aki-ctx-rhabdo','aki-ctx-obstruction','aki-ctx-diuretics','aki-ctx-ckd'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) { el.checked = false; var lbl = el.closest('label'); if (lbl) lbl.classList.remove('checked'); }
+  });
+  document.getElementById('aki-results').innerHTML = '<div class="placeholder-text">Bitte Daten eingeben und Evaluierung starten.</div>';
+  document.getElementById('aki-mgmt').innerHTML = '<div class="placeholder-text">Wird nach Evaluierung generiert.</div>';
+  document.getElementById('aki-rrt').innerHTML = '<div class="placeholder-text">Wird nach Evaluierung generiert.</div>';
+}
+
+// ── Expose ───────────────────────────────────────────────────────
+window.akiAutoImport = akiAutoImport;
+window.akiCalculate  = akiCalculate;
+window.akiClear      = akiClear;
+
+})();
+</script>
+
+</div><!-- end tool-aki -->
+
+<!-- ══════════════════════════════════════════════════════════
+     TOOL: TMA / TTP / HUS
+     ══════════════════════════════════════════════════════════ -->
+<div id="tool-tma">
+<style>
+#tool-tma .tma-container { max-width:920px; margin:0 auto; padding:16px; }
+#tool-tma .tma-subtabs { display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap; }
+#tool-tma .tma-stab-btn { background:#fff; border:2px solid #c62828; color:#c62828; border-radius:8px; padding:8px 18px; cursor:pointer; font-weight:700; font-size:.85rem; transition:.15s; }
+#tool-tma .tma-stab-btn.active, #tool-tma .tma-stab-btn:hover { background:#c62828; color:#fff; }
+#tool-tma .tma-tab { display:none; }
+#tool-tma .tma-tab.active { display:block; }
+#tool-tma .tma-card { background:#fff; border-radius:12px; padding:16px; box-shadow:0 2px 8px rgba(0,0,0,.08); margin-bottom:14px; }
+#tool-tma .tma-card-title { font-size:.78rem; font-weight:800; text-transform:uppercase; letter-spacing:.5px; color:#455a64; margin-bottom:12px; border-bottom:2px solid #f5f5f5; padding-bottom:6px; }
+#tool-tma .tma-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+#tool-tma .tma-field { display:flex; flex-direction:column; gap:4px; }
+#tool-tma .tma-label { font-size:.78rem; font-weight:600; color:#546e7a; }
+#tool-tma .tma-input { border:1.5px solid #cfd8dc; border-radius:6px; padding:6px 10px; font-size:.88rem; width:100%; box-sizing:border-box; }
+#tool-tma .tma-input:focus { border-color:#c62828; outline:none; }
+#tool-tma .tma-select { border:1.5px solid #cfd8dc; border-radius:6px; padding:6px 10px; font-size:.88rem; width:100%; box-sizing:border-box; background:#fff; }
+#tool-tma .tma-radio-group { display:flex; gap:12px; margin-top:2px; }
+#tool-tma .tma-radio-group label { font-size:.83rem; display:flex; align-items:center; gap:4px; cursor:pointer; }
+#tool-tma .tma-result-box { border-radius:10px; padding:12px 16px; margin-bottom:12px; }
+#tool-tma .tma-result-low { background:#e8f5e9; border:2px solid #43a047; }
+#tool-tma .tma-result-mid { background:#fff8e1; border:2px solid #fb8c00; }
+#tool-tma .tma-result-high { background:#fce4ec; border:2px solid #e53935; }
+#tool-tma .tma-result-title { font-weight:800; font-size:.93rem; margin-bottom:5px; }
+#tool-tma .tma-result-sub { font-size:.82rem; line-height:1.6; }
+#tool-tma .tma-score-row { display:flex; justify-content:space-between; align-items:center; font-size:.82rem; padding:4px 0; border-bottom:1px solid #f0f0f0; }
+#tool-tma .tma-score-row:last-child { border-bottom:none; }
+#tool-tma .tma-score-item { color:#546e7a; }
+#tool-tma .tma-score-val { font-weight:700; min-width:30px; text-align:right; }
+#tool-tma .tma-score-val.yes { color:#43a047; }
+#tool-tma .tma-score-val.no { color:#bdbdbd; }
+#tool-tma .tma-total { font-size:1.05rem; font-weight:800; text-align:center; padding:10px; border-radius:8px; margin-top:10px; background:#f5f5f5; }
+#tool-tma .tma-section-sep { margin:18px 0 10px; font-size:.75rem; font-weight:800; text-transform:uppercase; letter-spacing:.5px; color:#78909c; border-bottom:2px solid #eceff1; padding-bottom:5px; }
+#tool-tma .tma-ent-line { font-size:.82rem; line-height:1.65; padding:4px 0; border-bottom:1px solid #f5f5f5; }
+#tool-tma .tma-ent-line:last-child { border-bottom:none; }
+#tool-tma .tma-ent-key { font-weight:700; color:#37474f; }
+#tool-tma .tma-warn { background:#fff3e0; border:1.5px solid #ff6f00; border-radius:8px; padding:8px 12px; font-size:.81rem; margin:8px 0; line-height:1.6; }
+#tool-tma .tma-danger { background:#fce4ec; border:1.5px solid #c62828; border-radius:8px; padding:8px 12px; font-size:.81rem; margin:8px 0; line-height:1.6; }
+#tool-tma .tma-ok { background:#e8f5e9; border:1.5px solid #43a047; border-radius:8px; padding:8px 12px; font-size:.81rem; margin:8px 0; line-height:1.6; }
+#tool-tma .tma-dose-table { width:100%; border-collapse:collapse; font-size:.82rem; margin:8px 0; }
+#tool-tma .tma-dose-table th { background:#f5f5f5; padding:5px 8px; text-align:left; font-size:.78rem; font-weight:700; }
+#tool-tma .tma-dose-table td { padding:5px 8px; border-bottom:1px solid #f5f5f5; vertical-align:top; }
+@media (max-width:620px) {
+  #tool-tma .tma-grid { grid-template-columns:1fr; }
+}
+</style>
+
+<div class="tma-container">
+  <h2 style="margin:0 0 3px;font-size:1.1rem;color:#c62828;">🩸 TMA · TTP · HUS · HELLP · DIC · ITP</h2>
+  <p style="margin:0 0 14px;font-size:.8rem;color:#78909c;">Thrombotische Mikroangiopathien &amp; schwangerschaftsassoziierte Komplikationen — Differentialdiagnose, Scores &amp; Therapiealgorithmen</p>
+
+  <div class="tma-subtabs">
+    <button class="tma-stab-btn active" onclick="tmaShowTab('diag',this)">🔍 Diagnostik &amp; Scores</button>
+    <button class="tma-stab-btn" onclick="tmaShowTab('therapie',this)">💊 Therapiealgorithmen</button>
+    <button class="tma-stab-btn" onclick="tmaShowTab('info',this)">ℹ️ Leitlinien &amp; Info</button>
+  </div>
+
+  <!-- ===== DIAGNOSTIK ===== -->
+  <div id="tma-diag" class="tma-tab active">
+
+    <div class="tma-card">
+      <div class="tma-card-title">🧪 Laborparameter</div>
+      <div class="tma-grid">
+        <div class="tma-field">
+          <label class="tma-label">Thrombozyten (×10⁹/L)</label>
+          <input class="tma-input" id="tma-plt" type="number" min="0" max="999" placeholder="z.B. 18" oninput="tmaCalc()">
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">Kreatinin (mg/dl)</label>
+          <input class="tma-input" id="tma-krea" type="number" min="0" step="0.1" placeholder="z.B. 1.8" oninput="tmaCalc()">
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">LDH (U/L) <span style="font-weight:400;color:#999">— Norm ≤250 U/L</span></label>
+          <input class="tma-input" id="tma-ldh" type="number" min="0" placeholder="z.B. 820" oninput="tmaCalc()">
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">Haptoglobin</label>
+          <select class="tma-select" id="tma-hapto" onchange="tmaCalc()">
+            <option value="">— bitte wählen —</option>
+            <option value="normal">Normal</option>
+            <option value="niedrig">Erniedrigt</option>
+            <option value="null">Nicht nachweisbar</option>
+          </select>
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">Schistozyten im Blutausstrich</label>
+          <select class="tma-select" id="tma-schisto" onchange="tmaCalc()">
+            <option value="">— bitte wählen —</option>
+            <option value="keine">Keine / &lt;0,1%</option>
+            <option value="low">&lt;1%</option>
+            <option value="mid">1–2%</option>
+            <option value="high">&gt;2%</option>
+          </select>
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">Coombs-Test (DAT)</label>
+          <select class="tma-select" id="tma-coombs" onchange="tmaCalc()">
+            <option value="">— bitte wählen —</option>
+            <option value="neg">Negativ</option>
+            <option value="pos">Positiv</option>
+          </select>
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">INR</label>
+          <input class="tma-input" id="tma-inr" type="number" min="0" step="0.1" placeholder="z.B. 1.1" oninput="tmaCalc()">
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">MCV (fl)</label>
+          <input class="tma-input" id="tma-mcv" type="number" min="50" max="130" placeholder="z.B. 87" oninput="tmaCalc()">
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">Fibrinogen (g/L)</label>
+          <input class="tma-input" id="tma-fibrin" type="number" min="0" step="0.1" placeholder="z.B. 0.8" oninput="tmaCalc()">
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">AST (U/L) <span style="font-weight:400;color:#999">— Norm ≤35</span></label>
+          <input class="tma-input" id="tma-ast" type="number" min="0" placeholder="z.B. 120" oninput="tmaCalc()">
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">ALT (U/L) <span style="font-weight:400;color:#999">— Norm ≤35</span></label>
+          <input class="tma-input" id="tma-alt" type="number" min="0" placeholder="z.B. 95" oninput="tmaCalc()">
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">D-Dimere / Fibrinspaltprodukte</label>
+          <select class="tma-select" id="tma-ddimer" onchange="tmaCalc()">
+            <option value="">— bitte wählen —</option>
+            <option value="normal">Normal</option>
+            <option value="moderat">Moderat erhöht (&lt;5× ULN)</option>
+            <option value="stark">Stark erhöht (≥5× ULN)</option>
+          </select>
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">PT-Verlängerung (Sekunden über Norm)</label>
+          <input class="tma-input" id="tma-pt" type="number" min="0" step="0.5" placeholder="z.B. 4" oninput="tmaCalc()">
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">Aktive Krebserkrankung</label>
+          <div class="tma-radio-group">
+            <label><input type="radio" name="tma-cancer" value="ja" onchange="tmaCalc()"> Ja</label>
+            <label><input type="radio" name="tma-cancer" value="nein" onchange="tmaCalc()"> Nein</label>
+          </div>
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">Stammzelltransplantation in Anamnese</label>
+          <div class="tma-radio-group">
+            <label><input type="radio" name="tma-sct" value="ja" onchange="tmaCalc()"> Ja</label>
+            <label><input type="radio" name="tma-sct" value="nein" onchange="tmaCalc()"> Nein</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tma-card">
+      <div class="tma-card-title">🏥 Klinische Angaben</div>
+      <div class="tma-grid">
+        <div class="tma-field">
+          <label class="tma-label">Blutige Diarrhoe (akut)</label>
+          <div class="tma-radio-group">
+            <label><input type="radio" name="tma-diarrhoe" value="ja" onchange="tmaCalc()"> Ja</label>
+            <label><input type="radio" name="tma-diarrhoe" value="nein" onchange="tmaCalc()"> Nein</label>
+          </div>
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">Shiga-Toxin-Test (STEC)</label>
+          <select class="tma-select" id="tma-stec" onchange="tmaCalc()">
+            <option value="">— nicht getestet —</option>
+            <option value="neg">Negativ</option>
+            <option value="pos">Positiv</option>
+          </select>
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">Strep.-pneumoniae-Infektion bekannt</label>
+          <div class="tma-radio-group">
+            <label><input type="radio" name="tma-sp" value="ja" onchange="tmaCalc()"> Ja</label>
+            <label><input type="radio" name="tma-sp" value="nein" onchange="tmaCalc()"> Nein</label>
+          </div>
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">Solide Organtransplantation</label>
+          <div class="tma-radio-group">
+            <label><input type="radio" name="tma-tx" value="ja" onchange="tmaCalc()"> Ja</label>
+            <label><input type="radio" name="tma-tx" value="nein" onchange="tmaCalc()"> Nein</label>
+          </div>
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">Medikament (TMA-auslösend bekannt)</label>
+          <select class="tma-select" id="tma-drug" onchange="tmaCalc()">
+            <option value="">— keines bekannt —</option>
+            <option value="Chinin">Chinin</option>
+            <option value="Cyclosporin/Tacrolimus">Cyclosporin / Tacrolimus</option>
+            <option value="Gemcitabin">Gemcitabin</option>
+            <option value="Mitomycin C">Mitomycin C</option>
+            <option value="Clopidogrel/Ticlopidin">Clopidogrel / Ticlopidin</option>
+            <option value="Bevacizumab/VEGF-Inhibitor">Bevacizumab / VEGF-Inhibitor</option>
+            <option value="anderes (bekannt)">Anderes (bekannt)</option>
+          </select>
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">Schwangerschaft / post partum</label>
+          <div class="tma-radio-group">
+            <label><input type="radio" name="tma-preg" value="ja" onchange="tmaCalc()"> Ja</label>
+            <label><input type="radio" name="tma-preg" value="nein" onchange="tmaCalc()"> Nein</label>
+          </div>
+        </div>
+        <div class="tma-field" id="tma-preg-fields" style="display:none;">
+          <label class="tma-label">Schwangerschaftswoche (SSW)</label>
+          <input class="tma-input" id="tma-ssw" type="number" min="1" max="42" placeholder="z.B. 34" oninput="tmaCalc()">
+        </div>
+        <div class="tma-field" id="tma-preg-fields2" style="display:none;">
+          <label class="tma-label">Hypertonie ≥140/90 mmHg</label>
+          <div class="tma-radio-group">
+            <label><input type="radio" name="tma-htn" value="ja" onchange="tmaCalc()"> Ja</label>
+            <label><input type="radio" name="tma-htn" value="nein" onchange="tmaCalc()"> Nein</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HELLP-spezifische Felder (nur bei Schwangerschaft sichtbar) -->
+    <div class="tma-card" id="tma-hellp-labs" style="display:none;">
+      <div class="tma-card-title">🤰 HELLP-Diagnostik — Zusatzfelder (Schwangerschaft)</div>
+      <div class="tma-grid">
+        <div class="tma-field">
+          <label class="tma-label">Bilirubin gesamt (mg/dl)</label>
+          <input class="tma-input" id="tma-bili" type="number" min="0" step="0.1" placeholder="z.B. 1.4" oninput="tmaCalc()">
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">Proteinurie</label>
+          <div class="tma-radio-group">
+            <label><input type="radio" name="tma-prot" value="ja" onchange="tmaCalc()"> Ja</label>
+            <label><input type="radio" name="tma-prot" value="nein" onchange="tmaCalc()"> Nein</label>
+          </div>
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">Epigastrische Schmerzen / Übelkeit</label>
+          <div class="tma-radio-group">
+            <label><input type="radio" name="tma-epigast" value="ja" onchange="tmaCalc()"> Ja</label>
+            <label><input type="radio" name="tma-epigast" value="nein" onchange="tmaCalc()"> Nein</label>
+          </div>
+        </div>
+        <div class="tma-field">
+          <label class="tma-label">ADAMTS13 Ergebnis (wenn vorhanden)</label>
+          <select class="tma-select" id="tma-adamts13" onchange="tmaCalc()">
+            <option value="">— ausstehend / nicht bestimmt —</option>
+            <option value="lt10">≤10% (schwere Defizienz → TTP)</option>
+            <option value="10-50">10–50% (intermediär)</option>
+            <option value="gt50">&gt;50% (normal → HELLP / aHUS wahrscheinlicher)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ergebnis-Section -->
+    <div id="tma-results" style="display:none;">
+
+      <div id="tma-maha-box"></div>
+
+      <div class="tma-grid" style="margin-bottom:14px;align-items:start;">
+        <div class="tma-card" style="margin-bottom:0;">
+          <div class="tma-card-title">🎯 PLASMIC Score (iTTP-Wahrscheinlichkeit)</div>
+          <div id="tma-plasmic-rows"></div>
+          <div id="tma-plasmic-total" class="tma-total"></div>
+          <div id="tma-plasmic-interp" style="margin-top:8px;font-size:.81rem;line-height:1.5;"></div>
+        </div>
+        <div class="tma-card" style="margin-bottom:0;">
+          <div class="tma-card-title">🎯 French Score (iTTP-Wahrscheinlichkeit)</div>
+          <div id="tma-french-rows"></div>
+          <div id="tma-french-total" class="tma-total"></div>
+          <div id="tma-french-interp" style="margin-top:8px;font-size:.81rem;line-height:1.5;"></div>
+          <div class="tma-section-sep" style="margin-top:14px;">⚖️ ISTH DIC Score</div>
+          <div id="tma-dic-rows"></div>
+          <div id="tma-dic-total" class="tma-total"></div>
+          <div id="tma-dic-interp" style="margin-top:8px;font-size:.81rem;line-height:1.5;"></div>
+        </div>
+      </div>
+
+      <div id="tma-hellp-result-card" class="tma-card" style="display:none;">
+        <div class="tma-card-title">🤰 HELLP-Klassifikation (Mississippi / ACOG)</div>
+        <div id="tma-hellp-result"></div>
+      </div>
+
+      <div class="tma-card">
+        <div class="tma-card-title">🔀 Differentialdiagnose TMA</div>
+        <div id="tma-diff-result"></div>
+      </div>
+    </div>
+
+    <div id="tma-empty-hint" style="text-align:center;color:#90a4ae;padding:40px 0;font-size:.88rem;">
+      ↑ Laborwerte eingeben — Scores werden automatisch berechnet
+    </div>
+
+  </div><!-- end tma-diag -->
+
+  <!-- ===== THERAPIEALGORITHMEN ===== -->
+  <div id="tma-therapie" class="tma-tab">
+
+    <div class="tma-danger">
+      ⚠️ <strong>Notfall:</strong> TMA ist ein medizinischer Notfall — Stunden entscheiden. Alle Therapieentscheidungen mit erfahrenem Spezialisten (Hämostaseologie / Nephrologie) abstimmen.
+    </div>
+
+    <div class="tma-section-sep">⚡ Sofort-Diagnostik-Bundle (alle TMA-Verdachtsfälle)</div>
+    <div class="tma-card">
+      <div class="tma-grid">
+        <div>
+          <div class="tma-ent-line"><span class="tma-ent-key">Blut:</span> BB + Diff, Retikulozyten, LDH, Haptoglobin, Bilirubin (dir./indir.), DAT (Coombs), Kreatinin, <strong>AST/ALT (LFP)</strong>, Troponin, BNP, Urinstatus</div>
+          <div class="tma-ent-line"><span class="tma-ent-key">Gerinnung:</span> PT, aPTT, Fibrinogen, D-Dimere, Anti-Xa (wenn Heparin)</div>
+          <div class="tma-ent-line"><span class="tma-ent-key">Blutausstrich:</span> Schistozyten quantifizieren — Norm &lt;0,1%; ab 0,1–0,5% diagnostisch relevant</div>
+        </div>
+        <div>
+          <div class="tma-ent-line"><span class="tma-ent-key" style="color:#c62828;">ADAMTS13 SOFORT:</span> Aktivität + Inhibitor-Titer (Citratblut, auf Eis, sofort ins Labor!) — VOR jeder Therapie abnehmen!</div>
+          <div class="tma-ent-line"><span class="tma-ent-key">Stuhl:</span> Shiga-Toxin-PCR + Kultur (bei Diarrhoe)</div>
+          <div class="tma-ent-line"><span class="tma-ent-key">Komplement:</span> C3, C4, CH50, Anti-CFH-AK — bei Verdacht aHUS</div>
+          <div class="tma-ent-line"><span class="tma-ent-key">Genetik:</span> Komplementgene (CFH, CFI, MCP/CD46, CFB, C3, THBD) — bei aHUS-Verdacht</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tma-section-sep">🔴 Immunvermittelte TTP (iTTP) — ADAMTS13-Inhibitor</div>
+    <div class="tma-card">
+      <div class="tma-ent-line"><span class="tma-ent-key">Diagnosekriterium:</span> ADAMTS13-Aktivität &lt;10% + Nachweis Inhibitor → definitive iTTP. Therapie NICHT auf Ergebnis warten — empirisch bei PLASMIC ≥6!</div>
+      <div class="tma-section-sep" style="margin-top:12px;">Soforttherapie (innerhalb 4–8 h nach Diagnose)</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">Plasmapherese (TPE):</span> 1–1,5× Plasmavolumen täglich mit TK-armem Frischplasma (FFP) als Austauschflüssigkeit — täglich bis Remission (Plt &gt;150×10⁹/L an 2 aufeinanderfolgenden Tagen)</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">Kortikosteroide:</span> Methylprednisolon 1 g/d i.v. × 3 Tage (bei neurologischen Symptomen, Troponin↑ oder schwerem Verlauf), danach Prednison 1 mg/kg/d p.o.</div>
+      <div class="tma-section-sep" style="margin-top:12px;">Caplacizumab (Anti-vWF-Nanobody)</div>
+      <table class="tma-dose-table">
+        <tr><th>Zeitpunkt</th><th>Dosis / Route</th><th>Hinweis</th></tr>
+        <tr><td>VOR 1. TPE</td><td>10 mg i.v. Bolus</td><td>Einmalig, vor Beginn TPE</td></tr>
+        <tr><td>Täglich (nach TPE)</td><td>10 mg s.c.</td><td>Am TPE-Tag: nach TPE injizieren</td></tr>
+        <tr><td>Dauer</td><td colspan="2">Bis 30 Tage nach letzter TPE UND ADAMTS13 &gt;10% — nicht früher absetzen (Rebound!)</td></tr>
+      </table>
+      <div class="tma-section-sep" style="margin-top:12px;">Immunsuppression / Rituximab</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">Rituximab:</span> 375 mg/m² i.v. wöchentlich × 4 Wochen — bei schwerem Verlauf, Refraktärität, ADAMTS13 &lt;10% nach 5 TPE oder Rezidiv. Alternativ: 1.000 mg × 2 im Abstand von 2 Wochen</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">Tapering:</span> Nach Remission TPE über 3–5 Tage ausschleichen (nicht abrupt stoppen)</div>
+      <div class="tma-danger">🚫 <strong>KEINE Thrombozytentransfusion</strong> — kann Mikrothrombosen aggravieren und tödlich sein. Ausnahme: lebensbedrohliche Blutung (ZNS, viszerale Hämorrhagie)</div>
+      <div class="tma-warn">⚡ ADAMTS13 10–50%: Diagnose überdenken — aHUS, sek. TMA oder falscher Befund?</div>
+    </div>
+
+    <div class="tma-section-sep">🔵 Atypisches HUS (aHUS) — Komplementvermittelt</div>
+    <div class="tma-card">
+      <div class="tma-ent-line"><span class="tma-ent-key">Diagnose:</span> TMA nach Ausschluss iTTP (ADAMTS13 &gt;10%), STEC-HUS, Sp-HUS, drug-TMA. Oft ANV im Vordergrund, Thrombopenie geringer ausgeprägt als bei TTP</div>
+      <div class="tma-section-sep" style="margin-top:12px;">Eculizumab-Therapie (C5-Inhibitor)</div>
+      <table class="tma-dose-table">
+        <tr><th>Phase</th><th>Dosis</th><th>Intervall</th></tr>
+        <tr><td>Induktion</td><td>900 mg i.v.</td><td>Wöchentlich × 4 Wochen</td></tr>
+        <tr><td>Erhaltung</td><td>1.200 mg i.v.</td><td>Alle 2 Wochen (dauerhaft)</td></tr>
+      </table>
+      <div class="tma-ent-line" style="margin-top:8px;"><span class="tma-ent-key">Ravulizumab (Alternative):</span> Längere Wirkdauer — Dosierung gewichtsadaptiert, Infusion alle 8 Wochen</div>
+      <div class="tma-danger">⚠️ <strong>Meningokokken-Prophylaxe OBLIGAT vor Eculizumab:</strong><br>• Impfung: MenACWY + MenB — idealerweise ≥2 Wochen VOR Eculizumab<br>• Falls keine Zeit: <strong>sofort Penicillin V 500 mg 2×/d p.o.</strong> starten (mindestens bis 2 Wochen nach vollständiger Impfung wirksam)<br>• Impfung auch im Verlauf nachholen wenn initial keine Zeit</div>
+      <div class="tma-warn">ℹ️ TPE hat keinen etablierten Stellenwert bei aHUS — nur überbrückend bis Eculizumab verfügbar. Therapieentscheidung mit Hämostaseologie/Nephrologie.</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">Genetische Testung:</span> CFH, CFI, CD46/MCP, CFB, C3, THBD, CFHR1–5 — beeinflusst Rezidivrisiko, Therapiedauer und Transplantationsentscheidung</div>
+    </div>
+
+    <div class="tma-section-sep">🟢 STEC-HUS (Shiga-Toxin-assoziiertes HUS)</div>
+    <div class="tma-card">
+      <div class="tma-ent-line"><span class="tma-ent-key">Typisch:</span> Kinder; blutige Diarrhoe (E. coli O157:H7, STEC) → 5–10 Tage später MAHA + ANV. Adulte: schwerere Verläufe</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">Diagnose:</span> Shiga-Toxin-PCR (Stuhl) positiv oder STEC-Kultur, Serologie</div>
+      <div class="tma-danger">🚫 <strong>KEINE Antibiotika</strong> — erhöhen intraluminale Shiga-Toxin-Freisetzung und steigern HUS-Risiko signifikant<br>🚫 <strong>KEINE Antiperistaltika</strong> (Loperamid o.ä.) — verlängern Toxin-Kontakt mit Darmschleimhaut<br>🚫 <strong>KEINE Thrombozytentransfusion</strong> ohne vitale Indikation</div>
+      <div class="tma-ok">✅ <strong>Supportive Therapie ist die Standardtherapie:</strong><br>• Frühzeitiger, großzügiger Volumenersatz mit isotoner NaCl (0,9%) — reduziert ANV-Schwere nachweislich<br>• Nierenersatztherapie (HD/CVVH) bei ANV-Indikation<br>• Antihypertensiva bei hypertensiver Krise<br>• EK-Gabe bei Anämie (kein Ziel-Hb definiert, symptomorientiert)</div>
+      <div class="tma-warn">⚡ Eculizumab: Nur bei schwersten Verlaufsformen (ZNS-Beteiligung, prolongierte Anurie &gt;2 Wochen) als Einzelfallentscheidung erwägen</div>
+    </div>
+
+    <div class="tma-section-sep">🟡 Streptococcus pneumoniae HUS (Sp-HUS)</div>
+    <div class="tma-card">
+      <div class="tma-ent-line"><span class="tma-ent-key">Mechanismus:</span> Neuraminidase legt Thomsen-Friedenreich (T)-Antigen frei → natürliche Anti-T-IgG binden → Hämolyse + TMA</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">Typisch:</span> Kleinkinder mit invasiver Pneumokokken-Infektion (Pneumonie, Meningitis, Sepsis) + TMA</div>
+      <div class="tma-ent-line" style="margin-top:8px;"><span class="tma-ent-key">Antibiotika:</span> Ceftriaxon 2 g/d i.v. (oder Cefotaxim 2 g alle 8h) + Vancomycin 15 mg/kg alle 6h i.v. bis Resistenztest vorliegt</div>
+      <div class="tma-danger">🚫 <strong>KEIN FFP</strong> — enthält Anti-T-IgG → Agglutination + Verschlechterung der TMA!<br>🚫 <strong>Keine Standard-Erythrozytenkonzentrate</strong> — nur <strong>gewaschene EK</strong> transfundieren (Entfernung von Anti-T-IgG aus dem Plasma)</div>
+      <div class="tma-ok">✅ Prognose bei adäquater frühzeitiger Antibiotikatherapie und korrektem Bluttransfusionsmanagement in der Regel gut</div>
+    </div>
+
+    <div class="tma-section-sep">⚫ DIC (Disseminierte Intravasale Koagulation)</div>
+    <div class="tma-card">
+      <div class="tma-ent-line"><span class="tma-ent-key">Auslöser:</span> Sepsis (häufigste Ursache), Trauma, Malignome, geburtshilfliche Komplikationen, schwere Hämolyse, Verbrennung</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">ISTH DIC Score ≥5:</span> Overt DIC — Soforttherapie. Score &lt;5: Wiederholen nach 24–48 h</div>
+      <div class="tma-ok" style="margin-top:8px;">✅ <strong>Grunderkrankung behandeln</strong> — dies ist der zentrale Pfeiler der DIC-Therapie</div>
+      <div class="tma-section-sep" style="margin-top:12px;">Substitutionstherapie bei aktiver Blutung</div>
+      <table class="tma-dose-table">
+        <tr><th>Produkt</th><th>Ziel</th><th>Dosierung</th></tr>
+        <tr><td>FFP</td><td>PT/aPTT normalisieren</td><td>15–20 ml/kg i.v.</td></tr>
+        <tr><td>Fibrinogen-Konzentrat</td><td>Fibrinogen &gt;1,5 g/L</td><td>2–4 g i.v. (ggf. wiederholen)</td></tr>
+        <tr><td>Thrombozyten-Konzentrat</td><td>Plt &gt;50×10⁹/L bei Blutung</td><td>1 EK / 10 kg KG</td></tr>
+        <tr><td>PPSB (Prothrombinkomplex)</td><td>Alternativ zu FFP bei Volumenrestriktion</td><td>20–30 IE/kg i.v.</td></tr>
+      </table>
+      <div class="tma-warn">⚡ Heparin: nur bei thrombotisch dominierter DIC (Akrozyanose, Purpura fulminans) — immer Rücksprache Hämostaseologie</div>
+      <div class="tma-danger">🚫 <strong>KEINE Antifibrinolytika</strong> (Tranexamsäure) bei DIC — außer dokumentierter hyperfibrinolytischer Verlaufsform (Thrombelastographie!)</div>
+    </div>
+
+    <div class="tma-section-sep">🤰 HELLP-Syndrom — Schwangerschaftsassoziiert</div>
+    <div class="tma-card">
+      <div class="tma-ent-line"><span class="tma-ent-key">Diagnose-Trias (ACOG):</span> Hämolyse (LDH ↑, Haptoglobin ↓, Schistozyten) + Leberenzyme ≥2× ULN (AST/ALT) + Thrombozyten &lt;100×10⁹/L</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">Auftreten:</span> Meist 2./3. Trimenon (24.–37. SSW), postpartal in 20–30% der Fälle; kann ohne vorherige Hypertonie auftreten</div>
+      <div class="tma-section-sep" style="margin-top:12px;">Therapie (Entbindung ist die einzige kurative Maßnahme)</div>
+      <div class="tma-ok">✅ <strong>Entbindung:</strong> Ab 34+0 SSW sofortige Entbindung indiziert. &lt;34 SSW: Abwägung fetale Reife vs. maternales Risiko mit Perinatologie<br>✅ <strong>Magnesiumsulfat:</strong> 4 g i.v. Bolus, dann 1–2 g/h Perfusor — Eklampsieprophylaxe bei Prä- / Eklampsie<br>✅ <strong>Kortikosteroide (fetale Lungenreife):</strong> Betamethason 2× 12 mg i.m. im Abstand 24 h — bei &lt;34 SSW<br>✅ <strong>Blutdruckkontrolle:</strong> Labetalol i.v. oder Nifedipin p.o. — Ziel RR &lt;160/110 mmHg</div>
+    </div>
+
+    <div class="tma-section-sep">🟣 ITP (Immunthrombozytopenie) — Isolierte Thrombopenie</div>
+    <div class="tma-card">
+      <div class="tma-ent-line"><span class="tma-ent-key">Abgrenzung zur TMA:</span> <em>Keine</em> Schistozyten, kein LDH↑, kein Kreatinin↑, normales Fibrinogen, DAT negativ — isolierte Thrombopenie ohne MAHA</div>
+      <div class="tma-section-sep" style="margin-top:12px;">Erstlinientherapie</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">Prednison:</span> 0,5–1 mg/kg/d p.o. × 2–4 Wochen, dann langsam Tapering über 4–6 Wochen</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">Dexamethason:</span> 40 mg/d p.o. × 4 Tage (Puls) — alternativ zu Prednison, höhere initiale Ansprechrate</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">IVIG:</span> 1 g/kg/d i.v. × 1–2 Tage — bei aktiver Blutung oder Notfall (rascher Plt-Anstieg innerhalb 24–48 h)</div>
+      <div class="tma-section-sep" style="margin-top:12px;">Notfalltherapie (Plt &lt;10×10⁹/L + aktive Blutung)</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">Kombination:</span> IVIG 1 g/kg i.v. + Methylprednisolon 1 g i.v. + Thrombozytentransfusion (bei lebensbedrohlicher Blutung)</div>
+    </div>
+
+  </div><!-- end tma-therapie -->
+
+  <!-- ===== INFO ===== -->
+  <div id="tma-info" class="tma-tab">
+    <div class="tma-card">
+      <div class="tma-card-title">📚 Leitlinien &amp; Quellen</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">iTTP Leitlinie:</span> ISTH Guidelines for Treatment of TTP — Cuker et al., J Thromb Haemost 2021</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">HUS:</span> Haemolytic uraemic syndrome — Lancet 2022</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">PLASMIC Score:</span> Bendapudi et al., Lancet Haematol 2017</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">Caplacizumab HERCULES:</span> Scully et al., N Engl J Med 2019</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">Eculizumab aHUS:</span> Legendre et al., N Engl J Med 2013</div>
+      <div class="tma-ent-line"><span class="tma-ent-key">HELLP-Syndrom:</span> ACOG Practice Bulletin Nr. 222 (2020)</div>
+    </div>
+
+    <div class="tma-card">
+      <div class="tma-card-title">🔬 PLASMIC Score — Itemdefinitionen</div>
+      <table class="tma-dose-table">
+        <tr><th>Buchstabe</th><th>Kriterium</th><th>+1 Punkt wenn</th></tr>
+        <tr><td><strong>P</strong>latelet</td><td>Thrombozyten</td><td>&lt;30×10⁹/L</td></tr>
+        <tr><td><strong>L</strong>ysis</td><td>Hämolyse-Marker</td><td>LDH &gt;2× ULN oder Hapto n.n.</td></tr>
+        <tr><td><strong>A</strong>ctive cancer</td><td>Krebserkrankung</td><td>Keine aktive Krebserkrankung</td></tr>
+        <tr><td><strong>S</strong>CT</td><td>Stammzelltransplantation</td><td>Keine in der Anamnese</td></tr>
+        <tr><td><strong>M</strong>CV</td><td>MCV</td><td>&lt;90 fl</td></tr>
+        <tr><td><strong>I</strong>NR</td><td>INR</td><td>&lt;1,5</td></tr>
+        <tr><td><strong>C</strong>reatinine</td><td>Kreatinin</td><td>&lt;2,0 mg/dl</td></tr>
+      </table>
+      <div style="margin-top:8px;font-size:.81rem;"><strong>0–4 Pkt.:</strong> Niedrig (&lt;5%) | <strong>5 Pkt.:</strong> Intermediär (~6%) | <strong>6–7 Pkt.:</strong> Hoch (~72%) → Therapie!</div>
+    </div>
+  </div><!-- end tma-info -->
+
+</div><!-- end tma-container -->
+
+<script>
+(function(){
+  'use strict';
+
+  window.tmaShowTab = function(id, btn) {
+    document.querySelectorAll('#tool-tma .tma-tab').forEach(function(t){ t.classList.remove('active'); });
+    document.querySelectorAll('#tool-tma .tma-stab-btn').forEach(function(b){ b.classList.remove('active'); });
+    document.getElementById('tma-'+id).classList.add('active');
+    if (btn) btn.classList.add('active');
+  };
+
+  function getRadio(name) {
+    var r = document.querySelector('input[name="'+name+'"]:checked');
+    return r ? r.value : null;
+  }
+
+  function numVal(id) {
+    var el = document.getElementById(id);
+    if (!el) return null;
+    var v = parseFloat(el.value);
+    return isNaN(v) ? null : v;
+  }
+
+  function selVal(id) {
+    var el = document.getElementById(id);
+    return el ? el.value : '';
+  }
+
+  window.tmaCalc = function() {
+    var plt    = numVal('tma-plt');
+    var krea   = numVal('tma-krea');
+    var ldh    = numVal('tma-ldh');
+    var hapto  = selVal('tma-hapto');
+    var schisto= selVal('tma-schisto');
+    var inr    = numVal('tma-inr');
+    var mcv    = numVal('tma-mcv');
+    var fibrin = numVal('tma-fibrin');
+    var ddimer = selVal('tma-ddimer');
+    var pt     = numVal('tma-pt');
+    var cancer = getRadio('tma-cancer');
+    var sct    = getRadio('tma-sct');
+    var diarrhoe = getRadio('tma-diarrhoe');
+    var stec   = selVal('tma-stec');
+    var sp     = getRadio('tma-sp');
+    var tx     = getRadio('tma-tx');
+    var drug   = selVal('tma-drug');
+    var preg   = getRadio('tma-preg');
+    var ast    = numVal('tma-ast');
+    var alt    = numVal('tma-alt');
+
+    var pregFields = document.getElementById('tma-preg-fields');
+    var pregFields2 = document.getElementById('tma-preg-fields2');
+    var hellpLabs = document.getElementById('tma-hellp-labs');
+    if (pregFields) pregFields.style.display = preg === 'ja' ? '' : 'none';
+    if (pregFields2) pregFields2.style.display = preg === 'ja' ? '' : 'none';
+    if (hellpLabs) hellpLabs.style.display = preg === 'ja' ? '' : 'none';
+
+    var filledCount = [plt, krea, ldh,
+      hapto && hapto !== '' ? 1 : null,
+      schisto && schisto !== '' ? 1 : null
+    ].filter(function(x){ return x !== null; }).length;
+
+    var resultsEl = document.getElementById('tma-results');
+    var hintEl    = document.getElementById('tma-empty-hint');
+    if (filledCount < 2) {
+      resultsEl.style.display = 'none';
+      hintEl.style.display = 'block';
+      return;
+    }
+    resultsEl.style.display = 'block';
+    hintEl.style.display = 'none';
+
+    var thrombopenia = (plt !== null && plt < 100);
+    var schistoPresent = (schisto && schisto !== 'keine' && schisto !== '');
+    var haemolysis = (ldh !== null && ldh > 500) || (hapto === 'null') || (hapto === 'niedrig' && ldh !== null && ldh > 300);
+    var maha = thrombopenia && schistoPresent && haemolysis;
+
+    var mahaHtml = '';
+    if (plt !== null && schisto) {
+      if (maha) {
+        mahaHtml = '<div class="tma-result-box tma-result-high"><div class="tma-result-title">⚠️ MAHA-Kriterien erfüllt — TMA-Abklärung dringend indiziert</div><div class="tma-result-sub">Thrombopenie + Schistozyten + Hämolysezeichen. Sofort ADAMTS13-Blut abnehmen!</div></div>';
+      } else if (thrombopenia && schistoPresent) {
+        mahaHtml = '<div class="tma-result-box tma-result-mid"><div class="tma-result-title">⚡ Mögliche MAHA — vollständige Abklärung empfohlen</div><div class="tma-result-sub">Thrombopenie + Schistozyten ohne eindeutige Hämolyse-Marker. LDH, Haptoglobin vervollständigen.</div></div>';
+      } else if (!thrombopenia && !schistoPresent) {
+        mahaHtml = '<div class="tma-result-box tma-result-low"><div class="tma-result-title">✅ Kein Hinweis auf MAHA bei diesen Werten</div><div class="tma-result-sub">Keine typische thrombotische Mikroangiopathie. Andere Diagnose wahrscheinlich.</div></div>';
+      }
+    }
+    document.getElementById('tma-maha-box').innerHTML = mahaHtml;
+
+    // PLASMIC Score
+    var plasmic = 0;
+    var pRows = '';
+    var p1 = (plt !== null && plt < 30);
+    if (p1) plasmic++;
+    pRows += '<div class="tma-score-row"><span class="tma-score-item">Thrombozyten &lt;30×10⁹/L'+(plt!==null?' ('+plt+')':'')+'</span><span class="tma-score-val '+(p1?'yes':'no')+'">'+(plt===null?'?':(p1?'+1':'0'))+'</span></div>';
+    var pHaemo = (ldh !== null && ldh > 500) || (hapto === 'null');
+    if (pHaemo) plasmic++;
+    pRows += '<div class="tma-score-row"><span class="tma-score-item">Hämolyse (LDH &gt;500 oder Hapto n.n.)</span><span class="tma-score-val '+(pHaemo?'yes':'no')+'">'+((ldh===null&&hapto==='') ? '?' : (pHaemo?'+1':'0'))+'</span></div>';
+    var p3 = (cancer === 'nein');
+    if (p3) plasmic++;
+    pRows += '<div class="tma-score-row"><span class="tma-score-item">Keine aktive Krebserkrankung</span><span class="tma-score-val '+(p3?'yes':'no')+'">'+(cancer===null?'?':(p3?'+1':'0'))+'</span></div>';
+    var p4 = (sct === 'nein');
+    if (p4) plasmic++;
+    pRows += '<div class="tma-score-row"><span class="tma-score-item">Keine Stammzelltransplantation</span><span class="tma-score-val '+(p4?'yes':'no')+'">'+(sct===null?'?':(p4?'+1':'0'))+'</span></div>';
+    var p5 = (mcv !== null && mcv < 90);
+    if (p5) plasmic++;
+    pRows += '<div class="tma-score-row"><span class="tma-score-item">MCV &lt;90 fl'+(mcv!==null?' ('+mcv+' fl)':'')+'</span><span class="tma-score-val '+(p5?'yes':'no')+'">'+(mcv===null?'?':(p5?'+1':'0'))+'</span></div>';
+    var p6 = (inr !== null && inr < 1.5);
+    if (p6) plasmic++;
+    pRows += '<div class="tma-score-row"><span class="tma-score-item">INR &lt;1,5'+(inr!==null?' ('+inr+')':'')+'</span><span class="tma-score-val '+(p6?'yes':'no')+'">'+(inr===null?'?':(p6?'+1':'0'))+'</span></div>';
+    var p7 = (krea !== null && krea < 2.0);
+    if (p7) plasmic++;
+    pRows += '<div class="tma-score-row"><span class="tma-score-item">Kreatinin &lt;2,0 mg/dl'+(krea!==null?' ('+krea+')':'')+'</span><span class="tma-score-val '+(p7?'yes':'no')+'">'+(krea===null?'?':(p7?'+1':'0'))+'</span></div>';
+    document.getElementById('tma-plasmic-rows').innerHTML = pRows;
+    var pColor = plasmic <= 4 ? '#2e7d32' : (plasmic === 5 ? '#e65100' : '#c62828');
+    document.getElementById('tma-plasmic-total').innerHTML = '<span style="color:'+pColor+';">PLASMIC-Score: '+plasmic+' / 7</span>';
+    document.getElementById('tma-plasmic-interp').innerHTML = plasmic <= 4 ? '🟢 <strong>Niedrig</strong> — TTP unwahrscheinlich (&lt;5%). Alternative Diagnose suchen.' : plasmic === 5 ? '🟡 <strong>Intermediär</strong> — ca. 6% TTP-Wahrscheinlichkeit. ADAMTS13 abwarten wenn stabil.' : '🔴 <strong>Hoch</strong> — ca. 72% TTP-Wahrscheinlichkeit. <strong>Empirische TPE + Caplacizumab sofort starten!</strong>';
+
+    // French Score
+    var french = 0;
+    var fRows = '';
+    var f1 = (plt !== null && plt < 30);
+    if (f1) french++;
+    fRows += '<div class="tma-score-row"><span class="tma-score-item">Thrombozyten &lt;30×10⁹/L</span><span class="tma-score-val '+(f1?'yes':'no')+'">'+(plt===null?'?':(f1?'+1':'0'))+'</span></div>';
+    var f2 = (krea !== null && krea < 2.26);
+    if (f2) french++;
+    fRows += '<div class="tma-score-row"><span class="tma-score-item">Kreatinin &lt;2,26 mg/dl</span><span class="tma-score-val '+(f2?'yes':'no')+'">'+(krea===null?'?':(f2?'+1':'0'))+'</span></div>';
+    document.getElementById('tma-french-rows').innerHTML = fRows;
+    var fColor = french === 0 ? '#2e7d32' : (french === 1 ? '#e65100' : '#c62828');
+    document.getElementById('tma-french-total').innerHTML = '<span style="color:'+fColor+';">French-Score: '+french+' / 2</span>';
+    document.getElementById('tma-french-interp').innerHTML = french === 0 ? '🟢 Score 0 — TTP-Wahrscheinlichkeit ~2%' : french === 1 ? '🟡 Score 1 — TTP-Wahrscheinlichkeit ~70%' : '🔴 Score 2 — TTP-Wahrscheinlichkeit ~94% — <strong>Therapiebeginn!</strong>';
+
+    // ISTH DIC Score
+    var dic = 0;
+    var dRows = '';
+    var dicPlt = plt !== null ? (plt < 50 ? 2 : (plt <= 100 ? 1 : 0)) : null;
+    if (dicPlt !== null) dic += dicPlt;
+    dRows += '<div class="tma-score-row"><span class="tma-score-item">Thrombozyten'+(plt!==null?' ('+plt+'×10⁹/L)':'')+'</span><span class="tma-score-val">'+(dicPlt===null?'?':dicPlt+' Pkt.')+'</span></div>';
+    var dicFdp = ddimer === 'stark' ? 3 : (ddimer === 'moderat' ? 2 : (ddimer === 'normal' ? 0 : null));
+    if (dicFdp !== null) dic += dicFdp;
+    dRows += '<div class="tma-score-row"><span class="tma-score-item">D-Dimere / FDP</span><span class="tma-score-val">'+(dicFdp===null?'?':dicFdp+' Pkt.')+'</span></div>';
+    var dicPt = pt !== null ? (pt > 6 ? 2 : (pt >= 3 ? 1 : 0)) : null;
+    if (dicPt !== null) dic += dicPt;
+    dRows += '<div class="tma-score-row"><span class="tma-score-item">PT-Verlängerung'+(pt!==null?' ('+pt+' s)':'')+'</span><span class="tma-score-val">'+(dicPt===null?'?':dicPt+' Pkt.')+'</span></div>';
+    var dicFib = fibrin !== null ? (fibrin < 1.0 ? 1 : 0) : null;
+    if (dicFib !== null) dic += dicFib;
+    dRows += '<div class="tma-score-row"><span class="tma-score-item">Fibrinogen'+(fibrin!==null?' ('+fibrin+' g/L)':'')+'</span><span class="tma-score-val">'+(dicFib===null?'?':dicFib+' Pkt.')+'</span></div>';
+    document.getElementById('tma-dic-rows').innerHTML = dRows;
+    var dColor = dic >= 5 ? '#c62828' : '#2e7d32';
+    document.getElementById('tma-dic-total').innerHTML = '<span style="color:'+dColor+';">ISTH DIC Score: '+dic+' Punkte</span>';
+    document.getElementById('tma-dic-interp').innerHTML = dic >= 5 ? '🔴 <strong>Overt DIC</strong> (≥5 Punkte) — Grunderkrankung behandeln, Substitutionstherapie bei Blutung' : '🟢 Score &lt;5 — Kein overt DIC. Bei klinischem Verdacht: Kontrolle nach 24–48 h';
+
+    // Differentialdiagnose
+    var diagList = [];
+    var liverElevGen = (ast !== null && ast >= 70) || (alt !== null && alt >= 70);
+    if (liverElevGen && preg !== 'ja') {
+      var ldh_ast_gen = (ldh !== null && ast !== null && ast > 0) ? (ldh / ast).toFixed(1) : null;
+      var liverMsg = 'AST' + (ast !== null ? ' '+ast : '') + (alt !== null ? ' / ALT '+alt : '') + ' U/L — Leberbeteiligung.';
+      if (ldh_ast_gen) {
+        var r = parseFloat(ldh_ast_gen);
+        liverMsg += ' LDH/AST-Ratio: <strong>' + ldh_ast_gen + '</strong> — ' + (r > 22 ? '⚠️ &gt;22 → eher TTP/aHUS' : '🟡 &lt;22 → HELLP-ähnlich oder ischämisch/DIC');
+      }
+      diagList.push({ color:'#e65100', icon:'🫀', label:'Leberenzyme erhöht — DD beachten', text: liverMsg });
+    }
+    if (dic >= 5) diagList.push({ color:'#37474f', icon:'⚫', label:'DIC (Disseminierte Intravasale Koagulation)', text:'ISTH DIC Score ≥5. Grunderkrankung identifizieren und behandeln.' });
+    if (stec === 'pos' || diarrhoe === 'ja') diagList.push({ color:'#2e7d32', icon:'🟢', label:'STEC-HUS (Shiga-Toxin-assoziiertes HUS)', text:'Blutige Diarrhoe / STEC positiv. KEINE Antibiotika! Supportive Therapie.' });
+    if (sp === 'ja') diagList.push({ color:'#e65100', icon:'🟡', label:'Streptococcus pneumoniae HUS (Sp-HUS)', text:'Cephalosporin + Vancomycin. KEIN FFP! Nur gewaschene EK transfundieren.' });
+    if (drug && drug !== '') diagList.push({ color:'#4527a0', icon:'💊', label:'Arzneimittel-induzierte TMA (DITMA) — '+drug, text:'Sofortiges Absetzen des auslösenden Medikaments ist Therapie der ersten Wahl.' });
+    if (tx === 'ja') diagList.push({ color:'#1565c0', icon:'🔵', label:'Transplantations-assoziierte TMA (TA-TMA)', text:'Calcineurin-Inhibitor reduzieren / wechseln. Eculizumab erwägen.' });
+    if (preg === 'ja') {
+      var adamts13 = selVal('tma-adamts13');
+      var liverElev = (ast !== null && ast >= 70) || (alt !== null && alt >= 70);
+      if (adamts13 === 'lt10') {
+        diagList.push({ color:'#c62828', icon:'🔴', label:'TTP in der Schwangerschaft (ADAMTS13 ≤10%)', text:'Sofortige TPE + Caplacizumab. Entbindung erst nach Stabilisierung.' });
+      } else if (liverElev && plt !== null && plt < 100) {
+        diagList.push({ color:'#ad1457', icon:'🤰', label:'HELLP-Syndrom — wahrscheinlich', text:'Trias: Hämolyse + LFP ↑↑ + Plt <100 → HELLP wahrscheinlich. Geburtshilfe einbinden.' });
+      } else {
+        diagList.push({ color:'#880e4f', icon:'🌸', label:'Schwangerschafts-assoziierte TMA — Differenzierung erforderlich', text:'HELLP / TTP / aHUS — ADAMTS13 abnehmen! Geburtshilfe und Hämostaseologie einbinden.' });
+      }
+    }
+    if (plasmic >= 6 || (plasmic === 5 && maha)) {
+      diagList.push({ color:'#c62828', icon:'🔴', label:'Immunvermittelte TTP (iTTP) — wahrscheinlich', text:'PLASMIC-Score '+plasmic+'/7. Empirische Therapie: TPE + Caplacizumab + Kortikosteroide JETZT starten!' });
+    } else if (plasmic <= 4 && maha && dic < 5 && stec !== 'pos' && diarrhoe !== 'ja' && sp !== 'ja' && (!drug || drug==='') && tx !== 'ja') {
+      diagList.push({ color:'#1565c0', icon:'🔵', label:'aHUS (Atypisches HUS) — komplementvermittelt möglich', text:'PLASMIC niedrig + MAHA + keine anderen Ursachen → aHUS erwägen. Eculizumab! Meningokokken-Prophylaxe sofort.' });
+    }
+    if (!maha && plt !== null && plt < 100 && (!schisto || schisto === 'keine') && filledCount >= 3) {
+      diagList.push({ color:'#6a1b9a', icon:'🟣', label:'ITP (Immunthrombozytopenie) oder andere Thrombopenie-Ursache', text:'Keine MAHA-Zeichen. ITP erwägen: isolierte Thrombopenie, normales LDH, keine Schistozyten.' });
+    }
+
+    var diffHtml = '';
+    if (diagList.length === 0) {
+      diffHtml = '<div style="color:#90a4ae;font-size:.85rem;padding:10px 0;">Keine eindeutige Zuordnung mit diesen Werten — weitere Angaben erforderlich</div>';
+    } else {
+      diagList.forEach(function(d) {
+        diffHtml += '<div style="border-left:4px solid '+d.color+';padding:8px 12px;margin-bottom:8px;background:#fafafa;border-radius:0 8px 8px 0;">';
+        diffHtml += '<div style="font-weight:800;font-size:.87rem;color:'+d.color+';margin-bottom:3px;">'+d.icon+' '+d.label+'</div>';
+        diffHtml += '<div style="font-size:.81rem;color:#546e7a;line-height:1.55;">'+d.text+'</div>';
+        diffHtml += '</div>';
+      });
+    }
+
+    // HELLP Klassifikation
+    var hellpCard = document.getElementById('tma-hellp-result-card');
+    var hellpEl   = document.getElementById('tma-hellp-result');
+    if (preg === 'ja' && plt !== null) {
+      var astV  = ast;
+      var altV  = alt;
+      var liverE = (astV !== null && astV >= 70) || (altV !== null && altV >= 70);
+      var haemol = haemolysis;
+      var ldh_ast = (ldh !== null && astV !== null && astV > 0) ? (ldh / astV).toFixed(1) : null;
+      var hellpHtml = '';
+      var missClass = plt <= 50 ? '1 (schwer)' : (plt <= 100 ? '2 (moderat)' : (plt < 150 ? '3 (mild)' : null));
+      if (missClass) hellpHtml += '<div style="font-size:.9rem;font-weight:800;margin-bottom:8px;color:#ad1457;">Mississippi Klasse ' + missClass + ' — Plt: ' + plt + '×10⁹/L</div>';
+      hellpHtml += '<table class="tma-dose-table"><tr><th>Kriterium</th><th>Erfüllt?</th><th>Wert</th></tr>';
+      hellpHtml += '<tr><td>Hämolyse (LDH↑ / Hapto↓)</td><td>' + (haemol ? '✅ Ja' : '⬜ Nein/unklar') + '</td><td>' + (ldh !== null ? 'LDH '+ldh+' U/L' : '—') + '</td></tr>';
+      hellpHtml += '<tr><td>Leberenzyme ≥2× ULN (AST/ALT ≥70)</td><td>' + (liverE ? '✅ Ja' : '❌ Nein') + '</td><td>' + (astV !== null ? 'AST '+astV : '') + (altV !== null ? ' / ALT '+altV : '') + ' U/L</td></tr>';
+      hellpHtml += '<tr><td>Thrombozyten &lt;100×10⁹/L</td><td>' + (plt < 100 ? '✅ Ja' : '❌ Nein') + '</td><td>Plt: '+plt+'×10⁹/L</td></tr>';
+      hellpHtml += '</table>';
+      var hellpDiag = haemol && liverE && plt < 100;
+      hellpHtml += hellpDiag ? '<div class="tma-danger" style="margin-top:10px;">🔴 <strong>HELLP-Diagnosekriterien erfüllt</strong> — Entbindung indizieren! Geburtshilfe sofort einbinden.</div>' : '<div class="tma-ok" style="margin-top:10px;">🟢 HELLP-Trias nicht komplett erfüllt — Verlauf beobachten.</div>';
+      if (hellpEl) hellpEl.innerHTML = hellpHtml;
+      if (hellpCard) hellpCard.style.display = '';
+    } else {
+      if (hellpCard) hellpCard.style.display = 'none';
+    }
+
+    document.getElementById('tma-diff-result').innerHTML = diffHtml;
+  };
+
+  window.tmaAutoImport = function() {};
+
+})();
+</script>
+
+</div><!-- end tool-tma -->
+
+<!-- ══════════════════════════════════════════════════════════
+     TOOL: ABx-DOSIERUNG
+     ══════════════════════════════════════════════════════════ -->
+<div id="tool-abx">
+<style>
+.abx-container { max-width: 960px; margin: 0 auto; padding: 16px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+.abx-header { background: linear-gradient(135deg, #1b5e20, #2e7d32); color: #fff; border-radius: 12px; padding: 18px 22px; margin-bottom: 18px; }
+.abx-header h2 { margin: 0 0 4px; font-size: 1.3rem; }
+.abx-header p { margin: 0; font-size: .85rem; opacity: .85; }
+.abx-controls { background: #fff; border: 1px solid #e0e0e0; border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+.abx-field { display: flex; flex-direction: column; gap: 4px; }
+.abx-field label { font-size: .78rem; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: .04em; }
+.abx-field input, .abx-field select { padding: 7px 10px; border: 1.5px solid #ccc; border-radius: 6px; font-size: .93rem; }
+.abx-field input:focus, .abx-field select:focus { border-color: #2e7d32; outline: none; }
+.abx-search { flex: 1; min-width: 200px; }
+.abx-search input { width: 100%; box-sizing: border-box; font-size: 1rem; padding: 8px 12px; }
+.abx-egfr-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.abx-egfr-btn { padding: 6px 12px; border: 2px solid #2e7d32; background: #fff; color: #2e7d32; border-radius: 16px; cursor: pointer; font-size: .85rem; font-weight: 700; transition: all .15s; }
+.abx-egfr-btn.active { background: #2e7d32; color: #fff; }
+.abx-egfr-btn:hover { background: #e8f5e9; }
+.abx-egfr-btn.hd { border-color: #6a1b9a; color: #6a1b9a; }
+.abx-egfr-btn.hd.active { background: #6a1b9a; color: #fff; }
+.abx-egfr-btn.crrt { border-color: #00695c; color: #00695c; }
+.abx-egfr-btn.crrt.active { background: #00695c; color: #fff; }
+.abx-egfr-btn.crrt:hover { background: #e0f2f1; }
+.abx-egfr-btn.pd { border-color: #e65100; color: #e65100; }
+.abx-egfr-btn.pd.active { background: #e65100; color: #fff; }
+.abx-egfr-btn.pd:hover { background: #fff3e0; }
+.abx-table tr.hl-hd { background: #ede7f6; }
+.abx-table tr.hl-hd td:first-child { border-left: 3px solid #6a1b9a; }
+.abx-table tr.hl-crrt { background: #e0f2f1; }
+.abx-table tr.hl-crrt td:first-child { border-left: 3px solid #00695c; }
+.abx-table tr.hl-pd { background: #fff3e0; }
+.abx-table tr.hl-pd td:first-child { border-left: 3px solid #e65100; }
+.abx-egfr-badge { display:inline-flex; align-items:center; gap:6px; background:#e8f5e9; border:1px solid #a5d6a7; border-radius:8px; padding:4px 10px; font-size:.82rem; color:#1b5e20; font-weight:600; }
+.abx-gruppe-filter { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.abx-grp-btn { padding: 4px 12px; border: 1.5px solid #ccc; background: #fafafa; color: #555; border-radius: 14px; cursor: pointer; font-size: .8rem; font-weight: 600; transition: all .15s; }
+.abx-grp-btn.active { background: #1b5e20; color: #fff; border-color: #1b5e20; }
+.abx-grid { display: grid; gap: 10px; }
+.abx-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+.abx-card-head { padding: 10px 14px 8px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; cursor: pointer; user-select: none; }
+.abx-card-head:hover { background: #f9f9f9; }
+.abx-card-title { font-weight: 700; font-size: .95rem; color: #1b5e20; }
+.abx-card-brand { font-size: .78rem; color: #888; font-weight: 400; }
+.abx-card-gruppe { font-size: .75rem; background: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 10px; font-weight: 600; white-space: nowrap; }
+.abx-card-body { padding: 12px 14px; display: none; }
+.abx-card-body.open { display: block; }
+.abx-indikation { font-size: .82rem; color: #555; margin-bottom: 10px; }
+.abx-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+.abx-table th { background: #e8f5e9; padding: 6px 10px; text-align: left; font-size: .78rem; color: #2e7d32; font-weight: 700; }
+.abx-table td { padding: 7px 10px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
+.abx-table tr:last-child td { border-bottom: none; }
+.abx-table tr.highlighted { background: #fffde7; }
+.abx-table tr.highlighted td:first-child { border-left: 3px solid #f9a825; }
+.abx-dosis { font-weight: 700; }
+.abx-cave { background: #fce4ec; border-left: 3px solid #c62828; border-radius: 4px; padding: 6px 10px; margin-top: 8px; font-size: .82rem; color: #c62828; }
+.abx-tdm { background: #e3f2fd; border-left: 3px solid #1565c0; border-radius: 4px; padding: 6px 10px; margin-top: 8px; font-size: .82rem; color: #1565c0; }
+.abx-ki { background: #fce4ec; font-weight: 700; color: #b71c1c; }
+.abx-tag { display: inline-block; padding: 1px 7px; border-radius: 8px; font-size: .75rem; font-weight: 700; margin-left: 4px; }
+.abx-tag.tdm { background: #e3f2fd; color: #1565c0; }
+.abx-tag.cave { background: #fce4ec; color: #c62828; }
+.abx-tag.ki { background: #fce4ec; color: #b71c1c; }
+.abx-tag.noadj { background: #e8f5e9; color: #2e7d32; }
+.abx-empty { text-align: center; color: #aaa; padding: 30px; font-size: .95rem; }
+.abx-disclaimer { background: #fff8e1; border: 1px solid #ffe082; border-radius: 8px; padding: 10px 14px; margin-top: 14px; font-size: .8rem; color: #5d4037; }
+/* Spektrum-Badges */
+.abx-spek { display:flex; gap:4px; flex-wrap:wrap; margin-top:4px; }
+.abx-spek-tag { display:inline-block; padding:1px 6px; border-radius:8px; font-size:.68rem; font-weight:700; letter-spacing:.02em; white-space:nowrap; }
+.abx-spek-tag.gpos { background:#dbeafe; color:#1565c0; border:1px solid #90caf9; }
+.abx-spek-tag.gneg { background:#dcfce7; color:#15803d; border:1px solid #86efac; }
+.abx-spek-tag.aty  { background:#f3e8ff; color:#6b21a8; border:1px solid #d8b4fe; }
+.abx-spek-tag.ent  { background:#fff7ed; color:#c2410c; border:1px solid #fdba74; }
+.abx-spek-tag.psa  { background:#fde8e8; color:#b91c1c; border:1px solid #fca5a5; }
+.abx-spek-tag.ana  { background:#f1f5f9; color:#334155; border:1px solid #cbd5e1; }
+/* Spektrum-Filter */
+.abx-spek-filter { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; align-items:center; }
+.abx-spek-filter label { font-size:.75rem; font-weight:700; color:#555; text-transform:uppercase; letter-spacing:.04em; margin-right:2px; }
+.abx-spek-btn { padding:3px 10px; border-radius:12px; cursor:pointer; font-size:.78rem; font-weight:700; transition:all .15s; }
+.abx-spek-btn.alle { border:1.5px solid #aaa; background:#fafafa; color:#555; }
+.abx-spek-btn.alle.active { background:#555; color:#fff; border-color:#555; }
+.abx-spek-btn.gpos { border:1.5px solid #90caf9; background:#fff; color:#1565c0; }
+.abx-spek-btn.gpos.active { background:#1565c0; color:#fff; }
+.abx-spek-btn.gneg { border:1.5px solid #86efac; background:#fff; color:#15803d; }
+.abx-spek-btn.gneg.active { background:#15803d; color:#fff; }
+.abx-spek-btn.aty  { border:1.5px solid #d8b4fe; background:#fff; color:#6b21a8; }
+.abx-spek-btn.aty.active  { background:#6b21a8; color:#fff; }
+.abx-spek-btn.ent  { border:1.5px solid #fdba74; background:#fff; color:#c2410c; }
+.abx-spek-btn.ent.active  { background:#c2410c; color:#fff; }
+.abx-spek-btn.psa  { border:1.5px solid #fca5a5; background:#fff; color:#b91c1c; }
+.abx-spek-btn.psa.active  { background:#b91c1c; color:#fff; }
+.abx-spek-btn.ana  { border:1.5px solid #cbd5e1; background:#fff; color:#334155; }
+.abx-spek-btn.ana.active  { background:#334155; color:#fff; }
+</style>
+
+<div class="abx-container">
+  <div class="abx-header">
+    <h2>🦠 Antibiotika-Dosierung bei Niereninsuffizienz</h2>
+    <p>Dosisanpassung nach eGFR-Stufen · Quelle: Renal Drug Handbook / UpToDate / Fachinformation</p>
+  </div>
+
+  <div class="abx-controls">
+    <div class="abx-field abx-search">
+      <label>Antibiotikum suchen</label>
+      <input type="text" id="abx-search" placeholder="z.B. Meropenem, Vancomycin, Pip/Taz …" oninput="abxRender()">
+    </div>
+    <div class="abx-field">
+      <label>Nierenfunktion / Nierenersatzverfahren hervorheben</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <div class="abx-egfr-btns" id="abx-egfr-btns">
+          <button class="abx-egfr-btn" data-val=">50" onclick="abxSetEgfr('>50',this)">&gt;50</button>
+          <button class="abx-egfr-btn" data-val="30-50" onclick="abxSetEgfr('30-50',this)">30–50</button>
+          <button class="abx-egfr-btn" data-val="15-30" onclick="abxSetEgfr('15-30',this)">15–30</button>
+          <button class="abx-egfr-btn" data-val="<15" onclick="abxSetEgfr('<15',this)">&lt;15</button>
+          <button class="abx-egfr-btn hd" data-val="HD" onclick="abxSetEgfr('HD',this)">HD</button>
+          <button class="abx-egfr-btn crrt" data-val="CRRT" onclick="abxSetEgfr('CRRT',this)">CRRT</button>
+          <button class="abx-egfr-btn pd" data-val="PD" onclick="abxSetEgfr('PD',this)">PD</button>
+        </div>
+        <div id="abx-egfr-badge" style="display:none;" class="abx-egfr-badge">
+          <span>📊 eGFR:</span><span id="abx-egfr-badge-val"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="abx-gruppe-filter" id="abx-grp-filter">
+    <button class="abx-grp-btn active" onclick="abxSetGruppe('',this)">Alle</button>
+    <button class="abx-grp-btn" onclick="abxSetGruppe('Penicillin/BLI',this)">Penicilline/BLI</button>
+    <button class="abx-grp-btn" onclick="abxSetGruppe('Cephalosporin',this)">Cephalosporine</button>
+    <button class="abx-grp-btn" onclick="abxSetGruppe('Carbapenem',this)">Carbapeneme</button>
+    <button class="abx-grp-btn" onclick="abxSetGruppe('Fluorchinolon',this)">Fluorchinolone</button>
+    <button class="abx-grp-btn" onclick="abxSetGruppe('Glykopeptid',this)">Glykopeptide</button>
+    <button class="abx-grp-btn" onclick="abxSetGruppe('Aminoglykosid',this)">Aminoglykoside</button>
+    <button class="abx-grp-btn" onclick="abxSetGruppe('Sonstige',this)">Sonstige</button>
+  </div>
+
+  <div class="abx-spek-filter" id="abx-spek-filter">
+    <label>Spektrum:</label>
+    <button class="abx-spek-btn alle active" onclick="abxSetSpektrum('',this)">Alle</button>
+    <button class="abx-spek-btn gpos" onclick="abxSetSpektrum('G+',this)">Gram+</button>
+    <button class="abx-spek-btn gneg" onclick="abxSetSpektrum('G-',this)">Gram−</button>
+    <button class="abx-spek-btn aty"  onclick="abxSetSpektrum('Aty',this)">Atypiker</button>
+    <button class="abx-spek-btn ent"  onclick="abxSetSpektrum('Ent',this)">Enterokokken</button>
+    <button class="abx-spek-btn psa"  onclick="abxSetSpektrum('PSA',this)">Pseudomonas</button>
+    <button class="abx-spek-btn ana"  onclick="abxSetSpektrum('Ana',this)">Anaerobier</button>
+  </div>
+
+  <div class="abx-grid" id="abx-grid"></div>
+
+  <div class="abx-disclaimer">
+    ⚠️ <strong>Haftungsausschluss:</strong> Alle Dosierungsangaben basieren auf Standardquellen (Renal Drug Handbook, UpToDate, Fachinformation) und dienen als klinische Orientierung. Individuelle Faktoren (Schwere der Infektion, Organfunktion, Interaktionen, TDM-Ergebnisse) müssen immer berücksichtigt werden. Bei TDM-pflichtigen Substanzen (Vancomycin, Aminoglykoside, Teicoplanin) ist die Spiegelmessung obligat.
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+var abxCurrentEgfr = '';
+var abxCurrentGruppe = '';
+var abxCurrentSpektrum = '';
+
+var EGFR_STUFEN = ['>50','30-50','15-30','<15','HD','CRRT','PD'];
+
+var SPEK_META = {
+  'G+':  { cls:'gpos', label:'Gram+' },
+  'G-':  { cls:'gneg', label:'Gram\u2212' },
+  'Aty': { cls:'aty',  label:'Atypiker' },
+  'Ent': { cls:'ent',  label:'Enterokokken' },
+  'PSA': { cls:'psa',  label:'Pseudomonas' },
+  'Ana': { cls:'ana',  label:'Anaerobier' }
+};
+
+var abxData = [
+  // ===== PENICILLINE / BLI =====
+  {
+    name: 'Amoxicillin/Clavulans\u00e4ure', brand: 'Augmentan\u00ae', gruppe: 'Penicillin/BLI',
+    spektrum: ['G+','G-','Ent'],
+    indikation: 'HWI, CAP, ABECB, Sinusitis, Weichteilinfektionen, Bisse',
+    dosierung: {
+      '>50':   { dosis: '875/125 mg q8h p.o. | 2,2 g q8h i.v.', hinweis: '' },
+      '30-50': { dosis: '875/125 mg q12h p.o. | 2,2 g q12h i.v.', hinweis: '' },
+      '15-30': { dosis: '500/125 mg q12h p.o. | 1,1 g q12h i.v.', hinweis: '' },
+      '<15':   { dosis: '500/125 mg q24h p.o. | 1,1 g q24h i.v.', hinweis: '' },
+      'HD':    { dosis: '500/125 mg nach HD p.o.', hinweis: 'nach jeder HD supplementieren; Clavulans\u00e4ure akkumuliert' },
+      'CRRT':  { dosis: '2,2 g q8h i.v.', hinweis: 'Standard-Dosierung; CRRT-Clearance \u00e4hnlich eGFR 30\u201350' },
+      'PD':    { dosis: '500/125 mg q12\u201324h p.o. | 1,1 g q24h i.v.', hinweis: 'geringe PD-Clearance; wie <15 dosieren' }
+    },
+    tdm: false, cave: 'Clavulans\u00e4ure akkumuliert bei CKD \u2192 erh\u00f6htes GI-Nebenwirkungs-Risiko'
+  },
+  {
+    name: 'Ampicillin/Sulbactam', brand: 'Unacid\u00ae', gruppe: 'Penicillin/BLI',
+    spektrum: ['G+','G-','Ent','Ana'],
+    indikation: 'HAP, Aspirationspneumonie, intraabdominell, Acinetobacter',
+    dosierung: {
+      '>50':   { dosis: '3 g (2+1) q6h i.v.', hinweis: '' },
+      '30-50': { dosis: '3 g q8h i.v.', hinweis: '' },
+      '15-30': { dosis: '3 g q12h i.v.', hinweis: '' },
+      '<15':   { dosis: '1,5\u20133 g q12\u201324h i.v.', hinweis: '' },
+      'HD':    { dosis: '1,5\u20133 g q12\u201324h i.v.', hinweis: 'nach HD: 1,5 g supplementieren' },
+      'CRRT':  { dosis: '3 g q8h i.v.', hinweis: 'CRRT erh\u00f6ht Clearance; Standard-/leicht erh\u00f6hte Dosis' },
+      'PD':    { dosis: '1,5\u20133 g q12\u201324h i.v.', hinweis: 'wie HD; geringe PD-Clearance' }
+    },
+    tdm: false, cave: ''
+  },
+  {
+    name: 'Piperacillin/Tazobactam', brand: 'Tazobac\u00ae', gruppe: 'Penicillin/BLI',
+    spektrum: ['G+','G-','Ent','PSA','Ana'],
+    indikation: 'Sepsis, HAP, Pseudomonas, intraabdominell, febrile Neutropenie',
+    dosierung: {
+      '>50':   { dosis: '4,5 g q6\u20138h i.v.', hinweis: 'q6h bei schwerer Infektion / Pseudomonas' },
+      '30-50': { dosis: '4,5 g q8h i.v.', hinweis: '' },
+      '15-30': { dosis: '4,5 g q8h i.v. (max. 3\u00d7/d)', hinweis: '' },
+      '<15':   { dosis: '4,5 g q12h i.v.', hinweis: '' },
+      'HD':    { dosis: '2,25\u20134,5 g q12h i.v.', hinweis: 'nach HD: 0,75 g supplementieren' },
+      'CRRT':  { dosis: '4,5 g q8h i.v.', hinweis: 'CRRT entfernt signifikant; Dosierung wie normale Nierenfunktion empfohlen' },
+      'PD':    { dosis: '4,5 g q12h i.v.', hinweis: 'geringe PD-Elimination; wie <15 ml/min' }
+    },
+    tdm: false, cave: 'Hypokali\u00e4mie m\u00f6glich'
+  },
+  // ===== CEPHALOSPORINE =====
+  {
+    name: 'Cefazolin', brand: 'Cefazolin\u00ae', gruppe: 'Cephalosporin',
+    spektrum: ['G+','G-'],
+    indikation: 'Perioperative Prophylaxe, Haut-/Weichteilinfektion, MSSA-Bakteriämie',
+    dosierung: {
+      '>50':   { dosis: '2 g q8h i.v. | Prophylaxe: 2 g Einmaldosis', hinweis: '' },
+      '30-50': { dosis: '1\u20132 g q12h i.v.', hinweis: '' },
+      '15-30': { dosis: '1\u20132 g q24h i.v.', hinweis: '' },
+      '<15':   { dosis: '1 g q24h i.v.', hinweis: '' },
+      'HD':    { dosis: '1\u20132 g nach HD', hinweis: 'nach jeder Dialyse; alternativ 0,5 g q12h' },
+      'CRRT':  { dosis: '2 g q12h i.v.', hinweis: 'CRRT entfernt moderat; Dosisintervall wie eGFR 30\u201350' },
+      'PD':    { dosis: '1 g q24h i.v. | oder i.p. 250 mg/l Dialysat (Peritonitis)', hinweis: 'bei PD-Peritonitis: i.p. Gabe bevorzugen' }
+    },
+    tdm: false, cave: ''
+  },
+  {
+    name: 'Cefuroxim', brand: 'Zinacef\u00ae', gruppe: 'Cephalosporin',
+    spektrum: ['G+','G-'],
+    indikation: 'CAP, HWI, Haut-/Weichteilinfektion (2. Generation)',
+    dosierung: {
+      '>50':   { dosis: '750 mg\u20131,5 g q8h i.v. | 500 mg q12h p.o.', hinweis: '' },
+      '30-50': { dosis: '750 mg\u20131,5 g q12h i.v. | 500 mg q12h p.o.', hinweis: '' },
+      '15-30': { dosis: '750 mg q12\u201324h i.v.', hinweis: '' },
+      '<15':   { dosis: '750 mg q24h i.v.', hinweis: '' },
+      'HD':    { dosis: '750 mg nach HD', hinweis: 'nach jeder Dialyse' },
+      'CRRT':  { dosis: '750 mg\u20131,5 g q12h i.v.', hinweis: 'wie eGFR 15\u201350' },
+      'PD':    { dosis: '750 mg q24h i.v.', hinweis: 'wie <15 ml/min; geringe PD-Clearance' }
+    },
+    tdm: false, cave: ''
+  },
+  {
+    name: 'Ceftriaxon', brand: 'Rocephin\u00ae', gruppe: 'Cephalosporin',
+    spektrum: ['G+','G-'],
+    indikation: 'CAP, Meningitis, Sepsis, HWI, Gonorrh\u00f6e (3. Generation)',
+    dosierung: {
+      '>50':   { dosis: '1\u20132 g q24h i.v. | Meningitis: 2 g q12h', hinweis: '' },
+      '30-50': { dosis: '1\u20132 g q24h i.v.', hinweis: 'keine Anpassung n\u00f6tig' },
+      '15-30': { dosis: '1\u20132 g q24h i.v.', hinweis: 'keine Anpassung n\u00f6tig' },
+      '<15':   { dosis: '1\u20132 g q24h i.v.', hinweis: 'keine Anpassung n\u00f6tig' },
+      'HD':    { dosis: '1\u20132 g q24h i.v.', hinweis: 'keine Anpassung (bili\u00e4re Elimination ~50%)' },
+      'CRRT':  { dosis: '1\u20132 g q24h i.v.', hinweis: 'keine Anpassung; bili\u00e4re Elimination dominiert' },
+      'PD':    { dosis: '1\u20132 g q24h i.v.', hinweis: 'keine Anpassung' }
+    },
+    tdm: false, cave: 'Cave: Kalzium-Pr\u00e4zipitate bei paralleler Ca-Infusion; bili\u00e4re Elimination \u2192 kaum renale Anpassung n\u00f6tig'
+  },
+  {
+    name: 'Ceftazidim', brand: 'Fortum\u00ae', gruppe: 'Cephalosporin',
+    spektrum: ['G-','PSA'],
+    indikation: 'Pseudomonas, HAP, febrile Neutropenie, ZNS-Infektionen (3. Gen.)',
+    dosierung: {
+      '>50':   { dosis: '2 g q8h i.v.', hinweis: '' },
+      '30-50': { dosis: '2 g q12h i.v.', hinweis: '' },
+      '15-30': { dosis: '2 g q24h i.v.', hinweis: '' },
+      '<15':   { dosis: '1\u20132 g q24\u201348h i.v.', hinweis: '' },
+      'HD':    { dosis: '1 g nach HD', hinweis: 'nach jeder Dialyse; HD entfernt ~50%' },
+      'CRRT':  { dosis: '2 g q12h i.v.', hinweis: 'CRRT entfernt signifikant; Dosisintervall anpassen' },
+      'PD':    { dosis: '1 g q24h i.v. | i.p.: 250 mg/l Dialysat (Peritonitis)', hinweis: 'bei PD-Peritonitis: i.p. Gabe bevorzugen' }
+    },
+    tdm: false, cave: 'Neurotoxizit\u00e4t (Enzephalopathie, Myoklonus) bei Akkumulation \u2014 auch unter CRRT m\u00f6glich!'
+  },
+  {
+    name: 'Cefepim', brand: 'Maxipime\u00ae', gruppe: 'Cephalosporin',
+    spektrum: ['G+','G-','PSA'],
+    indikation: 'Pseudomonas, HAP, febrile Neutropenie, Gram-negative Sepsis (4. Gen.)',
+    dosierung: {
+      '>50':   { dosis: '2 g q8h i.v. | leichte Infektion: 1 g q12h', hinweis: '' },
+      '30-50': { dosis: '2 g q12h i.v.', hinweis: '' },
+      '15-30': { dosis: '2 g q24h i.v. | oder 1 g q12h', hinweis: '' },
+      '<15':   { dosis: '1 g q24h i.v.', hinweis: '' },
+      'HD':    { dosis: '0,5\u20131 g nach HD', hinweis: 'nach jeder Dialyse; HD entfernt ~68%' },
+      'CRRT':  { dosis: '2 g q12h i.v.', hinweis: 'CRRT entfernt signifikant; Talspiegel-Monitoring empfohlen' },
+      'PD':    { dosis: '1 g q24h i.v.', hinweis: 'wie HD; geringe PD-Clearance' }
+    },
+    tdm: false, cave: '\u26a0\ufe0f NEUROTOXIZIT\u00c4T (Enzephalopathie, nicht-konvulsiver Status epilepticus) bei Akkumulation \u2014 auch bei CRRT! Engmaschige neurologische \u00dcberwachung'
+  },
+  // ===== CARBAPENEME =====
+  {
+    name: 'Meropenem', brand: 'Meronem\u00ae', gruppe: 'Carbapenem',
+    spektrum: ['G+','G-','Ent','PSA','Ana'],
+    indikation: 'Schwere Sepsis, ESBL, Pseudomonas, HAP, intraabdominell, Meningitis',
+    dosierung: {
+      '>50':   { dosis: '1 g q8h i.v. | schwere/Meningitis: 2 g q8h', hinweis: '' },
+      '30-50': { dosis: '1 g q12h i.v. | schwere: 2 g q12h', hinweis: '' },
+      '15-30': { dosis: '1 g q12h i.v.', hinweis: '' },
+      '<15':   { dosis: '500 mg\u20131 g q12\u201324h i.v.', hinweis: '' },
+      'HD':    { dosis: '500 mg\u20131 g q24h i.v.', hinweis: 'nach HD supplementieren' },
+      'CRRT':  { dosis: '1 g q8\u201312h i.v. | schwere Infektion: 2 g q8\u201312h', hinweis: 'CRRT entfernt signifikant; Standard-Dosierung meist ausreichend' },
+      'PD':    { dosis: '500 mg\u20131 g q12\u201324h i.v.', hinweis: 'wie <15 ml/min; geringe PD-Clearance' }
+    },
+    tdm: false, cave: ''
+  },
+  {
+    name: 'Imipenem/Cilastatin', brand: 'Zienam\u00ae', gruppe: 'Carbapenem',
+    spektrum: ['G+','G-','Ent','PSA','Ana'],
+    indikation: 'Schwere Sepsis, ESBL, polymikrobielle Infektionen, Nokardiose',
+    dosierung: {
+      '>50':   { dosis: '500 mg q6h i.v. | oder 1 g q8h', hinweis: '' },
+      '30-50': { dosis: '500 mg q8h i.v.', hinweis: '' },
+      '15-30': { dosis: '500 mg q12h i.v.', hinweis: '' },
+      '<15':   { dosis: '250\u2013500 mg q12h i.v.', hinweis: '' },
+      'HD':    { dosis: '250 mg q12h i.v.', hinweis: 'nach HD supplementieren' },
+      'CRRT':  { dosis: '500 mg q8h i.v.', hinweis: 'CRRT entfernt ~30\u201350%; wie eGFR 30\u201350 dosieren' },
+      'PD':    { dosis: '250 mg q12h i.v.', hinweis: 'wie HD; geringe PD-Clearance' }
+    },
+    tdm: false, cave: '\u26a0\ufe0f Krampfanfallrisiko bei hohen Dosen / Akkumulation (Epilepsie-Vorgeschichte: Meropenem bevorzugen)'
+  },
+  {
+    name: 'Ertapenem', brand: 'Invanz\u00ae', gruppe: 'Carbapenem',
+    spektrum: ['G+','G-','Ana'],
+    indikation: 'Ambulant erworbene Infektionen, ESBL, intraabdominell (KEIN Pseudomonas!)',
+    dosierung: {
+      '>50':   { dosis: '1 g q24h i.v./i.m.', hinweis: '' },
+      '30-50': { dosis: '1 g q24h i.v.', hinweis: 'ab eGFR >30: keine Anpassung' },
+      '15-30': { dosis: '500 mg q24h i.v.', hinweis: '' },
+      '<15':   { dosis: '500 mg q24h i.v.', hinweis: '' },
+      'HD':    { dosis: '500 mg q24h i.v.', hinweis: 'nach HD: 150 mg supplementieren (HD entfernt ~30%)' },
+      'CRRT':  { dosis: '500 mg q24h i.v.', hinweis: 'CRRT entfernt moderat; wie eGFR <30 dosieren' },
+      'PD':    { dosis: '500 mg q24h i.v.', hinweis: 'wie HD; geringe PD-Clearance' }
+    },
+    tdm: false, cave: 'Kein Pseudomonas-Spektrum; 1\u00d7 t\u00e4gliche Gabe vereinfacht Therapie'
+  },
+  // ===== FLUORCHINOLONE =====
+  {
+    name: 'Ciprofloxacin', brand: 'Ciprobay\u00ae', gruppe: 'Fluorchinolon',
+    spektrum: ['G+','G-','Aty','PSA'],
+    indikation: 'HWI, Reisediarr\u00f6, Pseudomonas (Gruppe 2), Knochen-/Gelenkinfektion',
+    dosierung: {
+      '>50':   { dosis: '400 mg q8\u201312h i.v. | 500\u2013750 mg q12h p.o.', hinweis: '' },
+      '30-50': { dosis: '400 mg q12h i.v. | 500 mg q12h p.o.', hinweis: '' },
+      '15-30': { dosis: '200\u2013400 mg q12h i.v. | 250\u2013500 mg q12h p.o.', hinweis: '' },
+      '<15':   { dosis: '200\u2013400 mg q12h i.v. | 250\u2013500 mg q12h p.o.', hinweis: '' },
+      'HD':    { dosis: '200 mg q12h i.v.', hinweis: 'nach HD: zus\u00e4tzlich 200 mg; HD entfernt ~10%' },
+      'CRRT':  { dosis: '400 mg q12h i.v.', hinweis: 'CRRT entfernt ~15\u201320%; wie eGFR 15\u201350' },
+      'PD':    { dosis: '200\u2013400 mg q12h i.v.', hinweis: 'geringe PD-Clearance; Dosierung wie HD' }
+    },
+    tdm: false, cave: 'QTc-Verl\u00e4ngerung; Sehnenrupturrisiko; Interaktionen (Antazida, Eisenpr\u00e4parate, Warfarin)'
+  },
+  {
+    name: 'Levofloxacin', brand: 'Tavanic\u00ae', gruppe: 'Fluorchinolon',
+    spektrum: ['G+','G-','Aty','PSA'],
+    indikation: 'CAP, ABECB, HWI, atypische Erreger, Legionella (Gruppe 3)',
+    dosierung: {
+      '>50':   { dosis: '500 mg q24h i.v./p.o. | schwere CAP: 500 mg q12h', hinweis: '' },
+      '30-50': { dosis: '500 mg 1\u00d7 ED, dann 250 mg q24h', hinweis: '' },
+      '15-30': { dosis: '500 mg 1\u00d7 ED, dann 125\u2013250 mg q24h', hinweis: '' },
+      '<15':   { dosis: '500 mg 1\u00d7 ED, dann 125 mg q24h', hinweis: '' },
+      'HD':    { dosis: '500 mg 1\u00d7 ED, dann 125 mg q24h', hinweis: 'keine zus\u00e4tzliche Supplementierung nach HD' },
+      'CRRT':  { dosis: '500 mg 1\u00d7 ED, dann 250 mg q24h', hinweis: 'CRRT entfernt ~15%; etwas h\u00f6here Erhaltungsdosis als bei HD' },
+      'PD':    { dosis: '500 mg 1\u00d7 ED, dann 125 mg q24h', hinweis: 'wie HD; geringe PD-Clearance' }
+    },
+    tdm: false, cave: 'QTc-Verl\u00e4ngerung; bessere Pneumokokken-Wirksamkeit als Ciprofloxacin'
+  },
+  {
+    name: 'Moxifloxacin', brand: 'Avalox\u00ae', gruppe: 'Fluorchinolon',
+    spektrum: ['G+','G-','Aty','Ana'],
+    indikation: 'CAP, ABECB, intraabdominell, Anaerobier (Gruppe 4)',
+    dosierung: {
+      '>50':   { dosis: '400 mg q24h i.v./p.o.', hinweis: 'keine renale Anpassung' },
+      '30-50': { dosis: '400 mg q24h i.v./p.o.', hinweis: 'keine Anpassung (hepatisch)' },
+      '15-30': { dosis: '400 mg q24h i.v./p.o.', hinweis: 'keine Anpassung' },
+      '<15':   { dosis: '400 mg q24h i.v./p.o.', hinweis: 'keine Anpassung' },
+      'HD':    { dosis: '400 mg q24h i.v./p.o.', hinweis: 'keine Anpassung (bili\u00e4re/intestinale Elimination)' },
+      'CRRT':  { dosis: '400 mg q24h i.v./p.o.', hinweis: 'keine Anpassung; hepatische Elimination dominiert' },
+      'PD':    { dosis: '400 mg q24h i.v./p.o.', hinweis: 'keine Anpassung' }
+    },
+    tdm: false, cave: '\u26a0\ufe0f QTc-Verl\u00e4ngerung (st\u00e4rker als Cipro/Levo); kontraindiziert bei bekannter QT-Verl\u00e4ngerung'
+  },
+  // ===== GLYKOPEPTIDE =====
+  {
+    name: 'Vancomycin', brand: 'Vancomycin\u00ae', gruppe: 'Glykopeptid',
+    spektrum: ['G+','Ent'],
+    indikation: 'MRSA, Koagulase-neg. Staph., Enterokokken, penicillinresistente Grampositive',
+    dosierung: {
+      '>50':   { dosis: '15\u201320 mg/kg q8\u201312h i.v.', hinweis: 'TDM obligat; AUC/MIC-Ziel 400\u2013600 mg\u00b7h/l' },
+      '30-50': { dosis: '15\u201320 mg/kg q12\u201324h i.v.', hinweis: 'verl\u00e4ngertes Intervall; TDM vor jeder Gabe' },
+      '15-30': { dosis: '15\u201320 mg/kg q24\u201348h i.v.', hinweis: 'Intervall nach Spiegel; TDM obligat' },
+      '<15':   { dosis: '15\u201320 mg/kg q48\u201372h i.v.', hinweis: 'stark verl\u00e4ngerte Intervalle; nur nach TDM' },
+      'HD':    { dosis: '15\u201320 mg/kg nach HD', hinweis: 'high-flux HD entfernt 30\u201340%; Spiegel vor n\u00e4chster Gabe; low-flux: kaum Entfernung' },
+      'CRRT':  { dosis: '15\u201320 mg/kg Ladedosis, dann 10\u201315 mg/kg q24\u201348h', hinweis: '\u26a0\ufe0f Hohe Variabilit\u00e4t je nach CRRT-Modus + Flussrate! TDM zwingend obligat; Ziel-Talspiegel 15\u201320 mg/l' },
+      'PD':    { dosis: '15\u201320 mg/kg q4\u20137d i.v. | bei PD-Peritonitis: 30 mg/kg i.p. im Wechselbeutel', hinweis: 'sehr geringe PD-Clearance (~10\u201315 ml/min); Spiegel w\u00f6chentlich; i.p. Gabe bei Peritonitis bevorzugt' }
+    },
+    tdm: true, cave: 'Nephrotoxizit\u00e4t (besonders mit Aminoglykosiden/Schleifendiuretika); Ototoxizit\u00e4t; Red-Man-Syndrom (Infusion \u226560 min)'
+  },
+  {
+    name: 'Teicoplanin', brand: 'Targocid\u00ae', gruppe: 'Glykopeptid',
+    spektrum: ['G+','Ent'],
+    indikation: 'MRSA, Gram-positive Infektionen (Alternative zu Vancomycin)',
+    dosierung: {
+      '>50':   { dosis: 'Loading: 6\u201310 mg/kg q12h \u00d7 3 Dosen, dann 6\u201310 mg/kg q24h i.v.', hinweis: 'TDM empfohlen' },
+      '30-50': { dosis: 'Loading wie normal, ab Tag 4: 6\u201310 mg/kg q48h', hinweis: 'Talspiegel >10 mg/l' },
+      '15-30': { dosis: 'Loading wie normal, ab Tag 4: 6\u201310 mg/kg q72h', hinweis: 'TDM obligat' },
+      '<15':   { dosis: 'Loading wie normal, ab Tag 4\u20137: 6\u201310 mg/kg q72h', hinweis: 'nach Spiegel titrieren' },
+      'HD':    { dosis: '6\u201310 mg/kg q72h i.v.', hinweis: 'kaum dialysierbar; Talspiegel-basierte Dosierung' },
+      'CRRT':  { dosis: 'Loading wie normal, dann 6\u201310 mg/kg q24\u201348h', hinweis: 'CRRT entfernt wenig; TDM obligat; Intervall nach Spiegel' },
+      'PD':    { dosis: '6\u201310 mg/kg q48\u201372h i.v.', hinweis: 'kaum PD-dialysierbar; wie <15 ml/min dosieren; TDM' }
+    },
+    tdm: true, cave: 'Talspiegel: >10 mg/l (leicht), >20 mg/l (Endokarditis/Knochen/Sepsis)'
+  },
+  // ===== AMINOGLYKOSIDE =====
+  {
+    name: 'Gentamicin', brand: 'Gentamicin\u00ae', gruppe: 'Aminoglykosid',
+    spektrum: ['G+','G-','Ent','PSA'],
+    indikation: 'Synergistisch bei Endokarditis, Gram-negative Sepsis, Tular\u00e4mie',
+    dosierung: {
+      '>50':   { dosis: '5\u20137 mg/kg q24h i.v. (Extended-Interval)', hinweis: 'TDM: Peak 1h: 15\u201320 mg/l; Talspiegel <1 mg/l' },
+      '30-50': { dosis: '4\u20135 mg/kg q24\u201336h i.v.', hinweis: 'TDM vor jeder Gabe; Talspiegel <1 mg/l' },
+      '15-30': { dosis: '3\u20134 mg/kg q48h i.v.', hinweis: 'TDM obligat; Intervall bis Talspiegel <1 mg/l' },
+      '<15':   { dosis: '2\u20133 mg/kg q48\u201372h i.v.', hinweis: 'nur nach TDM; m\u00f6glichst vermeiden' },
+      'HD':    { dosis: '1,5\u20132 mg/kg nach HD', hinweis: 'HD entfernt ~50%; TDM nach jeder Gabe' },
+      'CRRT':  { dosis: '2\u20133 mg/kg q24\u201336h i.v.', hinweis: '\u26a0\ufe0f CRRT erh\u00f6ht Clearance signifikant; TDM zwingend obligat; Talspiegel <1 mg/l vor jeder Gabe sicherstellen!' },
+      'PD':    { dosis: '1,5\u20132 mg/kg q24\u201348h i.v.', hinweis: 'geringe PD-Clearance; TDM obligat; m\u00f6glichst vermeiden' }
+    },
+    tdm: true, cave: '\u26a0\ufe0f Nephrotoxizit\u00e4t + Ototoxizit\u00e4t (kumulativ, irreversibel!); kurze Therapiedauer (<5 Tage); Kombination mit Vancomycin vermeiden'
+  },
+  {
+    name: 'Tobramycin', brand: 'Gernebcin\u00ae', gruppe: 'Aminoglykosid',
+    spektrum: ['G-','PSA'],
+    indikation: 'Pseudomonas (besser als Gentamicin), gram-negative Infektionen',
+    dosierung: {
+      '>50':   { dosis: '5\u20137 mg/kg q24h i.v. (Extended-Interval)', hinweis: 'TDM; Peak 15\u201320 mg/l; Talspiegel <1 mg/l' },
+      '30-50': { dosis: '4\u20135 mg/kg q24\u201336h i.v.', hinweis: 'TDM obligat' },
+      '15-30': { dosis: '3\u20134 mg/kg q48h i.v.', hinweis: 'TDM obligat' },
+      '<15':   { dosis: '2\u20133 mg/kg q48\u201372h i.v.', hinweis: 'TDM; m\u00f6glichst vermeiden' },
+      'HD':    { dosis: '1,5\u20132 mg/kg nach HD', hinweis: 'HD entfernt ~50%; TDM nach Gabe' },
+      'CRRT':  { dosis: '2\u20133 mg/kg q24\u201336h i.v.', hinweis: 'wie Gentamicin; TDM zwingend; Talspiegel <1 mg/l vor Gabe' },
+      'PD':    { dosis: '1,5\u20132 mg/kg q24\u201348h i.v.', hinweis: 'geringe PD-Clearance; TDM obligat' }
+    },
+    tdm: true, cave: 'Gleiche Toxizit\u00e4t wie Gentamicin; bevorzugt bei Pseudomonas-Verdacht'
+  },
+  // ===== SONSTIGE =====
+  {
+    name: 'Metronidazol', brand: 'Flagyl\u00ae / Clont\u00ae', gruppe: 'Sonstige',
+    spektrum: ['Ana'],
+    indikation: 'Anaerobier, C. difficile (p.o.), Trichomoniasis, Am\u00f6ben, Giardia',
+    dosierung: {
+      '>50':   { dosis: '500 mg q8h i.v./p.o. | C. diff: 400 mg q8h p.o.', hinweis: '' },
+      '30-50': { dosis: '500 mg q8h i.v./p.o.', hinweis: 'keine Anpassung' },
+      '15-30': { dosis: '500 mg q8h i.v./p.o.', hinweis: 'keine Anpassung' },
+      '<15':   { dosis: '500 mg q8\u201312h i.v./p.o.', hinweis: 'Metaboliten akkumulieren; Langzeittherapie \u00fcberwachen' },
+      'HD':    { dosis: '500 mg q8h i.v./p.o.', hinweis: 'nach HD keine zus\u00e4tzliche Supplementierung; hepatisch' },
+      'CRRT':  { dosis: '500 mg q8h i.v./p.o.', hinweis: 'keine Anpassung n\u00f6tig; hepatische Elimination dominiert' },
+      'PD':    { dosis: '500 mg q8h i.v./p.o.', hinweis: 'keine Anpassung; geringe PD-Clearance' }
+    },
+    tdm: false, cave: 'Aktive Metaboliten akkumulieren bei CKD; periphere Neuropathie bei Langzeittherapie; kein Alkohol'
+  },
+  {
+    name: 'Clindamycin', brand: 'Sobelin\u00ae', gruppe: 'Sonstige',
+    spektrum: ['G+','Ana'],
+    indikation: 'Gram-positive, Anaerobier, Weichteilinfektionen, Knochen, MRSA-Haut (p.o.)',
+    dosierung: {
+      '>50':   { dosis: '600\u2013900 mg q8h i.v. | 300\u2013450 mg q8h p.o.', hinweis: '' },
+      '30-50': { dosis: '600\u2013900 mg q8h i.v.', hinweis: 'keine Anpassung' },
+      '15-30': { dosis: '600\u2013900 mg q8h i.v.', hinweis: 'keine Anpassung' },
+      '<15':   { dosis: '600\u2013900 mg q8h i.v.', hinweis: 'keine Anpassung (hepatisch)' },
+      'HD':    { dosis: '600\u2013900 mg q8h i.v.', hinweis: 'keine Anpassung; kaum dialysierbar' },
+      'CRRT':  { dosis: '600\u2013900 mg q8h i.v.', hinweis: 'keine Anpassung; hepatische Elimination dominiert' },
+      'PD':    { dosis: '600\u2013900 mg q8h i.v.', hinweis: 'keine Anpassung' }
+    },
+    tdm: false, cave: '\u26a0\ufe0f Hohes C.-difficile-Risiko; bei Diarr\u00f6 sofort absetzen'
+  },
+  {
+    name: 'Cotrimoxazol (TMP/SMX)', brand: 'Bactrim\u00ae / Cotrim\u00ae', gruppe: 'Sonstige',
+    spektrum: ['G+','G-'],
+    indikation: 'HWI (unkompliziert), PCP-Prophylaxe/-Therapie, Nokardiose, MRSA-HWI',
+    dosierung: {
+      '>50':   { dosis: 'HWI: 160/800 mg q12h p.o. | PCP-Therapie: 5 mg/kg TMP q6h i.v.', hinweis: '' },
+      '30-50': { dosis: '160/800 mg q12h p.o.', hinweis: 'volle Dosis f\u00fcr 7\u201310d m\u00f6glich' },
+      '15-30': { dosis: '50% Dosis oder q24h | PCP: reduziert unter TDM', hinweis: 'erh\u00f6htes Hyperkali\u00e4mie-Risiko' },
+      '<15':   { dosis: 'KONTRAINDIZIERT bei HWI', hinweis: 'nur PCP (lebensrettend) unter engem Monitoring' },
+      'HD':    { dosis: 'KONTRAINDIZIERT Standardtherapie', hinweis: 'TMP partiell dialysierbar; nur PCP in Notfall' },
+      'CRRT':  { dosis: 'PCP: 5 mg/kg TMP q8\u201312h i.v.', hinweis: 'CRRT erh\u00f6ht Clearance; bei PCP Standard-Dosierung m\u00f6glich; HWI-Therapie nicht geeignet; TDM/K\u207a-Monitoring!' },
+      'PD':    { dosis: 'KONTRAINDIZIERT bei HWI', hinweis: 'nur PCP in Notfall; wie HD dosieren; Hyperkali\u00e4mie-Risiko hoch' }
+    },
+    tdm: false, cave: '\u26a0\ufe0f HYPERKALI\u00c4MIE (TMP blockiert ENaC); \u26a0\ufe0f Falscher Kreatinin-Anstieg (kein echter GFR-Abfall); Folsäuremangel, Knochenmarksuppression'
+  },
+  {
+    name: 'Nitrofurantoin', brand: 'Furadantin\u00ae / Nifurantin\u00ae', gruppe: 'Sonstige',
+    spektrum: ['G+','G-','Ent'],
+    indikation: 'Unkomplizierter HWI (nur untere HWI, kein Gewebepenetration!)',
+    dosierung: {
+      '>50':   { dosis: '50\u2013100 mg q6h p.o. \u00d7 5\u20137 Tage', hinweis: 'nur bei eGFR >45' },
+      '30-50': { dosis: '50 mg q6h p.o.', hinweis: 'eGFR 45\u201350 noch m\u00f6glich' },
+      '15-30': { dosis: 'KONTRAINDIZIERT', hinweis: 'kein therapeutischer Urin-Spiegel; Metaboliten-Akkumulation' },
+      '<15':   { dosis: 'KONTRAINDIZIERT', hinweis: 'absolut kontraindiziert' },
+      'HD':    { dosis: 'KONTRAINDIZIERT', hinweis: 'absolut kontraindiziert' },
+      'CRRT':  { dosis: 'KONTRAINDIZIERT', hinweis: 'absolut kontraindiziert' },
+      'PD':    { dosis: 'KONTRAINDIZIERT', hinweis: 'absolut kontraindiziert' }
+    },
+    tdm: false, cave: '\u26a0\ufe0f KONTRAINDIZIERT bei eGFR <45; Lungenfibrose, Polyneuropathie; CAVE: h\u00e4ufig trotzdem verschrieben!'
+  },
+  {
+    name: 'Fosfomycin i.v.', brand: 'Infectofos\u00ae', gruppe: 'Sonstige',
+    spektrum: ['G+','G-'],
+    indikation: 'ESBL, komplizierte HWI, Knochen, Kombinationstherapie (immer Kombination!)',
+    dosierung: {
+      '>50':   { dosis: '8\u201312 g q6\u20138h i.v. (200 mg/kg/d)', hinweis: 'immer in Kombination' },
+      '30-50': { dosis: '8 g q8\u201312h i.v.', hinweis: '' },
+      '15-30': { dosis: '4\u20138 g q12h i.v.', hinweis: '' },
+      '<15':   { dosis: '2\u20134 g q12\u201324h i.v.', hinweis: '' },
+      'HD':    { dosis: '2\u20134 g nach HD', hinweis: 'HD entfernt ~80%; nach Dialyse supplementieren' },
+      'CRRT':  { dosis: '4\u20138 g q12h i.v.', hinweis: 'CRRT entfernt signifikant (~80% renale Elimination); Na-Bilanz beachten!' },
+      'PD':    { dosis: '2\u20134 g q12\u201324h i.v.', hinweis: 'geringe PD-Clearance; wie <15 ml/min; Na-Bilanz beachten!' }
+    },
+    tdm: false, cave: '\u26a0\ufe0f Hoher Natriumgehalt (~14,4 mmol Na/g) \u2192 Na-Bilanz bei HI/CKD; immer in Kombination'
+  },
+  {
+    name: 'Linezolid', brand: 'Zyvoxid\u00ae', gruppe: 'Sonstige',
+    spektrum: ['G+','Ent'],
+    indikation: 'MRSA, VRE, therapierefraktäre gram-positive Infektionen, ZNS-MRSA',
+    dosierung: {
+      '>50':   { dosis: '600 mg q12h i.v./p.o.', hinweis: '100% orale Bioverfügbarkeit' },
+      '30-50': { dosis: '600 mg q12h i.v./p.o.', hinweis: 'keine Anpassung' },
+      '15-30': { dosis: '600 mg q12h i.v./p.o.', hinweis: 'keine Anpassung; Metaboliten akkumulieren' },
+      '<15':   { dosis: '600 mg q12h i.v./p.o.', hinweis: 'keine Anpassung; ggf. Monitoring' },
+      'HD':    { dosis: '600 mg q12h i.v./p.o.', hinweis: 'nach HD keine Supplementierung n\u00f6tig' },
+      'CRRT':  { dosis: '600 mg q12h i.v./p.o.', hinweis: 'keine Anpassung; CRRT entfernt minimal; Metaboliten-Akkumulation m\u00f6glich' },
+      'PD':    { dosis: '600 mg q12h i.v./p.o.', hinweis: 'keine Anpassung' }
+    },
+    tdm: false, cave: '\u26a0\ufe0f Thrombozytopenie >2 Wochen (w\u00f6chentliches BB!); serotonerges Syndrom; Laktatazidose m\u00f6glich'
+  },
+  {
+    name: 'Daptomycin', brand: 'Cubicin\u00ae', gruppe: 'Sonstige',
+    spektrum: ['G+','Ent'],
+    indikation: 'MRSA-Bakteriämie/-Endokarditis, VRE, komplizierte Hautinfektionen (KEIN Pneumonie!)',
+    dosierung: {
+      '>50':   { dosis: '6\u20138 mg/kg q24h i.v. | Endokarditis: 8\u201310 mg/kg q24h', hinweis: '' },
+      '30-50': { dosis: '6\u20138 mg/kg q24h i.v.', hinweis: 'eGFR >30: keine Anpassung' },
+      '15-30': { dosis: '6\u20138 mg/kg q48h i.v.', hinweis: 'Intervall verl\u00e4ngern' },
+      '<15':   { dosis: '6\u20138 mg/kg q48h i.v.', hinweis: '' },
+      'HD':    { dosis: '6\u20138 mg/kg q48h i.v.', hinweis: 'nach HD geben; HD entfernt ~11\u201315%' },
+      'CRRT':  { dosis: '6\u20138 mg/kg q24\u201348h i.v.', hinweis: 'CRRT-Clearance variabel; TDM erw\u00e4gen; Intervall nach Nierenfunktion' },
+      'PD':    { dosis: '6\u20138 mg/kg q48h i.v.', hinweis: 'geringe PD-Clearance; wie HD dosieren' }
+    },
+    tdm: false, cave: '\u26a0\ufe0f Myopathie/Rhabdomyolyse \u2192 CK w\u00f6chentlich; NICHT bei Pneumonie (Surfactant-Inaktivierung); Statin pausieren'
+  },
+  {
+    name: 'Tigecyclin', brand: 'Tygacil\u00ae', gruppe: 'Sonstige',
+    spektrum: ['G+','G-','Aty','Ent','Ana'],
+    indikation: 'Reserve-Antibiotikum: komplizierte Haut-/Weichgewebeinfektionen, intraabdominelle Infektionen, MBL-/KPC-Carbapenemase-produzierende Erreger',
+    dosierung: {
+      '>50':   { dosis: '100 mg Ladedosis, dann 50 mg q12h i.v. (Inf. \u00fcber 30\u201360 min)', hinweis: '' },
+      '30-50': { dosis: '100 mg Ladedosis, dann 50 mg q12h i.v.', hinweis: 'Keine Dosisanpassung erforderlich' },
+      '15-30': { dosis: '100 mg Ladedosis, dann 50 mg q12h i.v.', hinweis: 'Keine Dosisanpassung erforderlich' },
+      '<15':   { dosis: '100 mg Ladedosis, dann 50 mg q12h i.v.', hinweis: 'Keine Dosisanpassung; schwere Niereninsuffizienz: Daten begrenzt' },
+      'HD':    { dosis: '100 mg Ladedosis, dann 50 mg q12h i.v.', hinweis: 'Keine Dosisanpassung; wird NICHT durch HD eliminiert (hohes Vd)' },
+      'CRRT':  { dosis: '100 mg Ladedosis, dann 50 mg q12h i.v.', hinweis: 'Keine Dosisanpassung; hohes Vd \u2192 minimale CRRT-Elimination' },
+      'PD':    { dosis: '100 mg Ladedosis, dann 50 mg q12h i.v.', hinweis: 'Keine Dosisanpassung; geringe PD-Clearance' }
+    },
+    tdm: false, cave: '\u26a0\ufe0f Mortalit\u00e4tssignal in schweren Infektionen (FDA-Warnung); \u00dcbelkeit/Erbrechen h\u00e4ufig; NICHT f\u00fcr Pneumonie-Monotherapie; Tetracyclin-Klasse: keine Kinder, keine Schwangerschaft'
+  },
+  {
+    name: 'Cefpodoxim', brand: 'Orelox\u00ae / Podomexef\u00ae', gruppe: 'Cephalosporin',
+    spektrum: ['G+','G-'],
+    indikation: 'Oral: HWI, ambulant erworbene Pneumonie, Haut-/Weichgewebeinfektionen, Exazerbation COPD',
+    dosierung: {
+      '>50':   { dosis: '200 mg q12h p.o. | HWI unkompliziert: 100 mg q12h p.o.', hinweis: '' },
+      '30-50': { dosis: '200 mg q12h p.o.', hinweis: 'eGFR 26\u201350: Standarddosis' },
+      '15-30': { dosis: '200 mg q24h p.o.', hinweis: 'Intervall auf 24h verl\u00e4ngern (eGFR 10\u201325)' },
+      '<15':   { dosis: '200 mg q24\u201348h p.o.', hinweis: 'Dosisreduktion; engmaschige \u00dcberwachung' },
+      'HD':    { dosis: '200 mg 3\u00d7/Woche p.o. (nach HD)', hinweis: 'HD entfernt ca. 23%; nach Dialyse geben' },
+      'CRRT':  { dosis: '200 mg q24h p.o.', hinweis: 'Wenige Daten; wie eGFR 15\u201330 dosieren' },
+      'PD':    { dosis: '200 mg q24\u201348h p.o.', hinweis: 'Wenige Daten; wie <15 ml/min dosieren' }
+    },
+    tdm: false, cave: ''
+  },
+  {
+    name: 'Flucloxacillin', brand: 'Staphylex\u00ae', gruppe: 'Penicillin/BLI',
+    spektrum: ['G+'],
+    indikation: 'MSSA-Infektionen: Endokarditis, Osteomyelitis, Haut-/Weichgewebeinfektionen, Pneumonie',
+    dosierung: {
+      '>50':   { dosis: '1\u20132 g q4\u20136h i.v. | Endokarditis/Osteomyelitis: 2 g q4h i.v.', hinweis: '' },
+      '30-50': { dosis: '1\u20132 g q6h i.v.', hinweis: 'Standarddosis; keine routinem\u00e4\u00dfige Anpassung' },
+      '15-30': { dosis: '1\u20132 g q6h i.v.', hinweis: 'Keine strenge Dosisanpassung; hepatische Elimination dominiert' },
+      '<15':   { dosis: '1 g q6h i.v.', hinweis: 'Dosisreduktion m\u00f6glich; \u00fcberwiegend hepatisch eliminiert' },
+      'HD':    { dosis: '1 g q6h i.v.', hinweis: 'Kaum dialysierbar; Standardintervall; nicht HD-abh\u00e4ngig dosieren' },
+      'CRRT':  { dosis: '2 g q6h i.v.', hinweis: 'Geringe CRRT-Clearance; Standarddosierung; schwere Inf. h\u00f6here Dosen' },
+      'PD':    { dosis: '1 g q6h i.v.', hinweis: 'Geringe PD-Clearance; Standardintervall' }
+    },
+    tdm: false, cave: '\u26a0\ufe0f Cholestatische Hepatitis m\u00f6glich (bis 2 Monate nach Therapie); LFT \u00fcberwachen; p.o.-Bioverfügbarkeit 50\u201370% (n\u00fcchtern!)'
+  },
+  {
+    name: 'Azithromycin', brand: 'Zithromax\u00ae', gruppe: 'Sonstige',
+    spektrum: ['G+','G-','Aty'],
+    indikation: 'CAP (ambulant), atypische Pneumonie (Legionellen, Mykoplasmen, Chlamydien), Exazerbation COPD, Harnr\u00f6hren-/Zervizitis (Chlamydien)',
+    dosierung: {
+      '>50':   { dosis: '500 mg q24h i.v./p.o. \u00d7 3\u20135 Tage | CAP-Kombination: 500 mg/d \u00d7 3d', hinweis: '' },
+      '30-50': { dosis: '500 mg q24h i.v./p.o.', hinweis: 'Keine Dosisanpassung (\u00fcberwiegend hepatisch/bili\u00e4r)' },
+      '15-30': { dosis: '500 mg q24h i.v./p.o.', hinweis: 'Keine Dosisanpassung; Vorsicht: AUC \u219135% bei GFR <10' },
+      '<15':   { dosis: '500 mg q24h i.v./p.o.', hinweis: 'Vorsicht; keine formale Anpassung; begrenzte Daten' },
+      'HD':    { dosis: '500 mg q24h p.o.', hinweis: 'Kaum dialysierbar (hohes Vd); Standarddosis' },
+      'CRRT':  { dosis: '500 mg q24h p.o./i.v.', hinweis: 'Keine relevante CRRT-Clearance; Standarddosis' },
+      'PD':    { dosis: '500 mg q24h p.o.', hinweis: 'Keine relevante PD-Clearance; Standarddosis' }
+    },
+    tdm: false, cave: '\u26a0\ufe0f QTc-Verl\u00e4ngerung (Interaktion mit anderen QT-Verl\u00e4ngernden Medikamenten!); Leberfunktion pr\u00fcfen; CAVE: Torsades de Pointes; lange Halbwertszeit (68h)'
+  },
+  {
+    name: 'Doxycyclin', brand: 'Vibramycin\u00ae / Doxycyclin AL\u00ae', gruppe: 'Sonstige',
+    spektrum: ['G+','G-','Aty'],
+    indikation: 'Atypische Pneumonie, Borrelia, Rickettsia, Chlamydien, Syphilis, Malaria-Prophylaxe, Akne (Langzeit)',
+    dosierung: {
+      '>50':   { dosis: '200 mg Ladedosis, dann 100 mg q12\u201324h p.o./i.v.', hinweis: '' },
+      '30-50': { dosis: '200 mg Ladedosis, dann 100 mg q12\u201324h p.o./i.v.', hinweis: 'Keine Dosisanpassung (nicht renal eliminiert)' },
+      '15-30': { dosis: '200 mg Ladedosis, dann 100 mg q12\u201324h p.o./i.v.', hinweis: 'Keine Dosisanpassung; bei Niereninsuffizienz sicheres Tetracyclin' },
+      '<15':   { dosis: '200 mg Ladedosis, dann 100 mg q12\u201324h p.o./i.v.', hinweis: 'Bevorzugtes Tetracyclin bei Niereninsuffizienz (kein Az\u00f6tamie-Risiko wie \u00e4ltere Tetracycline)' },
+      'HD':    { dosis: '200 mg Ladedosis, dann 100 mg q12\u201324h p.o./i.v.', hinweis: 'Keine Dosisanpassung; nicht dialysierbar' },
+      'CRRT':  { dosis: '200 mg Ladedosis, dann 100 mg q12\u201324h p.o./i.v.', hinweis: 'Keine Dosisanpassung; CRRT-Clearance minimal' },
+      'PD':    { dosis: '200 mg Ladedosis, dann 100 mg q12\u201324h p.o./i.v.', hinweis: 'Keine Dosisanpassung; PD-Clearance minimal' }
+    },
+    tdm: false, cave: '\u26a0\ufe0f Nicht mit Milch/Antazida/Eisen (Chelat); \u00d6sophagusulzera (aufrecht einnehmen, viel Wasser); Photosensibilisierung; NICHT bei Kindern <8J oder Schwangerschaft'
+  }
+];
+
+window.abxSetEgfr = function(val, btn) {
+  abxCurrentEgfr = (abxCurrentEgfr === val) ? '' : val;
+  document.querySelectorAll('.abx-egfr-btn').forEach(function(b){ b.classList.remove('active'); });
+  if (abxCurrentEgfr) btn.classList.add('active');
+  abxRender();
+};
+
+window.abxSetGruppe = function(val, btn) {
+  abxCurrentGruppe = val;
+  document.querySelectorAll('.abx-grp-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  abxRender();
+};
+
+window.abxSetSpektrum = function(val, btn) {
+  abxCurrentSpektrum = val;
+  document.querySelectorAll('.abx-spek-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  abxRender();
+};
+
+window.abxToggleCard = function(id) {
+  var body = document.getElementById('abx-body-' + id);
+  if (body) body.classList.toggle('open');
+};
+
+window.abxRender = function() {
+  var search = (document.getElementById('abx-search').value || '').toLowerCase();
+  var filtered = abxData.filter(function(a) {
+    var matchGruppe = !abxCurrentGruppe || a.gruppe === abxCurrentGruppe;
+    var matchSpektrum = !abxCurrentSpektrum || (a.spektrum && a.spektrum.indexOf(abxCurrentSpektrum) !== -1);
+    var matchSearch = !search || a.name.toLowerCase().indexOf(search) !== -1 || (a.brand||'').toLowerCase().indexOf(search) !== -1 || a.indikation.toLowerCase().indexOf(search) !== -1;
+    return matchGruppe && matchSpektrum && matchSearch;
+  });
+
+  var grid = document.getElementById('abx-grid');
+  if (filtered.length === 0) {
+    grid.innerHTML = '<div class="abx-empty">Kein Antibiotikum gefunden.</div>';
+    return;
+  }
+
+  var html = '';
+  filtered.forEach(function(a, idx) {
+    var isOpen = search.length > 0 || abxCurrentEgfr;
+    var tdmTag = a.tdm ? '<span class="abx-tag tdm">TDM!</span>' : '';
+
+    html += '<div class="abx-card">';
+    html += '<div class="abx-card-head" onclick="abxToggleCard(\'' + idx + '\')">';
+    html += '<div style="flex:1;min-width:0;">';
+    html += '<div class="abx-card-title">' + a.name + tdmTag;
+    if (a.brand) html += ' <span class="abx-card-brand">(' + a.brand + ')</span>';
+    html += '</div>';
+    if (a.spektrum && a.spektrum.length) {
+      html += '<div class="abx-spek">';
+      a.spektrum.forEach(function(s) {
+        var m = SPEK_META[s];
+        if (m) html += '<span class="abx-spek-tag ' + m.cls + '">' + m.label + '</span>';
+      });
+      html += '</div>';
+    }
+    html += '<div style="font-size:.78rem;color:#777;margin-top:3px;">' + a.indikation + '</div>';
+    html += '</div>';
+    html += '<span class="abx-card-gruppe" style="flex-shrink:0;">' + a.gruppe + '</span>';
+    html += '</div>';
+
+    html += '<div class="abx-card-body' + (isOpen ? ' open' : '') + '" id="abx-body-' + idx + '">';
+
+    html += '<table class="abx-table"><thead><tr><th>Nierenfunktion</th><th>Dosierung</th><th>Hinweis</th></tr></thead><tbody>';
+    EGFR_STUFEN.forEach(function(stufe) {
+      var d = a.dosierung[stufe];
+      if (!d) return;
+      var isHighlighted = abxCurrentEgfr === stufe;
+      var isKI = d.dosis.indexOf('KONTRAIND') !== -1;
+      var rowClass = '';
+      if (isHighlighted) {
+        if (stufe === 'HD') rowClass = ' hl-hd';
+        else if (stufe === 'CRRT') rowClass = ' hl-crrt';
+        else if (stufe === 'PD') rowClass = ' hl-pd';
+        else rowClass = ' highlighted';
+      }
+      var dosisClass = isKI ? ' abx-ki' : ' abx-dosis';
+      var label;
+      if (stufe === 'HD') label = '<strong style="color:#6a1b9a;">HD (H\u00e4modialyse)</strong>';
+      else if (stufe === 'CRRT') label = '<strong style="color:#00695c;">CRRT</strong>';
+      else if (stufe === 'PD') label = '<strong style="color:#e65100;">PD (Peritonealdialyse)</strong>';
+      else label = 'eGFR <strong>' + stufe + '</strong>';
+      html += '<tr class="' + rowClass + '">';
+      html += '<td>' + label + '</td>';
+      html += '<td class="' + dosisClass + '">' + d.dosis + '</td>';
+      html += '<td style="color:#666;font-size:.82rem;">' + (d.hinweis || '') + '</td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+
+    if (a.tdm) {
+      html += '<div class="abx-tdm">\ud83d\udd2c <strong>TDM obligat</strong> \u2014 Spiegelbestimmung vor weiterer Dosierung!</div>';
+    }
+    if (a.cave) {
+      html += '<div class="abx-cave">\u26a0\ufe0f ' + a.cave + '</div>';
+    }
+
+    html += '</div></div>';
+  });
+
+  grid.innerHTML = html;
+};
+
+window.abxAutoImport = function() {
+  abxRender();
+};
+
+// Initial render
+abxRender();
+
+})();
+</script>
+</div><!-- end tool-abx -->
+
 <script>
 (function(){
 'use strict';
@@ -651,6 +2707,9 @@ window.switchTool = function(name) {
   document.querySelectorAll('.nav-tab-btn').forEach(function(b){ b.classList.remove('active'); });
   document.querySelector('.nav-tab-btn[data-tool="'+name+'"]').classList.add('active');
   document.getElementById('tool-lae').style.display = name === 'lae' ? 'block' : 'none';
+  document.getElementById('tool-aki').style.display = name === 'aki' ? 'block' : 'none';
+  document.getElementById('tool-tma').style.display = name === 'tma' ? 'block' : 'none';
+  document.getElementById('tool-abx').style.display = name === 'abx' ? 'block' : 'none';
 };
 
 // ── LAE Sub-Tab-Switcher ───────────────────────────────────
