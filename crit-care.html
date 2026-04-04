@@ -36,6 +36,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 #tool-copd{display:none;}
 #tool-sab{display:none;}
 #tool-del{display:none;}
+#tool-sepsis{display:none;}
+#tool-ards{display:none;}
 
 /* ============================================================
    LAE — CSS (vollständig aus lae.html, in Datei isoliert)
@@ -173,8 +175,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <button class="nav-tab-btn" data-tool="copd" onclick="switchTool('copd')">🫁 COPD / AECOPD</button>
   <button class="nav-tab-btn" data-tool="del" onclick="switchTool('del')">🧠 Delir</button>
   <!-- Platzhalter für weitere Tools: -->
-  <!-- <button class="nav-tab-btn" data-tool="sepsis" onclick="switchTool('sepsis')">🦠 Sepsis</button> -->
-  <!-- <button class="nav-tab-btn" data-tool="ards" onclick="switchTool('ards')">💨 ARDS</button> -->
+  <button class="nav-tab-btn" data-tool="sepsis" onclick="switchTool('sepsis')">🦠 Sepsis</button>
+  <button class="nav-tab-btn" data-tool="ards" onclick="switchTool('ards')">💨 ARDS</button>
 </div>
 
 <!-- ══════════════════════════════════════════════════════════
@@ -3075,6 +3077,8 @@ window.switchTool = function(name) {
   document.getElementById('tool-ernaehrung').style.display = name === 'ernaehrung' ? 'block' : 'none';
   document.getElementById('tool-copd').style.display = name === 'copd' ? 'block' : 'none';
   document.getElementById('tool-del').style.display  = name === 'del'  ? 'block' : 'none';
+  document.getElementById('tool-sepsis').style.display = name === 'sepsis' ? 'block' : 'none';
+  document.getElementById('tool-ards').style.display   = name === 'ards'   ? 'block' : 'none';
 };
 
 // ── LAE Sub-Tab-Switcher ───────────────────────────────────
@@ -6944,6 +6948,743 @@ window.delCalcCiwa = function() {
 })();
 </script>
 </div><!-- end tool-del -->
+
+<!-- ══════════════════════════════════════════════════════════
+     TOOL: SEPSIS
+     ══════════════════════════════════════════════════════════ -->
+<div id="tool-sepsis">
+<style>
+/* ── Sepsis Tool CSS ── */
+.sep-wrap{max-width:860px;margin:0 auto;padding:16px;}
+
+.sep-tab-nav{background:#fff;border-bottom:2px solid #e3eaf5;display:flex;overflow-x:auto;padding:0 12px;gap:2px;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:0;}
+.sep-tab-btn{border:none;background:none;padding:13px 15px 11px;font-size:.8rem;font-weight:600;color:#78909c;cursor:pointer;border-bottom:2.5px solid transparent;white-space:nowrap;transition:color .15s,border-color .15s;}
+.sep-tab-btn.active{color:#b71c1c;border-bottom-color:#b71c1c;}
+.sep-tab-btn:hover:not(.active){color:#c62828;border-bottom-color:#ef9a9a;}
+
+.sep-tab{display:none;padding:20px 0;}
+.sep-tab.active{display:block;}
+
+.sep-card{background:#fff;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.08);padding:20px;margin-bottom:16px;}
+.sep-card h3{font-size:1rem;font-weight:700;color:#b71c1c;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.sep-card h4{font-size:.9rem;font-weight:600;color:#37474f;margin:14px 0 8px;}
+
+.sep-score-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0f4f8;}
+.sep-score-row:last-child{border-bottom:none;}
+.sep-score-label{font-size:.88rem;color:#37474f;flex:1;}
+.sep-score-val{font-size:.88rem;color:#b71c1c;font-weight:700;min-width:30px;text-align:right;}
+
+.sep-check-row{display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid #f5f5f5;}
+.sep-check-row:last-child{border-bottom:none;}
+.sep-check-row input[type=checkbox]{width:18px;height:18px;accent-color:#b71c1c;margin-top:1px;flex-shrink:0;cursor:pointer;}
+.sep-check-label{font-size:.88rem;color:#37474f;cursor:pointer;line-height:1.4;}
+.sep-check-label strong{color:#1a2332;}
+
+.sep-result{margin-top:14px;padding:12px 16px;border-radius:8px;font-size:.9rem;font-weight:600;display:none;}
+.sep-result.show{display:block;}
+.sep-result-low{background:#e8f5e9;color:#2e7d32;border-left:4px solid #4caf50;}
+.sep-result-mid{background:#fff8e1;color:#f57f17;border-left:4px solid #ffc107;}
+.sep-result-high{background:#ffebee;color:#b71c1c;border-left:4px solid #ef5350;}
+.sep-result-shock{background:#b71c1c;color:#fff;border-left:4px solid #7f0000;}
+
+.sep-select{width:100%;padding:8px 10px;border:1.5px solid #ddd;border-radius:6px;font-size:.88rem;color:#1a2332;background:#fff;font-family:inherit;cursor:pointer;margin-top:4px;}
+.sep-select:focus{outline:none;border-color:#b71c1c;}
+
+.sep-input{width:100%;padding:8px 10px;border:1.5px solid #ddd;border-radius:6px;font-size:.88rem;color:#1a2332;background:#fff;font-family:inherit;}
+.sep-input:focus{outline:none;border-color:#b71c1c;}
+
+.sep-sofa-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media(max-width:600px){.sep-sofa-grid{grid-template-columns:1fr;}}
+.sep-sofa-item label{display:block;font-size:.8rem;font-weight:600;color:#546e7a;margin-bottom:4px;}
+
+.sep-score-total{background:linear-gradient(135deg,#b71c1c,#c62828);color:#fff;border-radius:8px;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;margin-top:12px;}
+.sep-score-total span:first-child{font-size:.95rem;font-weight:600;}
+.sep-score-total span:last-child{font-size:1.8rem;font-weight:800;}
+
+.sep-def-box{background:#fff3cd;border:1.5px solid #ffc107;border-radius:8px;padding:14px 16px;margin-bottom:14px;}
+.sep-def-box h4{color:#7c5700;font-size:.88rem;font-weight:700;margin-bottom:8px;}
+.sep-def-box ul{list-style:none;padding:0;}
+.sep-def-box ul li{font-size:.83rem;color:#5d4037;padding:3px 0;padding-left:16px;position:relative;}
+.sep-def-box ul li::before{content:'›';position:absolute;left:0;color:#f57f17;font-weight:700;}
+
+.sep-accordion{border:1.5px solid #e3eaf5;border-radius:8px;margin-bottom:10px;overflow:hidden;}
+.sep-acc-header{background:#f8fafc;padding:12px 16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:.88rem;font-weight:600;color:#37474f;user-select:none;}
+.sep-acc-header:hover{background:#f0f4f8;}
+.sep-acc-arrow{transition:transform .2s;font-size:.75rem;}
+.sep-acc-body{display:none;padding:14px 16px;border-top:1px solid #e3eaf5;background:#fff;}
+.sep-acc-body.open{display:block;}
+.sep-acc-body ul{list-style:none;padding:0;}
+.sep-acc-body ul li{font-size:.83rem;color:#37474f;padding:4px 0;padding-left:18px;position:relative;line-height:1.4;}
+.sep-acc-body ul li::before{content:'•';position:absolute;left:4px;color:#b71c1c;}
+
+.sep-bundle-list{list-style:none;padding:0;}
+.sep-bundle-list li{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #f0f4f8;}
+.sep-bundle-list li:last-child{border-bottom:none;}
+.sep-bundle-icon{font-size:1.3rem;flex-shrink:0;margin-top:1px;}
+.sep-bundle-text strong{display:block;font-size:.9rem;color:#1a2332;margin-bottom:2px;}
+.sep-bundle-text span{font-size:.82rem;color:#546e7a;line-height:1.4;}
+
+.sep-info-box{background:#f3e5f5;border:1.5px solid #ce93d8;border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:.83rem;color:#4a148c;line-height:1.5;}
+.sep-info-box strong{display:block;margin-bottom:4px;font-size:.88rem;}
+
+.sep-vol-calc{background:#e8f5e9;border:1.5px solid #a5d6a7;border-radius:8px;padding:14px 16px;margin-top:12px;}
+.sep-vol-calc h4{color:#1b5e20;font-size:.88rem;font-weight:700;margin-bottom:10px;}
+.sep-vol-result{font-size:1.4rem;font-weight:800;color:#b71c1c;margin-top:8px;}
+.sep-vol-result small{font-size:.75rem;color:#546e7a;font-weight:400;display:block;margin-top:2px;}
+
+.sep-therapie-table{width:100%;border-collapse:collapse;font-size:.83rem;margin-top:8px;}
+.sep-therapie-table th{background:#b71c1c;color:#fff;padding:8px 10px;text-align:left;font-weight:600;}
+.sep-therapie-table td{padding:8px 10px;border-bottom:1px solid #f0f4f8;vertical-align:top;line-height:1.4;}
+.sep-therapie-table tr:nth-child(even) td{background:#fafafa;}
+.sep-therapie-table td:first-child{font-weight:600;color:#37474f;white-space:nowrap;}
+
+.sep-target-table{width:100%;border-collapse:collapse;font-size:.83rem;margin-top:8px;}
+.sep-target-table th{background:#37474f;color:#fff;padding:8px 10px;text-align:left;font-weight:600;}
+.sep-target-table td{padding:8px 10px;border-bottom:1px solid #f0f4f8;vertical-align:top;}
+.sep-target-table tr:nth-child(even) td{background:#fafafa;}
+.sep-target-table td:first-child{font-weight:600;color:#37474f;}
+.sep-target-table td:last-child{color:#b71c1c;font-weight:600;}
+
+.sep-daily-check{list-style:none;padding:0;}
+.sep-daily-check li{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid #f5f5f5;font-size:.87rem;color:#37474f;}
+.sep-daily-check li::before{content:'☐';font-size:1.1rem;color:#b71c1c;flex-shrink:0;margin-top:-1px;}
+
+.sep-warning{background:#fff3e0;border:1.5px solid #ffb74d;border-radius:6px;padding:10px 14px;font-size:.82rem;color:#e65100;margin-top:10px;}
+.sep-warning strong{display:block;margin-bottom:2px;}
+</style>
+
+<div class="sep-wrap">
+  <!-- Sub-Tab-Navigation -->
+  <div class="sep-tab-nav">
+    <button class="sep-tab-btn active" onclick="sepShowTab('diagnose',this)">&#128269; Diagnose &amp; Screening</button>
+    <button class="sep-tab-btn" onclick="sepShowTab('bundle',this)">&#9200;&#65039; Hour-1 Bundle</button>
+    <button class="sep-tab-btn" onclick="sepShowTab('therapie',this)">&#128138; Therapie</button>
+    <button class="sep-tab-btn" onclick="sepShowTab('monitoring',this)">&#128260; Monitoring</button>
+  </div>
+
+  <!-- ── Sub-Tab 1: Diagnose & Screening ── -->
+  <div id="sep-diagnose" class="sep-tab active">
+
+    <!-- Sepsis-Definition -->
+    <div class="sep-card">
+      <h3>Sepsis-Definition (Singer 2016 / SSC 2021)</h3>
+      <div class="sep-def-box">
+        <h4>Sepsis</h4>
+        <ul>
+          <li>Lebensbedrohliche Organdysfunktion durch dysregulierte Wirtsantwort auf Infektion</li>
+          <li>Diagnosekriterium: SOFA-Score-Anstieg &#8805;2 Punkte gegenüber Baseline</li>
+          <li>Mortalität: ca. 10%</li>
+        </ul>
+      </div>
+      <div class="sep-def-box" style="background:#ffebee;border-color:#ef9a9a;">
+        <h4 style="color:#b71c1c;">Septischer Schock</h4>
+        <ul>
+          <li style="color:#7f0000;">Sepsis + Vasopressor-Bedarf (MAP &#8805;65 mmHg) + Laktat &gt;2 mmol/l trotz adäquater Volumentherapie</li>
+          <li style="color:#7f0000;">Mortalität: ca. 40%</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- qSOFA -->
+    <div class="sep-card">
+      <h3>qSOFA-Score (Screening)</h3>
+      <p style="font-size:.82rem;color:#546e7a;margin-bottom:12px;">Schnell-Screening außerhalb der ITS. Jedes Kriterium = 1 Punkt.</p>
+      <div class="sep-check-row">
+        <input type="checkbox" id="sep-qsofa1" onchange="sepQsofaCalc()">
+        <label class="sep-check-label" for="sep-qsofa1"><strong>Atemfrequenz &#8805;22/min</strong></label>
+        <span class="sep-score-val">+1</span>
+      </div>
+      <div class="sep-check-row">
+        <input type="checkbox" id="sep-qsofa2" onchange="sepQsofaCalc()">
+        <label class="sep-check-label" for="sep-qsofa2"><strong>Altered mentation</strong> (GCS &lt;15 / akute Bewusstseinsänderung)</label>
+        <span class="sep-score-val">+1</span>
+      </div>
+      <div class="sep-check-row">
+        <input type="checkbox" id="sep-qsofa3" onchange="sepQsofaCalc()">
+        <label class="sep-check-label" for="sep-qsofa3"><strong>Systolischer RR &#8804;100 mmHg</strong></label>
+        <span class="sep-score-val">+1</span>
+      </div>
+      <div class="sep-score-total">
+        <span>qSOFA-Gesamtpunkte</span>
+        <span id="sep-qsofa-total">0</span>
+      </div>
+      <div id="sep-qsofa-result" class="sep-result"></div>
+    </div>
+
+    <!-- SOFA Score -->
+    <div class="sep-card">
+      <h3>SOFA-Score (Organdysfunktion)</h3>
+      <p style="font-size:.82rem;color:#546e7a;margin-bottom:14px;">Baseline-SOFA ermitteln. Anstieg &#8805;2 = Sepsis. Alle Felder ausfüllen.</p>
+      <div class="sep-sofa-grid">
+        <div class="sep-sofa-item">
+          <label>Respiratorisch (PaO&#8322;/FiO&#8322;)</label>
+          <select class="sep-select" id="sep-sofa-resp" onchange="sepSofaCalc()">
+            <option value="0">&gt;400 &#8594; 0 Pkt</option>
+            <option value="1">300&#8211;400 &#8594; 1 Pkt</option>
+            <option value="2">200&#8211;300 &#8594; 2 Pkt</option>
+            <option value="3">100&#8211;200 &#8594; 3 Pkt</option>
+            <option value="4">&lt;100 &#8594; 4 Pkt</option>
+          </select>
+        </div>
+        <div class="sep-sofa-item">
+          <label>Koagulation (Thrombozyten /nl)</label>
+          <select class="sep-select" id="sep-sofa-koa" onchange="sepSofaCalc()">
+            <option value="0">&gt;150 &#8594; 0 Pkt</option>
+            <option value="1">101&#8211;150 &#8594; 1 Pkt</option>
+            <option value="2">51&#8211;100 &#8594; 2 Pkt</option>
+            <option value="3">21&#8211;50 &#8594; 3 Pkt</option>
+            <option value="4">&#8804;20 &#8594; 4 Pkt</option>
+          </select>
+        </div>
+        <div class="sep-sofa-item">
+          <label>Leber (Bilirubin mg/dl)</label>
+          <select class="sep-select" id="sep-sofa-leber" onchange="sepSofaCalc()">
+            <option value="0">&lt;1,2 &#8594; 0 Pkt</option>
+            <option value="1">1,2&#8211;1,9 &#8594; 1 Pkt</option>
+            <option value="2">2,0&#8211;5,9 &#8594; 2 Pkt</option>
+            <option value="3">6,0&#8211;11,9 &#8594; 3 Pkt</option>
+            <option value="4">&#8805;12,0 &#8594; 4 Pkt</option>
+          </select>
+        </div>
+        <div class="sep-sofa-item">
+          <label>Kardiovaskulär (MAP / Vasopressoren)</label>
+          <select class="sep-select" id="sep-sofa-kardio" onchange="sepSofaCalc()">
+            <option value="0">MAP &#8805;70 mmHg &#8594; 0 Pkt</option>
+            <option value="1">MAP &lt;70 mmHg &#8594; 1 Pkt</option>
+            <option value="2">Dopa &#8804;5 oder Dobutamin &#8594; 2 Pkt</option>
+            <option value="3">Dopa &gt;5 oder NE &#8804;0,1 &#8594; 3 Pkt</option>
+            <option value="4">Dopa &gt;15 oder NE &gt;0,1 &#8594; 4 Pkt</option>
+          </select>
+        </div>
+        <div class="sep-sofa-item">
+          <label>ZNS (GCS)</label>
+          <select class="sep-select" id="sep-sofa-zns" onchange="sepSofaCalc()">
+            <option value="0">GCS 15 &#8594; 0 Pkt</option>
+            <option value="1">GCS 13&#8211;14 &#8594; 1 Pkt</option>
+            <option value="2">GCS 10&#8211;12 &#8594; 2 Pkt</option>
+            <option value="3">GCS 6&#8211;9 &#8594; 3 Pkt</option>
+            <option value="4">GCS &lt;6 &#8594; 4 Pkt</option>
+          </select>
+        </div>
+        <div class="sep-sofa-item">
+          <label>Niere (Krea mg/dl / Diurese)</label>
+          <select class="sep-select" id="sep-sofa-niere" onchange="sepSofaCalc()">
+            <option value="0">&lt;1,2 mg/dl &#8594; 0 Pkt</option>
+            <option value="1">1,2&#8211;1,9 mg/dl &#8594; 1 Pkt</option>
+            <option value="2">2,0&#8211;3,4 mg/dl &#8594; 2 Pkt</option>
+            <option value="3">3,5&#8211;4,9 mg/dl oder &lt;500 ml/d &#8594; 3 Pkt</option>
+            <option value="4">&gt;5,0 mg/dl oder &lt;200 ml/d &#8594; 4 Pkt</option>
+          </select>
+        </div>
+      </div>
+      <div class="sep-score-total" style="margin-top:16px;">
+        <span>SOFA-Gesamtpunkte</span>
+        <span id="sep-sofa-total">0</span>
+      </div>
+      <div id="sep-sofa-result" class="sep-result"></div>
+    </div>
+
+    <!-- Fokus-Checkliste -->
+    <div class="sep-card">
+      <h3>Fokussuche &#8212; Checkliste</h3>
+      <p style="font-size:.82rem;color:#546e7a;margin-bottom:12px;">Blutkulturen immer VOR Antibiose (2&#215;2: aerob + anaerob, wenn möglich periphervenös + ZVK).</p>
+
+      <div class="sep-accordion">
+        <div class="sep-acc-header" onclick="sepToggleAcc('fokus-pulmonal')">
+          <span>Pulmonaler Fokus</span><span class="sep-acc-arrow" id="sep-arr-fokus-pulmonal">&#9660;</span>
+        </div>
+        <div class="sep-acc-body" id="sep-fokus-pulmonal">
+          <ul>
+            <li>Pneumonie (ambulant oder nosokomial)</li>
+            <li>Diagnostik: Röntgen/CT Thorax, Sputumkultur, BAL bei beatmeten Patienten</li>
+            <li>Erreger: S. pneumoniae, H. influenzae, Legionellen (Antigen-Test Urin!), Atypische</li>
+            <li>Cave Aspiration: anaerobe Keime, breites Spektrum erforderlich</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="sep-accordion">
+        <div class="sep-acc-header" onclick="sepToggleAcc('fokus-abdo')">
+          <span>Abdomineller Fokus</span><span class="sep-acc-arrow" id="sep-arr-fokus-abdo">&#9660;</span>
+        </div>
+        <div class="sep-acc-body" id="sep-fokus-abdo">
+          <ul>
+            <li>Appendizitis, Cholezystitis, Cholangitis, Peritonitis, Divertikulitis</li>
+            <li>Diagnostik: CT Abdomen mit KM (Standard), Sono (Screening)</li>
+            <li>Sofortige chirurgische Konsultation bei Peritonitis / Perforation</li>
+            <li>Gallengangs-Drainage bei Cholangitis (ERCP/PTC)</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="sep-accordion">
+        <div class="sep-acc-header" onclick="sepToggleAcc('fokus-uro')">
+          <span>Urogenitaler Fokus</span><span class="sep-acc-arrow" id="sep-arr-fokus-uro">&#9660;</span>
+        </div>
+        <div class="sep-acc-body" id="sep-fokus-uro">
+          <ul>
+            <li>Pyelonephritis, Urosepsis, Prostatitis, obstruktiver Harnstau</li>
+            <li>Diagnostik: Urin-Stix + Mikroskopie, Urinkultur (MSU), Sono Nieren/Blase</li>
+            <li>Wichtig: Obstruktion ausschließen &#8212; sofortige Entlastung (DJ, Nephrostomie) bei Stauungsniere!</li>
+            <li>DK-assoziiert: Wechsel des DK, ggf. Zystoskopie</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="sep-accordion">
+        <div class="sep-acc-header" onclick="sepToggleAcc('fokus-ka')">
+          <span>Katheter-assoziiert (CRBSI)</span><span class="sep-acc-arrow" id="sep-arr-fokus-ka">&#9660;</span>
+        </div>
+        <div class="sep-acc-body" id="sep-fokus-ka">
+          <ul>
+            <li>ZVK, Port, Dialysekatheter, VP-Shunt, Gelenkprothesen, Herzschrittmacher</li>
+            <li>Blutkultur durch Katheter + peripher gleichzeitig abnehmen (Differential Time to Positivity)</li>
+            <li>CRBSI: Katheter sofort entfernen (wenn möglich) oder wechseln</li>
+            <li>Staphylokokken (CoNS, S. aureus) häufigste Erreger</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="sep-accordion">
+        <div class="sep-acc-header" onclick="sepToggleAcc('fokus-weichteil')">
+          <span>Weichteil / Knochen / ZNS</span><span class="sep-acc-arrow" id="sep-arr-fokus-weichteil">&#9660;</span>
+        </div>
+        <div class="sep-acc-body" id="sep-fokus-weichteil">
+          <ul>
+            <li>Nekrotisierende Fasziitis: sofortige chirurgische Exploration, CT kann täuschen!</li>
+            <li>Osteomyelitis: MRT, ggf. Biopsie vor Antibiose</li>
+            <li>Meningitis / Enzephalitis: Lumbalpunktion (wenn kein Hirndruck: CCT zuerst), sofortiger Therapiebeginn</li>
+            <li>Endokarditis: neue Herzgeräusche, Echo TTE + TEE, mind. 3&#215;2 Blutkulturen</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div><!-- end sep-diagnose -->
+
+  <!-- ── Sub-Tab 2: Hour-1 Bundle ── -->
+  <div id="sep-bundle" class="sep-tab">
+    <div class="sep-card">
+      <h3>Hour-1 Bundle (SSC 2018 / 2021)</h3>
+      <div class="sep-info-box">
+        <strong>Evidenz</strong>
+        Konsequente Umsetzung des Hour-1 Bundles reduziert die Krankenhausmortalität. Dokumentation der Uhrzeit jeder Maßnahme ist obligat (Qualitätsindikator). Bei Septic Shock: alle Maßnahmen sofort, keine Verzögerung.
+      </div>
+      <ul class="sep-bundle-list">
+        <li>
+          <span class="sep-bundle-icon">&#9200;&#65039;</span>
+          <div class="sep-bundle-text">
+            <strong>1. Laktat messen</strong>
+            <span>Arteriell oder venös. Ziel: &lt;2 mmol/l. Bei Laktat &#8805;4 mmol/l: sofortige aggressive Intervention. Kontrolle nach 2h wenn erhöht. Laktat-Clearance &gt;10%/h als Ziel.</span>
+          </div>
+        </li>
+        <li>
+          <span class="sep-bundle-icon">&#129516;</span>
+          <div class="sep-bundle-text">
+            <strong>2. Blutkulturen abnehmen (2&#215;2)</strong>
+            <span>Aerob + anaerob, VOR Antibiose-Gabe. Wenn möglich: 1 Set periphervenös + 1 Set durch ZVK. Mindestvolumen: 8&#8211;10 ml pro Flasche. Bei Immunsuppression: ggf. Pilzkulturen ergänzen.</span>
+          </div>
+        </li>
+        <li>
+          <span class="sep-bundle-icon">&#128138;</span>
+          <div class="sep-bundle-text">
+            <strong>3. Breitspektrum-Antibiotika i.v.</strong>
+            <span>Innerhalb 1h bei Sepsis, <em>sofort</em> bei septischem Schock. Jede Stunde Verzögerung erhöht Mortalität um ca. 7%. Empirische Auswahl nach Fokus und Resistenzlage (s. Therapie-Tab).</span>
+          </div>
+        </li>
+        <li>
+          <span class="sep-bundle-icon">&#128167;</span>
+          <div class="sep-bundle-text">
+            <strong>4. Volumentherapie: 30 ml/kg i.v.</strong>
+            <span>Bei Hypotension (MAP &lt;65) oder Laktat &#8805;4 mmol/l. Balancierte Kristalloide bevorzugen (Ringer-Laktat, Plasma-Lyte). Kein HES. NaCl 0,9% wenn nötig, aber Cave hyperchlorämische Azidose. Volumenansprechen prüfen: PLR, PPV, Echo.</span>
+          </div>
+        </li>
+        <li>
+          <span class="sep-bundle-icon">&#128308;</span>
+          <div class="sep-bundle-text">
+            <strong>5. Vasopressoren bei MAP &lt;65 mmHg</strong>
+            <span>Noradrenalin als 1. Wahl. Über ZVK oder großlumigen peripheren Zugang. Ziel: MAP &#8805;65 mmHg (&#8805;70&#8211;80 bei chron. Hypertonie). Parallel Volumen weiter optimieren.</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Volumen-Rechner -->
+    <div class="sep-card">
+      <h3>Volumen-Rechner (30 ml/kg)</h3>
+      <label style="font-size:.85rem;font-weight:600;color:#37474f;display:block;margin-bottom:6px;">Körpergewicht (kg)</label>
+      <input type="number" class="sep-input" id="sep-vol-weight" placeholder="z.B. 75" min="30" max="200" oninput="sepVolCalc()" style="max-width:200px;">
+      <div class="sep-vol-calc" id="sep-vol-result" style="display:none;">
+        <h4>Empfohlenes Volumen (30 ml/kg)</h4>
+        <div class="sep-vol-result" id="sep-vol-ml">&#8212;</div>
+        <small id="sep-vol-note"></small>
+      </div>
+      <div class="sep-warning" style="margin-top:12px;">
+        <strong>Klinische Einschätzung obligat</strong>
+        Volumengabe nicht schematisch &#8212; Volumenstatus klinisch und sonographisch beurteilen (IVC-Kollapsibilität, Lungenwasser-POCUS). Herzinsuffizienz: engmaschige Überwachung, ggf. früher Vasopressor-Beginn.
+      </div>
+    </div>
+  </div><!-- end sep-bundle -->
+
+  <!-- ── Sub-Tab 3: Therapie ── -->
+  <div id="sep-therapie" class="sep-tab">
+
+    <!-- Antibiotika -->
+    <div class="sep-card">
+      <h3>Empirische Antibiotika-Therapie</h3>
+      <div class="sep-warning" style="margin-bottom:12px;">
+        <strong>Wichtig: Immer Loading-Dose unabhängig von GFR!</strong>
+        De-Eskalation nach 48&#8211;72h nach Antibiogramm. Therapiedauer i.d.R. 7&#8211;10 Tage. Lokale Resistenzlage beachten.
+      </div>
+      <table class="sep-therapie-table">
+        <thead>
+          <tr><th>Situation</th><th>Empirische Therapie</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Community-acquired, keine Risikofaktoren</td>
+            <td>Pip/Tazobactam 4,5 g q6h i.v.<br><small style="color:#546e7a;">+ Clarithromycin 500 mg q12h p.o./i.v. bei V.a. atypische Erreger</small></td>
+          </tr>
+          <tr>
+            <td>HAP / VAP</td>
+            <td>Pip/Tazobactam 4,5 g q6h i.v.<br><small style="color:#546e7a;">+ Vancomycin 15 mg/kg q12h i.v. bei MRSA-Risiko (Talspiegel &lt;15 mg/l)</small></td>
+          </tr>
+          <tr>
+            <td>Immunsupprimiert / Neutropenie</td>
+            <td>Pip/Tazobactam 4,5 g q6h i.v.<br>+ Caspofungin 70 mg Loading &#8594; 50 mg/d<br><small style="color:#546e7a;">+ Aciclovir 5 mg/kg q8h i.v. bei HSV/VZV-Risiko</small></td>
+          </tr>
+          <tr>
+            <td>Septischer Schock / schwer</td>
+            <td>Meropenem 2 g q8h i.v. (30-min-Infusion)<br><small style="color:#546e7a;">Breitestes empirisches Spektrum, Karbapenem-Sparing wenn möglich</small></td>
+          </tr>
+          <tr>
+            <td>MRGN-Risiko (Dialyse, Ausland, Vorbehandlung)</td>
+            <td>Meropenem 2 g q8h i.v. empirisch<br><small style="color:#546e7a;">+ ggf. Colistin bei CRKP. Infektiologie-Konsil empfohlen.</small></td>
+          </tr>
+          <tr>
+            <td>Urosepsis (keine Komplikationen)</td>
+            <td>Pip/Tazobactam 4,5 g q6h i.v.<br><small style="color:#546e7a;">Obstruktion ausschließen! De-Eskalation nach Antibiogramm auf Cephalosporin 3. Gen.</small></td>
+          </tr>
+          <tr>
+            <td>Meningitis (ambulant erworben)</td>
+            <td>Ceftriaxon 2 g q12h i.v. + Ampicillin 2 g q4h (Listerien-Abdeckung &gt;50 J.)<br><small style="color:#546e7a;">+ Dexamethason 10 mg q6h i.v. &#215;4 Tage (vor/mit 1. ABx-Gabe)</small></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="sep-info-box" style="margin-top:14px;">
+        <strong>PCT-gesteuertes De-Eskalationsprotokoll</strong>
+        PCT-Abfall &gt;80% vom Ausgangswert &#8594; Absetzen der Antibiotika erwägen. Tägliche Re-Evaluation: Fokus saniert? Antibiogramm vorhanden? Spektrum einengbar?
+      </div>
+    </div>
+
+    <!-- Vasopressor-Therapie -->
+    <div class="sep-card">
+      <h3>Vasopressor-Therapie</h3>
+      <table class="sep-therapie-table">
+        <thead>
+          <tr><th>Substanz</th><th>Dosierung</th><th>Indikation / Hinweis</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Noradrenalin (NE) &#8212; 1. Wahl</td>
+            <td>0,05&#8211;3 µg/kg/min</td>
+            <td>Ziel MAP &#8805;65 mmHg; über ZVK oder großlumigen pVZ; Titrieren nach Wirkung</td>
+          </tr>
+          <tr>
+            <td>Vasopressin &#8212; 2. Wahl (Add-on)</td>
+            <td>0,03 IE/min (fix)</td>
+            <td>NE-sparend, keine Titration; cave: digitale Ischämie bei hohen Dosen</td>
+          </tr>
+          <tr>
+            <td>Dobutamin &#8212; kardiogene Komponente</td>
+            <td>2,5&#8211;20 µg/kg/min</td>
+            <td>Bei CI &lt;2,2 l/min/m&#178; oder klinischen Zeichen der Minderperfusion; cave: Tachykardie</td>
+          </tr>
+          <tr>
+            <td>Adrenalin &#8212; Reservemittel</td>
+            <td>0,05&#8211;1 µg/kg/min</td>
+            <td>Nur bei therapierefraktärem Schock; cave: Laktat &#8593; (metabolischer Effekt), Tachyarrhythmie</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="sep-warning" style="margin-top:10px;">
+        <strong>MAP-Ziel anpassen:</strong>
+        Bei chron. Hypertonie: MAP &#8805;70&#8211;80 mmHg anstreben. NE-Gabe über peripheren Zugang: großlumig (18G), Ellenbeuge/V. antecubiti, engmaschige Überwachung auf Paravasation.
+      </div>
+    </div>
+
+    <!-- Steroid-Therapie -->
+    <div class="sep-card">
+      <h3>Steroid-Therapie (Hydrokortison)</h3>
+      <div>
+        <p style="font-size:.88rem;color:#37474f;margin-bottom:8px;"><strong>Indikation (APROCCHSS 2018 / SSC 2021):</strong> Septischer Schock + Noradrenalin-Bedarf &#8805;0,25 µg/kg/min nach 1&#8211;2h adäquater Volumen- und Vasopressor-Therapie</p>
+        <p style="font-size:.88rem;color:#37474f;margin-bottom:8px;"><strong>Dosis:</strong> Hydrokortison 200 mg/d &#8212; als Perfusor kontinuierlich (200 mg/24h) oder fraktioniert (50 mg q6h i.v.)</p>
+        <p style="font-size:.88rem;color:#37474f;margin-bottom:8px;"><strong>Dauer:</strong> Mindestens 4&#8211;7 Tage; ausschleichen sobald Vasopressor-Bedarf rückläufig (ACTH-Test nicht erforderlich)</p>
+        <p style="font-size:.88rem;color:#546e7a;"><em>Cave: Hyperglykämie (Insulin-Perfusor anpassen), Myopathie bei Langzeittherapie</em></p>
+      </div>
+    </div>
+
+    <!-- Fokussanierung -->
+    <div class="sep-card">
+      <h3>Fokussanierung</h3>
+      <table class="sep-therapie-table">
+        <thead>
+          <tr><th>Fokus</th><th>Maßnahme &amp; Zeitfenster</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Peritonitis / Perforation</td>
+            <td>Sofortige OP (&lt;6h). Chirurgie-Konsil notfallmäßig.</td>
+          </tr>
+          <tr>
+            <td>Abszess &gt;3 cm</td>
+            <td>CT-gesteuerte Drainage (&lt;12h) oder chirurgisch</td>
+          </tr>
+          <tr>
+            <td>Nekrotisierende Fasziitis</td>
+            <td>Sofortige chirurgische Exploration (&lt;6h) &#8212; CT kann unterschätzen!</td>
+          </tr>
+          <tr>
+            <td>Infizierte Prothese / Fremdmaterial</td>
+            <td>Entfernung anstreben (&lt;12h), ggf. Staged-Procedure</td>
+          </tr>
+          <tr>
+            <td>ZVK-assoziierte Bakteriämie</td>
+            <td>Katheter sofort entfernen oder wechseln (über Führungsdraht nur bei unkomplizierter CoNS-Bakteriämie)</td>
+          </tr>
+          <tr>
+            <td>Obstruktiver Harnstau</td>
+            <td>Sofortige Harnableitung (DJ-Stent / Nephrostomie, Urologie-Konsil)</td>
+          </tr>
+          <tr>
+            <td>Cholangitis mit Obstruktion</td>
+            <td>ERCP / PTC (&lt;12&#8211;24h)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Supportive Maßnahmen -->
+    <div class="sep-card">
+      <h3>Supportive Maßnahmen</h3>
+      <table class="sep-therapie-table">
+        <thead>
+          <tr><th>Maßnahme</th><th>Empfehlung / Ziel</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Glukosekontrolle</td>
+            <td>Ziel 140&#8211;180 mg/dl; Insulin-Perfusor bei BZ &gt;180; engmaschige BZ-Kontrollen (q1&#8211;2h)</td>
+          </tr>
+          <tr>
+            <td>Transfusion</td>
+            <td>Hb-Ziel &#8805;7 g/dl (restriktiv); &#8805;9 g/dl bei ACS oder aktiver Blutung</td>
+          </tr>
+          <tr>
+            <td>DVT-Prophylaxe</td>
+            <td>NMH nach Nierenfunktion (s. ABx/Antikoag-Tab); mechanisch bei Blutungsrisiko</td>
+          </tr>
+          <tr>
+            <td>Stressulkusprophylaxe</td>
+            <td>PPI bei: Beatmung &gt;48h, Koagulopathie, Vorulkus, hochdosiertem Kortison</td>
+          </tr>
+          <tr>
+            <td>Enterale Ernährung</td>
+            <td>Beginn innerhalb 24&#8211;48h (s. Ernährungs-Tab); parenterale Ernährung erst nach &gt;7 Tagen unzureichender enteraler Zufuhr</td>
+          </tr>
+          <tr>
+            <td>Nierenersatztherapie</td>
+            <td>Frühzeitig bei AKI + Hypervolämie, Azidose (pH &lt;7,1), Hyperkaliämie &gt;6,5 mmol/l, Urämie</td>
+          </tr>
+          <tr>
+            <td>Beatmung (falls notwendig)</td>
+            <td>Tidalvolumen 6 ml/kg IBW; Plateau-Druck &lt;30 cmH&#8322;O; Bauchlage bei P/F &lt;150</td>
+          </tr>
+          <tr>
+            <td>Temperaturmanagement</td>
+            <td>Antipyrese (Paracetamol 1 g q6h) bei T &gt;39&#176;C mit Kreislaufinstabilität. Cave: kein NSAID.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div><!-- end sep-therapie -->
+
+  <!-- ── Sub-Tab 4: Monitoring & Verlauf ── -->
+  <div id="sep-monitoring" class="sep-tab">
+
+    <!-- Zielparameter -->
+    <div class="sep-card">
+      <h3>Zielparameter</h3>
+      <table class="sep-target-table">
+        <thead>
+          <tr><th>Parameter</th><th>Zielbereich</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>MAP</td><td>&#8805;65 mmHg (&#8805;70&#8211;80 bei chron. Hypertonie)</td></tr>
+          <tr><td>Laktat</td><td>&lt;2 mmol/l; Abfall &gt;10%/h wenn erhöht; Kontrolle q2h</td></tr>
+          <tr><td>Diurese</td><td>&#8805;0,5 ml/kg/h</td></tr>
+          <tr><td>SvO&#8322; (ZVK)</td><td>&#8805;70% (Orientierungswert, kein Routine-Ziel mehr)</td></tr>
+          <tr><td>Hämoglobin</td><td>&#8805;7 g/dl (&#8805;9 bei ACS / aktiver Blutung)</td></tr>
+          <tr><td>Thrombozyten</td><td>&gt;50/nl bei aktiver Blutung; &gt;20/nl prophylaktisch</td></tr>
+          <tr><td>Glukose</td><td>140&#8211;180 mg/dl</td></tr>
+          <tr><td>Temperatur</td><td>Antipyrese bei &gt;39&#176;C mit Kreislaufinstabilität</td></tr>
+          <tr><td>pCO&#8322; / pH</td><td>pH &gt;7,25 anstreben; permissive Hyperkapnie bei ARDS</td></tr>
+          <tr><td>Kreatinin / Diurese</td><td>AKI-Staging (s. AKI-Tab), frühzeitig Nierenersatz erwägen</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Prognose -->
+    <div class="sep-card">
+      <h3>Prognose-Orientierung</h3>
+      <div class="sep-def-box">
+        <h4>APACHE II (Referenz)</h4>
+        <ul>
+          <li>Score 0&#8211;4: Mortalität ca. 4%; Score 10&#8211;14: ca. 15%; Score 20&#8211;24: ca. 40%; Score &#8805;35: &gt;80%</li>
+          <li>Basiert auf: Alter, Vitalparameter, Laborwerte, GCS, chron. Komorbidität</li>
+          <li>Für individuelle Prognose-Einschätzung geeignet, aber nie als alleinige Entscheidungsgrundlage</li>
+        </ul>
+      </div>
+      <div class="sep-def-box" style="background:#e8f5e9;border-color:#a5d6a7;">
+        <h4 style="color:#1b5e20;">Positiv-Zeichen (Erholung)</h4>
+        <ul>
+          <li style="color:#2e7d32;">Laktat-Clearance &gt;10%/h über 6h &#8594; gutes Ansprechen</li>
+          <li style="color:#2e7d32;">Vasopressor-Reduktion möglich &#8594; hämodynamische Stabilisierung</li>
+          <li style="color:#2e7d32;">Diurese wiederkehrend ohne Diuretika &#8594; Nierenregeneration</li>
+          <li style="color:#2e7d32;">PCT-Abfall &gt;50% nach 48&#8211;72h &#8594; Infekt unter Kontrolle</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Tägliche Verlauf-Checkliste -->
+    <div class="sep-card">
+      <h3>Tägliche Verlauf-Checkliste</h3>
+      <p style="font-size:.82rem;color:#546e7a;margin-bottom:14px;">Täglich strukturiert evaluieren &#8212; jeden Punkt aktiv ansprechen:</p>
+      <ul class="sep-daily-check">
+        <li>Antibiogramm vorhanden? &#8594; De-Eskalation auf schmaleres Spektrum möglich?</li>
+        <li>PCT-Verlauf: Abfall &gt;80% vom Ausgangswert? &#8594; Absetzzeitpunkt planen</li>
+        <li>Vasopressor-Reduktion möglich? &#8594; Stufenweise Deeskalation</li>
+        <li>Sedierung reduzieren (SAT/SBT)? &#8594; ABCDEF-Bundle (s. Delir-Tab)</li>
+        <li>Frühmobilisation möglich? &#8594; Physiotherapie anmelden</li>
+        <li>Fokus vollständig saniert oder weiterer Interventionsbedarf?</li>
+        <li>Ernährung ausreichend? Toleranz? Prokinetikum erwägen?</li>
+        <li>PICS-Prävention: Familie einbinden, Tagebuch, psychologische Unterstützung</li>
+        <li>DNR/Therapieziel-Gespräch dokumentiert? (bei prolongiertem Verlauf)</li>
+        <li>Verlegungsfähigkeit prüfen: ITS &#8594; IMC &#8594; Normalstation</li>
+      </ul>
+    </div>
+
+    <!-- PICS-Box -->
+    <div class="sep-card">
+      <h3>Post-Intensive Care Syndrome (PICS)</h3>
+      <div class="sep-info-box">
+        <strong>Häufige Langzeitfolgen nach schwerer Sepsis</strong>
+        Kognitives Defizit (bis 30%), ICU-erworbene Muskelschwäche (ICUAW), PTBS (bis 25%), Depression, eingeschränkte Lebensqualität. PICS-Prävention beginnt auf ITS: Sedierung minimieren, Mobilisierung früh, Familie einbinden, Schlaf schützen, Delir vermeiden (s. Delir-Tab).
+      </div>
+      <table class="sep-target-table">
+        <thead>
+          <tr><th>PICS-Domäne</th><th>Intervention</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Kognition</td><td>Frühe Orientierungshilfen, Tagebuch, kognitive Stimulation</td></tr>
+          <tr><td>Physisch (ICUAW)</td><td>Passive &#8594; aktive Physiotherapie ab Tag 1; Frühsitzen, Stehen, Gehen</td></tr>
+          <tr><td>Psychisch</td><td>ITS-Tagebuch, psychologische Mitbetreuung, Angehörige als Ressource</td></tr>
+          <tr><td>Familie</td><td>Regelmäßige Angehörigen-Gespräche, ggf. Familien-PTBS screenen</td></tr>
+          <tr><td>Nachsorge</td><td>ITS-Nachsorgeambulanz (wenn verfügbar), Hausarzt-Überleitung mit Entlassbrief</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div><!-- end sep-monitoring -->
+
+</div><!-- end sep-wrap -->
+
+<script>
+(function(){
+'use strict';
+
+// ── Sub-Tab Switcher ─────────────────────────────────────────
+window.sepShowTab = function(id, btn) {
+  document.querySelectorAll('.sep-tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.sep-tab-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.getElementById('sep-' + id).classList.add('active');
+  btn.classList.add('active');
+};
+
+// ── Accordion ────────────────────────────────────────────────
+window.sepToggleAcc = function(id) {
+  var body = document.getElementById('sep-' + id);
+  var arrow = document.getElementById('sep-arr-' + id);
+  if (!body) return;
+  var isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  if (arrow) arrow.style.transform = isOpen ? '' : 'rotate(180deg)';
+};
+
+// ── qSOFA Kalkulation ─────────────────────────────────────────
+window.sepQsofaCalc = function() {
+  var c1 = document.getElementById('sep-qsofa1').checked ? 1 : 0;
+  var c2 = document.getElementById('sep-qsofa2').checked ? 1 : 0;
+  var c3 = document.getElementById('sep-qsofa3').checked ? 1 : 0;
+  var total = c1 + c2 + c3;
+  document.getElementById('sep-qsofa-total').textContent = total;
+  var res = document.getElementById('sep-qsofa-result');
+  res.className = 'sep-result show';
+  if (total <= 1) {
+    res.className += ' sep-result-low';
+    res.innerHTML = '<strong>qSOFA ' + total + ' \u2014 Kein erh\u00f6hter Sepsis-Verdacht</strong><br><small>Klinische \u00dcberwachung fortf\u00fchren. Bei Verschlechterung erneut evaluieren.</small>';
+  } else {
+    res.className += ' sep-result-high';
+    res.innerHTML = '<strong>qSOFA ' + total + ' \u2014 Sepsis-Verdacht \u2191</strong><br><small>SOFA-Score berechnen, Fokussuche, Blutkulturen, Antibiose-Indikation pr\u00fcfen. Hour-1 Bundle einleiten.</small>';
+  }
+};
+
+// ── SOFA Kalkulation ──────────────────────────────────────────
+window.sepSofaCalc = function() {
+  var ids = ['sep-sofa-resp','sep-sofa-koa','sep-sofa-leber','sep-sofa-kardio','sep-sofa-zns','sep-sofa-niere'];
+  var total = 0;
+  ids.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) total += parseInt(el.value, 10);
+  });
+  document.getElementById('sep-sofa-total').textContent = total;
+  var res = document.getElementById('sep-sofa-result');
+  res.className = 'sep-result show';
+  if (total < 2) {
+    res.className += ' sep-result-low';
+    res.innerHTML = '<strong>SOFA ' + total + ' \u2014 Keine schwerwiegende Organdysfunktion</strong><br><small>Verlauf beobachten. Anstieg \u22652 gegen\u00fcber Baseline = Sepsis-Diagnose erf\u00fcllt.</small>';
+  } else if (total < 6) {
+    res.className += ' sep-result-mid';
+    res.innerHTML = '<strong>SOFA ' + total + ' \u2014 Moderate Organdysfunktion</strong><br><small>Bei Anstieg \u22652 gegen\u00fcber Baseline: Sepsis-Diagnose. ITS-Aufnahme und Hour-1 Bundle.</small>';
+  } else if (total < 10) {
+    res.className += ' sep-result-high';
+    res.innerHTML = '<strong>SOFA ' + total + ' \u2014 Schwere Organdysfunktion</strong><br><small>Sepsis. Intensivtherapie. Fokussanierung. Bei Vasopressor-Bedarf + Laktat &gt;2: Septischer Schock.</small>';
+  } else {
+    res.className += ' sep-result-shock';
+    res.innerHTML = '<strong>SOFA ' + total + ' \u2014 Kritische Organdysfunktion</strong><br><small>Schwere Sepsis / Septischer Schock. Maximale Intensivtherapie. Prognose-Gespr\u00e4ch mit Angeh\u00f6rigen.</small>';
+  }
+};
+
+// ── Volumen-Rechner ───────────────────────────────────────────
+window.sepVolCalc = function() {
+  var w = parseFloat(document.getElementById('sep-vol-weight').value);
+  var resDiv = document.getElementById('sep-vol-result');
+  var mlEl = document.getElementById('sep-vol-ml');
+  var noteEl = document.getElementById('sep-vol-note');
+  if (isNaN(w) || w < 20) { resDiv.style.display = 'none'; return; }
+  var ml = Math.round(w * 30);
+  resDiv.style.display = 'block';
+  mlEl.textContent = ml + ' ml';
+  var note = 'Bei ' + w + ' kg KG: ' + ml + ' ml balanciertes Kristalloid i.v. (z.B. Ringer-Laktat). ';
+  if (ml > 3000) {
+    note += 'Hohe Volumenmenge \u2014 Volumenansprechen nach 1.000 ml pr\u00fcfen (PLR, Echo).';
+  } else {
+    note += 'Volumenansprechen nach 500\u20131.000 ml pr\u00fcfen.';
+  }
+  noteEl.textContent = note;
+};
+
+})();
+</script>
+</div><!-- end tool-sepsis -->
 
 </body>
 </html>

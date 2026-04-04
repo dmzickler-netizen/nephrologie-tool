@@ -15610,6 +15610,18 @@ window.tahUpdateEgfr       = tahUpdateEgfr;
 @media(max-width:640px) { #tab-hwi .hwi-grid2 { grid-template-columns:1fr; } }
 #tab-hwi .hwi-sep { border:none; border-top:2px solid #f0f4f8; margin:16px 0; }
 #tab-hwi .hwi-reset-bar { display:flex; justify-content:flex-end; margin-bottom:10px; }
+#tab-hwi .hwi-patient-card { background:linear-gradient(135deg,#e3f2fd,#f0f8ff); border:2px solid #1565c0; border-radius:12px; padding:14px 18px; margin-bottom:14px; }
+#tab-hwi .hwi-patient-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; align-items:end; }
+@media(max-width:640px){ #tab-hwi .hwi-patient-grid { grid-template-columns:1fr 1fr; } }
+#tab-hwi .hwi-patient-field label { display:block; font-size:.75rem; font-weight:700; color:#37474f; margin-bottom:4px; text-transform:uppercase; letter-spacing:.4px; }
+#tab-hwi .hwi-patient-field input { width:100%; padding:7px 10px; border:1.5px solid #bbdefb; border-radius:6px; font-size:.9rem; box-sizing:border-box; background:#fff; }
+#tab-hwi .hwi-patient-field input:focus { border-color:#1565c0; outline:none; }
+#tab-hwi .hwi-route-badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:.76rem; font-weight:800; white-space:nowrap; }
+#tab-hwi .hwi-route-po { background:#e8f5e9; color:#1b5e20; }
+#tab-hwi .hwi-route-iv { background:#fce4ec; color:#b71c1c; }
+#tab-hwi .hwi-drug-table td:nth-child(3) { white-space:nowrap; }
+#tab-hwi .hwi-drug-table .hwi-dose-note { display:block; font-size:.78rem; color:#546e7a; margin-top:2px; line-height:1.35; }
+#tab-hwi .hwi-drug-table .hwi-dose-active { display:block; font-size:.78rem; font-weight:700; color:#b71c1c; margin-top:2px; background:#fce4ec; border-radius:4px; padding:1px 5px; }
 </style>
 
 <div class="hwi-container">
@@ -15622,6 +15634,26 @@ window.tahUpdateEgfr       = tahUpdateEgfr;
 
   <div id="hwi-import-hint" class="hwi-import-hint" style="display:none;">
     <strong>Auto-Import:</strong> <span id="hwi-import-text"></span>
+  </div>
+
+  <!-- ── PATIENTENDATEN ── -->
+  <div class="hwi-patient-card">
+    <div class="hwi-card-title" style="margin-bottom:10px;">👤 Patientendaten — Dosisanpassung</div>
+    <div class="hwi-patient-grid">
+      <div class="hwi-patient-field">
+        <label for="hwi-pat-weight">Körpergewicht (kg)</label>
+        <input type="number" id="hwi-pat-weight" placeholder="z.B. 70" min="30" max="250" oninput="hwiUpdate()">
+      </div>
+      <div class="hwi-patient-field">
+        <label for="hwi-pat-egfr">eGFR (ml/min/1,73m²)</label>
+        <input type="number" id="hwi-pat-egfr" placeholder="z.B. 45" min="0" max="150" oninput="hwiPatEgfrChanged()">
+        <div id="hwi-egfr-badge-wrap" style="margin-top:5px;min-height:22px;"></div>
+      </div>
+      <div class="hwi-patient-field">
+        <label style="color:#546e7a;">Hinweis</label>
+        <div style="font-size:.8rem;color:#546e7a;padding:7px 0;line-height:1.4;">eGFR wird automatisch aus dem CKD-Tab übernommen — oder manuell eingeben</div>
+      </div>
+    </div>
   </div>
 
   <div class="hwi-reset-bar">
@@ -15812,17 +15844,38 @@ window.hwiAutoImport = function() {
   var hints = [];
 
   // Parse eGFR
-  var isDialysis = /HD|PD|Dialyse|<15/i.test(egfrText);
+  var isDialysis = /HD|PD|Dialyse/i.test(egfrText);
   var egfrNum = parseFloat(egfrText.replace(',', '.'));
+
+  // Fill patient eGFR card if empty
+  var patEgfrEl = document.getElementById('hwi-pat-egfr');
+  if (patEgfrEl && !patEgfrEl.value) {
+    if (isDialysis) {
+      patEgfrEl.value = '5';
+      hints.push('eGFR: Dialyse importiert');
+    } else if (!isNaN(egfrNum) && egfrNum > 0) {
+      patEgfrEl.value = Math.round(egfrNum);
+      hints.push('eGFR ' + Math.round(egfrNum) + ' ml/min importiert');
+    }
+    if (patEgfrEl.value) { window.hwiPatEgfrChanged(true); }
+  }
+
+  // Fill weight from CKD tab
+  var weightEl = document.getElementById('weight');
+  var patWeightEl = document.getElementById('hwi-pat-weight');
+  if (weightEl && weightEl.value && patWeightEl && !patWeightEl.value) {
+    patWeightEl.value = weightEl.value;
+    hints.push('Gewicht ' + weightEl.value + ' kg importiert');
+  }
 
   if (isDialysis) {
     var cbD = document.getElementById('hwi-cf-dialysis');
-    if (cbD && !cbD.checked) { cbD.checked = true; hints.push('Dialyse vorausgewählt'); }
+    if (cbD && !cbD.checked) { cbD.checked = true; if(hints.indexOf('Dialyse importiert')<0) hints.push('Dialyse vorausgewählt'); }
     var cbCkd = document.getElementById('hwi-cf-ckd');
     if (cbCkd && !cbCkd.checked) { cbCkd.checked = true; }
   } else if (!isNaN(egfrNum) && egfrNum < 45) {
     var cbCkd2 = document.getElementById('hwi-cf-ckd');
-    if (cbCkd2 && !cbCkd2.checked) { cbCkd2.checked = true; hints.push('CKD ≥3b vorausgewählt (eGFR ' + Math.round(egfrNum) + ')'); }
+    if (cbCkd2 && !cbCkd2.checked) { cbCkd2.checked = true; hints.push('CKD ≥3b vorausgewählt'); }
   }
 
   // Sex
@@ -15835,7 +15888,7 @@ window.hwiAutoImport = function() {
   var hintEl = document.getElementById('hwi-import-hint');
   var hintText = document.getElementById('hwi-import-text');
   if (hints.length > 0 && hintEl && hintText) {
-    hintText.textContent = hints.join('; ') + '.';
+    hintText.textContent = hints.join(' · ') + '.';
     hintEl.style.display = 'block';
   } else if (hintEl) {
     hintEl.style.display = 'none';
@@ -15854,8 +15907,38 @@ window.hwiReset = function() {
   });
   var radios = document.querySelectorAll('input[name="hwi-loc"], input[name="hwi-sev"]');
   radios.forEach(function(r){ r.checked = false; });
+  // Clear patient card
+  ['hwi-pat-weight','hwi-pat-egfr'].forEach(function(id){
+    var el = document.getElementById(id); if(el) el.value = '';
+  });
+  var badge = document.getElementById('hwi-egfr-badge-wrap'); if(badge) badge.innerHTML = '';
   document.getElementById('hwi-result-area').innerHTML = '';
   document.getElementById('hwi-import-hint').style.display = 'none';
+};
+
+// ── EGFR PATIENT INPUT ────────────────────────────────────────
+window.hwiPatEgfrChanged = function(skipUpdate) {
+  var egfr = hwiGetEgfr();
+  var wrap = document.getElementById('hwi-egfr-badge-wrap');
+  if(wrap){
+    if(egfr === null){ wrap.innerHTML = ''; }
+    else if(egfr < 10){ wrap.innerHTML = '<span class="hwi-tag hwi-tag-red">HD/GFR &lt;10</span>'; }
+    else if(egfr < 15){ wrap.innerHTML = '<span class="hwi-tag hwi-tag-red">G5: 10–15</span>'; }
+    else if(egfr < 30){ wrap.innerHTML = '<span class="hwi-tag hwi-tag-orange">G4: 15–30</span>'; }
+    else if(egfr < 45){ wrap.innerHTML = '<span class="hwi-tag hwi-tag-orange">G3b: 30–45</span>'; }
+    else if(egfr < 60){ wrap.innerHTML = '<span class="hwi-tag hwi-tag-blue">G3a: 45–60</span>'; }
+    else { wrap.innerHTML = '<span class="hwi-tag hwi-tag-green">eGFR ≥60 — normal</span>'; }
+  }
+  // Auto-sync checkboxes
+  if(egfr !== null){
+    var cbD = document.getElementById('hwi-cf-dialysis');
+    var cbC = document.getElementById('hwi-cf-ckd');
+    var wD = document.getElementById('hwi-cf-dialysis-wrap');
+    var wC = document.getElementById('hwi-cf-ckd-wrap');
+    if(cbD){ cbD.checked = egfr < 10; if(wD) wD.classList.toggle('hwi-checked', cbD.checked); }
+    if(cbC){ cbC.checked = egfr < 45; if(wC) wC.classList.toggle('hwi-checked', cbC.checked); }
+  }
+  if(!skipUpdate) hwiUpdate();
 };
 
 // ── ACCORDION ────────────────────────────────────────────────
@@ -15873,6 +15956,19 @@ function checked(id){ var el = document.getElementById(id); return el && el.chec
 function locVal(){ var r = document.querySelector('input[name="hwi-loc"]:checked'); return r ? r.value : null; }
 function sevVal(){ var r = document.querySelector('input[name="hwi-sev"]:checked'); return r ? r.value : null; }
 
+function hwiGetEgfr(){
+  var el = document.getElementById('hwi-pat-egfr');
+  if(!el || !el.value) return null;
+  var v = parseFloat(el.value);
+  return isNaN(v) ? null : v;
+}
+function hwiGetWeight(){
+  var el = document.getElementById('hwi-pat-weight');
+  if(!el || !el.value) return null;
+  var v = parseFloat(el.value);
+  return isNaN(v) ? null : v;
+}
+
 function hasComplicating(){
   return checked('hwi-cf-cath') || checked('hwi-cf-ckd') || checked('hwi-cf-dialysis') ||
          checked('hwi-cf-male') || checked('hwi-cf-dm') || checked('hwi-cf-immuno') ||
@@ -15880,16 +15976,45 @@ function hasComplicating(){
 }
 
 function isDialysisPatient(){
-  return checked('hwi-cf-dialysis');
+  if(checked('hwi-cf-dialysis')) return true;
+  var egfr = hwiGetEgfr();
+  return egfr !== null && egfr < 10;
 }
 
 function isCkdReduced(){
-  return checked('hwi-cf-ckd') || isDialysisPatient();
+  if(checked('hwi-cf-ckd') || isDialysisPatient()) return true;
+  var egfr = hwiGetEgfr();
+  return egfr !== null && egfr < 45;
+}
+
+// Returns a highlighted dose note based on current eGFR
+function egfrNote(ranges){
+  // ranges: array of {min, max, text} — text shown when egfr in [min,max)
+  var egfr = hwiGetEgfr();
+  var out = '';
+  ranges.forEach(function(r){
+    var active = egfr !== null && egfr >= r.min && egfr < r.max;
+    if(active){
+      out += '<span class="hwi-dose-active">▶ ' + r.text + '</span>';
+    } else {
+      out += '<span class="hwi-dose-note">' + r.text + '</span>';
+    }
+  });
+  return out;
 }
 
 // ── RESULT BUILDERS ──────────────────────────────────────────
 function buildResultHTML(scenario){
+  var egfr = hwiGetEgfr();
+  var weight = hwiGetWeight();
   var html = '';
+  var po = '<span class="hwi-route-badge hwi-route-po">p.o.</span>';
+  var iv = '<span class="hwi-route-badge hwi-route-iv">i.v.</span>';
+  var thDrug = '<thead><tr><th>#</th><th>z.B. Substanz</th><th>Route</th><th>Standarddosis &amp; Dauer</th><th>Dosisanpassung bei NI</th></tr></thead>';
+  var thSetting = '<thead><tr><th>Setting</th><th>z.B. Substanz</th><th>Route</th><th>Standarddosis</th><th>Dosisanpassung bei NI</th></tr></thead>';
+
+  // Inline eGFR summary if entered
+  var egfrInfo = egfr !== null ? ' <span style="font-size:.8rem;font-weight:400;color:#546e7a;">(eGFR ' + Math.round(egfr) + ' ml/min)</span>' : '';
 
   if(scenario === 'asb'){
     html += '<div class="hwi-result-card hwi-res-none">';
@@ -15905,36 +16030,71 @@ function buildResultHTML(scenario){
 
   if(scenario === 'zystitis-f'){
     html += '<div class="hwi-result-card hwi-res-mild">';
-    html += '<div class="hwi-result-title">💊 Unkomplizierte Zystitis — Frau (ohne komplizierende Faktoren)</div>';
-    if(isCkdReduced()){
-      html += '<div class="hwi-danger"><span>⚠️</span><span><strong>Eingeschränkte Nierenfunktion / Dialyse erkannt:</strong> Nitrofurantoin <strong>kontraindiziert</strong> bei eGFR &lt;45! Fosfomycin-Resorption eingeschränkt. Cefalexin bevorzugen.</span></div>';
+    html += '<div class="hwi-result-title">💊 Unkomplizierte Zystitis — Frau (ohne komplizierende Faktoren)' + egfrInfo + '</div>';
+    if(isDialysisPatient()){
+      html += '<div class="hwi-danger"><span>⚠️</span><span><strong>Dialyse/eGFR &lt;10:</strong> Nitrofurantoin &amp; Fosfomycin <strong>kontraindiziert</strong>. z.B. Cefalexin (Dosis nach HD-Schema, s. unten).</span></div>';
+    } else if(isCkdReduced()){
+      html += '<div class="hwi-danger"><span>⚠️</span><span><strong>eGFR &lt;45:</strong> Nitrofurantoin <strong>kontraindiziert</strong>. Fosfomycin eingeschränkt wirksam. z.B. Cefalexin bevorzugen (Dosis anpassen, s. Tabelle).</span></div>';
     }
     html += '<div class="hwi-result-subtitle">Erstlinientherapie (Kurztherapie bevorzugt):</div>';
-    html += '<table class="hwi-drug-table"><thead><tr><th>#</th><th>Substanz</th><th>Dosis &amp; Dauer</th><th>Hinweis</th></tr></thead><tbody>';
-    html += '<tr class="hwi-first-choice"><td>1.</td><td>Nitrofurantoin retard</td><td>2×100 mg/Tag × <strong>5 Tage</strong></td><td><span class="hwi-tag hwi-tag-red">KI eGFR &lt;45</span> Kein letztes Trimenon SS</td></tr>';
-    html += '<tr class="hwi-first-choice"><td>2.</td><td>Fosfomycin 3g Granulat</td><td><strong>Einmaldosis</strong> (ggf. Wdh. nach 48h)</td><td>Nur Frauen; eingeschränkt bei CKD</td></tr>';
-    html += '<tr><td>3.</td><td>Pivmecillinam</td><td>3×400 mg × <strong>3 Tage</strong></td><td>Gut verträglich, eng-spectrum</td></tr>';
-    html += '<tr><td>4.</td><td>Cefalexin</td><td>3×1 g × <strong>3–5 Tage</strong></td><td>Auch bei eGFR 30–45 nutzbar</td></tr>';
+    html += '<table class="hwi-drug-table">' + thDrug + '<tbody>';
+    html += '<tr class="hwi-first-choice"><td>1.</td><td>z.B. Nitrofurantoin retard</td><td>' + po + '</td><td>2×100 mg/Tag × <strong>5 Tage</strong></td>';
+    html += '<td>' + egfrNote([
+      {min:45, max:999, text:'eGFR ≥45: Standarddosis'},
+      {min:30, max:45,  text:'eGFR 30–45: KI (ineffektiv + toxisch)'},
+      {min:0,  max:30,  text:'eGFR &lt;30: kontraindiziert'}
+    ]) + '</td></tr>';
+    html += '<tr class="hwi-first-choice"><td>2.</td><td>z.B. Fosfomycin 3g Granulat</td><td>' + po + '</td><td><strong>Einmaldosis</strong> p.o.</td>';
+    html += '<td>' + egfrNote([
+      {min:45, max:999, text:'eGFR ≥45: Standarddosis'},
+      {min:30, max:45,  text:'eGFR 30–45: eingeschränkt nutzbar'},
+      {min:10, max:30,  text:'eGFR 10–30: nicht empfohlen'},
+      {min:0,  max:10,  text:'HD: kontraindiziert'}
+    ]) + '</td></tr>';
+    html += '<tr><td>3.</td><td>z.B. Pivmecillinam</td><td>' + po + '</td><td>3×400 mg × <strong>3 Tage</strong></td>';
+    html += '<td>' + egfrNote([
+      {min:10, max:999, text:'eGFR ≥10: Standarddosis'},
+      {min:0,  max:10,  text:'eGFR &lt;10/HD: kontraindiziert'}
+    ]) + '</td></tr>';
+    html += '<tr><td>4.</td><td>z.B. Cefalexin</td><td>' + po + '</td><td>3×1g × <strong>3–5 Tage</strong></td>';
+    html += '<td>' + egfrNote([
+      {min:45, max:999, text:'eGFR ≥45: 3×1g'},
+      {min:30, max:45,  text:'eGFR 30–45: 2×1g'},
+      {min:15, max:30,  text:'eGFR 15–30: 2×500 mg'},
+      {min:0,  max:15,  text:'eGFR &lt;15/HD: 1×500 mg nach Dialyse'}
+    ]) + '</td></tr>';
     html += '</tbody></table>';
     html += '<div class="hwi-warn"><span class="hwi-warn-icon">🚫</span><span><strong>Kein Fluorchinolon als Erstlinientherapie!</strong> (Rote-Hand-Brief). Cotrimoxazol nur wenn lokale Resistenz &lt;20%.</span></div>';
     html += '<div class="hwi-result-subtitle">Diagnostik:</div>';
-    html += '<ul class="hwi-list"><li>Urinkultur bei unkomplizierter Zystitis <em>nicht zwingend</em> — empfohlen bei Rezidiv (&ge;2×/Halbjahr)</li><li>Bei Therapieversagen nach 48–72h: Urinkultur + Resistogramm</li></ul>';
+    html += '<ul class="hwi-list"><li>Urinkultur bei unkomplizierter Zystitis <em>nicht zwingend</em> — empfohlen bei Rezidiv (≥2×/Halbjahr)</li><li>Bei Therapieversagen nach 48–72h: Urinkultur + Resistogramm</li></ul>';
     html += '</div>';
     return html;
   }
 
   if(scenario === 'zystitis-m'){
     html += '<div class="hwi-result-card hwi-res-mild">';
-    html += '<div class="hwi-result-title">💊 HWI Mann — immer als kompliziert werten</div>';
+    html += '<div class="hwi-result-title">💊 HWI Mann — immer als kompliziert werten' + egfrInfo + '</div>';
     html += '<div class="hwi-result-subtitle">Vorgehen:</div>';
     html += '<ul class="hwi-list"><li><strong>Immer Sonographie</strong> — Ausschluss Restharn, Steine, Obstruktion, Prostatavergrößerung</li><li><strong>Immer Urinkultur</strong> — gezielte Therapie nach Resistogramm</li><li>DD Prostatitis (akut/chronisch) und Urethritis ausschließen</li></ul>';
     html += '<div class="hwi-result-subtitle">Empirische Therapie — Dauer 7 Tage:</div>';
-    html += '<table class="hwi-drug-table"><thead><tr><th>#</th><th>Substanz</th><th>Dosis &amp; Dauer</th><th>Hinweis</th></tr></thead><tbody>';
-    html += '<tr class="hwi-first-choice"><td>1.</td><td>Cefalexin</td><td>3×1 g × <strong>7 Tage</strong></td><td>Bevorzugt</td></tr>';
-    html += '<tr><td>2.</td><td>Ciprofloxacin</td><td>2×500 mg × <strong>7 Tage</strong></td><td>Nur nach Resistogramm oder Versagen; <span class="hwi-tag hwi-tag-orange">2. Wahl</span></td></tr>';
+    html += '<table class="hwi-drug-table">' + thDrug + '<tbody>';
+    html += '<tr class="hwi-first-choice"><td>1.</td><td>z.B. Cefalexin</td><td>' + po + '</td><td>3×1g × <strong>7 Tage</strong></td>';
+    html += '<td>' + egfrNote([
+      {min:45, max:999, text:'eGFR ≥45: 3×1g'},
+      {min:30, max:45,  text:'eGFR 30–45: 2×1g'},
+      {min:15, max:30,  text:'eGFR 15–30: 2×500 mg'},
+      {min:0,  max:15,  text:'eGFR &lt;15/HD: 1×500 mg nach Dialyse'}
+    ]) + '</td></tr>';
+    html += '<tr><td>2.</td><td>z.B. Ciprofloxacin</td><td>' + po + '</td><td>2×500 mg × <strong>7 Tage</strong></td>';
+    html += '<td>' + egfrNote([
+      {min:50, max:999, text:'eGFR ≥50: 2×500 mg'},
+      {min:30, max:50,  text:'eGFR 30–50: 2×250–500 mg'},
+      {min:15, max:30,  text:'eGFR 15–30: 1×250–500 mg'},
+      {min:0,  max:15,  text:'HD: 1×250 mg nach Dialyse (2. Wahl)'}
+    ]) + '<span class="hwi-dose-note"><span class="hwi-tag hwi-tag-orange">2. Wahl</span> — nur nach Resistogramm / Versagen</span></td></tr>';
     html += '</tbody></table>';
     if(isCkdReduced()){
-      html += '<div class="hwi-danger"><span>⚠️</span><span>Nierfunktion eingeschränkt — Nitrofurantoin <strong>kontraindiziert</strong>. Ciprofloxacin-Dosis ggf. reduzieren (eGFR 30–50: 2×250–500 mg).</span></div>';
+      html += '<div class="hwi-danger"><span>⚠️</span><span>Niereninsuffizienz: Nitrofurantoin <strong>kontraindiziert</strong>. Dosisanpassung beachten (s. Tabelle).</span></div>';
     }
     html += '</div>';
     return html;
@@ -15942,21 +16102,37 @@ function buildResultHTML(scenario){
 
   if(scenario === 'zystitis-compl'){
     html += '<div class="hwi-result-card hwi-res-mod">';
-    html += '<div class="hwi-result-title">⚠️ Komplizierte Zystitis (mit komplizierenden Faktoren, kein Fieber)</div>';
+    html += '<div class="hwi-result-title">⚠️ Komplizierte Zystitis (mit komplizierenden Faktoren, kein Fieber)' + egfrInfo + '</div>';
     html += '<div class="hwi-warn"><span class="hwi-warn-icon">🧫</span><span><strong>Urinkultur obligat!</strong> Gezielte Therapie nach Antibiogramm hat Vorrang.</span></div>';
     if(checked('hwi-cf-cath')){
       html += '<div class="hwi-info"><strong>Dauerkatheter (CAUTI):</strong> Behandlung NUR bei Symptomen (Fieber, Schüttelfrost, neue Verwirrung, Flankenschmerz). DK-Wechsel wenn möglich <em>vor oder bei</em> Therapiebeginn.</div>';
     }
     html += '<div class="hwi-result-subtitle">Empirische Therapie — Dauer 7 Tage:</div>';
-    html += '<table class="hwi-drug-table"><thead><tr><th>#</th><th>Substanz</th><th>Dosis &amp; Dauer</th><th>Hinweis</th></tr></thead><tbody>';
-    html += '<tr class="hwi-first-choice"><td>1.</td><td>Cefalexin</td><td>3×1 g × <strong>7 Tage</strong> (po)</td><td>Bevorzugt</td></tr>';
-    html += '<tr><td>2.</td><td>Ciprofloxacin</td><td>2×500 mg × <strong>7 Tage</strong> (po)</td><td><span class="hwi-tag hwi-tag-orange">2. Wahl</span></td></tr>';
+    html += '<table class="hwi-drug-table">' + thDrug + '<tbody>';
+    html += '<tr class="hwi-first-choice"><td>1.</td><td>z.B. Cefalexin</td><td>' + po + '</td><td>3×1g × <strong>7 Tage</strong></td>';
+    html += '<td>' + egfrNote([
+      {min:45, max:999, text:'eGFR ≥45: 3×1g'},
+      {min:30, max:45,  text:'eGFR 30–45: 2×1g'},
+      {min:15, max:30,  text:'eGFR 15–30: 2×500 mg'},
+      {min:0,  max:15,  text:'HD: 1×500 mg nach Dialyse'}
+    ]) + '</td></tr>';
+    html += '<tr><td>2.</td><td>z.B. Ciprofloxacin</td><td>' + po + '</td><td>2×500 mg × <strong>7 Tage</strong></td>';
+    html += '<td>' + egfrNote([
+      {min:50, max:999, text:'eGFR ≥50: 2×500 mg'},
+      {min:30, max:50,  text:'eGFR 30–50: 2×250–500 mg'},
+      {min:0,  max:30,  text:'eGFR &lt;30: 1×250 mg; <span class="hwi-tag hwi-tag-orange">2. Wahl</span>'}
+    ]) + '</td></tr>';
+    if(isDialysisPatient()){
+      html += '<tr><td>3.</td><td>z.B. Cefuroxim</td><td>' + iv + '</td><td>3×750 mg/Tag</td><td>' + egfrNote([
+        {min:0, max:10, text:'HD: 750 mg nach jeder Dialyse (2–3×/Woche)'}
+      ]) + '</td></tr>';
+    }
     html += '</tbody></table>';
     if(isCkdReduced()){
-      html += '<div class="hwi-danger"><span>⚠️</span><span>Niereninsuffizienz / Dialyse: Nitrofurantoin <strong>kontraindiziert</strong>. Fosfomycin nur eingeschränkt nutzbar. Cefalexin bei eGFR 30–45 dosisreduziert (2×1g).</span></div>';
+      html += '<div class="hwi-danger"><span>⚠️</span><span>Niereninsuffizienz: Nitrofurantoin <strong>kontraindiziert</strong>. Fosfomycin eingeschränkt. Dosisanpassung s. Tabelle.</span></div>';
     }
     if(checked('hwi-cf-cath')){
-      html += '<div class="hwi-info"><strong>Bei DK + MRSA-Risiko:</strong> Cotrimoxazol hochdosiert po nach Antibiogramm</div>';
+      html += '<div class="hwi-info"><strong>Bei DK + MRSA-Risiko:</strong> z.B. Cotrimoxazol hochdosiert p.o. nach Antibiogramm</div>';
     }
     html += '</div>';
     return html;
@@ -15964,17 +16140,29 @@ function buildResultHTML(scenario){
 
   if(scenario === 'pyelo-mild'){
     html += '<div class="hwi-result-card hwi-res-mod">';
-    html += '<div class="hwi-result-title">🔥 Pyelonephritis — leicht/moderat, ambulant</div>';
-    html += '<div class="hwi-warn"><span class="hwi-warn-icon">🧫</span><span><strong>Urinkultur obligat!</strong> Sequenztherapie nach Resistogramm.</span></div>';
+    html += '<div class="hwi-result-title">🔥 Pyelonephritis — leicht/moderat, ambulant' + egfrInfo + '</div>';
+    html += '<div class="hwi-warn"><span class="hwi-warn-icon">🧫</span><span><strong>Urinkultur obligat!</strong> Sequenztherapie nach Resistogramm. Kontrolle 48–72h.</span></div>';
     html += '<div class="hwi-result-subtitle">Empirische Therapie:</div>';
-    html += '<table class="hwi-drug-table"><thead><tr><th>#</th><th>Substanz</th><th>Dosis &amp; Dauer</th><th>Hinweis</th></tr></thead><tbody>';
-    html += '<tr class="hwi-first-choice"><td>1.</td><td>Ciprofloxacin</td><td>2×500 mg × <strong>7–10 Tage</strong> (po)</td><td>Erstlinie bei Pyelo (nach Resistogramm)</td></tr>';
-    html += '<tr><td>2.</td><td>Cefalexin</td><td>3×1 g × <strong>7–10 Tage</strong> (po)</td><td>Nur prämenopausale Frauen; alternativ bei Chinolon-KI</td></tr>';
+    html += '<table class="hwi-drug-table">' + thDrug + '<tbody>';
+    html += '<tr class="hwi-first-choice"><td>1.</td><td>z.B. Ciprofloxacin</td><td>' + po + '</td><td>2×500 mg × <strong>7–10 Tage</strong></td>';
+    html += '<td>' + egfrNote([
+      {min:50, max:999, text:'eGFR ≥50: 2×500 mg'},
+      {min:30, max:50,  text:'eGFR 30–50: 2×250–500 mg'},
+      {min:15, max:30,  text:'eGFR 15–30: 1×250–500 mg; i.v.-Therapie erwägen'},
+      {min:0,  max:15,  text:'eGFR &lt;15/HD: i.v.-Therapie obligat → Szenario wechseln'}
+    ]) + '<span class="hwi-dose-note">Nach Resistogramm, Rote-Hand-Brief beachten</span></td></tr>';
+    html += '<tr><td>2.</td><td>z.B. Cefalexin</td><td>' + po + '</td><td>3×1g × <strong>7–10 Tage</strong></td>';
+    html += '<td>' + egfrNote([
+      {min:45, max:999, text:'eGFR ≥45: 3×1g'},
+      {min:30, max:45,  text:'eGFR 30–45: 2×1g'},
+      {min:15, max:30,  text:'eGFR 15–30: 2×500 mg; i.v. erwägen'},
+      {min:0,  max:15,  text:'HD: i.v.-Therapie bevorzugen'}
+    ]) + '<span class="hwi-dose-note">Alternative bei Chinolon-KI; bei CKD bevorzugt</span></td></tr>';
     html += '</tbody></table>';
     html += '<div class="hwi-result-subtitle">Weitere Maßnahmen:</div>';
     html += '<ul class="hwi-list"><li>Sonographie Nieren (Obstruktion, Abszess?)</li><li>Kontrolle nach <strong>48–72h</strong> — bei fehlendem Ansprechen: Hospitalisierung, i.v.-Therapie</li><li>Gesamttherapiedauer: <strong>7–10 Tage</strong></li></ul>';
     if(isCkdReduced()){
-      html += '<div class="hwi-danger"><span>⚠️</span><span>Niereninsuffizienz: Ciprofloxacin bei eGFR 30–50 → 2×250–500 mg. Hospitalisierung großzügig erwägen.</span></div>';
+      html += '<div class="hwi-danger"><span>⚠️</span><span>Niereninsuffizienz / eGFR &lt;45: Dosisanpassung erforderlich (s. Tabelle). Bei eGFR &lt;30 großzügig stationäre i.v.-Therapie erwägen.</span></div>';
     }
     html += '</div>';
     return html;
@@ -15982,41 +16170,75 @@ function buildResultHTML(scenario){
 
   if(scenario === 'pyelo-severe'){
     html += '<div class="hwi-result-card hwi-res-severe">';
-    html += '<div class="hwi-result-title">🏥 Pyelonephritis — schwer, stationär (i.v.)</div>';
-    html += '<div class="hwi-warn"><span class="hwi-warn-icon">🧫</span><span><strong>Urinkultur obligat!</strong> Gezielte Deeskalation nach Antibiogramm.</span></div>';
+    html += '<div class="hwi-result-title">🏥 Pyelonephritis — schwer, stationär' + egfrInfo + '</div>';
+    html += '<div class="hwi-warn"><span class="hwi-warn-icon">🧫</span><span><strong>Urinkultur obligat!</strong> Gezielte Deeskalation nach Antibiogramm. Sequenz i.v. → p.o. sobald afebrile &gt;24h.</span></div>';
     html += '<div class="hwi-result-subtitle">Empirische i.v.-Therapie:</div>';
-    html += '<table class="hwi-drug-table"><thead><tr><th>Setting</th><th>Substanz</th><th>Dosis</th><th>Sequenz / Hinweis</th></tr></thead><tbody>';
-    html += '<tr class="hwi-first-choice"><td>Standard</td><td>Cefuroxim i.v.</td><td>3×1,5 g/Tag</td><td>→ Sequenz: Cefalexin po; Gesamtdauer 7–14 Tage</td></tr>';
-    html += '<tr><td>Komplizierende Faktoren / MRGN-Risiko</td><td>Pip/Tazobactam i.v.</td><td>3×4,5 g/Tag</td><td>Bei Obstruktion, DK, nosokomial</td></tr>';
+    html += '<table class="hwi-drug-table">' + thSetting + '<tbody>';
+    html += '<tr class="hwi-first-choice"><td>Standard</td><td>z.B. Cefuroxim</td><td>' + iv + '</td><td>3×1,5 g/Tag</td>';
+    html += '<td>' + egfrNote([
+      {min:30, max:999, text:'eGFR ≥30: 3×1,5g'},
+      {min:10, max:30,  text:'eGFR 10–30: 2×1,5g'},
+      {min:0,  max:10,  text:'HD: 750 mg–1,5g nach jeder Dialyse'}
+    ]) + '<span class="hwi-dose-note">Sequenz → z.B. Cefalexin p.o.; Gesamtdauer 10–14 Tage</span></td></tr>';
+    html += '<tr><td>MRGN-Risiko / DK / nosokomial</td><td>z.B. Pip/Tazobactam</td><td>' + iv + '</td><td>3×4,5 g/Tag</td>';
+    html += '<td>' + egfrNote([
+      {min:40, max:999, text:'eGFR ≥40: 3×4,5g'},
+      {min:20, max:40,  text:'eGFR 20–40: 3×4,5g (ggf. verlängerte Infusion)'},
+      {min:10, max:20,  text:'eGFR 10–20: 2×4,5g'},
+      {min:0,  max:10,  text:'HD: 2×4,5g (nach HD-Schema)'}
+    ]) + '</td></tr>';
     if(isDialysisPatient()){
-      html += '<tr><td><strong>Dialyse / MRGN</strong></td><td><strong>Meropenem i.v.</strong></td><td>Normalgewicht: 3×1g/Tag<br><span class="hwi-tag hwi-tag-red">HD: 1×1g nach Dialyse (leicht) / 1×2g nach Dialyse (schwer)</span></td><td>HD-Dosierung beachten!</td></tr>';
+      html += '<tr><td><strong>Dialyse / MRGN</strong></td><td><strong>z.B. Meropenem</strong></td><td>' + iv + '</td><td>3×1g/Tag</td>';
+      html += '<td>' + egfrNote([
+        {min:0, max:10, text:'HD: 1×1g nach Dialyse (leicht) / 1×2g nach Dialyse (schwer) — TDM erwägen'}
+      ]) + '</td></tr>';
     } else if(isCkdReduced()){
-      html += '<tr><td>CKD / eGFR &lt;45</td><td>Cefuroxim i.v. (angepasst)</td><td>Dosisreduktion je nach eGFR — Rücksprache Pharmazie</td><td>Alternativ Meropenem bei MRGN-Risiko</td></tr>';
+      html += '<tr><td>eGFR 15–45 + MRGN</td><td>z.B. Meropenem</td><td>' + iv + '</td><td>3×1g/Tag</td>';
+      html += '<td>' + egfrNote([
+        {min:25, max:50, text:'eGFR 25–50: 3×1g'},
+        {min:10, max:25, text:'eGFR 10–25: 2×1g'},
+        {min:0,  max:10, text:'HD: 1×1g nach Dialyse'}
+      ]) + '</td></tr>';
     }
     html += '</tbody></table>';
-    html += '<ul class="hwi-list"><li>Sono Nieren/Blase: Obstruktion? Abszess?</li><li>Urologie-Konsil bei Obstruktion oder Nierenabszess</li><li>Sequenz i.v. → po sobald klinisch möglich (afebrile &gt;24h, orale Resorption ok)</li></ul>';
+    html += '<ul class="hwi-list"><li>Sono Nieren/Blase: Obstruktion? Abszess?</li><li>Urologie-Konsil bei Obstruktion oder Nierenabszess</li><li>Sequenz i.v. → p.o. sobald klinisch möglich (afebrile &gt;24h, orale Resorption ok)</li></ul>';
     html += '</div>';
     return html;
   }
 
   if(scenario === 'urosepsis'){
     html += '<div class="hwi-result-card hwi-res-severe">';
-    html += '<div class="hwi-result-title">🚨 Urosepsis — Sepsis-Bundle einleiten!</div>';
-    html += '<div class="hwi-danger"><span>🩺</span><span><strong>Sepsis-Bundle (1h-Bundle):</strong> Blutkulturen 2×2 vor Antibiose! Laktat, Antibiotikum innerhalb 1h, Volumen 30 ml/kg bei Hypotension, Vasopressoren bei MAP &lt;65 mmHg</span></div>';
+    html += '<div class="hwi-result-title">🚨 Urosepsis — Sepsis-Bundle einleiten!' + egfrInfo + '</div>';
+    html += '<div class="hwi-danger"><span>🩺</span><span><strong>1h-Sepsis-Bundle:</strong> Blutkulturen 2×2 <em>vor</em> Antibiose! Laktat messen. Antibiotikum &lt;1h. Bei Hypotension: Volumen 30 ml/kg. Vasopressoren bei MAP &lt;65 mmHg.</span></div>';
     html += '<div class="hwi-result-subtitle">Empirische i.v.-Therapie:</div>';
-    html += '<table class="hwi-drug-table"><thead><tr><th>Situation</th><th>Substanz</th><th>Dosis</th><th>Hinweis</th></tr></thead><tbody>';
-    html += '<tr class="hwi-first-choice"><td>Standard / ITS</td><td>Meropenem i.v.</td><td>3×1 g/Tag</td><td>Breite empirische Abdeckung</td></tr>';
-    if(isDialysisPatient()){
-      html += '<tr><td><strong>Dialyse (HD)</strong></td><td><strong>Meropenem i.v.</strong></td><td><span class="hwi-tag hwi-tag-red">1×1g nach Dialyse (SD) / 1×2g nach Dialyse (schwer)</span></td><td>HD-Dosierung beachten!</td></tr>';
+    html += '<table class="hwi-drug-table">' + thSetting + '<tbody>';
+    html += '<tr class="hwi-first-choice"><td>Standard / ITS</td><td>z.B. Meropenem</td><td>' + iv + '</td><td>3×1g/Tag</td>';
+    html += '<td>' + egfrNote([
+      {min:50, max:999, text:'eGFR ≥50: 3×1g'},
+      {min:25, max:50,  text:'eGFR 25–50: 3×1g (ggf. verlängert)'},
+      {min:10, max:25,  text:'eGFR 10–25: 2×1g'},
+      {min:0,  max:10,  text:'HD: 1×1g nach Dialyse (leicht) / 1×2g nach Dialyse (schwer)'}
+    ]) + '</td></tr>';
+    if(!checked('hwi-cf-nosocomial')){
+      html += '<tr><td>Alternativ (kein MRGN-Risiko)</td><td>z.B. Ceftriaxon</td><td>' + iv + '</td><td>1×2g/Tag</td>';
+      html += '<td>' + egfrNote([
+        {min:10, max:999, text:'eGFR ≥10: 1×2g (keine Dosisreduktion nötig)'},
+        {min:0,  max:10,  text:'HD: 1×2g (keine Reduktion, gut dialysierbar)'}
+      ]) + '<span class="hwi-dose-note">Bei ambulant erworben + kein MRGN-Risiko + kein DK</span></td></tr>';
     }
-    html += '<tr><td>+ MRSA-Risiko</td><td>+ Vancomycin i.v.</td><td>Spiegeladaptiert (Talspiegel 15–20)</td><td>Bei MRSA-Verdacht, nosokomial, DK</td></tr>';
+    html += '<tr><td>+ MRSA-Risiko (nosokomial / DK)</td><td>z.B. + Vancomycin</td><td>' + iv + '</td><td>Spiegeladaptiert</td>';
+    html += '<td>' + egfrNote([
+      {min:50, max:999, text:'eGFR ≥50: TDM — Talspiegel 15–20 mg/l'},
+      {min:30, max:50,  text:'eGFR 30–50: Verlängertes Intervall, TDM obligat'},
+      {min:0,  max:30,  text:'eGFR &lt;30/HD: Stark verlängerte HWZ — AUC-TDM, Spezialist fragen'}
+    ]) + '</td></tr>';
     html += '</tbody></table>';
     html += '<div class="hwi-result-subtitle">Fokussuche &amp; Maßnahmen:</div>';
     html += '<ul class="hwi-list">';
     html += '<li><strong>Sono / CT Abdomen:</strong> Abszess? Obstruktion? Steine? Emphysem?</li>';
     html += '<li><strong>Urologie-Konsil:</strong> Bei Obstruktion, Abszess, Stauungsniere → Drainage!</li>';
     html += '<li><strong>Nierenabszess:</strong> Drainage wenn renal &gt;5 cm oder perirenal &gt;3 cm</li>';
-    html += '<li><strong>DK / DJ:</strong> Wechsel wenn möglich</li>';
+    html += '<li><strong>DK / DJ:</strong> Wechsel wenn möglich vor oder bei Therapiebeginn</li>';
     html += '<li>Deeskalation nach Blutkulturbefund und Resistogramm</li>';
     html += '</ul>';
     html += '</div>';
@@ -16025,20 +16247,37 @@ function buildResultHTML(scenario){
 
   if(scenario === 'cauti'){
     html += '<div class="hwi-result-card hwi-res-mod">';
-    html += '<div class="hwi-result-title">🔗 Katheter-assoziierter HWI (CAUTI)</div>';
+    html += '<div class="hwi-result-title">🔗 Katheter-assoziierter HWI (CAUTI)' + egfrInfo + '</div>';
     html += '<div class="hwi-success"><strong>Asymptomatische Keimbesiedelung bei Katheter → KEIN Antibiotikum!</strong> Nur bei klinischen Symptomen behandeln.</div>';
     html += '<div class="hwi-result-subtitle">Symptome die Behandlung erfordern:</div>';
     html += '<ul class="hwi-list"><li>Fieber (&gt;38°C) ohne andere Ursache</li><li>Schüttelfrost, Rigor</li><li>Neue Flankenschmerzen, Druckschmerz Nierenlager</li><li>Neue Verwirrtheit (bei DK-Träger)</li></ul>';
     html += '<div class="hwi-result-subtitle">Therapie:</div>';
+    html += '<table class="hwi-drug-table">' + thSetting + '<tbody>';
+    html += '<tr class="hwi-first-choice"><td>Leicht–moderat</td><td>z.B. Cefalexin</td><td>' + po + '</td><td>3×1g × <strong>7 Tage</strong></td>';
+    html += '<td>' + egfrNote([
+      {min:45, max:999, text:'eGFR ≥45: 3×1g'},
+      {min:30, max:45,  text:'eGFR 30–45: 2×1g'},
+      {min:15, max:30,  text:'eGFR 15–30: 2×500 mg'},
+      {min:0,  max:15,  text:'HD: 1×500 mg nach Dialyse'}
+    ]) + '<span class="hwi-dose-note">Gezielt nach Antibiogramm — breite Empirik vermeiden</span></td></tr>';
+    html += '<tr><td>Schwer / systemisch</td><td>z.B. Cefuroxim</td><td>' + iv + '</td><td>3×1,5g/Tag</td>';
+    html += '<td>' + egfrNote([
+      {min:30, max:999, text:'eGFR ≥30: 3×1,5g'},
+      {min:10, max:30,  text:'eGFR 10–30: 2×1,5g'},
+      {min:0,  max:10,  text:'HD: 750 mg–1,5g nach Dialyse'}
+    ]) + '<span class="hwi-dose-note">Bei Therapieversagen: Eskalation nach Antibiogramm</span></td></tr>';
+    if(isDialysisPatient()){
+      html += '<tr><td>Dialyse + schwer</td><td>z.B. Meropenem</td><td>' + iv + '</td><td>3×1g/Tag</td>';
+      html += '<td>' + egfrNote([
+        {min:0, max:10, text:'HD: 1×1g nach Dialyse (leicht) / 1×2g (schwer)'}
+      ]) + '</td></tr>';
+    }
+    html += '</tbody></table>';
     html += '<ul class="hwi-list">';
     html += '<li><strong>DK-Wechsel wenn möglich</strong> — vor oder bei Therapiebeginn</li>';
     html += '<li>Dauer: <strong>7 Tage</strong> (14 Tage wenn langsames Ansprechen)</li>';
-    html += '<li>Antibiose <strong>gezielt nach Antibiogramm</strong> — breite Empirik vermeiden</li>';
-    html += '<li>Bei MRSA-HWI / DK: <strong>Cotrimoxazol hochdosiert</strong> po (nach Antibiogramm)</li>';
+    html += '<li>Bei MRSA-HWI: z.B. Cotrimoxazol hochdosiert p.o. nach Antibiogramm</li>';
     html += '</ul>';
-    if(isDialysisPatient()){
-      html += '<div class="hwi-danger"><span>⚠️</span><span>Dialyse: Nitrofurantoin <strong>kontraindiziert</strong>. Bei schwerem CAUTI: Meropenem HD-Dosierung (1×1g nach Dialyse).</span></div>';
-    }
     html += '</div>';
     return html;
   }
