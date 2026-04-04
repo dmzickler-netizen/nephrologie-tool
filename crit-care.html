@@ -2029,7 +2029,9 @@ window.akiClear      = akiClear;
 .abx-spek-tag.aty  { background:#f3e8ff; color:#6b21a8; border:1px solid #d8b4fe; }
 .abx-spek-tag.ent  { background:#fff7ed; color:#c2410c; border:1px solid #fdba74; }
 .abx-spek-tag.psa  { background:#fde8e8; color:#b91c1c; border:1px solid #fca5a5; }
-.abx-spek-tag.ana  { background:#f1f5f9; color:#334155; border:1px solid #cbd5e1; }
+.abx-spek-tag.ana    { background:#f1f5f9; color:#334155; border:1px solid #cbd5e1; }
+.abx-spek-tag.pilze  { background:#fdf4ff; color:#7e22ce; border:1px solid #e9d5ff; }
+.abx-spek-tag.viren  { background:#fff1f2; color:#9f1239; border:1px solid #fda4af; }
 /* Spektrum-Filter */
 .abx-spek-filter { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; align-items:center; }
 .abx-spek-filter label { font-size:.75rem; font-weight:700; color:#555; text-transform:uppercase; letter-spacing:.04em; margin-right:2px; }
@@ -2046,8 +2048,12 @@ window.akiClear      = akiClear;
 .abx-spek-btn.ent.active  { background:#c2410c; color:#fff; }
 .abx-spek-btn.psa  { border:1.5px solid #fca5a5; background:#fff; color:#b91c1c; }
 .abx-spek-btn.psa.active  { background:#b91c1c; color:#fff; }
-.abx-spek-btn.ana  { border:1.5px solid #cbd5e1; background:#fff; color:#334155; }
-.abx-spek-btn.ana.active  { background:#334155; color:#fff; }
+.abx-spek-btn.ana    { border:1.5px solid #cbd5e1; background:#fff; color:#334155; }
+.abx-spek-btn.ana.active    { background:#334155; color:#fff; }
+.abx-spek-btn.pilze  { border:1.5px solid #e9d5ff; background:#fff; color:#7e22ce; }
+.abx-spek-btn.pilze.active  { background:#7e22ce; color:#fff; }
+.abx-spek-btn.viren  { border:1.5px solid #fda4af; background:#fff; color:#9f1239; }
+.abx-spek-btn.viren.active  { background:#9f1239; color:#fff; }
 </style>
 
 <div class="abx-container">
@@ -2089,6 +2095,8 @@ window.akiClear      = akiClear;
     <button class="abx-grp-btn" onclick="abxSetGruppe('Glykopeptid',this)">Glykopeptide</button>
     <button class="abx-grp-btn" onclick="abxSetGruppe('Aminoglykosid',this)">Aminoglykoside</button>
     <button class="abx-grp-btn" onclick="abxSetGruppe('Sonstige',this)">Sonstige</button>
+    <button class="abx-grp-btn" onclick="abxSetGruppe('Antimykotikum',this)">Antimykotika</button>
+    <button class="abx-grp-btn" onclick="abxSetGruppe('Antiviral',this)">Antivirale</button>
   </div>
 
   <div class="abx-spek-filter" id="abx-spek-filter">
@@ -2100,6 +2108,8 @@ window.akiClear      = akiClear;
     <button class="abx-spek-btn ent"  onclick="abxSetSpektrum('Ent',this)">Enterokokken</button>
     <button class="abx-spek-btn psa"  onclick="abxSetSpektrum('PSA',this)">Pseudomonas</button>
     <button class="abx-spek-btn ana"  onclick="abxSetSpektrum('Ana',this)">Anaerobier</button>
+    <button class="abx-spek-btn pilze" onclick="abxSetSpektrum('Pilze',this)">Pilze</button>
+    <button class="abx-spek-btn viren" onclick="abxSetSpektrum('Viren',this)">Viren</button>
   </div>
 
   <div class="abx-grid" id="abx-grid"></div>
@@ -2125,7 +2135,9 @@ var SPEK_META = {
   'Aty': { cls:'aty',  label:'Atypiker' },
   'Ent': { cls:'ent',  label:'Enterokokken' },
   'PSA': { cls:'psa',  label:'Pseudomonas' },
-  'Ana': { cls:'ana',  label:'Anaerobier' }
+  'Ana':   { cls:'ana',   label:'Anaerobier' },
+  'Pilze': { cls:'pilze', label:'Pilze' },
+  'Viren': { cls:'viren', label:'Viren' }
 };
 
 var abxData = [
@@ -2585,6 +2597,344 @@ var abxData = [
       'PD':    { dosis: '200 mg Ladedosis, dann 100 mg q12\u201324h p.o./i.v.', hinweis: 'Keine Dosisanpassung; PD-Clearance minimal' }
     },
     tdm: false, cave: '\u26a0\ufe0f Nicht mit Milch/Antazida/Eisen (Chelat); \u00d6sophagusulzera (aufrecht einnehmen, viel Wasser); Photosensibilisierung; NICHT bei Kindern <8J oder Schwangerschaft'
+  },
+  // ===== PENICILLINE (pur) =====
+  {
+    name: 'Penicillin G (Benzylpenicillin)', brand: 'Penicillin G Gr\u00fcnenthal\u00ae', gruppe: 'Penicillin/BLI',
+    spektrum: ['G+','Ana'],
+    indikation: 'Streptokokken-Infektionen, Pneumokokken-Meningitis, Syphilis, Erysipel, Endokarditis (Strept.), Gasbrand',
+    dosierung: {
+      '>50':   { dosis: '4\u20136 \u00d7 5 Mio. IE i.v. | Meningitis: 4\u00d7 6\u20138 Mio. IE', hinweis: '' },
+      '30-50': { dosis: '3\u00d7 5 Mio. IE i.v.', hinweis: '' },
+      '15-30': { dosis: '2\u00d7 5 Mio. IE i.v.', hinweis: 'Intervall verl\u00e4ngern' },
+      '<15':   { dosis: '2\u00d7 5 Mio. IE i.v.', hinweis: 'max. 4,8 g/d; erh\u00f6hte Neurotoxizit\u00e4t' },
+      'HD':    { dosis: '2\u00d7 5 Mio. IE i.v.', hinweis: 'nach HD: Supplementierung empfohlen; dialysierbar' },
+      'CRRT':  { dosis: '4\u00d7 5 Mio. IE i.v.', hinweis: 'CRRT erh\u00f6ht Clearance; Standard-/h\u00f6here Dosis' },
+      'PD':    { dosis: '2\u00d7 5 Mio. IE i.v.', hinweis: 'wie <15; geringe PD-Clearance' }
+    },
+    tdm: false, cave: '\u26a0\ufe0f Neurotoxizit\u00e4t/Krampfanfallrisiko bei Akkumulation (besonders bei CKD); Ladedosis immer voll'
+  },
+  {
+    name: 'Penicillin V', brand: 'Penicillin V STADA\u00ae', gruppe: 'Penicillin/BLI',
+    spektrum: ['G+'],
+    indikation: 'Tonsillitis (Streptok.), Scharlach, Otitis media, Erysipel (ambulant, leicht)',
+    dosierung: {
+      '>50':   { dosis: '3\u00d7 1 Mio. IE p.o.', hinweis: '' },
+      '30-50': { dosis: '3\u00d7 1 Mio. IE p.o.', hinweis: 'keine Anpassung' },
+      '15-30': { dosis: '2\u00d7 1 Mio. IE p.o.', hinweis: '' },
+      '<15':   { dosis: '2\u00d7 1 Mio. IE p.o.', hinweis: 'verl\u00e4ngertes Intervall' },
+      'HD':    { dosis: '2\u00d7 1 Mio. IE p.o.', hinweis: 'nach Dialyse geben; dialysierbar' },
+      'CRRT':  { dosis: '3\u00d7 1 Mio. IE p.o.', hinweis: 'Standarddosis; breiter therapeutischer Index' },
+      'PD':    { dosis: '2\u00d7 1 Mio. IE p.o.', hinweis: 'wie <15; keine PD-Daten' }
+    },
+    tdm: false, cave: 'Nur oral; geringe Bioverfügbarkeit n\u00fcchtern (60%). N\u00fcchtern einnehmen!'
+  },
+  {
+    name: 'Ampicillin', brand: 'Ampicillin ratiopharm\u00ae', gruppe: 'Penicillin/BLI',
+    spektrum: ['G+','G-','Ana'],
+    indikation: 'Listerien-Meningitis, Enterokokken-Endokarditis (Synergismus), biliäre Infektionen',
+    dosierung: {
+      '>50':   { dosis: '3\u00d7 2 g i.v. | Meningitis/Endokarditis: 6\u00d7 2 g i.v.', hinweis: '' },
+      '30-50': { dosis: '3\u00d7 2 g i.v.', hinweis: 'keine Anpassung' },
+      '15-30': { dosis: '2\u00d7 2 g i.v.', hinweis: '' },
+      '<15':   { dosis: '2\u00d7 2 g i.v.', hinweis: 'Intervallanpassung' },
+      'HD':    { dosis: '1\u00d7 2 g i.v. + nach HD supplementieren', hinweis: 'Dialysierbar; Gabe nach HDT' },
+      'CRRT':  { dosis: '3\u00d7 2 g i.v.', hinweis: 'CRRT entfernt signifikant; Standarddosis' },
+      'PD':    { dosis: '2\u00d7 2 g i.v.', hinweis: 'kaum PD-dialysierbar; wie HD' }
+    },
+    tdm: false, cave: 'Neurotoxizit\u00e4t bei hohen Dosen/CKD; Listerien-Mittel der Wahl (nicht durch Cephalosporine abgedeckt!)'
+  },
+  {
+    name: 'Amoxicillin', brand: 'Amoxicillin HEXAL\u00ae', gruppe: 'Penicillin/BLI',
+    spektrum: ['G+','G-'],
+    indikation: 'HWI, Otitis media, Sinusitis, H.-pylori-Eradikation (Kombination), ambulante Pneumonie',
+    dosierung: {
+      '>50':   { dosis: '3\u00d7 1 g p.o. | Streptok.-Pharyngitis: 2\u00d7 1 g \u00d7 10 d', hinweis: '' },
+      '30-50': { dosis: '3\u00d7 1 g p.o.', hinweis: 'keine Anpassung' },
+      '15-30': { dosis: '2\u00d7 1 g p.o.', hinweis: '' },
+      '<15':   { dosis: '2\u00d7 500 mg p.o.', hinweis: 'Dosis und Intervall anpassen' },
+      'HD':    { dosis: '2\u00d7 500 mg p.o.', hinweis: 'nach Dialyse geben; dialysierbar' },
+      'CRRT':  { dosis: '3\u00d7 1 g p.o.', hinweis: 'Standarddosis; CRRT erh\u00f6ht Clearance' },
+      'PD':    { dosis: '2\u00d7 500 mg p.o.', hinweis: 'wie <15; geringe PD-Clearance' }
+    },
+    tdm: false, cave: 'Kein Beta-Laktamase-Schutz. Resistenzrate E. coli >50% \u2192 nicht f\u00fcr HWI ohne Antibiogramm!'
+  },
+  {
+    name: 'Pivmecillinam', brand: 'X-Systo\u00ae', gruppe: 'Penicillin/BLI',
+    spektrum: ['G-','Ent'],
+    indikation: 'Unkomplizierter HWI (E. coli, Klebsiella), Zystitis (oral)',
+    dosierung: {
+      '>50':   { dosis: '3\u00d7 400 mg p.o. \u00d7 3\u20135 Tage', hinweis: 'nur unterer HWI' },
+      '30-50': { dosis: '3\u00d7 400 mg p.o.', hinweis: 'keine Anpassung; Wirkung \u00fcber Urinkonzentration' },
+      '15-30': { dosis: '3\u00d7 400 mg p.o.', hinweis: 'mit Vorsicht; eingeschr\u00e4nkte Urinkonzentration' },
+      '<15':   { dosis: 'KONTRAINDIZIERT', hinweis: 'keine ausreichende Urinkonzentration bei fehlender Restdiurese' },
+      'HD':    { dosis: 'KONTRAINDIZIERT', hinweis: 'keine ausreichende Urinkonzentration' },
+      'CRRT':  { dosis: 'KONTRAINDIZIERT', hinweis: 'nicht geeignet' },
+      'PD':    { dosis: 'KONTRAINDIZIERT', hinweis: 'nicht geeignet' }
+    },
+    tdm: false, cave: 'Wirkprinzip: Konzentration im Urin \u2192 unwirksam ohne Restdiurese; KEINE systemischen Infektionen!'
+  },
+  // ===== CEPHALOSPORINE 1. GENERATION =====
+  {
+    name: 'Cefalexin', brand: 'Cefalexin HEXAL\u00ae', gruppe: 'Cephalosporin',
+    spektrum: ['G+','G-'],
+    indikation: 'Haut-/Weichgewebeinfektionen (MSSA), HWI (ambulant), Zahninfektionen (oral)',
+    dosierung: {
+      '>50':   { dosis: '3\u00d7 1 g p.o. | leicht: 3\u00d7 500 mg', hinweis: '' },
+      '30-50': { dosis: '3\u00d7 1 g p.o.', hinweis: 'keine Anpassung' },
+      '15-30': { dosis: '2\u00d7 1 g p.o.', hinweis: '' },
+      '<15':   { dosis: '2\u00d7 500 mg p.o.', hinweis: 'Dosisreduktion' },
+      'HD':    { dosis: '1\u00d7 1 g p.o. nach HD', hinweis: 'dialysierbar; nach HDT geben' },
+      'CRRT':  { dosis: '3\u00d7 1 g p.o.', hinweis: 'wie normale Nierenfunktion' },
+      'PD':    { dosis: '2\u00d7 500 mg p.o.', hinweis: 'geringe PD-Clearance; wie <15' }
+    },
+    tdm: false, cave: 'Nur oral. Gute orale Bioverfügbarkeit (~90%). Kein MRSA!'
+  },
+  // ===== CEPHALOSPORINE 3b/4. GENERATION / BLI =====
+  {
+    name: 'Ceftazidim/Avibactam', brand: 'Zavicefta\u00ae', gruppe: 'Cephalosporin',
+    spektrum: ['G-','PSA','Ent'],
+    indikation: 'KPC-/OXA-48-Carbapenemase-Produzenten, MBL-negative CRKP, schwieriger Pseudomonas',
+    dosierung: {
+      '>50':   { dosis: '3\u00d7 2,5 g i.v. (\u00fcber 2 h)', hinweis: 'Infusion mindestens 2 h!' },
+      '30-50': { dosis: '3\u00d7 1,25 g i.v.', hinweis: 'Dosisreduktion bei eGFR 31\u201350' },
+      '15-30': { dosis: '2\u00d7 0,94 g i.v.', hinweis: 'deutliche Dosisreduktion' },
+      '<15':   { dosis: '1\u00d7 0,94 g i.v.', hinweis: 'weiteres Intervall' },
+      'HD':    { dosis: '2,5 g nach HD + 0,94 g interdialytisch', hinweis: 'dialysierbar; TDM empfohlen' },
+      'CRRT':  { dosis: '3\u00d7 1,25\u20132,5 g i.v.', hinweis: 'CRRT erh\u00f6ht Clearance; h\u00f6here Dosierung wie eGFR >50 anstreben; TDM!' },
+      'PD':    { dosis: '1\u00d7 0,94 g i.v.', hinweis: 'wie <15; PD-Daten fehlend' }
+    },
+    tdm: true, cave: '\u26a0\ufe0f Reserveantibiotikum! Immer EUCAST-Resistenztestung. KEIN MBL-Spektrum (kein NDM, kein VIM). Infusion \u22652 h!'
+  },
+  {
+    name: 'Ceftolozan/Tazobactam', brand: 'Zerbaxa\u00ae', gruppe: 'Cephalosporin',
+    spektrum: ['G-','PSA'],
+    indikation: 'Multiresistenter Pseudomonas (MDR-PA), komplizierter HWI, HAP/VAP (Pseudomonas)',
+    dosierung: {
+      '>50':   { dosis: '3\u00d7 1,5 g i.v. (HAP: 3\u00d7 3 g)', hinweis: 'Infusion \u00fcber 1 h' },
+      '30-50': { dosis: '3\u00d7 750 mg i.v. (HAP: 3\u00d7 1,5 g)', hinweis: 'Dosisreduktion 50%' },
+      '15-30': { dosis: '3\u00d7 375 mg i.v. (HAP: 3\u00d7 750 mg)', hinweis: 'weitere Dosisreduktion' },
+      '<15':   { dosis: 'Loading: 750 mg, dann 3\u00d7 150 mg i.v.', hinweis: 'stark reduziert; TDM empfohlen' },
+      'HD':    { dosis: 'Loading: 2,25 g, dann 3\u00d7 450 mg i.v. (HAP)', hinweis: 'nach HD; HD entfernt ~66% Ceftolozan; TDM!' },
+      'CRRT':  { dosis: '3\u00d7 1,5 g i.v.', hinweis: 'CRRT erh\u00f6ht Clearance erheblich; Standard-/h\u00f6here Dosis; TDM zwingend' },
+      'PD':    { dosis: 'Loading: 750 mg, dann 3\u00d7 150 mg i.v.', hinweis: 'wie <15; begrenzte Daten' }
+    },
+    tdm: true, cave: '\u26a0\ufe0f Reserveantibiotikum! KEIN ESBL-Spektrum (keine Klebsiella ESBL). Nur Pseudomonas + E. coli. Erregerdiagnostik vor Einsatz!'
+  },
+  // ===== MAKROLIDE =====
+  {
+    name: 'Clarithromycin', brand: 'Klacid\u00ae', gruppe: 'Sonstige',
+    spektrum: ['G+','Aty'],
+    indikation: 'CAP (atypische Erreger), H.-pylori-Eradikation (Triple-Therapie), ABECB, Helicobacter',
+    dosierung: {
+      '>50':   { dosis: '2\u00d7 500 mg p.o./i.v.', hinweis: '' },
+      '30-50': { dosis: '2\u00d7 500 mg p.o.', hinweis: 'keine Anpassung' },
+      '15-30': { dosis: '2\u00d7 250 mg p.o. (Ladedosis: 2\u00d7 500 mg)', hinweis: '50% Dosisreduktion' },
+      '<15':   { dosis: '2\u00d7 250 mg p.o.', hinweis: 'kaum dialysierbar; Dosisreduktion' },
+      'HD':    { dosis: '2\u00d7 250 mg p.o.', hinweis: 'nicht signifikant dialysierbar; wie <15' },
+      'CRRT':  { dosis: '2\u00d7 250\u2013500 mg p.o.', hinweis: 'begrenzte Daten; hepatisch dominiert' },
+      'PD':    { dosis: '2\u00d7 250 mg p.o.', hinweis: 'wie HD; geringe PD-Clearance' }
+    },
+    tdm: false, cave: '\u26a0\ufe0f QTc-Verl\u00e4ngerung; starker CYP3A4-Inhibitor (Statine, Tacrolimus, Ciclosporin pausieren!); Interaktionen beachten'
+  },
+  // ===== AMINOGLYKOSIDE =====
+  {
+    name: 'Amikacin', brand: 'Amikacin Fresenius\u00ae', gruppe: 'Aminoglykosid',
+    spektrum: ['G-','PSA','Ent'],
+    indikation: 'Gram-negative Infektionen (breiteres Spektrum als Gentamicin), Kombination bei MDR, Mykobakterien',
+    dosierung: {
+      '>50':   { dosis: '15\u201320 mg/kg q24h i.v. (Extended-Interval)', hinweis: 'TDM: Peak 1h: 56\u201364 mg/l; Talspiegel <5 mg/l' },
+      '30-50': { dosis: '10\u201315 mg/kg q24\u201336h i.v.', hinweis: 'TDM obligat; Talspiegel <5 mg/l' },
+      '15-30': { dosis: '7\u201310 mg/kg q48h i.v.', hinweis: 'TDM obligat; Interval bis Talspiegel <5 mg/l' },
+      '<15':   { dosis: '5\u20137 mg/kg q48\u201372h i.v.', hinweis: 'nur nach TDM; m\u00f6glichst vermeiden' },
+      'HD':    { dosis: '5\u201310 mg/kg nach HD', hinweis: 'HD entfernt ~50%; TDM nach jeder Gabe' },
+      'CRRT':  { dosis: '7\u201310 mg/kg q24\u201336h i.v.', hinweis: 'CRRT erh\u00f6ht Clearance; TDM zwingend; Talspiegel <5 mg/l vor Gabe!' },
+      'PD':    { dosis: '5\u20137 mg/kg q24\u201348h i.v.', hinweis: 'TDM obligat; geringe PD-Clearance' }
+    },
+    tdm: true, cave: '\u26a0\ufe0f Nephrotoxizit\u00e4t + Ototoxizit\u00e4t (kumulativ, irreversibel!); breiter therapeutischer Index \u2192 weniger Resistenz als Gentamicin gegen Enterobacter; TDM zwingend'
+  },
+  // ===== RESERVE / SPEZIAL =====
+  {
+    name: 'Rifampicin', brand: 'Rifa\u00ae / Eremfat\u00ae', gruppe: 'Sonstige',
+    spektrum: ['G+','Aty'],
+    indikation: 'IMMER NUR IN KOMBINATION: Staphylokokken-Protheseninfektion, MRSA (Zusatz), Tuberkulose, Nokardiose, Legionellen (ZNS)',
+    dosierung: {
+      '>50':   { dosis: '2\u00d7 450\u2013600 mg p.o./i.v. | TBC: 10 mg/kg/d', hinweis: 'immer Kombinationstherapie!' },
+      '30-50': { dosis: '2\u00d7 450\u2013600 mg p.o./i.v.', hinweis: 'keine renale Anpassung (hepatisch)' },
+      '15-30': { dosis: '2\u00d7 450\u2013600 mg p.o./i.v.', hinweis: 'keine Anpassung' },
+      '<15':   { dosis: '2\u00d7 450\u2013600 mg p.o./i.v.', hinweis: 'keine Anpassung; \u00fcberwiegend hepatisch/bili\u00e4r eliminiert' },
+      'HD':    { dosis: '2\u00d7 450\u2013600 mg p.o./i.v.', hinweis: 'nicht signifikant dialysierbar; Standarddosis' },
+      'CRRT':  { dosis: '2\u00d7 450\u2013600 mg p.o./i.v.', hinweis: 'keine Anpassung; hepatische Elimination dominiert' },
+      'PD':    { dosis: '2\u00d7 450\u2013600 mg p.o./i.v.', hinweis: 'keine Anpassung' }
+    },
+    tdm: false, cave: '\u26a0\ufe0f MASSIVER CYP3A4/2C9-INDUKTOR: Antikoagulanzien (Marcumar!), Steroide, Immunsuppressiva, Kontrazeptiva, Antiepileptika verlieren Wirksamkeit! NIEMALS Monotherapie (Resistenz nach Tagen). Urin/Tr\u00e4nen orange. LFT \u00fcberwachen'
+  },
+  {
+    name: 'Colistin (Colistimethatsodium)', brand: 'Colistin Infectopharm\u00ae', gruppe: 'Sonstige',
+    spektrum: ['G-','PSA','Ent'],
+    indikation: 'LETZTES MITTEL: Carbapenem-resistente Gram-negative (XDR/PDR), MBL-Produzenten (NDM, VIM, IMP), Acinetobacter XDR',
+    dosierung: {
+      '>50':   { dosis: 'Loading: 9 Mio. IE, dann 2\u00d7 4,5 Mio. IE i.v.', hinweis: 'Ladedosis immer voll!' },
+      '30-50': { dosis: 'Loading: 9 Mio. IE, dann 2\u00d7 3\u20134 Mio. IE i.v.', hinweis: 'TDM empfohlen' },
+      '15-30': { dosis: 'Loading: 9 Mio. IE, dann 2\u00d7 2\u20133 Mio. IE i.v.', hinweis: 'TDM obligat' },
+      '<15':   { dosis: 'Loading: 9 Mio. IE, dann 2\u00d7 2 Mio. IE i.v.', hinweis: 'stark eingeschr\u00e4nkte Dosierung' },
+      'HD':    { dosis: 'Loading: 9 Mio. IE; Nicht-HD-Tage: 2\u00d7 1,1 Mio. IE; HD-Tage: 3 Mio. IE nach HD', hinweis: 'dialysierbar; TDM obligat' },
+      'CRRT':  { dosis: 'Loading: 9 Mio. IE, dann 3\u00d7 3 Mio. IE i.v.', hinweis: 'CRRT entfernt signifikant; erh\u00f6hte Erhaltungsdosis; TDM zwingend' },
+      'PD':    { dosis: 'Loading: 9 Mio. IE, dann 2\u00d7 2 Mio. IE i.v.', hinweis: 'geringe PD-Clearance; wie <15' }
+    },
+    tdm: true, cave: '\u26a0\ufe0f NEPHROTOXIZIT\u00c4T (bis 60% Nierenschaden!); Neurotoxizit\u00e4t (Apnoe, Parästhesien). Reserveantibiotikum der letzten Wahl. Immer Kombination (z.B. mit Meropenem, Fosfomycin). Inhalation zus\u00e4tzlich bei Pneumonie'
+  },
+  {
+    name: 'Fidaxomicin', brand: 'Dificlir\u00ae', gruppe: 'Sonstige',
+    spektrum: ['G+'],
+    indikation: 'C.-difficile-Infektion (CDI), Erstlinien- und Rezidivtherapie (niedrigere Rezidivrate als Vancomycin p.o.)',
+    dosierung: {
+      '>50':   { dosis: '2\u00d7 200 mg p.o. \u00d7 10 Tage', hinweis: '<1% systemische Absorption' },
+      '30-50': { dosis: '2\u00d7 200 mg p.o.', hinweis: 'keine Anpassung n\u00f6tig' },
+      '15-30': { dosis: '2\u00d7 200 mg p.o.', hinweis: 'keine Anpassung; Vorsicht bei schwerer NI (Herstellerhinweis)' },
+      '<15':   { dosis: '2\u00d7 200 mg p.o.', hinweis: 'mit Vorsicht; begrenzte Daten bei GFR <30' },
+      'HD':    { dosis: '2\u00d7 200 mg p.o.', hinweis: 'nicht dialysierbar; Standarddosis' },
+      'CRRT':  { dosis: '2\u00d7 200 mg p.o.', hinweis: 'minimale CRRT-Clearance; Standarddosis' },
+      'PD':    { dosis: '2\u00d7 200 mg p.o.', hinweis: 'keine Anpassung; geringe PD-Clearance' }
+    },
+    tdm: false, cave: 'Lokale Wirkung im Darm (\u226399% nicht resorbiert). \u00dcberlegenheit vs. Vancomycin p.o. bei Nicht-Ribotyp-027. Teuer \u2192 Indikation pr\u00fcfen'
+  },
+  // ===== ANTIMYKOTIKA =====
+  {
+    name: 'Fluconazol', brand: 'Diflucan\u00ae / Fluconazol Pfizer\u00ae', gruppe: 'Antimykotikum',
+    spektrum: ['Pilze'],
+    indikation: 'Candida-Infektionen (nicht C. krusei/glabrata!), H\u00e4matogen-kandidose, Candida-HWI, Prophylaxe',
+    dosierung: {
+      '>50':   { dosis: 'Kandidämie: 800 mg Ladedosis, dann 1\u00d7 400 mg/d i.v./p.o. | HWI: 1\u00d7 200 mg/d', hinweis: '' },
+      '30-50': { dosis: '1\u00d7 400 mg/d (Kandidämie) | 1\u00d7 200 mg/d (HWI)', hinweis: 'keine Anpassung' },
+      '15-30': { dosis: '1\u00d7 200\u2013400 mg/d (Kandidämie) | 1\u00d7 100\u2013200 mg/d (HWI)', hinweis: '50% Dosisreduktion bei eGFR <50' },
+      '<15':   { dosis: '50% der Tagesdosis', hinweis: 'Cl proportional zu GFR; starke Akkumulation' },
+      'HD':    { dosis: '400 mg nach HD (Kandidämie) | 200 mg nach HD (HWI)', hinweis: '50% nach 3h HD entfernt; Ladedosis voll; nach HDT geben' },
+      'CRRT':  { dosis: '1\u00d7 400 mg/d (Kandidämie)', hinweis: 'CRRT entfernt signifikant (renal el.); Standard-/h\u00f6here Dosis; TDM erw\u00e4gen' },
+      'PD':    { dosis: '50% der Tagesdosis', hinweis: 'geringe PD-Clearance; wie <15' }
+    },
+    tdm: false, cave: '\u26a0\ufe0f Starker CYP2C9/3A4-Inhibitor! Tacrolimus, Ciclosporin, Marcumar, Statine, Benzodiazepine: Spiegel/INR anpassen. C. glabrata oft resistent, C. krusei intrinsisch resistent'
+  },
+  {
+    name: 'Voriconazol', brand: 'Vfend\u00ae', gruppe: 'Antimykotikum',
+    spektrum: ['Pilze'],
+    indikation: 'Invasive Aspergillose (Mittel der Wahl!), Candida (incl. fluconazolresistent), Fusarium, Scedosporium',
+    dosierung: {
+      '>50':   { dosis: 'Loading: 2\u00d7 6 mg/kg i.v. (Tag 1), dann 2\u00d7 4 mg/kg i.v. | p.o.: Loading 2\u00d7 400 mg, dann 2\u00d7 200 mg', hinweis: 'TDM Zielspiegel 2\u20135,5 \u00b5g/ml' },
+      '30-50': { dosis: 'Oral: Standarddosis | i.v. vermeiden (SBECD-Akkumulation)', hinweis: 'Ab eGFR <50: orale Gabe bevorzugen!' },
+      '15-30': { dosis: 'Oral: 2\u00d7 200 mg', hinweis: 'IV kontraindiziert (SBECD-Lösungsmittel akkumuliert nephrotoxisch)' },
+      '<15':   { dosis: 'Oral: 2\u00d7 200 mg', hinweis: '\u26a0\ufe0f IV kontraindiziert bei eGFR <50; nur oral!' },
+      'HD':    { dosis: 'Oral: 2\u00d7 200 mg', hinweis: 'Voriconazol selbst kaum dialysierbar; SBECD dialysierbar \u2192 IV nach HD theoretisch m\u00f6glich, aber nicht empfohlen' },
+      'CRRT':  { dosis: 'Oral: 2\u00d7 200 mg | i.v. mit Vorsicht/TDM', hinweis: 'CRRT entfernt SBECD; IV m\u00f6glicherweise sicherer als HD, aber begrenzte Daten; TDM!' },
+      'PD':    { dosis: 'Oral: 2\u00d7 200 mg', hinweis: 'IV kontraindiziert; orale Bioverfügbarkeit 96%' }
+    },
+    tdm: true, cave: '\u26a0\ufe0f TDM zwingend (Zielspiegel 2\u20135,5 µg/ml); Lebertoxizit\u00e4t; Photodermatose/Hautkarzinom bei Langzeittherapie; Sehst\u00f6rungen; Viele Interaktionen (CYP2C19-Polymorphismus!); IV-Formulierung mit SBECD nephrotoxisch'
+  },
+  {
+    name: 'Caspofungin', brand: 'Cancidas\u00ae', gruppe: 'Antimykotikum',
+    spektrum: ['Pilze'],
+    indikation: 'Candida-Infektionen (incl. azolresistent), Aspergillose (2. Wahl), empirische Therapie febrile Neutropenie',
+    dosierung: {
+      '>50':   { dosis: 'Loading: 70 mg i.v. Tag 1, dann 1\u00d7 50 mg/d (>80 kg: 70 mg/d)', hinweis: 'Infusion \u00fcber 1 h' },
+      '30-50': { dosis: 'Loading: 70 mg, dann 1\u00d7 50 mg/d i.v.', hinweis: 'keine Anpassung n\u00f6tig' },
+      '15-30': { dosis: 'Loading: 70 mg, dann 1\u00d7 50 mg/d i.v.', hinweis: 'keine Anpassung' },
+      '<15':   { dosis: 'Loading: 70 mg, dann 1\u00d7 50 mg/d i.v.', hinweis: 'keine Anpassung; Elimination biliar/fäkal' },
+      'HD':    { dosis: 'Loading: 70 mg, dann 1\u00d7 50 mg/d i.v.', hinweis: 'nicht dialysierbar; Standarddosis' },
+      'CRRT':  { dosis: 'Loading: 70 mg, dann 1\u00d7 50 mg/d i.v.', hinweis: 'keine relevante CRRT-Clearance; Standarddosis' },
+      'PD':    { dosis: 'Loading: 70 mg, dann 1\u00d7 50 mg/d i.v.', hinweis: 'keine Anpassung; geringe PD-Clearance' }
+    },
+    tdm: false, cave: 'Bei gleichzeitiger Cyclosporin-Gabe: LFT \u00fcberwachen. Lebertoxizit\u00e4t m\u00f6glich. Keine Candida-parapsilosis-Deckung bei MHK-Erh\u00f6hung'
+  },
+  {
+    name: 'Anidulafungin', brand: 'Ecalta\u00ae', gruppe: 'Antimykotikum',
+    spektrum: ['Pilze'],
+    indikation: 'Invasive Kandidose (bevorzugt bei Leberinsuffizienz), Candida-Sepsis, ICU-Patienten',
+    dosierung: {
+      '>50':   { dosis: 'Loading: 200 mg i.v. Tag 1, dann 1\u00d7 100 mg/d', hinweis: 'Infusion max. 1,1 mg/min' },
+      '30-50': { dosis: 'Loading: 200 mg, dann 1\u00d7 100 mg/d i.v.', hinweis: 'keine Anpassung (<1% renal eliminiert)' },
+      '15-30': { dosis: 'Loading: 200 mg, dann 1\u00d7 100 mg/d i.v.', hinweis: 'keine Anpassung' },
+      '<15':   { dosis: 'Loading: 200 mg, dann 1\u00d7 100 mg/d i.v.', hinweis: 'keine Anpassung; sicherste Echinocandin-Wahl bei schwerer NI' },
+      'HD':    { dosis: 'Loading: 200 mg, dann 1\u00d7 100 mg/d i.v.', hinweis: 'nicht dialysierbar; Standarddosis; Mittel der Wahl bei HD' },
+      'CRRT':  { dosis: 'Loading: 200 mg, dann 1\u00d7 100 mg/d i.v.', hinweis: 'keine CRRT-Clearance; Standarddosis' },
+      'PD':    { dosis: 'Loading: 200 mg, dann 1\u00d7 100 mg/d i.v.', hinweis: 'keine Anpassung; bevorzugte Wahl' }
+    },
+    tdm: false, cave: 'Mittel der Wahl bei Leberinsuffizienz + Niereninsuffizienz (rein hepatisch eliminiert). Infusionsrate beachten!'
+  },
+  // ===== ANTIVIRALE =====
+  {
+    name: 'Aciclovir i.v.', brand: 'Zovirax\u00ae i.v.', gruppe: 'Antiviral',
+    spektrum: ['Viren'],
+    indikation: 'HSV-Enzephalitis, schwere VZV/Zoster-Infektion (Immunsupprimierte), neonataler HSV',
+    dosierung: {
+      '>50':   { dosis: 'HSV: 10 mg/kg q8h i.v. | VZV: 10\u201315 mg/kg q8h | Inf. \u00fcber 1 h', hinweis: 'ausreichende Hydrierung!' },
+      '30-50': { dosis: '10 mg/kg q12h i.v.', hinweis: 'GFR 25\u201350: Intervall auf 12 h verl\u00e4ngern' },
+      '15-30': { dosis: '10 mg/kg q24h i.v. | oder 5\u20137 mg/kg q12h', hinweis: 'weitere Intervallanpassung' },
+      '<15':   { dosis: '5 mg/kg q24h i.v.', hinweis: 'stark reduziert; kristalline Nephropathie-Risiko hoch' },
+      'HD':    { dosis: '2,5\u20135 mg/kg q24h i.v.', hinweis: 'HD entfernt ~60%; nach Dialyse; HWZ 19,5 h bei ESRF' },
+      'CRRT':  { dosis: '7,5\u201310 mg/kg q24h i.v.', hinweis: 'CRRT erh\u00f6ht Clearance; Dosierung wie eGFR 15\u201330' },
+      'PD':    { dosis: '5 mg/kg q24h i.v.', hinweis: 'geringe PD-Clearance; wie <15' }
+    },
+    tdm: false, cave: '\u26a0\ufe0f KRISTALLINE NEPHROPATHIE bei Hypovolämie/schneller Infusion! Mind. 1 h Infusionszeit + >500 ml Hydrierung/Dosis. Neurotoxizit\u00e4t bei Akkumulation. Kreatinin und Neurostatus t\u00e4glich'
+  },
+  {
+    name: 'Aciclovir p.o.', brand: 'Zovirax\u00ae 800 mg', gruppe: 'Antiviral',
+    spektrum: ['Viren'],
+    indikation: 'Herpes labialis (Behandlung/Prophylaxe), Zoster (mild\u2013mittel), HSV-Prophylaxe',
+    dosierung: {
+      '>50':   { dosis: 'Zoster: 5\u00d7 800 mg/d \u00d7 7 d | HSV: 3\u00d7 400 mg/d (Behandlung)', hinweis: '' },
+      '30-50': { dosis: 'Zoster: 3\u00d7 800 mg/d | HSV: 3\u00d7 400 mg/d', hinweis: 'eGFR 25\u201350: Intervall verl\u00e4ngern' },
+      '15-30': { dosis: 'Zoster: 800 mg q8h | HSV: 200 mg q8h', hinweis: '' },
+      '<15':   { dosis: 'Zoster: 800 mg q12h | HSV: 200 mg q12h', hinweis: 'stark reduziert' },
+      'HD':    { dosis: 'Zoster: 800 mg nach HD | HSV: 400 mg nach HD', hinweis: 'dialysierbar; nach HDT' },
+      'CRRT':  { dosis: 'wie eGFR 15\u201330', hinweis: 'angepasst an CRRT-Clearance' },
+      'PD':    { dosis: 'wie <15', hinweis: 'geringe PD-Clearance' }
+    },
+    tdm: false, cave: 'Orale Bioverfügbarkeit nur 15\u201330% \u2192 bei schwerer Infektion IV bevorzugen. Ausreichende Hydrierung auch oral wichtig'
+  },
+  {
+    name: 'Ganciclovir', brand: 'Cymevene\u00ae', gruppe: 'Antiviral',
+    spektrum: ['Viren'],
+    indikation: 'CMV-Retinitis, CMV-Pneumonitis (Immunsupprimierte), CMV-Prophylaxe nach Transplantation',
+    dosierung: {
+      '>50':   { dosis: 'Induktion: 2\u00d7 5 mg/kg i.v. \u00d7 14\u201321 d | Erhaltung: 1\u00d7 5 mg/kg/d', hinweis: 'TDM bei Niereninsuffizienz empfohlen' },
+      '30-50': { dosis: 'Induktion: 2\u00d7 2,5 mg/kg i.v. | Erhaltung: 1\u00d7 2,5 mg/kg/d', hinweis: 'eGFR 50\u201370: Dosisreduktion 50%' },
+      '15-30': { dosis: 'Induktion: 1\u00d7 2,5 mg/kg/d | Erhaltung: 1\u00d7 1,25 mg/kg/d', hinweis: '' },
+      '<15':   { dosis: 'Induktion: 1\u00d7 1,25 mg/kg/d | Erhaltung: 1\u00d7 0,625 mg/kg/d', hinweis: 'stark reduziert' },
+      'HD':    { dosis: 'Induktion: 1,25 mg/kg 3\u00d7/Woche nach HD | Erhaltung: 0,625 mg/kg 3\u00d7/Woche', hinweis: 'HD entfernt ~50%; nach Dialyse' },
+      'CRRT':  { dosis: 'Induktion: 1\u00d7 2,5 mg/kg/d | Erhaltung: 1\u00d7 1,25\u20132,5 mg/kg/d', hinweis: 'CRRT erh\u00f6ht Clearance; Dosierung wie eGFR 15\u201350' },
+      'PD':    { dosis: 'wie <15', hinweis: 'geringe PD-Clearance; nach Spiegel titrieren' }
+    },
+    tdm: true, cave: '\u26a0\ufe0f Myelosuppression (Thrombozytopenie, Neutropenie!) \u2192 BB 2\u00d7/Woche! Teratogen/mutagen. Alternative: Valganciclovir p.o. (Prodrug, falls orale Therapie m\u00f6glich)'
+  },
+  {
+    name: 'Oseltamivir (Tamiflu)', brand: 'Tamiflu\u00ae', gruppe: 'Antiviral',
+    spektrum: ['Viren'],
+    indikation: 'Influenza A+B (Therapie <48 h nach Symptombeginn; ITS ohne Zeitlimit!), Prophylaxe nach Exposition',
+    dosierung: {
+      '>50':   { dosis: 'Therapie: 2\u00d7 75 mg p.o. \u00d7 5 d | Prophylaxe: 1\u00d7 75 mg/d', hinweis: '' },
+      '30-50': { dosis: 'Therapie: 2\u00d7 30 mg p.o. | Prophylaxe: 1\u00d7 30 mg/d', hinweis: 'eGFR 30\u201360: Dosisreduktion' },
+      '15-30': { dosis: 'Therapie: 1\u00d7 30 mg/d p.o. | Prophylaxe: 30 mg alle 2 Tage', hinweis: '' },
+      '<15':   { dosis: 'Therapie: 30 mg sofort, dann individuell', hinweis: 'sehr begrenzte Daten; Dosierung nach Literatur/Pharmakologie' },
+      'HD':    { dosis: '30 mg sofort + nach jeder Dialyse (3\u00d7/Woche)', hinweis: 'dialysierbar; nach HDT geben; Prophylaxe: 30 mg/Woche' },
+      'CRRT':  { dosis: '2\u00d7 75 mg p.o.', hinweis: 'CRRT erh\u00f6ht Clearance deutlich; Standarddosierung wie GFR >60 empfohlen' },
+      'PD':    { dosis: '30 mg w\u00f6chentlich (APD/CAPD)', hinweis: 'sehr geringe PD-Clearance; Vorsicht' }
+    },
+    tdm: false, cave: 'Auf ITS auch nach >48 h sinnvoll! Neuropsychiatrische Nebenwirkungen (bes. Kinder). \u00dcbelkeit h\u00e4ufig (mit Mahlzeit). H1N1/H3N2: aktuell meistens empfindlich'
+  },
+  {
+    name: 'Paxlovid (Nirmatrelvir/Ritonavir)', brand: 'Paxlovid\u00ae', gruppe: 'Antiviral',
+    spektrum: ['Viren'],
+    indikation: 'COVID-19 (ambulant/fr\u00fch): symptomatische Erkrankung + Risikofaktoren f\u00fcr schweren Verlauf; innerhalb 5 Tage nach Symptombeginn',
+    dosierung: {
+      '>50':   { dosis: '2\u00d7 (300 mg Nirmatrelvir + 100 mg Ritonavir) q12h p.o. \u00d7 5 d', hinweis: '' },
+      '30-50': { dosis: '2\u00d7 (150 mg Nirmatrelvir + 100 mg Ritonavir) q12h p.o. \u00d7 5 d', hinweis: 'eGFR 30\u201360: 50% Nirmatrelvir-Reduktion' },
+      '15-30': { dosis: 'KONTRAINDIZIERT', hinweis: 'keine ausreichenden Sicherheitsdaten bei eGFR <30' },
+      '<15':   { dosis: 'KONTRAINDIZIERT', hinweis: 'kontraindiziert' },
+      'HD':    { dosis: 'KONTRAINDIZIERT', hinweis: 'kontraindiziert; Alternativen: Remdesivir i.v. oder Sotrovimab' },
+      'CRRT':  { dosis: 'KONTRAINDIZIERT', hinweis: 'kontraindiziert' },
+      'PD':    { dosis: 'KONTRAINDIZIERT', hinweis: 'kontraindiziert; PD gilt als GFR <30' }
+    },
+    tdm: false, cave: '\u26a0\ufe0f MASSIVER CYP3A4-Inhibitor (Ritonavir!): Statine absetzen, Immunsuppressiva (Tacrolimus, Ciclosporin) PAUSIEREN/stark reduzieren, Antikoagulanzien anpassen! Rebound-Ph\u00e4nomen beschrieben. Nur f\u00fcr ambulante Fr\u00fchtherapie'
   }
 ];
 
