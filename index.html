@@ -6738,8 +6738,8 @@ window.gichtAutoImport = function() {
           <div style="font-size:.78rem;font-weight:700;color:#1565c0;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Serum / Plasma</div>
           <div class="elek-row">
             <div class="elek-field"><label>Na⁺ (mmol/l) <span style="color:#c62828">*</span></label><input type="number" id="hypo-na" placeholder="z.B. 122" oninput="hypoCalc()"></div>
-            <div class="elek-field"><label>Harnstoff (mmol/l)</label><input type="number" id="hypo-hst" placeholder="z.B. 5" oninput="hypoCalc()"></div>
-            <div class="elek-field"><label>Glukose (mmol/l)</label><input type="number" id="hypo-glu" placeholder="z.B. 6" oninput="hypoCalc()"></div>
+            <div class="elek-field"><label>Harnstoff (mg/dl)</label><input type="number" id="hypo-hst" placeholder="z.B. 30" oninput="hypoCalc()"></div>
+            <div class="elek-field"><label>Glukose (mg/dl)</label><input type="number" id="hypo-glu" placeholder="z.B. 90" oninput="hypoCalc()"></div>
           </div>
           <div class="elek-row">
             <div class="elek-field"><label>Osmolalität gemessen <small style="color:#888">(mOsm/kg)</small></label><input type="number" id="hypo-osm-mess" placeholder="optional" oninput="hypoCalc()"></div>
@@ -6931,139 +6931,214 @@ window.gichtAutoImport = function() {
   <!-- ===== SÄURE-BASEN ===== -->
   <div id="elek-sab" class="elek-section">
 
-    <div class="elek-card">
-      <h3>🩸 BGA-Werte eingeben</h3>
-      <div class="elek-row">
-        <div class="elek-field">
-          <label>pH</label>
-          <input type="number" id="sab-ph" placeholder="7.40" step="0.01" oninput="sabCalc()">
+<style>
+/* ===== SÄURE-BASEN (SAB) ===== scoped under #elek-sab */
+#elek-sab .sab-wrap { max-width: 1100px; margin: 0 auto; padding: 16px; }
+#elek-sab .sab-header { background: linear-gradient(135deg,#b71c1c,#c62828); color:#fff; border-radius:12px; padding:18px 22px; margin-bottom:18px; }
+#elek-sab .sab-header h2 { margin:0 0 4px; font-size:1.3rem; }
+#elek-sab .sab-header p { margin:0; font-size:.85rem; opacity:.85; }
+
+#elek-sab .sab-layout { display:grid; grid-template-columns:1fr 360px; gap:18px; align-items:start; }
+@media(max-width:860px){ #elek-sab .sab-layout { grid-template-columns:1fr; } }
+
+/* Input card */
+#elek-sab .sab-card { background:#fff; border:1px solid #e0e0e0; border-radius:12px; padding:16px; margin-bottom:14px; box-shadow:0 1px 4px rgba(0,0,0,.07); }
+#elek-sab .sab-card-title { font-size:.82rem; font-weight:800; color:#b71c1c; text-transform:uppercase; letter-spacing:.6px; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+#elek-sab .sab-input-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:10px; }
+#elek-sab .sab-field { display:flex; flex-direction:column; gap:3px; }
+#elek-sab .sab-field label { font-size:.75rem; font-weight:600; color:#555; }
+#elek-sab .sab-field input { padding:7px 9px; border:1.5px solid #ccc; border-radius:7px; font-size:.9rem; outline:none; transition:border-color .15s; width:100%; }
+#elek-sab .sab-field input:focus { border-color:#b71c1c; }
+#elek-sab .sab-note { font-size:.72rem; color:#888; margin-top:6px; line-height:1.5; font-style:italic; }
+
+/* Flowchart steps */
+#elek-sab .sab-steps { position:relative; }
+#elek-sab .sab-step { background:#fff; border:1.5px solid #e0e0e0; border-radius:12px; padding:14px 16px; margin-bottom:10px; position:relative; }
+#elek-sab .sab-step-head { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+#elek-sab .sab-step-num { background:#b71c1c; color:#fff; border-radius:50%; width:26px; height:26px; display:flex; align-items:center; justify-content:center; font-size:.8rem; font-weight:800; flex-shrink:0; }
+#elek-sab .sab-step-title { font-size:.82rem; font-weight:800; color:#37474f; text-transform:uppercase; letter-spacing:.4px; }
+#elek-sab .sab-step-body { font-size:.82rem; line-height:1.55; }
+#elek-sab .sab-connector { width:2px; height:12px; background:#e0e0e0; margin:0 auto 0 12px; }
+
+/* Result badges */
+#elek-sab .sab-badge { display:inline-block; padding:4px 12px; border-radius:20px; font-size:.78rem; font-weight:700; margin:2px 2px 4px; }
+#elek-sab .sab-badge-red { background:#ffebee; color:#b71c1c; border:1.5px solid #ef9a9a; }
+#elek-sab .sab-badge-orange { background:#fff3e0; color:#e65100; border:1.5px solid #ffcc80; }
+#elek-sab .sab-badge-yellow { background:#fffde7; color:#f57f17; border:1.5px solid #ffe082; }
+#elek-sab .sab-badge-green { background:#e8f5e9; color:#2e7d32; border:1.5px solid #a5d6a7; }
+#elek-sab .sab-badge-blue { background:#e3f2fd; color:#0d47a1; border:1.5px solid #90caf9; }
+#elek-sab .sab-badge-gray { background:#f5f5f5; color:#546e7a; border:1.5px solid #cfd8dc; }
+
+/* Result boxes */
+#elek-sab .sab-result { border-radius:9px; padding:10px 13px; margin:6px 0; font-size:.81rem; line-height:1.6; }
+#elek-sab .sab-result-ok { background:#e8f5e9; border-left:3px solid #4caf50; }
+#elek-sab .sab-result-warn { background:#fff8e1; border-left:3px solid #ffc107; }
+#elek-sab .sab-result-danger { background:#ffebee; border-left:3px solid #f44336; }
+#elek-sab .sab-result-info { background:#e3f2fd; border-left:3px solid #1565c0; }
+#elek-sab .sab-result-neutral { background:#f5f5f5; border-left:3px solid #b0bec5; }
+
+/* Summary box */
+#elek-sab .sab-summary { background:linear-gradient(135deg,#ffebee,#fce4ec); border:2px solid #ef9a9a; border-radius:12px; padding:16px; margin-top:6px; font-size:.84rem; line-height:1.65; }
+#elek-sab .sab-summary-title { font-weight:800; color:#b71c1c; font-size:.86rem; margin-bottom:8px; }
+
+/* UAL section */
+#elek-sab .sab-ual-section { background:#fce4ec; border:1.5px solid #ef9a9a; border-radius:10px; padding:14px 16px; margin-top:4px; }
+#elek-sab .sab-ual-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:8px; margin-top:8px; }
+
+/* Accordion */
+#elek-sab .sab-acc-hd { display:flex; align-items:center; justify-content:space-between; cursor:pointer; user-select:none; padding:7px 0 5px; font-size:.74rem; font-weight:800; color:#b71c1c; text-transform:uppercase; letter-spacing:.5px; border-bottom:1.5px solid #ffcdd2; margin:10px 0 0; }
+#elek-sab .sab-acc-arrow { font-size:.8rem; transition:transform .18s; }
+#elek-sab .sab-acc-hd.open .sab-acc-arrow { transform:rotate(180deg); }
+#elek-sab .sab-acc-body { display:none; padding:8px 0 2px; font-size:.78rem; line-height:1.6; }
+#elek-sab .sab-acc-body.open { display:block; }
+
+/* Right column reference card */
+#elek-sab .sab-ref-card { background:#fff; border:1.5px solid #e0e0e0; border-radius:12px; padding:14px; margin-bottom:14px; font-size:.76rem; line-height:1.6; box-shadow:0 1px 4px rgba(0,0,0,.07); }
+#elek-sab .sab-ref-title { font-size:.78rem; font-weight:800; color:#b71c1c; text-transform:uppercase; letter-spacing:.5px; margin-bottom:10px; padding-bottom:6px; border-bottom:2px solid #ffcdd2; }
+#elek-sab .sab-ref-table { width:100%; border-collapse:collapse; font-size:.73rem; }
+#elek-sab .sab-ref-table th { background:#fce4ec; color:#b71c1c; font-weight:700; padding:6px 8px; text-align:left; font-size:.69rem; text-transform:uppercase; letter-spacing:.3px; }
+#elek-sab .sab-ref-table td { padding:5px 8px; border-bottom:1px solid #f0e0e0; vertical-align:top; }
+#elek-sab .sab-ref-table tr:last-child td { border-bottom:none; }
+#elek-sab .sab-norm-row { display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px solid #f5e6e6; }
+#elek-sab .sab-norm-row:last-child { border-bottom:none; }
+#elek-sab .sab-norm-key { font-weight:600; color:#555; }
+#elek-sab .sab-norm-val { color:#b71c1c; font-weight:700; font-family:monospace; }
+#elek-sab .sab-goldmark-item { display:flex; gap:8px; padding:4px 0; font-size:.76rem; }
+#elek-sab .sab-goldmark-letter { font-weight:900; color:#b71c1c; font-size:.9rem; width:16px; flex-shrink:0; }
+#elek-sab .sab-resp-type-row { margin:4px 0; }
+
+/* Formula code */
+#elek-sab code { font-family:monospace; background:#fce4ec; border-radius:4px; padding:2px 6px; font-size:.79rem; color:#7f0000; }
+
+/* Hint text */
+#elek-sab .sab-hint { background:#fce4ec; border:1.5px solid #ef9a9a; border-radius:9px; padding:12px 14px; font-size:.82rem; color:#7f0000; margin-top:4px; }
+
+/* Resp type toggle */
+#elek-sab .sab-resp-toggle { display:inline-flex; gap:4px; margin:6px 0; }
+#elek-sab .sab-resp-toggle input[type=radio] { display:none; }
+#elek-sab .sab-resp-toggle label { padding:4px 11px; border-radius:16px; font-size:.73rem; font-weight:600; cursor:pointer; border:1.5px solid #e0e0e0; color:#607d8b; transition:all .15s; }
+#elek-sab .sab-resp-toggle input[type=radio]:checked + label { background:#b71c1c; border-color:#b71c1c; color:#fff; }
+</style>
+
+<div class="sab-wrap">
+  <div class="sab-header">
+    <h2>🧪 Säure-Basen-Analyse</h2>
+    <p>BGA-Auswertung nach DIVI-Algorithmus · 6-Schritte-Flowchart · Anionenlücke · Delta-Ratio · Urin-Anionenlücke</p>
+  </div>
+
+  <div class="sab-layout">
+    <!-- ═══ LEFT COLUMN ═══ -->
+    <div>
+      <!-- INPUT PANEL -->
+      <div class="sab-card">
+        <div class="sab-card-title">🩸 BGA-Werte eingeben</div>
+        <div class="sab-input-grid">
+          <div class="sab-field">
+            <label>pH</label>
+            <input type="number" id="sab-ph" placeholder="7.40" step="0.01" min="6.5" max="8.0" oninput="sabWorkup()">
+          </div>
+          <div class="sab-field">
+            <label>pCO₂ (mmHg)</label>
+            <input type="number" id="sab-pco2" placeholder="40" step="1" oninput="sabWorkup()">
+          </div>
+          <div class="sab-field">
+            <label>HCO₃⁻ (mmol/l)</label>
+            <input type="number" id="sab-hco3" placeholder="24" step="0.1" oninput="sabWorkup()">
+          </div>
+          <div class="sab-field">
+            <label>Na⁺ (mmol/l)</label>
+            <input type="number" id="sab-na" placeholder="140" step="1" oninput="sabWorkup()">
+          </div>
+          <div class="sab-field">
+            <label>Cl⁻ (mmol/l)</label>
+            <input type="number" id="sab-cl" placeholder="104" step="1" oninput="sabWorkup()">
+          </div>
+          <div class="sab-field">
+            <label>K⁺ (mmol/l) <span style="color:#aaa;font-weight:400">opt.</span></label>
+            <input type="number" id="sab-k" placeholder="4.0" step="0.1" oninput="sabWorkup()">
+          </div>
+          <div class="sab-field">
+            <label>Albumin (g/l) <span style="color:#aaa;font-weight:400">opt.</span></label>
+            <input type="number" id="sab-alb" placeholder="40" step="1" oninput="sabWorkup()">
+          </div>
+          <div class="sab-field">
+            <label>Laktat (mmol/l) <span style="color:#aaa;font-weight:400">opt.</span></label>
+            <input type="number" id="sab-lak" placeholder="" step="0.1" oninput="sabWorkup()">
+          </div>
         </div>
-        <div class="elek-field">
-          <label>pCO₂ (mmHg)</label>
-          <input type="number" id="sab-pco2" placeholder="40" oninput="sabCalc()">
-        </div>
-        <div class="elek-field">
-          <label>HCO₃⁻ (mmol/l)</label>
-          <input type="number" id="sab-hco3" placeholder="24" oninput="sabCalc()">
-        </div>
-        <div class="elek-field">
-          <label>Na⁺ (mmol/l)</label>
-          <input type="number" id="sab-na" placeholder="140" oninput="sabCalc()">
-        </div>
-        <div class="elek-field">
-          <label>Cl⁻ (mmol/l)</label>
-          <input type="number" id="sab-cl" placeholder="100" oninput="sabCalc()">
-        </div>
-        <div class="elek-field">
-          <label>K⁺ (mmol/l) <small style="color:#888">opt.</small></label>
-          <input type="number" id="sab-k" placeholder="4.0" step="0.1" oninput="sabCalc()">
-        </div>
-        <div class="elek-field">
-          <label>Albumin (g/l) <small style="color:#888">opt.</small></label>
-          <input type="number" id="sab-alb" placeholder="40" oninput="sabCalc()">
-        </div>
-        <div class="elek-field">
-          <label>Laktat (mmol/l) <small style="color:#888">opt.</small></label>
-          <input type="number" id="sab-lak" placeholder="" oninput="sabCalc()">
-        </div>
+        <div class="sab-note">HCO₃⁻ aus BGA ablesen ODER berechnen: HCO₃⁻ = 0,03 × pCO₂ × 10^(pH − 6,1)</div>
       </div>
-      <div class="elek-row">
-        <div class="elek-field">
-          <label>Urin-Na⁺ (mmol/l) <small style="color:#888">opt.</small></label>
-          <input type="number" id="sab-una" placeholder="" oninput="sabCalc()">
-        </div>
-        <div class="elek-field">
-          <label>Urin-K⁺ (mmol/l) <small style="color:#888">opt.</small></label>
-          <input type="number" id="sab-uk" placeholder="" oninput="sabCalc()">
-        </div>
-        <div class="elek-field">
-          <label>Urin-Cl⁻ (mmol/l) <small style="color:#888">opt.</small></label>
-          <input type="number" id="sab-ucl" placeholder="" oninput="sabCalc()">
-        </div>
-        <div class="elek-field">
-          <label>Urin-Harnstoff (mmol/l) <small style="color:#888">opt.</small></label>
-          <input type="number" id="sab-uhst" placeholder="" oninput="sabCalc()">
-        </div>
-        <div class="elek-field">
-          <label>Urin-Osmolalität (mOsm/kg) <small style="color:#888">opt.</small></label>
-          <input type="number" id="sab-uosm" placeholder="" oninput="sabCalc()">
-        </div>
+
+      <!-- FLOWCHART RESULTS -->
+      <div id="sab-flowchart">
+        <div class="sab-hint" id="sab-hint-main">pH eingeben (+ HCO₃⁻ oder pCO₂), um die Analyse zu starten.</div>
       </div>
     </div>
 
-    <div id="sab-result-box" style="display:none;">
-
-      <!-- Schritt 1: pH -->
-      <div class="elek-card">
-        <h3><span class="elek-step-badge">1</span> pH-Beurteilung</h3>
-        <div id="sab-r-ph"></div>
-      </div>
-
-      <!-- Schritt 2: Primärstörung -->
-      <div class="elek-card">
-        <h3><span class="elek-step-badge">2</span> Primärstörung</h3>
-        <div id="sab-r-prim"></div>
-      </div>
-
-      <!-- Schritt 3: Kompensation -->
-      <div class="elek-card">
-        <h3><span class="elek-step-badge">3</span> Kompensationsprüfung</h3>
-        <div id="sab-r-komp"></div>
-      </div>
-
-      <!-- Schritt 4: Anionenlücke -->
-      <div class="elek-card">
-        <h3><span class="elek-step-badge">4</span> Anionenlücke</h3>
-        <div id="sab-r-al"></div>
-      </div>
-
-      <!-- Schritt 5: Delta-Ratio (wenn AL erhöht) -->
-      <div id="sab-r-delta-box" class="elek-card" style="display:none;">
-        <h3><span class="elek-step-badge">5</span> Delta-Ratio (bei erhöhter AL)</h3>
-        <div id="sab-r-delta"></div>
-      </div>
-
-      <!-- Schritt 6: Urin-Anionenlücke (wenn Urin-Werte vorhanden) -->
-      <div id="sab-r-ual-box" class="elek-card" style="display:none;">
-        <h3><span class="elek-step-badge">6</span> Urin-Anionenlücke</h3>
-        <div id="sab-r-ual"></div>
-      </div>
-
-      <!-- Zusammenfassung -->
-      <div class="elek-card">
-        <h3>📋 Zusammenfassung & Differentialdiagnosen</h3>
-        <div id="sab-r-summary"></div>
-      </div>
-
-    </div>
-
-    <div id="sab-hint" class="elek-result info">
-      pH und HCO₃⁻ oder pCO₂ eingeben, um die BGA-Auswertung zu starten.
-    </div>
-
-    <!-- Referenz-Infobox -->
-    <div class="elek-card" style="margin-top:8px;">
-      <h3>📐 Kompensationsformeln (Referenz)</h3>
-      <div style="overflow-x:auto;">
-        <table style="width:100%;border-collapse:collapse;font-size:.85rem;">
-          <thead><tr style="background:#e3f2fd;"><th style="padding:7px 10px;text-align:left;border-bottom:2px solid #90caf9;">Primärstörung</th><th style="padding:7px 10px;text-align:left;border-bottom:2px solid #90caf9;">Formel</th><th style="padding:7px 10px;text-align:left;border-bottom:2px solid #90caf9;">Erwarteter Bereich</th></tr></thead>
+    <!-- ═══ RIGHT COLUMN ═══ -->
+    <div>
+      <!-- REFERENCE: Compensation Formulas -->
+      <div class="sab-ref-card">
+        <div class="sab-ref-title">📐 Kompensationsformeln</div>
+        <table class="sab-ref-table">
+          <thead>
+            <tr><th>Primärstörung</th><th>Erwartete Kompensation</th></tr>
+          </thead>
           <tbody>
-            <tr style="border-bottom:1px solid #eee;"><td style="padding:6px 10px;"><strong>Met. Azidose</strong></td><td style="padding:6px 10px;font-family:monospace;">pCO₂ = 1,5 × HCO₃⁻ + 8 (±2) <br><small>Winters-Formel</small></td><td style="padding:6px 10px;">z.B. HCO₃⁻ 15 → pCO₂ 28–32</td></tr>
-            <tr style="border-bottom:1px solid #eee;"><td style="padding:6px 10px;"><strong>Met. Alkalose</strong></td><td style="padding:6px 10px;font-family:monospace;">pCO₂ = 0,7 × HCO₃⁻ + 20 (±2)</td><td style="padding:6px 10px;">z.B. HCO₃⁻ 36 → pCO₂ 43–47</td></tr>
-            <tr style="border-bottom:1px solid #eee;"><td style="padding:6px 10px;"><strong>Resp. Azidose akut</strong></td><td style="padding:6px 10px;font-family:monospace;">HCO₃⁻ = 24 + 1 × (pCO₂−40)/10</td><td style="padding:6px 10px;">1 mmol/l pro 10 mmHg ↑ pCO₂</td></tr>
-            <tr style="border-bottom:1px solid #eee;"><td style="padding:6px 10px;"><strong>Resp. Azidose chron.</strong></td><td style="padding:6px 10px;font-family:monospace;">HCO₃⁻ = 24 + 4 × (pCO₂−40)/10</td><td style="padding:6px 10px;">4 mmol/l pro 10 mmHg ↑ pCO₂</td></tr>
-            <tr style="border-bottom:1px solid #eee;"><td style="padding:6px 10px;"><strong>Resp. Alkalose akut</strong></td><td style="padding:6px 10px;font-family:monospace;">HCO₃⁻ = 24 − 2 × (40−pCO₂)/10</td><td style="padding:6px 10px;">2 mmol/l pro 10 mmHg ↓ pCO₂</td></tr>
-            <tr><td style="padding:6px 10px;"><strong>Resp. Alkalose chron.</strong></td><td style="padding:6px 10px;font-family:monospace;">HCO₃⁻ = 24 − 5 × (40−pCO₂)/10</td><td style="padding:6px 10px;">5 mmol/l pro 10 mmHg ↓ pCO₂</td></tr>
+            <tr><td><strong>Met. Azidose</strong></td><td>pCO₂ = 1,5 × HCO₃⁻ + 8 ± 2<br><em style="font-size:.69rem;color:#888;">Winter-Formel</em></td></tr>
+            <tr><td><strong>Met. Alkalose</strong></td><td>pCO₂ = 0,7 × HCO₃⁻ + 21 ± 2</td></tr>
+            <tr><td><strong>Resp. Az. akut</strong></td><td>HCO₃⁻ steigt 1 pro 10 mmHg ↑ pCO₂</td></tr>
+            <tr><td><strong>Resp. Az. chron.</strong></td><td>HCO₃⁻ steigt 3,5 pro 10 mmHg ↑ pCO₂</td></tr>
+            <tr><td><strong>Resp. Alk. akut</strong></td><td>HCO₃⁻ fällt 2 pro 10 mmHg ↓ pCO₂</td></tr>
+            <tr><td><strong>Resp. Alk. chron.</strong></td><td>HCO₃⁻ fällt 5 pro 10 mmHg ↓ pCO₂</td></tr>
           </tbody>
         </table>
       </div>
-      <div class="elek-infobox" style="margin-top:10px;">
-        <strong>Anionenlücke (AL)</strong> = Na⁺ − (HCO₃⁻ + Cl⁻) · Normal: 8–12 mmol/l<br>
-        <strong>Albumin-Korrektur:</strong> für jede 10 g/l Albumin unter 40 g/l → AL um 2,5 mmol/l erhöhen<br>
-        <strong>GOLDMARK</strong> (erhöhte AL): Glycolat · Oxoprolin · L-Laktat · D-Laktat · Methanol · Aspirin · Renal (Urämie) · Ketoazidose<br>
-        <strong>Normale AL</strong> (hyperchlorämisch): RTA · Diarrhö · Diuretika · Ureterableitung · Acetazolamid
+
+      <!-- REFERENCE: Normal Values -->
+      <div class="sab-ref-card">
+        <div class="sab-ref-title">🎯 Normalwerte</div>
+        <div class="sab-norm-row"><span class="sab-norm-key">pH</span><span class="sab-norm-val">7,35 – 7,45</span></div>
+        <div class="sab-norm-row"><span class="sab-norm-key">pCO₂</span><span class="sab-norm-val">35 – 45 mmHg</span></div>
+        <div class="sab-norm-row"><span class="sab-norm-key">HCO₃⁻</span><span class="sab-norm-val">22 – 26 mmol/l</span></div>
+        <div class="sab-norm-row"><span class="sab-norm-key">BE</span><span class="sab-norm-val">−2 bis +2 mmol/l</span></div>
+        <div class="sab-norm-row"><span class="sab-norm-key">Anionenlücke</span><span class="sab-norm-val">8 – 12 mmol/l</span></div>
+        <div class="sab-norm-row"><span class="sab-norm-key">Laktat</span><span class="sab-norm-val">&lt; 2 mmol/l</span></div>
+      </div>
+
+      <!-- REFERENCE: GOLD MARK -->
+      <div class="sab-ref-card">
+        <div class="sab-ref-title">🔴 GOLD MARK — erhöhte Anionenlücke</div>
+        <div class="sab-goldmark-item"><span class="sab-goldmark-letter">G</span><span><strong>G</strong>lykolat / Ethylenglykol-Vergiftung</span></div>
+        <div class="sab-goldmark-item"><span class="sab-goldmark-letter">O</span><span><strong>O</strong>xoprolin (Paracetamol-Überdosierung)</span></div>
+        <div class="sab-goldmark-item"><span class="sab-goldmark-letter">L</span><span><strong>L</strong>aktat-Azidose (Typ A: Hypoxie; Typ B: Metformin etc.)</span></div>
+        <div class="sab-goldmark-item"><span class="sab-goldmark-letter">D</span><span><strong>D</strong>-Laktat (Kurzdarmsyndrom)</span></div>
+        <div class="sab-goldmark-item"><span class="sab-goldmark-letter">M</span><span><strong>M</strong>ethanol-Vergiftung</span></div>
+        <div class="sab-goldmark-item"><span class="sab-goldmark-letter">A</span><span><strong>A</strong>lkoholische Ketoazidose</span></div>
+        <div class="sab-goldmark-item"><span class="sab-goldmark-letter">R</span><span><strong>R</strong>enal — Urämie (CKD Stadium 4–5)</span></div>
+        <div class="sab-goldmark-item"><span class="sab-goldmark-letter">K</span><span><strong>K</strong>etoazidose (DKA, Hungern)</span></div>
+        <div style="margin-top:8px;padding-top:8px;border-top:1px solid #f0e0e0;font-size:.72rem;color:#888;">
+          <strong style="color:#555;">Normale AL (hyperchlorämisch):</strong><br>
+          RTA Typ I/II/IV · Diarrhö · Pankreatitis · Ureterableitung · NaCl-Infusion · Acetazolamid
+        </div>
+      </div>
+
+      <!-- REFERENCE: Delta-Ratio -->
+      <div class="sab-ref-card">
+        <div class="sab-ref-title">Δ Delta-Ratio Interpretation</div>
+        <table class="sab-ref-table">
+          <thead><tr><th>Delta-Ratio</th><th>Bedeutung</th></tr></thead>
+          <tbody>
+            <tr><td style="color:#b71c1c;">&lt; 0,4</td><td>Reine normale-AL-Azidose</td></tr>
+            <tr><td style="color:#e65100;">0,4 – 1,0</td><td>Kombination: erhöhte + normale AL</td></tr>
+            <tr><td style="color:#2e7d32;">1,0 – 2,0</td><td>Reine erhöhte-AL-Azidose ✓</td></tr>
+            <tr><td style="color:#b71c1c;">&gt; 2,0</td><td>AG-Azidose + zusätzliche met. Alkalose</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
+  </div><!-- end sab-layout -->
+</div><!-- end sab-wrap -->
 
   </div><!-- end elek-sab -->
 
@@ -7115,7 +7190,7 @@ window.gichtAutoImport = function() {
       schwer:  '<span class="elek-tag red">Ausgeprägt (&lt;125 mmol/l)</span>'
     }[schwere];
 
-    var osmB = (!isNaN(hst) && !isNaN(glu)) ? (na + hst + glu) : null;
+    var osmB = (!isNaN(hst) && !isNaN(glu)) ? (2 * na + hst / 6.006 + glu / 18.016) : null;
     var osmLuecke = (!isNaN(osmM) && osmB !== null) ? (osmM - osmB) : null;
 
     var osmTyp = '';
@@ -7323,265 +7398,477 @@ window.gichtAutoImport = function() {
 
 
   /* ===== SÄURE-BASEN ===== */
-  window.sabCalc = function() {
-    var ph   = parseFloat(document.getElementById('sab-ph').value);
-    var pco2 = parseFloat(document.getElementById('sab-pco2').value);
-    var hco3 = parseFloat(document.getElementById('sab-hco3').value);
-    var na   = parseFloat(document.getElementById('sab-na').value);
-    var cl   = parseFloat(document.getElementById('sab-cl').value);
-    var k    = parseFloat(document.getElementById('sab-k').value);
-    var alb  = parseFloat(document.getElementById('sab-alb').value);
-    var lak  = parseFloat(document.getElementById('sab-lak').value);
-    var una  = parseFloat(document.getElementById('sab-una').value);
-    var uk   = parseFloat(document.getElementById('sab-uk').value);
-    var ucl  = parseFloat(document.getElementById('sab-ucl').value);
-    var uhst = parseFloat(document.getElementById('sab-uhst').value);
-    var uosm = parseFloat(document.getElementById('sab-uosm').value);
 
-    var hasPh   = !isNaN(ph);
-    var hasPco2 = !isNaN(pco2);
-    var hasHco3 = !isNaN(hco3);
+  /* ── helpers ── */
+  function val(id) {
+    var el = document.getElementById(id);
+    return el ? parseFloat(el.value) : NaN;
+  }
+  function isset(v) { return !isNaN(v); }
 
-    if (!hasPh || (!hasPco2 && !hasHco3)) {
-      document.getElementById('sab-result-box').style.display = 'none';
-      document.getElementById('sab-hint').style.display = 'block';
-      return;
+  /* UAL persistent storage (survives re-render) */
+  var _ualVals = { una: '', uk: '', ucl: '', uhst: '', uosm: '' };
+
+  function saveUalVals() {
+    var ids = ['una','uk','ucl','uhst','uosm'];
+    for (var i = 0; i < ids.length; i++) {
+      var el = document.getElementById('sab-' + ids[i]);
+      if (el) _ualVals[ids[i]] = el.value;
     }
-    document.getElementById('sab-result-box').style.display = 'block';
-    document.getElementById('sab-hint').style.display = 'none';
+  }
+  function restoreUalVals() {
+    var ids = ['una','uk','ucl','uhst','uosm'];
+    for (var i = 0; i < ids.length; i++) {
+      var el = document.getElementById('sab-' + ids[i]);
+      if (el && _ualVals[ids[i]]) el.value = _ualVals[ids[i]];
+    }
+  }
+  function getUalVal(key) {
+    var el = document.getElementById('sab-' + key);
+    if (el && el.value !== '') return parseFloat(el.value);
+    if (_ualVals[key] !== '') return parseFloat(_ualVals[key]);
+    return NaN;
+  }
 
-    // HCO3 schätzen aus pH+pCO2 falls nicht eingegeben
-    var hco3calc = hasHco3 ? hco3 : (hasPco2 ? (0.03 * pco2 * Math.pow(10, ph - 6.1)) : NaN);
-    if (!hasHco3 && !isNaN(hco3calc)) hco3 = parseFloat(hco3calc.toFixed(1));
+  function badge(cls, txt) {
+    return '<span class="sab-badge sab-badge-' + cls + '">' + txt + '</span>';
+  }
+  function result(cls, html) {
+    return '<div class="sab-result sab-result-' + cls + '">' + html + '</div>';
+  }
+  function step(num, title, bodyHtml) {
+    return '<div class="sab-step">' +
+      '<div class="sab-step-head">' +
+        '<div class="sab-step-num">' + num + '</div>' +
+        '<div class="sab-step-title">' + title + '</div>' +
+      '</div>' +
+      '<div class="sab-step-body">' + bodyHtml + '</div>' +
+    '</div>';
+  }
+  function connector() {
+    return '<div class="sab-connector"></div>';
+  }
 
-    // pCO2 schätzen falls nicht eingegeben
-    if (!hasPco2 && hasHco3) pco2 = parseFloat((hco3 / (0.03 * Math.pow(10, ph - 6.1))).toFixed(1));
-
-    // ===== SCHRITT 1: pH =====
-    var phClass = '';
-    var phText = '';
-    if (ph < 6.8 || ph > 7.8) { phClass = 'danger'; phText = '⛔ Lebensbedrohlicher pH!'; }
-    else if (ph < 7.35)  { phClass = 'warn';   phText = '<span class="elek-tag red">Azidämie</span>'; }
-    else if (ph > 7.45)  { phClass = 'warn';   phText = '<span class="elek-tag orange">Alkalämie</span>'; }
-    else                 { phClass = '';        phText = '<span class="elek-tag green">Normaler pH</span>'; }
-    document.getElementById('sab-r-ph').innerHTML =
-      '<div class="elek-result ' + phClass + '">' +
-      'pH <strong>' + ph + '</strong> — ' + phText + '<br>' +
-      '<small>Normal: 7,35–7,45 | Azidämie &lt;7,35 | Alkalämie &gt;7,45</small></div>';
-
-    // ===== SCHRITT 2: PRIMÄRSTÖRUNG =====
-    var isAzid  = ph < 7.35;
-    var isAlkal = ph > 7.45;
-    var metComp = hco3 - 24;    // + = met. Alkalose
-    var respComp= pco2 - 40;    // + = resp. Azidose
-
-    var primText = '';
-    var primType = ''; // 'metazid', 'metalk', 'respazid', 'respalk', 'gemischt'
-
-    // Primärstörung bestimmen
-    // Metabolische Azidose: HCO3 ↓ (primär), pCO2 ↓ = kompensatorische Hyperventilation (kein Fehler!)
-    // Respiratorische Azidose: pCO2 ↑ (primär), HCO3 ↑ = renale Kompensation
-    // Gemischte Azidose: HCO3 ↓ UND pCO2 ↑ (beide treiben pH nach unten)
-    if (isAzid) {
-      if (metComp < -2 && respComp > 2) {
-        primType = 'gemischt';
-        primText = '<span class="elek-tag red">Gemischte Azidose</span> (HCO₃⁻ ↓ + pCO₂ ↑)';
-      } else if (metComp < -2) {
-        primType = 'metazid';
-        primText = '<span class="elek-tag red">Metabolische Azidose</span> (HCO₃⁻ ↓ = ' + hco3 + ' mmol/l)';
-      } else if (respComp > 2) {
-        primType = 'respazid';
-        primText = '<span class="elek-tag red">Respiratorische Azidose</span> (pCO₂ ↑ = ' + pco2 + ' mmHg)';
-      } else {
-        primText = '<span class="elek-tag red">Azidose</span> — Primärstörung unklar (beide Parameter nur gering verändert)';
-      }
-    } else if (isAlkal) {
-      if (metComp > 2 && respComp < -2) {
-        primType = 'gemischt_alk';
-        primText = '<span class="elek-tag orange">Gemischte Alkalose</span> (HCO₃⁻ ↑ + pCO₂ ↓)';
-      } else if (metComp > 2) {
-        primType = 'metalk';
-        primText = '<span class="elek-tag orange">Metabolische Alkalose</span> (HCO₃⁻ ↑ = ' + hco3 + ' mmol/l)';
-      } else if (respComp < -2) {
-        primType = 'respalk';
-        primText = '<span class="elek-tag orange">Respiratorische Alkalose</span> (pCO₂ ↓ = ' + pco2 + ' mmHg)';
-      } else {
-        primText = '<span class="elek-tag orange">Alkalose</span> — Primärstörung unklar';
-      }
+  /* ── acc toggle ── */
+  window.sabToggleAcc = function(id) {
+    var hd = document.getElementById(id + '-hd');
+    var body = document.getElementById(id + '-body');
+    if (!hd || !body) return;
+    var isOpen = body.classList.contains('open');
+    if (isOpen) {
+      body.classList.remove('open');
+      hd.classList.remove('open');
     } else {
-      primText = '<span class="elek-tag green">Keine primäre Störung erkennbar</span> (pH normal — trotzdem AL prüfen!)';
-      if (metComp < -3 && respComp < -3) {
-        primText += '<br><small>Achtung: HCO₃⁻ und pCO₂ beide erniedrigt bei normalem pH → möglicherweise kompensierte met. Azidose + resp. Alkalose</small>';
-      }
+      body.classList.add('open');
+      hd.classList.add('open');
     }
-    primText += '<br><small>HCO₃⁻: ' + hco3 + ' mmol/l (Normal 22–26) | pCO₂: ' + pco2 + ' mmHg (Normal 35–45)</small>';
-    document.getElementById('sab-r-prim').innerHTML = '<div class="elek-result ' + (isAzid ? 'warn' : isAlkal ? 'warn' : '') + '">' + primText + '</div>';
-
-    // ===== SCHRITT 3: KOMPENSATION =====
-    var kompHtml = '';
-    var kompOk = null;
-    var erwartet = null;
-    var erwartetStr = '';
-
-    if (primType === 'metazid') {
-      var winters = 1.5 * hco3 + 8;
-      var wLow = winters - 2, wHigh = winters + 2;
-      erwartetStr = 'Winters-Formel: <code>pCO₂ = 1,5 × HCO₃⁻ + 8 (±2) = ' + wLow.toFixed(1) + '–' + wHigh.toFixed(1) + ' mmHg</code>';
-      kompOk = (pco2 >= wLow && pco2 <= wHigh);
-      kompHtml = erwartetStr + '<br><strong>Gemessenes pCO₂: ' + pco2 + ' mmHg</strong> → ';
-      if (kompOk) {
-        kompHtml += '<span class="elek-tag green">Adäquate respiratorische Kompensation</span>';
-      } else if (pco2 < wLow) {
-        kompHtml += '<span class="elek-tag orange">pCO₂ zu niedrig → zusätzliche respiratorische Alkalose</span>';
-      } else {
-        kompHtml += '<span class="elek-tag red">pCO₂ zu hoch → zusätzliche respiratorische Azidose (z.B. Ateminsuffizienz)</span>';
-      }
-    } else if (primType === 'metalk') {
-      var expPco2 = 0.7 * hco3 + 20;
-      var eLow = expPco2 - 2, eHigh = expPco2 + 2;
-      erwartetStr = '<code>pCO₂ = 0,7 × HCO₃⁻ + 20 (±2) = ' + eLow.toFixed(1) + '–' + eHigh.toFixed(1) + ' mmHg</code>';
-      kompOk = (pco2 >= eLow && pco2 <= eHigh);
-      kompHtml = erwartetStr + '<br><strong>Gemessenes pCO₂: ' + pco2 + ' mmHg</strong> → ';
-      if (kompOk) {
-        kompHtml += '<span class="elek-tag green">Adäquate respiratorische Kompensation</span>';
-      } else if (pco2 < eLow) {
-        kompHtml += '<span class="elek-tag orange">pCO₂ zu niedrig → zusätzliche respiratorische Alkalose</span>';
-      } else {
-        kompHtml += '<span class="elek-tag red">pCO₂ zu hoch → unzureichende Kompensation / zusätzliche resp. Azidose</span>';
-      }
-    } else if (primType === 'respazid') {
-      var hco3expAkut    = 24 + 1 * (pco2 - 40) / 10;
-      var hco3expChron   = 24 + 4 * (pco2 - 40) / 10;
-      kompHtml = '<strong>Akute resp. Azidose:</strong> erwartet HCO₃⁻ ≈ <strong>' + hco3expAkut.toFixed(1) + '</strong> mmol/l<br>';
-      kompHtml += '<strong>Chronische resp. Azidose (COPD):</strong> erwartet HCO₃⁻ ≈ <strong>' + hco3expChron.toFixed(1) + '</strong> mmol/l<br>';
-      kompHtml += '<strong>Gemessenes HCO₃⁻: ' + hco3 + ' mmol/l</strong> → ';
-      var diffAkut  = Math.abs(hco3 - hco3expAkut);
-      var diffChron = Math.abs(hco3 - hco3expChron);
-      if (diffAkut < 2) {
-        kompHtml += '<span class="elek-tag green">Adäquate Kompensation (akut)</span>';
-      } else if (diffChron < 2) {
-        kompHtml += '<span class="elek-tag green">Adäquate Kompensation (chronisch/COPD)</span>';
-      } else if (hco3 < hco3expAkut - 2) {
-        kompHtml += '<span class="elek-tag red">HCO₃⁻ zu niedrig → zusätzliche metabolische Azidose</span>';
-      } else {
-        kompHtml += '<span class="elek-tag orange">HCO₃⁻ > Erwartungswert → zusätzliche metabolische Alkalose</span>';
-      }
-    } else if (primType === 'respalk') {
-      var hco3expAkutAlk  = 24 - 2 * (40 - pco2) / 10;
-      var hco3expChronAlk = 24 - 5 * (40 - pco2) / 10;
-      kompHtml = '<strong>Akute resp. Alkalose:</strong> erwartet HCO₃⁻ ≈ <strong>' + hco3expAkutAlk.toFixed(1) + '</strong> mmol/l<br>';
-      kompHtml += '<strong>Chronische resp. Alkalose:</strong> erwartet HCO₃⁻ ≈ <strong>' + hco3expChronAlk.toFixed(1) + '</strong> mmol/l<br>';
-      kompHtml += '<strong>Gemessenes HCO₃⁻: ' + hco3 + ' mmol/l</strong>';
-    } else {
-      kompHtml = '<span class="elek-tag green">Keine Kompensationsberechnung erforderlich (kein pH-Abweichung)</span>';
-    }
-    document.getElementById('sab-r-komp').innerHTML = '<div class="elek-result">' + kompHtml + '</div>';
-
-    // ===== SCHRITT 4: ANIONENLÜCKE =====
-    var alHtml = '';
-    var al = null;
-    var alKorr = null;
-    if (!isNaN(na) && !isNaN(cl)) {
-      al = na - (hco3 + cl);
-      var albKorr = (!isNaN(alb) && alb < 40) ? 2.5 * (40 - alb) / 10 : 0;
-      alKorr = al + albKorr;
-
-      alHtml += '<code>AL = Na⁺ − (HCO₃⁻ + Cl⁻) = ' + na + ' − (' + hco3 + ' + ' + cl + ') = <strong>' + al.toFixed(1) + ' mmol/l</strong></code><br>';
-      if (!isNaN(alb) && alb < 40) {
-        alHtml += '<code>Albumin-Korrektur (+' + albKorr.toFixed(1) + '): AL<sub>korr</sub> = <strong>' + alKorr.toFixed(1) + ' mmol/l</strong></code><br>';
-      }
-      alHtml += '<br>';
-
-      var alVal = alKorr !== null ? alKorr : al;
-      if (alVal > 12) {
-        alHtml += '<span class="elek-tag red">Erhöhte Anionenlücke (&gt;12 mmol/l)</span><br>';
-        alHtml += '<small><strong>GOLDMARK:</strong> <b>G</b>lycolat/Ethylenglykol · <b>O</b>xoprolin · <b>L</b>-Laktat · <b>D</b>-Laktat · <b>M</b>ethanol · <b>A</b>spirin · <b>R</b>enal (Urämie) · <b>K</b>etoazidose (DKA, alkohol., Hunger)</small>';
-        if (!isNaN(lak) && lak > 2) {
-          alHtml += '<br><span class="elek-tag orange">Laktat: ' + lak + ' mmol/l → Laktatazidose trägt zur AL bei</span>';
-        }
-      } else if (alVal < 6) {
-        alHtml += '<span class="elek-tag orange">Erniedrigte Anionenlücke</span><br>';
-        alHtml += '<small>Mögliche Ursachen: Hypoalbuminämie, erhöhte Kationen (Ca, Mg, K, Li), positiv geladene Paraproteine</small>';
-      } else {
-        alHtml += '<span class="elek-tag green">Normale Anionenlücke (8–12 mmol/l)</span><br>';
-        alHtml += '<small><strong>Hyperchlorämische Azidose</strong> (wenn met. Azidose vorhanden):<br>RTA (Typ 1/2/4) · Diarrhö · Diuretika (Acetazolamid) · Ureterableitung · Pankreasfistel · NaHCO₃-Verlust</small>';
-      }
-    } else {
-      alHtml = '<div class="elek-result neutral">Na⁺ und Cl⁻ eingeben, um die Anionenlücke zu berechnen.</div>';
-    }
-    document.getElementById('sab-r-al').innerHTML = '<div class="elek-result">' + alHtml + '</div>';
-
-    // ===== DELTA-RATIO (nur bei erhöhter AL) =====
-    if (al !== null && (alKorr || al) > 12 && !isNaN(hco3)) {
-      var alUse = alKorr !== null ? alKorr : al;
-      var dr = (alUse - 12) / (24 - hco3);
-      var dl = (alUse - 12) - (24 - hco3);
-      var deltaHtml = '<code>Delta-Ratio = (AL − 12) / (24 − HCO₃⁻) = (' + alUse.toFixed(1) + ' − 12) / (24 − ' + hco3 + ') = <strong>' + dr.toFixed(2) + '</strong></code><br>';
-      deltaHtml += '<code>Delta-Lücke = (AL − 12) − (24 − HCO₃⁻) = <strong>' + dl.toFixed(1) + '</strong></code><br><br>';
-      if (dr < 1) {
-        deltaHtml += '<span class="elek-tag orange">DR &lt;1 → zusätzliche <strong>metabolische Azidose mit normaler AL</strong> (hyperchlorämische Komponente)</span>';
-      } else if (dr > 2) {
-        deltaHtml += '<span class="elek-tag orange">DR &gt;2 → zusätzliche <strong>metabolische Alkalose</strong></span>';
-      } else {
-        deltaHtml += '<span class="elek-tag green">DR 1–2 → reine metabolische Azidose mit erhöhter AL</span>';
-      }
-      document.getElementById('sab-r-delta').innerHTML = '<div class="elek-result">' + deltaHtml + '</div>';
-      document.getElementById('sab-r-delta-box').style.display = 'block';
-    } else {
-      document.getElementById('sab-r-delta-box').style.display = 'none';
-    }
-
-    // ===== URIN-ANIONENLÜCKE =====
-    if (!isNaN(una) && !isNaN(uk) && !isNaN(ucl)) {
-      var ual = (una + uk) - ucl;
-      var ualHtml = '<code>UAL = (Na⁺<sub>U</sub> + K⁺<sub>U</sub>) − Cl⁻<sub>U</sub> = (' + una + ' + ' + uk + ') − ' + ucl + ' = <strong>' + ual.toFixed(1) + ' mmol/l</strong></code><br><br>';
-      if (ual > 0) {
-        ualHtml += '<span class="elek-tag red">UAL positiv (+) → <strong>verminderte renale NH₄⁺-Ausscheidung</strong></span><br>';
-        ualHtml += '<small>Eher renale Ursache der metabolischen Azidose: RTA Typ 1 (distal), RTA Typ 4, CKD</small>';
-      } else {
-        ualHtml += '<span class="elek-tag green">UAL negativ (−) → <strong>adäquate renale NH₄⁺-Ausscheidung</strong></span><br>';
-        ualHtml += '<small>Eher extrarenale Ursache: Diarrhö, GI-Verluste, Fisteln</small>';
-      }
-
-      // Urin-Osmolalitätslücke
-      if (!isNaN(uhst) && !isNaN(uosm)) {
-        var uosmB = 2 * (una + uk) + uhst / 2.8;
-        var uol = uosm - uosmB;
-        ualHtml += '<br><hr style="border:none;border-top:1px solid #e0e0e0;margin:8px 0;">';
-        ualHtml += '<code>Urin-Osmolalitätslücke = ' + uosm + ' − ' + uosmB.toFixed(0) + ' = <strong>' + uol.toFixed(0) + ' mOsm/kg</strong></code><br>';
-        if (uol < 100) {
-          ualHtml += '<span class="elek-tag red">UOL &lt;100 → geringe NH₄⁺-Ausscheidung → renale Ursache</span>';
-        } else {
-          ualHtml += '<span class="elek-tag green">UOL &gt;100 → hohe NH₄⁺-Ausscheidung → extrarenale Ursache</span>';
-        }
-      }
-      document.getElementById('sab-r-ual').innerHTML = '<div class="elek-result">' + ualHtml + '</div>';
-      document.getElementById('sab-r-ual-box').style.display = 'block';
-    } else {
-      document.getElementById('sab-r-ual-box').style.display = 'none';
-    }
-
-    // ===== ZUSAMMENFASSUNG =====
-    var sumHtml = '<div class="elek-result">';
-    var findings = [];
-    if (ph < 7.35) findings.push('Azidämie (pH ' + ph + ')');
-    if (ph > 7.45) findings.push('Alkalämie (pH ' + ph + ')');
-    if (primType === 'metazid') findings.push('Metabolische Azidose (HCO₃⁻ ' + hco3 + ')');
-    if (primType === 'metalk') findings.push('Metabolische Alkalose (HCO₃⁻ ' + hco3 + ')');
-    if (primType === 'respazid') findings.push('Respiratorische Azidose (pCO₂ ' + pco2 + ')');
-    if (primType === 'respalk') findings.push('Respiratorische Alkalose (pCO₂ ' + pco2 + ')');
-    if (al !== null && (alKorr || al) > 12) findings.push('Erhöhte Anionenlücke (' + (alKorr||al).toFixed(1) + ')');
-    if (!isNaN(lak) && lak > 2) findings.push('Laktaterhöhung (' + lak + ' mmol/l)');
-
-    if (findings.length === 0) {
-      sumHtml += '<span class="elek-tag green">Alle Parameter im Normbereich</span>';
-    } else {
-      sumHtml += findings.map(function(f){ return '• ' + f; }).join('<br>');
-    }
-    sumHtml += '</div>';
-    document.getElementById('sab-r-summary').innerHTML = sumHtml;
   };
 
+  /* ── resp type selector ── */
+  function getRespType() {
+    var els = document.getElementsByName('sab-resp-type');
+    for (var i = 0; i < els.length; i++) {
+      if (els[i].checked) return els[i].value;
+    }
+    return 'unknown';
+  }
+
+  /* ── main workup ── */
+  window.sabWorkup = function() {
+    saveUalVals();
+
+    var ph   = val('sab-ph');
+    var pco2 = val('sab-pco2');
+    var hco3 = val('sab-hco3');
+    var na   = val('sab-na');
+    var cl   = val('sab-cl');
+    var alb  = val('sab-alb');
+    var lak  = val('sab-lak');
+
+    var fc = document.getElementById('sab-flowchart');
+
+    if (!isset(ph)) {
+      fc.innerHTML = '<div class="sab-hint" id="sab-hint-main">pH eingeben (+ HCO\u2083\u207b oder pCO\u2082), um die Analyse zu starten.</div>';
+      return;
+    }
+
+    /* derive missing value if possible */
+    if (!isset(hco3) && isset(pco2)) {
+      hco3 = parseFloat((0.03 * pco2 * Math.pow(10, ph - 6.1)).toFixed(1));
+    }
+    if (!isset(pco2) && isset(hco3)) {
+      pco2 = parseFloat((hco3 / (0.03 * Math.pow(10, ph - 6.1))).toFixed(1));
+    }
+
+    var hasHco3 = isset(hco3);
+    var hasPco2 = isset(pco2);
+
+    if (!hasHco3 && !hasPco2) {
+      fc.innerHTML = '<div class="sab-hint" id="sab-hint-main">pH eingeben (+ HCO\u2083\u207b oder pCO\u2082), um die Analyse zu starten.</div>';
+      return;
+    }
+
+    var html = '';
+
+    /* ══ SCHRITT 1: pH ══ */
+    var phBadge, phCls, phExtra;
+    if (ph < 7.35) {
+      phBadge = badge('red', '\uD83D\uDD34 Azidose (pH ' + ph + ')');
+      phCls = 'danger';
+      phExtra = 'pH &lt; 7,35 \u2192 Azid\u00e4mie';
+    } else if (ph > 7.45) {
+      phBadge = badge('blue', '\uD83D\uDD35 Alkalose (pH ' + ph + ')');
+      phCls = 'info';
+      phExtra = 'pH &gt; 7,45 \u2192 Alkali\u00e4mie';
+    } else {
+      phBadge = badge('yellow', '\uD83D\uDFE1 Normaler pH (' + ph + ')');
+      phCls = 'warn';
+      phExtra = 'Kompensierte St\u00f6rung m\u00f6glich!';
+    }
+    if (ph < 6.9 || ph > 7.7) {
+      phBadge = badge('red', '\u26D4 Lebensbedrohlicher pH (' + ph + ')');
+      phCls = 'danger';
+      phExtra = '<strong>Notfall!</strong> Sofortige Intervention erforderlich.';
+    }
+    var step1Body = phBadge + '<br>' + result(phCls, phExtra + '<br><small>Normal: 7,35\u20137,45</small>');
+    html += step(1, 'pH beurteilen', step1Body);
+    html += connector();
+
+    /* ══ SCHRITT 2: Primärstörung ══ */
+    var primType = '';
+    var primBody = '';
+    if (hasHco3 && hasPco2) {
+      var isAzid  = ph < 7.35;
+      var isAlkal = ph > 7.45;
+      var hco3Low  = hco3 < 22;
+      var hco3High = hco3 > 26;
+      var pco2High = pco2 > 45;
+      var pco2Low  = pco2 < 35;
+
+      if (ph >= 7.35 && ph <= 7.45 && (hco3Low || hco3High) && (pco2Low || pco2High)) {
+        /* normal pH but both abnormal — could be compensated or mixed */
+        if (hco3Low && pco2Low) {
+          primType = 'metazid';
+          primBody = badge('yellow', 'Kompensierte met. Azidose') +
+            '<br>' + result('warn', 'pH normal, aber HCO\u2083\u207b \u2193 (' + hco3 + ') und pCO\u2082 \u2193 (' + pco2 + ') \u2014 Anionenlücke entscheidend!');
+        } else if (hco3High && pco2High) {
+          primType = 'metalk';
+          primBody = badge('yellow', 'Kompensierte met. Alkalose') +
+            '<br>' + result('warn', 'pH normal, aber HCO\u2083\u207b \u2191 (' + hco3 + ') und pCO\u2082 \u2191 (' + pco2 + ')');
+        } else if (hco3Low && pco2High) {
+          primType = 'gemischt_gegeneinander';
+          primBody = badge('red', 'Gemischte St\u00f6rung') +
+            '<br>' + result('danger', '\u26A0\uFE0F HCO\u2083\u207b \u2193 UND pCO\u2082 \u2191 bei normalem pH \u2014 Met. Azidose + Resp. Azidose oder kompensierende Alkalose. Anionenlücke berechnen!');
+        } else if (hco3High && pco2Low) {
+          primType = 'gemischt_gegeneinander2';
+          primBody = badge('orange', 'Gemischte St\u00f6rung') +
+            '<br>' + result('warn', '\u26A0\uFE0F HCO\u2083\u207b \u2191 UND pCO\u2082 \u2193 bei normalem pH \u2014 Met. Alkalose + Resp. Alkalose.');
+        } else {
+          primType = '';
+          primBody = result('neutral', 'pH und Parameter im Normbereich — keine relevante Störung.');
+        }
+      } else if (isAzid) {
+        if (hco3Low && pco2High) {
+          primType = 'gemischt_azid';
+          primBody = badge('red', 'Gemischte Azidose') +
+            '<br>' + result('danger', 'HCO\u2083\u207b \u2193 (' + hco3 + ') + pCO\u2082 \u2191 (' + pco2 + ') \u2014 Metabolische + respiratorische Azidose gleichzeitig!');
+        } else if (hco3Low) {
+          primType = 'metazid';
+          primBody = badge('red', 'Metabolische Azidose') +
+            '<br>' + result('danger', 'HCO\u2083\u207b \u2193 = ' + hco3 + ' mmol/l (< 22) bei pH ' + ph);
+        } else if (pco2High) {
+          primType = 'respazid';
+          primBody = badge('red', 'Respiratorische Azidose') +
+            '<br>' + result('danger', 'pCO\u2082 \u2191 = ' + pco2 + ' mmHg (> 45) bei pH ' + ph);
+        } else {
+          primType = 'azid_unklar';
+          primBody = badge('red', 'Azidose') + '<br>' + result('warn', 'pH erniedrigt, aber Primärstörung unklar. Vollständige BGA prüfen.');
+        }
+      } else if (isAlkal) {
+        if (hco3High && pco2Low) {
+          primType = 'gemischt_alk';
+          primBody = badge('orange', 'Gemischte Alkalose') +
+            '<br>' + result('warn', 'HCO\u2083\u207b \u2191 (' + hco3 + ') + pCO\u2082 \u2193 (' + pco2 + ') \u2014 Met. + Resp. Alkalose gleichzeitig!');
+        } else if (hco3High) {
+          primType = 'metalk';
+          primBody = badge('orange', 'Metabolische Alkalose') +
+            '<br>' + result('warn', 'HCO\u2083\u207b \u2191 = ' + hco3 + ' mmol/l (> 26) bei pH ' + ph);
+        } else if (pco2Low) {
+          primType = 'respalk';
+          primBody = badge('blue', 'Respiratorische Alkalose') +
+            '<br>' + result('info', 'pCO\u2082 \u2193 = ' + pco2 + ' mmHg (< 35) bei pH ' + ph);
+        } else {
+          primBody = badge('orange', 'Alkalose') + '<br>' + result('warn', 'pH erhöht, aber Primärstörung unklar.');
+        }
+      } else {
+        primBody = result('ok', 'pH, HCO\u2083\u207b und pCO\u2082 im Normbereich \u2014 keine Störung erkennbar.');
+      }
+    } else {
+      primBody = result('neutral', 'HCO\u2083\u207b und pCO\u2082 eingeben f\u00fcr Primärstörung.');
+    }
+    html += step(2, 'Prim\u00e4re St\u00f6rung', primBody);
+    html += connector();
+
+    /* ══ SCHRITT 3: Kompensation ══ */
+    var kompBody = '';
+    if (hasHco3 && hasPco2 && primType) {
+      if (primType === 'metazid') {
+        var wExp  = 1.5 * hco3 + 8;
+        var wLow  = wExp - 2;
+        var wHigh = wExp + 2;
+        kompBody += '<strong>Winter-Formel:</strong> erwartet pCO\u2082 = <code>1,5 \u00d7 ' + hco3 + ' + 8 = ' + wExp.toFixed(1) + ' mmHg</code><br>';
+        kompBody += 'Bereich: <code>' + wLow.toFixed(1) + '\u2013' + wHigh.toFixed(1) + ' mmHg</code> | Gemessen: <strong>' + pco2 + ' mmHg</strong><br>';
+        if (pco2 >= wLow && pco2 <= wHigh) {
+          kompBody += result('ok', '\u2705 Adäquate respiratorische Kompensation');
+        } else if (pco2 > wHigh) {
+          kompBody += result('danger', '\u26A0\uFE0F pCO\u2082 zu hoch \u2192 Zus\u00e4tzliche respiratorische <strong>AZIDOSE</strong> (pCO\u2082 ' + pco2 + ' > ' + wHigh.toFixed(1) + ')');
+        } else {
+          kompBody += result('warn', '\u26A0\uFE0F pCO\u2082 zu niedrig \u2192 Zus\u00e4tzliche respiratorische <strong>ALKALOSE</strong> (pCO\u2082 ' + pco2 + ' < ' + wLow.toFixed(1) + ')');
+        }
+      } else if (primType === 'metalk') {
+        var malkExp  = 0.7 * hco3 + 21;
+        var malkLow  = malkExp - 2;
+        var malkHigh = malkExp + 2;
+        kompBody += '<strong>Erwartetes pCO\u2082:</strong> <code>0,7 \u00d7 ' + hco3 + ' + 21 = ' + malkExp.toFixed(1) + ' mmHg</code><br>';
+        kompBody += 'Bereich: <code>' + malkLow.toFixed(1) + '\u2013' + malkHigh.toFixed(1) + ' mmHg</code> | Gemessen: <strong>' + pco2 + ' mmHg</strong><br>';
+        if (pco2 >= malkLow && pco2 <= malkHigh) {
+          kompBody += result('ok', '\u2705 Adäquate respiratorische Kompensation');
+        } else if (pco2 > malkHigh) {
+          kompBody += result('danger', '\u26A0\uFE0F pCO\u2082 zu hoch \u2192 Zus\u00e4tzliche respiratorische <strong>AZIDOSE</strong>');
+        } else {
+          kompBody += result('warn', '\u26A0\uFE0F pCO\u2082 zu niedrig \u2192 Zus\u00e4tzliche respiratorische <strong>ALKALOSE</strong>');
+        }
+      } else if (primType === 'respazid') {
+        var rAkut  = 24 + 1   * (pco2 - 40) / 10;
+        var rChron = 24 + 3.5 * (pco2 - 40) / 10;
+        kompBody += '<strong>Erwartetes HCO\u2083\u207b:</strong><br>';
+        kompBody += '<span class="sab-resp-type-row">\u2022 Akut: <code>' + rAkut.toFixed(1) + ' mmol/l</code> (1 mmol/l pro 10 mmHg \u2191 pCO\u2082)</span><br>';
+        kompBody += '<span class="sab-resp-type-row">\u2022 Chronisch: <code>' + rChron.toFixed(1) + ' mmol/l</code> (3,5 mmol/l pro 10 mmHg \u2191 pCO\u2082)</span><br>';
+        kompBody += 'Gemessen: <strong>' + hco3 + ' mmol/l</strong><br>';
+        kompBody += '<div style="margin-top:6px;"><label style="font-size:.74rem;font-weight:600;color:#555;">Verlaufstyp:</label> ';
+        kompBody += '<div class="sab-resp-toggle">';
+        kompBody += '<input type="radio" name="sab-resp-type" id="sab-rt-akut" value="akut" onchange="sabWorkup()"><label for="sab-rt-akut">Akut</label>';
+        kompBody += '<input type="radio" name="sab-resp-type" id="sab-rt-chron" value="chronisch" onchange="sabWorkup()"><label for="sab-rt-chron">Chronisch</label>';
+        kompBody += '<input type="radio" name="sab-resp-type" id="sab-rt-unk" value="unknown" checked onchange="sabWorkup()"><label for="sab-rt-unk">Unbekannt</label>';
+        kompBody += '</div></div>';
+        var respType = getRespType();
+        if (respType === 'akut') {
+          var rTol = 1.5;
+          if (Math.abs(hco3 - rAkut) <= rTol) {
+            kompBody += result('ok', '\u2705 Adäquate Kompensation f\u00fcr akute resp. Azidose');
+          } else if (hco3 > rAkut + rTol) {
+            kompBody += result('warn', 'HCO\u2083\u207b erh\u00f6ht \u2192 Zus\u00e4tzliche metabolische <strong>ALKALOSE</strong> oder chronischer Verlauf');
+          } else {
+            kompBody += result('danger', 'HCO\u2083\u207b erniedrigt \u2192 Zus\u00e4tzliche metabolische <strong>AZIDOSE</strong>');
+          }
+        } else if (respType === 'chronisch') {
+          var rTolC = 2;
+          if (Math.abs(hco3 - rChron) <= rTolC) {
+            kompBody += result('ok', '\u2705 Adäquate Kompensation f\u00fcr chronische resp. Azidose');
+          } else if (hco3 > rChron + rTolC) {
+            kompBody += result('warn', 'HCO\u2083\u207b erh\u00f6ht \u2192 Zus\u00e4tzliche metabolische <strong>ALKALOSE</strong>');
+          } else {
+            kompBody += result('danger', 'HCO\u2083\u207b erniedrigt \u2192 Zus\u00e4tzliche metabolische <strong>AZIDOSE</strong>');
+          }
+        } else {
+          if (Math.abs(hco3 - rAkut) < Math.abs(hco3 - rChron)) {
+            kompBody += result('info', 'HCO\u2083\u207b n\u00e4her am Akut-Wert (' + rAkut.toFixed(1) + ') \u2014 eher akuter Verlauf.');
+          } else {
+            kompBody += result('info', 'HCO\u2083\u207b n\u00e4her am Chronisch-Wert (' + rChron.toFixed(1) + ') \u2014 eher chronischer Verlauf.');
+          }
+        }
+      } else if (primType === 'respalk') {
+        var raAkut  = 24 - 2 * (40 - pco2) / 10;
+        var raChron = 24 - 5 * (40 - pco2) / 10;
+        kompBody += '<strong>Erwartetes HCO\u2083\u207b:</strong><br>';
+        kompBody += '\u2022 Akut: <code>' + raAkut.toFixed(1) + ' mmol/l</code><br>';
+        kompBody += '\u2022 Chronisch: <code>' + raChron.toFixed(1) + ' mmol/l</code><br>';
+        kompBody += 'Gemessen: <strong>' + hco3 + ' mmol/l</strong><br>';
+        if (Math.abs(hco3 - raAkut) < Math.abs(hco3 - raChron)) {
+          kompBody += result('info', 'HCO\u2083\u207b n\u00e4her am Akut-Wert \u2014 eher akuter Verlauf.');
+        } else {
+          kompBody += result('info', 'HCO\u2083\u207b n\u00e4her am Chronisch-Wert \u2014 eher chronischer Verlauf.');
+        }
+      } else if (primType.indexOf('gemischt') === 0) {
+        kompBody = result('warn', 'Gemischte Störung — Kompensation nicht standardisiert berechenbar. Klinischen Kontext beachten.');
+      } else {
+        kompBody = result('neutral', 'Keine Kompensationsberechnung notwendig.');
+      }
+    } else if (!primType && hasHco3 && hasPco2) {
+      kompBody = result('ok', 'Keine relevante Primärstörung \u2014 Kompensation nicht erforderlich.');
+    } else {
+      kompBody = result('neutral', 'HCO\u2083\u207b und pCO\u2082 eingeben f\u00fcr Kompensationspr\u00fcfung.');
+    }
+    html += step(3, 'Kompensation adäquat?', kompBody);
+    html += connector();
+
+    /* ══ SCHRITT 4: Anionenlücke ══ */
+    var al = NaN, alKorr = NaN;
+    var alBody = '';
+    var highAG = false;
+    if (isset(na) && isset(cl) && hasHco3) {
+      al = na - (hco3 + cl);
+      var albKorrDelta = 0;
+      if (isset(alb) && alb < 40) {
+        albKorrDelta = 2.5 * (40 - alb);
+        alKorr = al + albKorrDelta;
+      } else {
+        alKorr = al;
+      }
+      alBody += '<code>AL = ' + na + ' \u2212 (' + hco3 + ' + ' + cl + ') = <strong>' + al.toFixed(1) + ' mmol/l</strong></code><br>';
+      if (isset(alb) && alb < 40) {
+        alBody += '<code>AL<sub>korr</sub> = ' + al.toFixed(1) + ' + 2,5 \u00d7 (40 \u2212 ' + alb + ') / 10 = <strong>' + alKorr.toFixed(1) + ' mmol/l</strong></code><br>';
+      }
+      alBody += '<small style="color:#888;">Normal: 8\u201312 mmol/l</small><br><br>';
+
+      var alUse = alKorr;
+      if (alUse > 12) {
+        highAG = true;
+        alBody += badge('red', 'Erhöhte Anionenlücke (' + alUse.toFixed(1) + ' mmol/l)') + '<br>';
+        alBody += result('danger', '<strong>\u2192 AG-Azidose</strong> \u2014 GOLD MARK-Ursachen (siehe rechte Spalte)');
+        if (isset(lak) && lak > 0) {
+          var lakContrib = lak;
+          alBody += result('warn', 'Laktat (' + lak + ' mmol/l) erklärt ca. ' + lakContrib.toFixed(1) + ' mmol/l der AL-Erhöhung (1:1 Beitrag)');
+        }
+        /* GOLDMARK accordion */
+        alBody += '<div id="sab-acc-gm-hd" class="sab-acc-hd" onclick="sabToggleAcc(\'sab-acc-gm\')">' +
+          'GOLD MARK Ursachen anzeigen <span class="sab-acc-arrow">▼</span>' +
+          '</div>' +
+          '<div id="sab-acc-gm-body" class="sab-acc-body">' +
+          '<strong>G</strong>lykolat · <strong>O</strong>xoprolin · <strong>L</strong>aktat · <strong>D</strong>-Laktat · ' +
+          '<strong>M</strong>ethanol · <strong>A</strong>lk. Ketoazidose · <strong>R</strong>enal (Urämie) · <strong>K</strong>etoazidose (DKA)' +
+          '</div>';
+      } else if (alUse < 6) {
+        alBody += badge('gray', 'Erniedrigte AL (' + alUse.toFixed(1) + ')') + '<br>';
+        alBody += result('neutral', 'Hypoalbuminämie · erhöhte Kationen (Mg\u00b2\u207a, Ca\u00b2\u207a) · Paraproteine');
+      } else {
+        alBody += badge('green', 'Normale AL (' + alUse.toFixed(1) + ' mmol/l)') + '<br>';
+        alBody += result('ok', 'Hyperchlorämische Azidose: RTA · Diarrhö · NaCl-Infusion · Diuretika · Ureterableitung');
+      }
+    } else {
+      alBody = result('neutral', 'Na\u207a, Cl\u207b und HCO\u2083\u207b eingeben f\u00fcr Anionenlücke.');
+    }
+    html += step(4, 'Anionenlücke (AL)', alBody);
+    html += connector();
+
+    /* ══ SCHRITT 4b: Delta-Delta ══ */
+    var ddBody = '';
+    if (highAG && hasHco3) {
+      var alUse2 = isset(alKorr) ? alKorr : al;
+      var dAG = alUse2 - 12;
+      var dHco3 = 24 - hco3;
+      var ddBody2 = '';
+      ddBody2 += '<code>\u0394AG = ' + alUse2.toFixed(1) + ' \u2212 12 = ' + dAG.toFixed(1) + ' mmol/l</code><br>';
+      ddBody2 += '<code>\u0394HCO\u2083\u207b = 24 \u2212 ' + hco3 + ' = ' + dHco3.toFixed(1) + ' mmol/l</code><br>';
+      if (dHco3 > 0) {
+        var dr = dAG / dHco3;
+        ddBody2 += '<code>Delta-Ratio = ' + dAG.toFixed(1) + ' / ' + dHco3.toFixed(1) + ' = <strong>' + dr.toFixed(2) + '</strong></code><br><br>';
+        if (dr < 0.4) {
+          ddBody2 += badge('red', 'DR < 0,4') + '<br>' + result('danger', 'Reine normale-AL-Azidose (AG-Erhöhung passt nicht zur HCO\u2083\u207b-Erniedrigung)');
+        } else if (dr < 1.0) {
+          ddBody2 += badge('orange', 'DR 0,4\u20131,0') + '<br>' + result('warn', 'Kombinierte Azidose: erhöhte AL + normale AL (z.B. DKA + Diarrhö)');
+        } else if (dr <= 2.0) {
+          ddBody2 += badge('green', 'DR 1,0\u20132,0') + '<br>' + result('ok', '\u2705 Reine erhöhte-AL-Azidose');
+        } else {
+          ddBody2 += badge('orange', 'DR > 2,0') + '<br>' + result('warn', 'Erhöhte-AL-Azidose + <strong>zusätzliche metabolische ALKALOSE</strong> (HCO\u2083\u207b relativ zu hoch!)');
+        }
+      } else {
+        ddBody2 += result('warn', 'HCO\u2083\u207b normal oder erhöht bei erhöhter AL \u2192 zus. metabolische Alkalose m\u00f6glich!');
+      }
+      html += step('4b', 'Delta-Delta-Verhältnis', ddBody2);
+      html += connector();
+    }
+
+    /* ══ SCHRITT 5: Summary ══ */
+    var sumFindings = [];
+    if (ph < 7.35) sumFindings.push('Azidämie (pH ' + ph + ')');
+    if (ph > 7.45) sumFindings.push('Alkalämie (pH ' + ph + ')');
+    if (primType === 'metazid')      sumFindings.push('Metabolische Azidose (HCO\u2083\u207b ' + hco3 + ' mmol/l)');
+    if (primType === 'metalk')       sumFindings.push('Metabolische Alkalose (HCO\u2083\u207b ' + hco3 + ' mmol/l)');
+    if (primType === 'respazid')     sumFindings.push('Respiratorische Azidose (pCO\u2082 ' + pco2 + ' mmHg)');
+    if (primType === 'respalk')      sumFindings.push('Respiratorische Alkalose (pCO\u2082 ' + pco2 + ' mmHg)');
+    if (primType === 'gemischt_azid') sumFindings.push('Gemischte Azidose (met. + resp.)');
+    if (primType === 'gemischt_alk') sumFindings.push('Gemischte Alkalose (met. + resp.)');
+    if (highAG) {
+      var alStr = isset(alKorr) ? alKorr.toFixed(1) : al.toFixed(1);
+      sumFindings.push('Erhöhte Anionenlücke (AL ' + alStr + ' mmol/l)');
+    } else if (isset(al) && !highAG && isset(na) && isset(cl)) {
+      sumFindings.push('Normale Anionenlücke (AL ' + (isset(alKorr) ? alKorr.toFixed(1) : al.toFixed(1)) + ' mmol/l)');
+    }
+    if (isset(lak) && lak >= 2) sumFindings.push('Laktaterhöhung (' + lak + ' mmol/l)');
+
+    var sumHtml2 = '<div class="sab-summary">';
+    sumHtml2 += '<div class="sab-summary-title">📋 Zusammenfassung</div>';
+    if (sumFindings.length === 0) {
+      sumHtml2 += badge('green', 'Alle Parameter im Normbereich') + ' — Keine Säure-Basen-Störung erkennbar.';
+    } else {
+      sumHtml2 += sumFindings.map(function(f){ return '\u2022 ' + f; }).join('<br>');
+    }
+    sumHtml2 += '</div>';
+    html += step(5, 'Zusammenfassung', sumHtml2);
+
+    /* ══ SCHRITT 6: UAL — only if normal AG or explicitly shown ══ */
+    var showUal = !highAG && isset(na) && isset(cl) && hasHco3 && isset(al);
+    var ualInputHtml = '<div id="sab-ual-section" class="sab-ual-section">' +
+      '<div style="font-size:.78rem;font-weight:700;color:#b71c1c;margin-bottom:8px;">🔍 Schritt 6 — Urin-Anionenlücke (UAL): Renale vs. extrarenale Ursache?</div>';
+    if (highAG) {
+      ualInputHtml += '<div class="sab-result sab-result-neutral" style="font-size:.76rem;">' +
+        '⚠️ UAL bei erhöhter AG-Azidose nicht verwertbar! UAL nur bei normaler Anionenlücke sinnvoll.' +
+        '</div>';
+    } else {
+      ualInputHtml += '<div style="font-size:.76rem;color:#555;margin-bottom:8px;">Urin-Werte eingeben zur Differenzierung RTA vs. extrarenale Ursache (Diarrhö):</div>';
+      ualInputHtml += '<div class="sab-ual-grid">';
+      ualInputHtml += '<div class="sab-field"><label style="font-size:.72rem;">U-Na\u207a (mmol/l)</label><input type="number" id="sab-una" placeholder="" oninput="sabWorkup()"></div>';
+      ualInputHtml += '<div class="sab-field"><label style="font-size:.72rem;">U-K\u207a (mmol/l)</label><input type="number" id="sab-uk" placeholder="" oninput="sabWorkup()"></div>';
+      ualInputHtml += '<div class="sab-field"><label style="font-size:.72rem;">U-Cl\u207b (mmol/l)</label><input type="number" id="sab-ucl" placeholder="" oninput="sabWorkup()"></div>';
+      ualInputHtml += '<div class="sab-field"><label style="font-size:.72rem;">U-Harnstoff (mg/dl)</label><input type="number" id="sab-uhst" placeholder="" oninput="sabWorkup()"></div>';
+      ualInputHtml += '<div class="sab-field"><label style="font-size:.72rem;">U-Osmolalität (mOsm/kg)</label><input type="number" id="sab-uosm" placeholder="" oninput="sabWorkup()"></div>';
+      ualInputHtml += '</div>';
+
+      var una  = getUalVal('una');
+      var uk   = getUalVal('uk');
+      var ucl  = getUalVal('ucl');
+      var uhst = getUalVal('uhst');
+      var uosm = getUalVal('uosm');
+
+      if (isset(una) && isset(uk) && isset(ucl)) {
+        var ual = (una + uk) - ucl;
+        ualInputHtml += '<div style="margin-top:10px;"><code>UAL = (' + una + ' + ' + uk + ') \u2212 ' + ucl + ' = <strong>' + ual.toFixed(1) + ' mmol/l</strong></code></div>';
+        if (ual < -10) {
+          ualInputHtml += result('ok', '\u2705 UAL negativ (&lt; \u221210) \u2192 Adäquate NH\u2084\u207a-Ausscheidung \u2192 <strong>Extrarenale Ursache</strong> (Diarrhö, GI-Verlust)');
+        } else if (ual > 10) {
+          ualInputHtml += result('danger', '\u26A0\uFE0F UAL positiv (&gt; +10) \u2192 Gestörte NH\u2084\u207a-Ausscheidung \u2192 <strong>Renale Ursache</strong> (RTA Typ I/II/IV, CKD)');
+        } else {
+          ualInputHtml += result('warn', 'UAL grenzwertig (\u221210 bis +10) \u2014 Klinischen Kontext beachten');
+        }
+        if (isset(uhst) && isset(uosm)) {
+          var uosmCalc = 2 * (una + uk) + uhst / 6.006;
+          var uol = uosm - uosmCalc;
+          ualInputHtml += '<div style="margin-top:6px;"><code>U-Osmolalitätslücke = ' + uosm + ' \u2212 ' + uosmCalc.toFixed(0) + ' = <strong>' + uol.toFixed(0) + ' mOsm/kg</strong></code><br>';
+          if (uol < 100) {
+            ualInputHtml += result('danger', 'UOL &lt; 100 \u2192 Renale Ursache (konsistent mit UAL)');
+          } else {
+            ualInputHtml += result('ok', 'UOL &gt; 100 \u2192 Extrarenale Ursache (konsistent mit UAL)');
+          }
+          ualInputHtml += '</div>';
+        }
+      } else {
+        ualInputHtml += '<div style="font-size:.74rem;color:#b71c1c;margin-top:6px;">U-Na\u207a, U-K\u207a und U-Cl\u207b eingeben zur Berechnung.</div>';
+      }
+    }
+    ualInputHtml += '</div>';
+
+    html += connector();
+    html += step(6, 'Urin-Anionenlücke (UAL)', ualInputHtml);
+
+    /* render */
+    fc.innerHTML = html;
+    /* restore UAL values into newly rendered inputs */
+    restoreUalVals();
+  };
+
+
+  window.sabCalc = window.sabWorkup; // backward compat
   window.elekAutoImport = function() {
     var ckdNa = document.getElementById('sodium');
     if (ckdNa && ckdNa.value) {
@@ -7667,6 +7954,8 @@ window.gichtAutoImport = function() {
 .abx-spek-tag.ent  { background:#fff7ed; color:#c2410c; border:1px solid #fdba74; }
 .abx-spek-tag.psa  { background:#fde8e8; color:#b91c1c; border:1px solid #fca5a5; }
 .abx-spek-tag.ana  { background:#f1f5f9; color:#334155; border:1px solid #cbd5e1; }
+.abx-spek-tag.pilze  { background:#fdf4ff; color:#7e22ce; border:1px solid #e9d5ff; }
+.abx-spek-tag.viren  { background:#fff1f2; color:#9f1239; border:1px solid #fda4af; }
 /* Spektrum-Filter */
 .abx-spek-filter { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; align-items:center; }
 .abx-spek-filter label { font-size:.75rem; font-weight:700; color:#555; text-transform:uppercase; letter-spacing:.04em; margin-right:2px; }
@@ -7685,6 +7974,10 @@ window.gichtAutoImport = function() {
 .abx-spek-btn.psa.active  { background:#b91c1c; color:#fff; }
 .abx-spek-btn.ana  { border:1.5px solid #cbd5e1; background:#fff; color:#334155; }
 .abx-spek-btn.ana.active  { background:#334155; color:#fff; }
+.abx-spek-btn.pilze  { border:1.5px solid #e9d5ff; background:#fff; color:#7e22ce; }
+.abx-spek-btn.pilze.active  { background:#7e22ce; color:#fff; }
+.abx-spek-btn.viren  { border:1.5px solid #fda4af; background:#fff; color:#9f1239; }
+.abx-spek-btn.viren.active  { background:#9f1239; color:#fff; }
 </style>
 
 <div class="abx-container">
@@ -7726,6 +8019,8 @@ window.gichtAutoImport = function() {
     <button class="abx-grp-btn" onclick="abxSetGruppe('Glykopeptid',this)">Glykopeptide</button>
     <button class="abx-grp-btn" onclick="abxSetGruppe('Aminoglykosid',this)">Aminoglykoside</button>
     <button class="abx-grp-btn" onclick="abxSetGruppe('Sonstige',this)">Sonstige</button>
+    <button class="abx-grp-btn" onclick="abxSetGruppe('Antimykotikum',this)">Antimykotika</button>
+    <button class="abx-grp-btn" onclick="abxSetGruppe('Antiviral',this)">Antivirale</button>
   </div>
 
   <div class="abx-spek-filter" id="abx-spek-filter">
@@ -7737,6 +8032,8 @@ window.gichtAutoImport = function() {
     <button class="abx-spek-btn ent"  onclick="abxSetSpektrum('Ent',this)">Enterokokken</button>
     <button class="abx-spek-btn psa"  onclick="abxSetSpektrum('PSA',this)">Pseudomonas</button>
     <button class="abx-spek-btn ana"  onclick="abxSetSpektrum('Ana',this)">Anaerobier</button>
+    <button class="abx-spek-btn pilze" onclick="abxSetSpektrum('Pilze',this)">Pilze</button>
+    <button class="abx-spek-btn viren" onclick="abxSetSpektrum('Viren',this)">Viren</button>
   </div>
 
   <div class="abx-grid" id="abx-grid"></div>
@@ -7762,13 +8059,15 @@ var SPEK_META = {
   'Aty': { cls:'aty',  label:'Atypiker' },
   'Ent': { cls:'ent',  label:'Enterokokken' },
   'PSA': { cls:'psa',  label:'Pseudomonas' },
-  'Ana': { cls:'ana',  label:'Anaerobier' }
+  'Ana':   { cls:'ana',   label:'Anaerobier' },
+  'Pilze': { cls:'pilze', label:'Pilze' },
+  'Viren': { cls:'viren', label:'Viren' }
 };
 
 var abxData = [
   // ===== PENICILLINE / BLI =====
   {
-    name: 'Amoxicillin/Clavulansäure', brand: 'Augmentan®', gruppe: 'Penicillin/BLI',
+    name: 'Amoxicillin/Clavulans\u00e4ure', brand: 'Augmentan\u00ae', gruppe: 'Penicillin/BLI',
     spektrum: ['G+','G-','Ent'],
     indikation: 'HWI, CAP, ABECB, Sinusitis, Weichteilinfektionen, Bisse',
     dosierung: {
@@ -7776,106 +8075,105 @@ var abxData = [
       '30-50': { dosis: '875/125 mg q12h p.o. | 2,2 g q12h i.v.', hinweis: '' },
       '15-30': { dosis: '500/125 mg q12h p.o. | 1,1 g q12h i.v.', hinweis: '' },
       '<15':   { dosis: '500/125 mg q24h p.o. | 1,1 g q24h i.v.', hinweis: '' },
-      'HD':    { dosis: '500/125 mg nach HD p.o.', hinweis: 'nach jeder HD supplementieren; Clavulansäure akkumuliert' },
-      'CRRT':  { dosis: '2,2 g q8h i.v.', hinweis: 'Standard-Dosierung; CRRT-Clearance ähnlich eGFR 30–50' },
-      'PD':    { dosis: '500/125 mg q12–24h p.o. | 1,1 g q24h i.v.', hinweis: 'geringe PD-Clearance; wie <15 dosieren' }
+      'HD':    { dosis: '500/125 mg nach HD p.o.', hinweis: 'nach jeder HD supplementieren; Clavulans\u00e4ure akkumuliert' },
+      'CRRT':  { dosis: '2,2 g q8h i.v.', hinweis: 'Standard-Dosierung; CRRT-Clearance \u00e4hnlich eGFR 30\u201350' },
+      'PD':    { dosis: '500/125 mg q12\u201324h p.o. | 1,1 g q24h i.v.', hinweis: 'geringe PD-Clearance; wie <15 dosieren' }
     },
-    tdm: false, cave: 'Clavulansäure akkumuliert bei CKD → erhöhtes GI-Nebenwirkungs-Risiko'
+    tdm: false, cave: 'Clavulans\u00e4ure akkumuliert bei CKD \u2192 erh\u00f6htes GI-Nebenwirkungs-Risiko'
   },
   {
-    name: 'Ampicillin/Sulbactam', brand: 'Unacid®', gruppe: 'Penicillin/BLI',
+    name: 'Ampicillin/Sulbactam', brand: 'Unacid\u00ae', gruppe: 'Penicillin/BLI',
     spektrum: ['G+','G-','Ent','Ana'],
     indikation: 'HAP, Aspirationspneumonie, intraabdominell, Acinetobacter',
     dosierung: {
       '>50':   { dosis: '3 g (2+1) q6h i.v.', hinweis: '' },
       '30-50': { dosis: '3 g q8h i.v.', hinweis: '' },
       '15-30': { dosis: '3 g q12h i.v.', hinweis: '' },
-      '<15':   { dosis: '1,5–3 g q12–24h i.v.', hinweis: '' },
-      'HD':    { dosis: '1,5–3 g q12–24h i.v.', hinweis: 'nach HD: 1,5 g supplementieren' },
-      'CRRT':  { dosis: '3 g q8h i.v.', hinweis: 'CRRT erhöht Clearance; Standard-/leicht erhöhte Dosis' },
-      'PD':    { dosis: '1,5–3 g q12–24h i.v.', hinweis: 'wie HD; geringe PD-Clearance' }
+      '<15':   { dosis: '1,5\u20133 g q12\u201324h i.v.', hinweis: '' },
+      'HD':    { dosis: '1,5\u20133 g q12\u201324h i.v.', hinweis: 'nach HD: 1,5 g supplementieren' },
+      'CRRT':  { dosis: '3 g q8h i.v.', hinweis: 'CRRT erh\u00f6ht Clearance; Standard-/leicht erh\u00f6hte Dosis' },
+      'PD':    { dosis: '1,5\u20133 g q12\u201324h i.v.', hinweis: 'wie HD; geringe PD-Clearance' }
     },
     tdm: false, cave: ''
   },
   {
-    name: 'Piperacillin/Tazobactam', brand: 'Tazobac®', gruppe: 'Penicillin/BLI',
+    name: 'Piperacillin/Tazobactam', brand: 'Tazobac\u00ae', gruppe: 'Penicillin/BLI',
     spektrum: ['G+','G-','Ent','PSA','Ana'],
     indikation: 'Sepsis, HAP, Pseudomonas, intraabdominell, febrile Neutropenie',
     dosierung: {
-      '>50':   { dosis: '4,5 g q6–8h i.v.', hinweis: 'q6h bei schwerer Infektion / Pseudomonas' },
+      '>50':   { dosis: '4,5 g q6\u20138h i.v.', hinweis: 'q6h bei schwerer Infektion / Pseudomonas' },
       '30-50': { dosis: '4,5 g q8h i.v.', hinweis: '' },
-      '15-30': { dosis: '4,5 g q8h i.v. (max. 3×/d)', hinweis: '' },
+      '15-30': { dosis: '4,5 g q8h i.v. (max. 3\u00d7/d)', hinweis: '' },
       '<15':   { dosis: '4,5 g q12h i.v.', hinweis: '' },
-      'HD':    { dosis: '2,25–4,5 g q12h i.v.', hinweis: 'nach HD: 0,75 g supplementieren' },
+      'HD':    { dosis: '2,25\u20134,5 g q12h i.v.', hinweis: 'nach HD: 0,75 g supplementieren' },
       'CRRT':  { dosis: '4,5 g q8h i.v.', hinweis: 'CRRT entfernt signifikant; Dosierung wie normale Nierenfunktion empfohlen' },
       'PD':    { dosis: '4,5 g q12h i.v.', hinweis: 'geringe PD-Elimination; wie <15 ml/min' }
     },
-    tdm: false, cave: 'Hypokaliämie möglich'
+    tdm: false, cave: 'Hypokali\u00e4mie m\u00f6glich'
   },
-
   // ===== CEPHALOSPORINE =====
   {
-    name: 'Cefazolin', brand: 'Cefazolin®', gruppe: 'Cephalosporin',
+    name: 'Cefazolin', brand: 'Cefazolin\u00ae', gruppe: 'Cephalosporin',
     spektrum: ['G+','G-'],
     indikation: 'Perioperative Prophylaxe, Haut-/Weichteilinfektion, MSSA-Bakteriämie',
     dosierung: {
       '>50':   { dosis: '2 g q8h i.v. | Prophylaxe: 2 g Einmaldosis', hinweis: '' },
-      '30-50': { dosis: '1–2 g q12h i.v.', hinweis: '' },
-      '15-30': { dosis: '1–2 g q24h i.v.', hinweis: '' },
+      '30-50': { dosis: '1\u20132 g q12h i.v.', hinweis: '' },
+      '15-30': { dosis: '1\u20132 g q24h i.v.', hinweis: '' },
       '<15':   { dosis: '1 g q24h i.v.', hinweis: '' },
-      'HD':    { dosis: '1–2 g nach HD', hinweis: 'nach jeder Dialyse; alternativ 0,5 g q12h' },
-      'CRRT':  { dosis: '2 g q12h i.v.', hinweis: 'CRRT entfernt moderat; Dosisintervall wie eGFR 30–50' },
+      'HD':    { dosis: '1\u20132 g nach HD', hinweis: 'nach jeder Dialyse; alternativ 0,5 g q12h' },
+      'CRRT':  { dosis: '2 g q12h i.v.', hinweis: 'CRRT entfernt moderat; Dosisintervall wie eGFR 30\u201350' },
       'PD':    { dosis: '1 g q24h i.v. | oder i.p. 250 mg/l Dialysat (Peritonitis)', hinweis: 'bei PD-Peritonitis: i.p. Gabe bevorzugen' }
     },
     tdm: false, cave: ''
   },
   {
-    name: 'Cefuroxim', brand: 'Zinacef®', gruppe: 'Cephalosporin',
+    name: 'Cefuroxim', brand: 'Zinacef\u00ae', gruppe: 'Cephalosporin',
     spektrum: ['G+','G-'],
     indikation: 'CAP, HWI, Haut-/Weichteilinfektion (2. Generation)',
     dosierung: {
-      '>50':   { dosis: '750 mg–1,5 g q8h i.v. | 500 mg q12h p.o.', hinweis: '' },
-      '30-50': { dosis: '750 mg–1,5 g q12h i.v. | 500 mg q12h p.o.', hinweis: '' },
-      '15-30': { dosis: '750 mg q12–24h i.v.', hinweis: '' },
+      '>50':   { dosis: '750 mg\u20131,5 g q8h i.v. | 500 mg q12h p.o.', hinweis: '' },
+      '30-50': { dosis: '750 mg\u20131,5 g q12h i.v. | 500 mg q12h p.o.', hinweis: '' },
+      '15-30': { dosis: '750 mg q12\u201324h i.v.', hinweis: '' },
       '<15':   { dosis: '750 mg q24h i.v.', hinweis: '' },
       'HD':    { dosis: '750 mg nach HD', hinweis: 'nach jeder Dialyse' },
-      'CRRT':  { dosis: '750 mg–1,5 g q12h i.v.', hinweis: 'wie eGFR 15–50' },
+      'CRRT':  { dosis: '750 mg\u20131,5 g q12h i.v.', hinweis: 'wie eGFR 15\u201350' },
       'PD':    { dosis: '750 mg q24h i.v.', hinweis: 'wie <15 ml/min; geringe PD-Clearance' }
     },
     tdm: false, cave: ''
   },
   {
-    name: 'Ceftriaxon', brand: 'Rocephin®', gruppe: 'Cephalosporin',
+    name: 'Ceftriaxon', brand: 'Rocephin\u00ae', gruppe: 'Cephalosporin',
     spektrum: ['G+','G-'],
-    indikation: 'CAP, Meningitis, Sepsis, HWI, Gonorrhoe (3. Generation)',
+    indikation: 'CAP, Meningitis, Sepsis, HWI, Gonorrh\u00f6e (3. Generation)',
     dosierung: {
-      '>50':   { dosis: '1–2 g q24h i.v. | Meningitis: 2 g q12h', hinweis: '' },
-      '30-50': { dosis: '1–2 g q24h i.v.', hinweis: 'keine Anpassung nötig' },
-      '15-30': { dosis: '1–2 g q24h i.v.', hinweis: 'keine Anpassung nötig' },
-      '<15':   { dosis: '1–2 g q24h i.v.', hinweis: 'keine Anpassung nötig' },
-      'HD':    { dosis: '1–2 g q24h i.v.', hinweis: 'keine Anpassung (biliäre Elimination ~50%)' },
-      'CRRT':  { dosis: '1–2 g q24h i.v.', hinweis: 'keine Anpassung; biliäre Elimination dominiert' },
-      'PD':    { dosis: '1–2 g q24h i.v.', hinweis: 'keine Anpassung' }
+      '>50':   { dosis: '1\u20132 g q24h i.v. | Meningitis: 2 g q12h', hinweis: '' },
+      '30-50': { dosis: '1\u20132 g q24h i.v.', hinweis: 'keine Anpassung n\u00f6tig' },
+      '15-30': { dosis: '1\u20132 g q24h i.v.', hinweis: 'keine Anpassung n\u00f6tig' },
+      '<15':   { dosis: '1\u20132 g q24h i.v.', hinweis: 'keine Anpassung n\u00f6tig' },
+      'HD':    { dosis: '1\u20132 g q24h i.v.', hinweis: 'keine Anpassung (bili\u00e4re Elimination ~50%)' },
+      'CRRT':  { dosis: '1\u20132 g q24h i.v.', hinweis: 'keine Anpassung; bili\u00e4re Elimination dominiert' },
+      'PD':    { dosis: '1\u20132 g q24h i.v.', hinweis: 'keine Anpassung' }
     },
-    tdm: false, cave: 'Cave: Kalzium-Präzipitate bei paralleler Ca-Infusion; biliäre Elimination → kaum renale Anpassung nötig'
+    tdm: false, cave: 'Cave: Kalzium-Pr\u00e4zipitate bei paralleler Ca-Infusion; bili\u00e4re Elimination \u2192 kaum renale Anpassung n\u00f6tig'
   },
   {
-    name: 'Ceftazidim', brand: 'Fortum®', gruppe: 'Cephalosporin',
+    name: 'Ceftazidim', brand: 'Fortum\u00ae', gruppe: 'Cephalosporin',
     spektrum: ['G-','PSA'],
     indikation: 'Pseudomonas, HAP, febrile Neutropenie, ZNS-Infektionen (3. Gen.)',
     dosierung: {
       '>50':   { dosis: '2 g q8h i.v.', hinweis: '' },
       '30-50': { dosis: '2 g q12h i.v.', hinweis: '' },
       '15-30': { dosis: '2 g q24h i.v.', hinweis: '' },
-      '<15':   { dosis: '1–2 g q24–48h i.v.', hinweis: '' },
+      '<15':   { dosis: '1\u20132 g q24\u201348h i.v.', hinweis: '' },
       'HD':    { dosis: '1 g nach HD', hinweis: 'nach jeder Dialyse; HD entfernt ~50%' },
       'CRRT':  { dosis: '2 g q12h i.v.', hinweis: 'CRRT entfernt signifikant; Dosisintervall anpassen' },
       'PD':    { dosis: '1 g q24h i.v. | i.p.: 250 mg/l Dialysat (Peritonitis)', hinweis: 'bei PD-Peritonitis: i.p. Gabe bevorzugen' }
     },
-    tdm: false, cave: 'Neurotoxizität (Enzephalopathie, Myoklonus) bei Akkumulation — auch unter CRRT möglich!'
+    tdm: false, cave: 'Neurotoxizit\u00e4t (Enzephalopathie, Myoklonus) bei Akkumulation \u2014 auch unter CRRT m\u00f6glich!'
   },
   {
-    name: 'Cefepim', brand: 'Maxipime®', gruppe: 'Cephalosporin',
+    name: 'Cefepim', brand: 'Maxipime\u00ae', gruppe: 'Cephalosporin',
     spektrum: ['G+','G-','PSA'],
     indikation: 'Pseudomonas, HAP, febrile Neutropenie, Gram-negative Sepsis (4. Gen.)',
     dosierung: {
@@ -7883,46 +8181,45 @@ var abxData = [
       '30-50': { dosis: '2 g q12h i.v.', hinweis: '' },
       '15-30': { dosis: '2 g q24h i.v. | oder 1 g q12h', hinweis: '' },
       '<15':   { dosis: '1 g q24h i.v.', hinweis: '' },
-      'HD':    { dosis: '0,5–1 g nach HD', hinweis: 'nach jeder Dialyse; HD entfernt ~68%' },
+      'HD':    { dosis: '0,5\u20131 g nach HD', hinweis: 'nach jeder Dialyse; HD entfernt ~68%' },
       'CRRT':  { dosis: '2 g q12h i.v.', hinweis: 'CRRT entfernt signifikant; Talspiegel-Monitoring empfohlen' },
       'PD':    { dosis: '1 g q24h i.v.', hinweis: 'wie HD; geringe PD-Clearance' }
     },
-    tdm: false, cave: '⚠️ NEUROTOXIZITÄT (Enzephalopathie, nicht-konvulsiver Status epilepticus) bei Akkumulation — auch bei CRRT! Engmaschige neurologische Überwachung'
+    tdm: false, cave: '\u26a0\ufe0f NEUROTOXIZIT\u00c4T (Enzephalopathie, nicht-konvulsiver Status epilepticus) bei Akkumulation \u2014 auch bei CRRT! Engmaschige neurologische \u00dcberwachung'
   },
-
   // ===== CARBAPENEME =====
   {
-    name: 'Meropenem', brand: 'Meronem®', gruppe: 'Carbapenem',
+    name: 'Meropenem', brand: 'Meronem\u00ae', gruppe: 'Carbapenem',
     spektrum: ['G+','G-','Ent','PSA','Ana'],
     indikation: 'Schwere Sepsis, ESBL, Pseudomonas, HAP, intraabdominell, Meningitis',
     dosierung: {
       '>50':   { dosis: '1 g q8h i.v. | schwere/Meningitis: 2 g q8h', hinweis: '' },
       '30-50': { dosis: '1 g q12h i.v. | schwere: 2 g q12h', hinweis: '' },
       '15-30': { dosis: '1 g q12h i.v.', hinweis: '' },
-      '<15':   { dosis: '500 mg–1 g q12–24h i.v.', hinweis: '' },
-      'HD':    { dosis: '500 mg–1 g q24h i.v.', hinweis: 'nach HD supplementieren' },
-      'CRRT':  { dosis: '1 g q8–12h i.v. | schwere Infektion: 2 g q8–12h', hinweis: 'CRRT entfernt signifikant; Standard-Dosierung meist ausreichend' },
-      'PD':    { dosis: '500 mg–1 g q12–24h i.v.', hinweis: 'wie <15 ml/min; geringe PD-Clearance' }
+      '<15':   { dosis: '500 mg\u20131 g q12\u201324h i.v.', hinweis: '' },
+      'HD':    { dosis: '500 mg\u20131 g q24h i.v.', hinweis: 'nach HD supplementieren' },
+      'CRRT':  { dosis: '1 g q8\u201312h i.v. | schwere Infektion: 2 g q8\u201312h', hinweis: 'CRRT entfernt signifikant; Standard-Dosierung meist ausreichend' },
+      'PD':    { dosis: '500 mg\u20131 g q12\u201324h i.v.', hinweis: 'wie <15 ml/min; geringe PD-Clearance' }
     },
     tdm: false, cave: ''
   },
   {
-    name: 'Imipenem/Cilastatin', brand: 'Zienam®', gruppe: 'Carbapenem',
+    name: 'Imipenem/Cilastatin', brand: 'Zienam\u00ae', gruppe: 'Carbapenem',
     spektrum: ['G+','G-','Ent','PSA','Ana'],
     indikation: 'Schwere Sepsis, ESBL, polymikrobielle Infektionen, Nokardiose',
     dosierung: {
       '>50':   { dosis: '500 mg q6h i.v. | oder 1 g q8h', hinweis: '' },
       '30-50': { dosis: '500 mg q8h i.v.', hinweis: '' },
       '15-30': { dosis: '500 mg q12h i.v.', hinweis: '' },
-      '<15':   { dosis: '250–500 mg q12h i.v.', hinweis: '' },
+      '<15':   { dosis: '250\u2013500 mg q12h i.v.', hinweis: '' },
       'HD':    { dosis: '250 mg q12h i.v.', hinweis: 'nach HD supplementieren' },
-      'CRRT':  { dosis: '500 mg q8h i.v.', hinweis: 'CRRT entfernt ~30–50%; wie eGFR 30–50 dosieren' },
+      'CRRT':  { dosis: '500 mg q8h i.v.', hinweis: 'CRRT entfernt ~30\u201350%; wie eGFR 30\u201350 dosieren' },
       'PD':    { dosis: '250 mg q12h i.v.', hinweis: 'wie HD; geringe PD-Clearance' }
     },
-    tdm: false, cave: '⚠️ Krampfanfallrisiko bei hohen Dosen / Akkumulation (Epilepsie-Vorgeschichte: Meropenem bevorzugen)'
+    tdm: false, cave: '\u26a0\ufe0f Krampfanfallrisiko bei hohen Dosen / Akkumulation (Epilepsie-Vorgeschichte: Meropenem bevorzugen)'
   },
   {
-    name: 'Ertapenem', brand: 'Invanz®', gruppe: 'Carbapenem',
+    name: 'Ertapenem', brand: 'Invanz\u00ae', gruppe: 'Carbapenem',
     spektrum: ['G+','G-','Ana'],
     indikation: 'Ambulant erworbene Infektionen, ESBL, intraabdominell (KEIN Pseudomonas!)',
     dosierung: {
@@ -7934,42 +8231,41 @@ var abxData = [
       'CRRT':  { dosis: '500 mg q24h i.v.', hinweis: 'CRRT entfernt moderat; wie eGFR <30 dosieren' },
       'PD':    { dosis: '500 mg q24h i.v.', hinweis: 'wie HD; geringe PD-Clearance' }
     },
-    tdm: false, cave: 'Kein Pseudomonas-Spektrum; 1× tägliche Gabe vereinfacht Therapie'
+    tdm: false, cave: 'Kein Pseudomonas-Spektrum; 1\u00d7 t\u00e4gliche Gabe vereinfacht Therapie'
   },
-
   // ===== FLUORCHINOLONE =====
   {
-    name: 'Ciprofloxacin', brand: 'Ciprobay®', gruppe: 'Fluorchinolon',
+    name: 'Ciprofloxacin', brand: 'Ciprobay\u00ae', gruppe: 'Fluorchinolon',
     spektrum: ['G+','G-','Aty','PSA'],
-    indikation: 'HWI, Reisediarrhö, Pseudomonas (Gruppe 2), Knochen-/Gelenkinfektion',
+    indikation: 'HWI, Reisediarr\u00f6, Pseudomonas (Gruppe 2), Knochen-/Gelenkinfektion',
     dosierung: {
-      '>50':   { dosis: '400 mg q8–12h i.v. | 500–750 mg q12h p.o.', hinweis: '' },
+      '>50':   { dosis: '400 mg q8\u201312h i.v. | 500\u2013750 mg q12h p.o.', hinweis: '' },
       '30-50': { dosis: '400 mg q12h i.v. | 500 mg q12h p.o.', hinweis: '' },
-      '15-30': { dosis: '200–400 mg q12h i.v. | 250–500 mg q12h p.o.', hinweis: '' },
-      '<15':   { dosis: '200–400 mg q12h i.v. | 250–500 mg q12h p.o.', hinweis: '' },
-      'HD':    { dosis: '200 mg q12h i.v.', hinweis: 'nach HD: zusätzlich 200 mg; HD entfernt ~10%' },
-      'CRRT':  { dosis: '400 mg q12h i.v.', hinweis: 'CRRT entfernt ~15–20%; wie eGFR 15–50' },
-      'PD':    { dosis: '200–400 mg q12h i.v.', hinweis: 'geringe PD-Clearance; Dosierung wie HD' }
+      '15-30': { dosis: '200\u2013400 mg q12h i.v. | 250\u2013500 mg q12h p.o.', hinweis: '' },
+      '<15':   { dosis: '200\u2013400 mg q12h i.v. | 250\u2013500 mg q12h p.o.', hinweis: '' },
+      'HD':    { dosis: '200 mg q12h i.v.', hinweis: 'nach HD: zus\u00e4tzlich 200 mg; HD entfernt ~10%' },
+      'CRRT':  { dosis: '400 mg q12h i.v.', hinweis: 'CRRT entfernt ~15\u201320%; wie eGFR 15\u201350' },
+      'PD':    { dosis: '200\u2013400 mg q12h i.v.', hinweis: 'geringe PD-Clearance; Dosierung wie HD' }
     },
-    tdm: false, cave: 'QTc-Verlängerung; Sehnenrupturrisiko; Interaktionen (Antazida, Eisenpräparate, Warfarin)'
+    tdm: false, cave: 'QTc-Verl\u00e4ngerung; Sehnenrupturrisiko; Interaktionen (Antazida, Eisenpr\u00e4parate, Warfarin)'
   },
   {
-    name: 'Levofloxacin', brand: 'Tavanic®', gruppe: 'Fluorchinolon',
+    name: 'Levofloxacin', brand: 'Tavanic\u00ae', gruppe: 'Fluorchinolon',
     spektrum: ['G+','G-','Aty','PSA'],
     indikation: 'CAP, ABECB, HWI, atypische Erreger, Legionella (Gruppe 3)',
     dosierung: {
       '>50':   { dosis: '500 mg q24h i.v./p.o. | schwere CAP: 500 mg q12h', hinweis: '' },
-      '30-50': { dosis: '500 mg 1× ED, dann 250 mg q24h', hinweis: '' },
-      '15-30': { dosis: '500 mg 1× ED, dann 125–250 mg q24h', hinweis: '' },
-      '<15':   { dosis: '500 mg 1× ED, dann 125 mg q24h', hinweis: '' },
-      'HD':    { dosis: '500 mg 1× ED, dann 125 mg q24h', hinweis: 'keine zusätzliche Supplementierung nach HD' },
-      'CRRT':  { dosis: '500 mg 1× ED, dann 250 mg q24h', hinweis: 'CRRT entfernt ~15%; etwas höhere Erhaltungsdosis als bei HD' },
-      'PD':    { dosis: '500 mg 1× ED, dann 125 mg q24h', hinweis: 'wie HD; geringe PD-Clearance' }
+      '30-50': { dosis: '500 mg 1\u00d7 ED, dann 250 mg q24h', hinweis: '' },
+      '15-30': { dosis: '500 mg 1\u00d7 ED, dann 125\u2013250 mg q24h', hinweis: '' },
+      '<15':   { dosis: '500 mg 1\u00d7 ED, dann 125 mg q24h', hinweis: '' },
+      'HD':    { dosis: '500 mg 1\u00d7 ED, dann 125 mg q24h', hinweis: 'keine zus\u00e4tzliche Supplementierung nach HD' },
+      'CRRT':  { dosis: '500 mg 1\u00d7 ED, dann 250 mg q24h', hinweis: 'CRRT entfernt ~15%; etwas h\u00f6here Erhaltungsdosis als bei HD' },
+      'PD':    { dosis: '500 mg 1\u00d7 ED, dann 125 mg q24h', hinweis: 'wie HD; geringe PD-Clearance' }
     },
-    tdm: false, cave: 'QTc-Verlängerung; bessere Pneumokokken-Wirksamkeit als Ciprofloxacin'
+    tdm: false, cave: 'QTc-Verl\u00e4ngerung; bessere Pneumokokken-Wirksamkeit als Ciprofloxacin'
   },
   {
-    name: 'Moxifloxacin', brand: 'Avalox®', gruppe: 'Fluorchinolon',
+    name: 'Moxifloxacin', brand: 'Avalox\u00ae', gruppe: 'Fluorchinolon',
     spektrum: ['G+','G-','Aty','Ana'],
     indikation: 'CAP, ABECB, intraabdominell, Anaerobier (Gruppe 4)',
     dosierung: {
@@ -7977,155 +8273,152 @@ var abxData = [
       '30-50': { dosis: '400 mg q24h i.v./p.o.', hinweis: 'keine Anpassung (hepatisch)' },
       '15-30': { dosis: '400 mg q24h i.v./p.o.', hinweis: 'keine Anpassung' },
       '<15':   { dosis: '400 mg q24h i.v./p.o.', hinweis: 'keine Anpassung' },
-      'HD':    { dosis: '400 mg q24h i.v./p.o.', hinweis: 'keine Anpassung (biliäre/intestinale Elimination)' },
+      'HD':    { dosis: '400 mg q24h i.v./p.o.', hinweis: 'keine Anpassung (bili\u00e4re/intestinale Elimination)' },
       'CRRT':  { dosis: '400 mg q24h i.v./p.o.', hinweis: 'keine Anpassung; hepatische Elimination dominiert' },
       'PD':    { dosis: '400 mg q24h i.v./p.o.', hinweis: 'keine Anpassung' }
     },
-    tdm: false, cave: '⚠️ QTc-Verlängerung (stärker als Cipro/Levo); kontraindiziert bei bekannter QT-Verlängerung'
+    tdm: false, cave: '\u26a0\ufe0f QTc-Verl\u00e4ngerung (st\u00e4rker als Cipro/Levo); kontraindiziert bei bekannter QT-Verl\u00e4ngerung'
   },
-
   // ===== GLYKOPEPTIDE =====
   {
-    name: 'Vancomycin', brand: 'Vancomycin®', gruppe: 'Glykopeptid',
+    name: 'Vancomycin', brand: 'Vancomycin\u00ae', gruppe: 'Glykopeptid',
     spektrum: ['G+','Ent'],
     indikation: 'MRSA, Koagulase-neg. Staph., Enterokokken, penicillinresistente Grampositive',
     dosierung: {
-      '>50':   { dosis: '15–20 mg/kg q8–12h i.v.', hinweis: 'TDM obligat; AUC/MIC-Ziel 400–600 mg·h/l' },
-      '30-50': { dosis: '15–20 mg/kg q12–24h i.v.', hinweis: 'verlängertes Intervall; TDM vor jeder Gabe' },
-      '15-30': { dosis: '15–20 mg/kg q24–48h i.v.', hinweis: 'Intervall nach Spiegel; TDM obligat' },
-      '<15':   { dosis: '15–20 mg/kg q48–72h i.v.', hinweis: 'stark verlängerte Intervalle; nur nach TDM' },
-      'HD':    { dosis: '15–20 mg/kg nach HD', hinweis: 'high-flux HD entfernt 30–40%; Spiegel vor nächster Gabe; low-flux: kaum Entfernung' },
-      'CRRT':  { dosis: '15–20 mg/kg Ladedosis, dann 10–15 mg/kg q24–48h', hinweis: '⚠️ Hohe Variabilität je nach CRRT-Modus + Flussrate! TDM zwingend obligat; Ziel-Talspiegel 15–20 mg/l' },
-      'PD':    { dosis: '15–20 mg/kg q4–7d i.v. | bei PD-Peritonitis: 30 mg/kg i.p. im Wechselbeutel', hinweis: 'sehr geringe PD-Clearance (~10–15 ml/min); Spiegel wöchentlich; i.p. Gabe bei Peritonitis bevorzugt' }
+      '>50':   { dosis: '15\u201320 mg/kg q8\u201312h i.v.', hinweis: 'TDM obligat; AUC/MIC-Ziel 400\u2013600 mg\u00b7h/l' },
+      '30-50': { dosis: '15\u201320 mg/kg q12\u201324h i.v.', hinweis: 'verl\u00e4ngertes Intervall; TDM vor jeder Gabe' },
+      '15-30': { dosis: '15\u201320 mg/kg q24\u201348h i.v.', hinweis: 'Intervall nach Spiegel; TDM obligat' },
+      '<15':   { dosis: '15\u201320 mg/kg q48\u201372h i.v.', hinweis: 'stark verl\u00e4ngerte Intervalle; nur nach TDM' },
+      'HD':    { dosis: '15\u201320 mg/kg nach HD', hinweis: 'high-flux HD entfernt 30\u201340%; Spiegel vor n\u00e4chster Gabe; low-flux: kaum Entfernung' },
+      'CRRT':  { dosis: '15\u201320 mg/kg Ladedosis, dann 10\u201315 mg/kg q24\u201348h', hinweis: '\u26a0\ufe0f Hohe Variabilit\u00e4t je nach CRRT-Modus + Flussrate! TDM zwingend obligat; Ziel-Talspiegel 15\u201320 mg/l' },
+      'PD':    { dosis: '15\u201320 mg/kg q4\u20137d i.v. | bei PD-Peritonitis: 30 mg/kg i.p. im Wechselbeutel', hinweis: 'sehr geringe PD-Clearance (~10\u201315 ml/min); Spiegel w\u00f6chentlich; i.p. Gabe bei Peritonitis bevorzugt' }
     },
-    tdm: true, cave: 'Nephrotoxizität (besonders mit Aminoglykosiden/Schleifendiuretika); Ototoxizität; Red-Man-Syndrom (Infusion ≥60 min)'
+    tdm: true, cave: 'Nephrotoxizit\u00e4t (besonders mit Aminoglykosiden/Schleifendiuretika); Ototoxizit\u00e4t; Red-Man-Syndrom (Infusion \u226560 min)'
   },
   {
-    name: 'Teicoplanin', brand: 'Targocid®', gruppe: 'Glykopeptid',
+    name: 'Teicoplanin', brand: 'Targocid\u00ae', gruppe: 'Glykopeptid',
     spektrum: ['G+','Ent'],
     indikation: 'MRSA, Gram-positive Infektionen (Alternative zu Vancomycin)',
     dosierung: {
-      '>50':   { dosis: 'Loading: 6–10 mg/kg q12h × 3 Dosen, dann 6–10 mg/kg q24h i.v.', hinweis: 'TDM empfohlen' },
-      '30-50': { dosis: 'Loading wie normal, ab Tag 4: 6–10 mg/kg q48h', hinweis: 'Talspiegel >10 mg/l' },
-      '15-30': { dosis: 'Loading wie normal, ab Tag 4: 6–10 mg/kg q72h', hinweis: 'TDM obligat' },
-      '<15':   { dosis: 'Loading wie normal, ab Tag 4–7: 6–10 mg/kg q72h', hinweis: 'nach Spiegel titrieren' },
-      'HD':    { dosis: '6–10 mg/kg q72h i.v.', hinweis: 'kaum dialysierbar; Talspiegel-basierte Dosierung' },
-      'CRRT':  { dosis: 'Loading wie normal, dann 6–10 mg/kg q24–48h', hinweis: 'CRRT entfernt wenig; TDM obligat; Intervall nach Spiegel' },
-      'PD':    { dosis: '6–10 mg/kg q48–72h i.v.', hinweis: 'kaum PD-dialysierbar; wie <15 ml/min dosieren; TDM' }
+      '>50':   { dosis: 'Loading: 6\u201310 mg/kg q12h \u00d7 3 Dosen, dann 6\u201310 mg/kg q24h i.v.', hinweis: 'TDM empfohlen' },
+      '30-50': { dosis: 'Loading wie normal, ab Tag 4: 6\u201310 mg/kg q48h', hinweis: 'Talspiegel >10 mg/l' },
+      '15-30': { dosis: 'Loading wie normal, ab Tag 4: 6\u201310 mg/kg q72h', hinweis: 'TDM obligat' },
+      '<15':   { dosis: 'Loading wie normal, ab Tag 4\u20137: 6\u201310 mg/kg q72h', hinweis: 'nach Spiegel titrieren' },
+      'HD':    { dosis: '6\u201310 mg/kg q72h i.v.', hinweis: 'kaum dialysierbar; Talspiegel-basierte Dosierung' },
+      'CRRT':  { dosis: 'Loading wie normal, dann 6\u201310 mg/kg q24\u201348h', hinweis: 'CRRT entfernt wenig; TDM obligat; Intervall nach Spiegel' },
+      'PD':    { dosis: '6\u201310 mg/kg q48\u201372h i.v.', hinweis: 'kaum PD-dialysierbar; wie <15 ml/min dosieren; TDM' }
     },
     tdm: true, cave: 'Talspiegel: >10 mg/l (leicht), >20 mg/l (Endokarditis/Knochen/Sepsis)'
   },
-
   // ===== AMINOGLYKOSIDE =====
   {
-    name: 'Gentamicin', brand: 'Gentamicin®', gruppe: 'Aminoglykosid',
+    name: 'Gentamicin', brand: 'Gentamicin\u00ae', gruppe: 'Aminoglykosid',
     spektrum: ['G+','G-','Ent','PSA'],
-    indikation: 'Synergistisch bei Endokarditis, Gram-negative Sepsis, Tularämie',
+    indikation: 'Synergistisch bei Endokarditis, Gram-negative Sepsis, Tular\u00e4mie',
     dosierung: {
-      '>50':   { dosis: '5–7 mg/kg q24h i.v. (Extended-Interval)', hinweis: 'TDM: Peak 1h: 15–20 mg/l; Talspiegel <1 mg/l' },
-      '30-50': { dosis: '4–5 mg/kg q24–36h i.v.', hinweis: 'TDM vor jeder Gabe; Talspiegel <1 mg/l' },
-      '15-30': { dosis: '3–4 mg/kg q48h i.v.', hinweis: 'TDM obligat; Intervall bis Talspiegel <1 mg/l' },
-      '<15':   { dosis: '2–3 mg/kg q48–72h i.v.', hinweis: 'nur nach TDM; möglichst vermeiden' },
-      'HD':    { dosis: '1,5–2 mg/kg nach HD', hinweis: 'HD entfernt ~50%; TDM nach jeder Gabe' },
-      'CRRT':  { dosis: '2–3 mg/kg q24–36h i.v.', hinweis: '⚠️ CRRT erhöht Clearance signifikant; TDM zwingend obligat; Talspiegel <1 mg/l vor jeder Gabe sicherstellen!' },
-      'PD':    { dosis: '1,5–2 mg/kg q24–48h i.v.', hinweis: 'geringe PD-Clearance; TDM obligat; möglichst vermeiden' }
+      '>50':   { dosis: '5\u20137 mg/kg q24h i.v. (Extended-Interval)', hinweis: 'TDM: Peak 1h: 15\u201320 mg/l; Talspiegel <1 mg/l' },
+      '30-50': { dosis: '4\u20135 mg/kg q24\u201336h i.v.', hinweis: 'TDM vor jeder Gabe; Talspiegel <1 mg/l' },
+      '15-30': { dosis: '3\u20134 mg/kg q48h i.v.', hinweis: 'TDM obligat; Intervall bis Talspiegel <1 mg/l' },
+      '<15':   { dosis: '2\u20133 mg/kg q48\u201372h i.v.', hinweis: 'nur nach TDM; m\u00f6glichst vermeiden' },
+      'HD':    { dosis: '1,5\u20132 mg/kg nach HD', hinweis: 'HD entfernt ~50%; TDM nach jeder Gabe' },
+      'CRRT':  { dosis: '2\u20133 mg/kg q24\u201336h i.v.', hinweis: '\u26a0\ufe0f CRRT erh\u00f6ht Clearance signifikant; TDM zwingend obligat; Talspiegel <1 mg/l vor jeder Gabe sicherstellen!' },
+      'PD':    { dosis: '1,5\u20132 mg/kg q24\u201348h i.v.', hinweis: 'geringe PD-Clearance; TDM obligat; m\u00f6glichst vermeiden' }
     },
-    tdm: true, cave: '⚠️ Nephrotoxizität + Ototoxizität (kumulativ, irreversibel!); kurze Therapiedauer (<5 Tage); Kombination mit Vancomycin vermeiden'
+    tdm: true, cave: '\u26a0\ufe0f Nephrotoxizit\u00e4t + Ototoxizit\u00e4t (kumulativ, irreversibel!); kurze Therapiedauer (<5 Tage); Kombination mit Vancomycin vermeiden'
   },
   {
-    name: 'Tobramycin', brand: 'Gernebcin®', gruppe: 'Aminoglykosid',
+    name: 'Tobramycin', brand: 'Gernebcin\u00ae', gruppe: 'Aminoglykosid',
     spektrum: ['G-','PSA'],
     indikation: 'Pseudomonas (besser als Gentamicin), gram-negative Infektionen',
     dosierung: {
-      '>50':   { dosis: '5–7 mg/kg q24h i.v. (Extended-Interval)', hinweis: 'TDM; Peak 15–20 mg/l; Talspiegel <1 mg/l' },
-      '30-50': { dosis: '4–5 mg/kg q24–36h i.v.', hinweis: 'TDM obligat' },
-      '15-30': { dosis: '3–4 mg/kg q48h i.v.', hinweis: 'TDM obligat' },
-      '<15':   { dosis: '2–3 mg/kg q48–72h i.v.', hinweis: 'TDM; möglichst vermeiden' },
-      'HD':    { dosis: '1,5–2 mg/kg nach HD', hinweis: 'HD entfernt ~50%; TDM nach Gabe' },
-      'CRRT':  { dosis: '2–3 mg/kg q24–36h i.v.', hinweis: 'wie Gentamicin; TDM zwingend; Talspiegel <1 mg/l vor Gabe' },
-      'PD':    { dosis: '1,5–2 mg/kg q24–48h i.v.', hinweis: 'geringe PD-Clearance; TDM obligat' }
+      '>50':   { dosis: '5\u20137 mg/kg q24h i.v. (Extended-Interval)', hinweis: 'TDM; Peak 15\u201320 mg/l; Talspiegel <1 mg/l' },
+      '30-50': { dosis: '4\u20135 mg/kg q24\u201336h i.v.', hinweis: 'TDM obligat' },
+      '15-30': { dosis: '3\u20134 mg/kg q48h i.v.', hinweis: 'TDM obligat' },
+      '<15':   { dosis: '2\u20133 mg/kg q48\u201372h i.v.', hinweis: 'TDM; m\u00f6glichst vermeiden' },
+      'HD':    { dosis: '1,5\u20132 mg/kg nach HD', hinweis: 'HD entfernt ~50%; TDM nach Gabe' },
+      'CRRT':  { dosis: '2\u20133 mg/kg q24\u201336h i.v.', hinweis: 'wie Gentamicin; TDM zwingend; Talspiegel <1 mg/l vor Gabe' },
+      'PD':    { dosis: '1,5\u20132 mg/kg q24\u201348h i.v.', hinweis: 'geringe PD-Clearance; TDM obligat' }
     },
-    tdm: true, cave: 'Gleiche Toxizität wie Gentamicin; bevorzugt bei Pseudomonas-Verdacht'
+    tdm: true, cave: 'Gleiche Toxizit\u00e4t wie Gentamicin; bevorzugt bei Pseudomonas-Verdacht'
   },
-
   // ===== SONSTIGE =====
   {
-    name: 'Metronidazol', brand: 'Flagyl® / Clont®', gruppe: 'Sonstige',
+    name: 'Metronidazol', brand: 'Flagyl\u00ae / Clont\u00ae', gruppe: 'Sonstige',
     spektrum: ['Ana'],
-    indikation: 'Anaerobier, C. difficile (p.o.), Trichomoniasis, Amöben, Giardia',
+    indikation: 'Anaerobier, C. difficile (p.o.), Trichomoniasis, Am\u00f6ben, Giardia',
     dosierung: {
       '>50':   { dosis: '500 mg q8h i.v./p.o. | C. diff: 400 mg q8h p.o.', hinweis: '' },
       '30-50': { dosis: '500 mg q8h i.v./p.o.', hinweis: 'keine Anpassung' },
       '15-30': { dosis: '500 mg q8h i.v./p.o.', hinweis: 'keine Anpassung' },
-      '<15':   { dosis: '500 mg q8–12h i.v./p.o.', hinweis: 'Metaboliten akkumulieren; Langzeittherapie überwachen' },
-      'HD':    { dosis: '500 mg q8h i.v./p.o.', hinweis: 'nach HD keine zusätzliche Supplementierung; hepatisch' },
-      'CRRT':  { dosis: '500 mg q8h i.v./p.o.', hinweis: 'keine Anpassung nötig; hepatische Elimination dominiert' },
+      '<15':   { dosis: '500 mg q8\u201312h i.v./p.o.', hinweis: 'Metaboliten akkumulieren; Langzeittherapie \u00fcberwachen' },
+      'HD':    { dosis: '500 mg q8h i.v./p.o.', hinweis: 'nach HD keine zus\u00e4tzliche Supplementierung; hepatisch' },
+      'CRRT':  { dosis: '500 mg q8h i.v./p.o.', hinweis: 'keine Anpassung n\u00f6tig; hepatische Elimination dominiert' },
       'PD':    { dosis: '500 mg q8h i.v./p.o.', hinweis: 'keine Anpassung; geringe PD-Clearance' }
     },
     tdm: false, cave: 'Aktive Metaboliten akkumulieren bei CKD; periphere Neuropathie bei Langzeittherapie; kein Alkohol'
   },
   {
-    name: 'Clindamycin', brand: 'Sobelin®', gruppe: 'Sonstige',
+    name: 'Clindamycin', brand: 'Sobelin\u00ae', gruppe: 'Sonstige',
     spektrum: ['G+','Ana'],
     indikation: 'Gram-positive, Anaerobier, Weichteilinfektionen, Knochen, MRSA-Haut (p.o.)',
     dosierung: {
-      '>50':   { dosis: '600–900 mg q8h i.v. | 300–450 mg q8h p.o.', hinweis: '' },
-      '30-50': { dosis: '600–900 mg q8h i.v.', hinweis: 'keine Anpassung' },
-      '15-30': { dosis: '600–900 mg q8h i.v.', hinweis: 'keine Anpassung' },
-      '<15':   { dosis: '600–900 mg q8h i.v.', hinweis: 'keine Anpassung (hepatisch)' },
-      'HD':    { dosis: '600–900 mg q8h i.v.', hinweis: 'keine Anpassung; kaum dialysierbar' },
-      'CRRT':  { dosis: '600–900 mg q8h i.v.', hinweis: 'keine Anpassung; hepatische Elimination dominiert' },
-      'PD':    { dosis: '600–900 mg q8h i.v.', hinweis: 'keine Anpassung' }
+      '>50':   { dosis: '600\u2013900 mg q8h i.v. | 300\u2013450 mg q8h p.o.', hinweis: '' },
+      '30-50': { dosis: '600\u2013900 mg q8h i.v.', hinweis: 'keine Anpassung' },
+      '15-30': { dosis: '600\u2013900 mg q8h i.v.', hinweis: 'keine Anpassung' },
+      '<15':   { dosis: '600\u2013900 mg q8h i.v.', hinweis: 'keine Anpassung (hepatisch)' },
+      'HD':    { dosis: '600\u2013900 mg q8h i.v.', hinweis: 'keine Anpassung; kaum dialysierbar' },
+      'CRRT':  { dosis: '600\u2013900 mg q8h i.v.', hinweis: 'keine Anpassung; hepatische Elimination dominiert' },
+      'PD':    { dosis: '600\u2013900 mg q8h i.v.', hinweis: 'keine Anpassung' }
     },
-    tdm: false, cave: '⚠️ Hohes C.-difficile-Risiko; bei Diarrhö sofort absetzen'
+    tdm: false, cave: '\u26a0\ufe0f Hohes C.-difficile-Risiko; bei Diarr\u00f6 sofort absetzen'
   },
   {
-    name: 'Cotrimoxazol (TMP/SMX)', brand: 'Bactrim® / Cotrim®', gruppe: 'Sonstige',
+    name: 'Cotrimoxazol (TMP/SMX)', brand: 'Bactrim\u00ae / Cotrim\u00ae', gruppe: 'Sonstige',
     spektrum: ['G+','G-'],
     indikation: 'HWI (unkompliziert), PCP-Prophylaxe/-Therapie, Nokardiose, MRSA-HWI',
     dosierung: {
       '>50':   { dosis: 'HWI: 160/800 mg q12h p.o. | PCP-Therapie: 5 mg/kg TMP q6h i.v.', hinweis: '' },
-      '30-50': { dosis: '160/800 mg q12h p.o.', hinweis: 'volle Dosis für 7–10d möglich' },
-      '15-30': { dosis: '50% Dosis oder q24h | PCP: reduziert unter TDM', hinweis: 'erhöhtes Hyperkaliämie-Risiko' },
+      '30-50': { dosis: '160/800 mg q12h p.o.', hinweis: 'volle Dosis f\u00fcr 7\u201310d m\u00f6glich' },
+      '15-30': { dosis: '50% Dosis oder q24h | PCP: reduziert unter TDM', hinweis: 'erh\u00f6htes Hyperkali\u00e4mie-Risiko' },
       '<15':   { dosis: 'KONTRAINDIZIERT bei HWI', hinweis: 'nur PCP (lebensrettend) unter engem Monitoring' },
       'HD':    { dosis: 'KONTRAINDIZIERT Standardtherapie', hinweis: 'TMP partiell dialysierbar; nur PCP in Notfall' },
-      'CRRT':  { dosis: 'PCP: 5 mg/kg TMP q8–12h i.v.', hinweis: 'CRRT erhöht Clearance; bei PCP Standard-Dosierung möglich; HWI-Therapie nicht geeignet; TDM/K⁺-Monitoring!' },
-      'PD':    { dosis: 'KONTRAINDIZIERT bei HWI', hinweis: 'nur PCP in Notfall; wie HD dosieren; Hyperkaliämie-Risiko hoch' }
+      'CRRT':  { dosis: 'PCP: 5 mg/kg TMP q8\u201312h i.v.', hinweis: 'CRRT erh\u00f6ht Clearance; bei PCP Standard-Dosierung m\u00f6glich; HWI-Therapie nicht geeignet; TDM/K\u207a-Monitoring!' },
+      'PD':    { dosis: 'KONTRAINDIZIERT bei HWI', hinweis: 'nur PCP in Notfall; wie HD dosieren; Hyperkali\u00e4mie-Risiko hoch' }
     },
-    tdm: false, cave: '⚠️ HYPERKALIÄMIE (TMP blockiert ENaC); ⚠️ Falscher Kreatinin-Anstieg (kein echter GFR-Abfall); Folsäuremangel, Knochenmarksuppression'
+    tdm: false, cave: '\u26a0\ufe0f HYPERKALI\u00c4MIE (TMP blockiert ENaC); \u26a0\ufe0f Falscher Kreatinin-Anstieg (kein echter GFR-Abfall); Folsäuremangel, Knochenmarksuppression'
   },
   {
-    name: 'Nitrofurantoin', brand: 'Furadantin® / Nifurantin®', gruppe: 'Sonstige',
+    name: 'Nitrofurantoin', brand: 'Furadantin\u00ae / Nifurantin\u00ae', gruppe: 'Sonstige',
     spektrum: ['G+','G-','Ent'],
     indikation: 'Unkomplizierter HWI (nur untere HWI, kein Gewebepenetration!)',
     dosierung: {
-      '>50':   { dosis: '50–100 mg q6h p.o. × 5–7 Tage', hinweis: 'nur bei eGFR >45' },
-      '30-50': { dosis: '50 mg q6h p.o.', hinweis: 'eGFR 45–50 noch möglich' },
+      '>50':   { dosis: '50\u2013100 mg q6h p.o. \u00d7 5\u20137 Tage', hinweis: 'nur bei eGFR >45' },
+      '30-50': { dosis: '50 mg q6h p.o.', hinweis: 'eGFR 45\u201350 noch m\u00f6glich' },
       '15-30': { dosis: 'KONTRAINDIZIERT', hinweis: 'kein therapeutischer Urin-Spiegel; Metaboliten-Akkumulation' },
       '<15':   { dosis: 'KONTRAINDIZIERT', hinweis: 'absolut kontraindiziert' },
       'HD':    { dosis: 'KONTRAINDIZIERT', hinweis: 'absolut kontraindiziert' },
       'CRRT':  { dosis: 'KONTRAINDIZIERT', hinweis: 'absolut kontraindiziert' },
       'PD':    { dosis: 'KONTRAINDIZIERT', hinweis: 'absolut kontraindiziert' }
     },
-    tdm: false, cave: '⚠️ KONTRAINDIZIERT bei eGFR <45; Lungenfibrose, Polyneuropathie; CAVE: häufig trotzdem verschrieben!'
+    tdm: false, cave: '\u26a0\ufe0f KONTRAINDIZIERT bei eGFR <45; Lungenfibrose, Polyneuropathie; CAVE: h\u00e4ufig trotzdem verschrieben!'
   },
   {
-    name: 'Fosfomycin i.v.', brand: 'Infectofos®', gruppe: 'Sonstige',
+    name: 'Fosfomycin i.v.', brand: 'Infectofos\u00ae', gruppe: 'Sonstige',
     spektrum: ['G+','G-'],
     indikation: 'ESBL, komplizierte HWI, Knochen, Kombinationstherapie (immer Kombination!)',
     dosierung: {
-      '>50':   { dosis: '8–12 g q6–8h i.v. (200 mg/kg/d)', hinweis: 'immer in Kombination' },
-      '30-50': { dosis: '8 g q8–12h i.v.', hinweis: '' },
-      '15-30': { dosis: '4–8 g q12h i.v.', hinweis: '' },
-      '<15':   { dosis: '2–4 g q12–24h i.v.', hinweis: '' },
-      'HD':    { dosis: '2–4 g nach HD', hinweis: 'HD entfernt ~80%; nach Dialyse supplementieren' },
-      'CRRT':  { dosis: '4–8 g q12h i.v.', hinweis: 'CRRT entfernt signifikant (~80% renale Elimination); Na-Bilanz beachten!' },
-      'PD':    { dosis: '2–4 g q12–24h i.v.', hinweis: 'geringe PD-Clearance; wie <15 ml/min; Na-Bilanz beachten!' }
+      '>50':   { dosis: '8\u201312 g q6\u20138h i.v. (200 mg/kg/d)', hinweis: 'immer in Kombination' },
+      '30-50': { dosis: '8 g q8\u201312h i.v.', hinweis: '' },
+      '15-30': { dosis: '4\u20138 g q12h i.v.', hinweis: '' },
+      '<15':   { dosis: '2\u20134 g q12\u201324h i.v.', hinweis: '' },
+      'HD':    { dosis: '2\u20134 g nach HD', hinweis: 'HD entfernt ~80%; nach Dialyse supplementieren' },
+      'CRRT':  { dosis: '4\u20138 g q12h i.v.', hinweis: 'CRRT entfernt signifikant (~80% renale Elimination); Na-Bilanz beachten!' },
+      'PD':    { dosis: '2\u20134 g q12\u201324h i.v.', hinweis: 'geringe PD-Clearance; wie <15 ml/min; Na-Bilanz beachten!' }
     },
-    tdm: false, cave: '⚠️ Hoher Natriumgehalt (~14,4 mmol Na/g) → Na-Bilanz bei HI/CKD; immer in Kombination'
+    tdm: false, cave: '\u26a0\ufe0f Hoher Natriumgehalt (~14,4 mmol Na/g) \u2192 Na-Bilanz bei HI/CKD; immer in Kombination'
   },
   {
-    name: 'Linezolid', brand: 'Zyvoxid®', gruppe: 'Sonstige',
+    name: 'Linezolid', brand: 'Zyvoxid\u00ae', gruppe: 'Sonstige',
     spektrum: ['G+','Ent'],
     indikation: 'MRSA, VRE, therapierefraktäre gram-positive Infektionen, ZNS-MRSA',
     dosierung: {
@@ -8133,101 +8426,439 @@ var abxData = [
       '30-50': { dosis: '600 mg q12h i.v./p.o.', hinweis: 'keine Anpassung' },
       '15-30': { dosis: '600 mg q12h i.v./p.o.', hinweis: 'keine Anpassung; Metaboliten akkumulieren' },
       '<15':   { dosis: '600 mg q12h i.v./p.o.', hinweis: 'keine Anpassung; ggf. Monitoring' },
-      'HD':    { dosis: '600 mg q12h i.v./p.o.', hinweis: 'nach HD keine Supplementierung nötig' },
-      'CRRT':  { dosis: '600 mg q12h i.v./p.o.', hinweis: 'keine Anpassung; CRRT entfernt minimal; Metaboliten-Akkumulation möglich' },
+      'HD':    { dosis: '600 mg q12h i.v./p.o.', hinweis: 'nach HD keine Supplementierung n\u00f6tig' },
+      'CRRT':  { dosis: '600 mg q12h i.v./p.o.', hinweis: 'keine Anpassung; CRRT entfernt minimal; Metaboliten-Akkumulation m\u00f6glich' },
       'PD':    { dosis: '600 mg q12h i.v./p.o.', hinweis: 'keine Anpassung' }
     },
-    tdm: false, cave: '⚠️ Thrombozytopenie >2 Wochen (wöchentliches BB!); serotonerges Syndrom; Laktatazidose möglich'
+    tdm: false, cave: '\u26a0\ufe0f Thrombozytopenie >2 Wochen (w\u00f6chentliches BB!); serotonerges Syndrom; Laktatazidose m\u00f6glich'
   },
   {
-    name: 'Daptomycin', brand: 'Cubicin®', gruppe: 'Sonstige',
+    name: 'Daptomycin', brand: 'Cubicin\u00ae', gruppe: 'Sonstige',
     spektrum: ['G+','Ent'],
     indikation: 'MRSA-Bakteriämie/-Endokarditis, VRE, komplizierte Hautinfektionen (KEIN Pneumonie!)',
     dosierung: {
-      '>50':   { dosis: '6–8 mg/kg q24h i.v. | Endokarditis: 8–10 mg/kg q24h', hinweis: '' },
-      '30-50': { dosis: '6–8 mg/kg q24h i.v.', hinweis: 'eGFR >30: keine Anpassung' },
-      '15-30': { dosis: '6–8 mg/kg q48h i.v.', hinweis: 'Intervall verlängern' },
-      '<15':   { dosis: '6–8 mg/kg q48h i.v.', hinweis: '' },
-      'HD':    { dosis: '6–8 mg/kg q48h i.v.', hinweis: 'nach HD geben; HD entfernt ~11–15%' },
-      'CRRT':  { dosis: '6–8 mg/kg q24–48h i.v.', hinweis: 'CRRT-Clearance variabel; TDM erwägen; Intervall nach Nierenfunktion' },
-      'PD':    { dosis: '6–8 mg/kg q48h i.v.', hinweis: 'geringe PD-Clearance; wie HD dosieren' }
+      '>50':   { dosis: '6\u20138 mg/kg q24h i.v. | Endokarditis: 8\u201310 mg/kg q24h', hinweis: '' },
+      '30-50': { dosis: '6\u20138 mg/kg q24h i.v.', hinweis: 'eGFR >30: keine Anpassung' },
+      '15-30': { dosis: '6\u20138 mg/kg q48h i.v.', hinweis: 'Intervall verl\u00e4ngern' },
+      '<15':   { dosis: '6\u20138 mg/kg q48h i.v.', hinweis: '' },
+      'HD':    { dosis: '6\u20138 mg/kg q48h i.v.', hinweis: 'nach HD geben; HD entfernt ~11\u201315%' },
+      'CRRT':  { dosis: '6\u20138 mg/kg q24\u201348h i.v.', hinweis: 'CRRT-Clearance variabel; TDM erw\u00e4gen; Intervall nach Nierenfunktion' },
+      'PD':    { dosis: '6\u20138 mg/kg q48h i.v.', hinweis: 'geringe PD-Clearance; wie HD dosieren' }
     },
-    tdm: false, cave: '⚠️ Myopathie/Rhabdomyolyse → CK wöchentlich; NICHT bei Pneumonie (Surfactant-Inaktivierung); Statin pausieren'
+    tdm: false, cave: '\u26a0\ufe0f Myopathie/Rhabdomyolyse \u2192 CK w\u00f6chentlich; NICHT bei Pneumonie (Surfactant-Inaktivierung); Statin pausieren'
   },
   {
-    name: 'Tigecyclin', brand: 'Tygacil®', gruppe: 'Sonstige',
+    name: 'Tigecyclin', brand: 'Tygacil\u00ae', gruppe: 'Sonstige',
     spektrum: ['G+','G-','Aty','Ent','Ana'],
     indikation: 'Reserve-Antibiotikum: komplizierte Haut-/Weichgewebeinfektionen, intraabdominelle Infektionen, MBL-/KPC-Carbapenemase-produzierende Erreger',
     dosierung: {
-      '>50':   { dosis: '100 mg Ladedosis, dann 50 mg q12h i.v. (Inf. über 30–60 min)', hinweis: '' },
+      '>50':   { dosis: '100 mg Ladedosis, dann 50 mg q12h i.v. (Inf. \u00fcber 30\u201360 min)', hinweis: '' },
       '30-50': { dosis: '100 mg Ladedosis, dann 50 mg q12h i.v.', hinweis: 'Keine Dosisanpassung erforderlich' },
       '15-30': { dosis: '100 mg Ladedosis, dann 50 mg q12h i.v.', hinweis: 'Keine Dosisanpassung erforderlich' },
       '<15':   { dosis: '100 mg Ladedosis, dann 50 mg q12h i.v.', hinweis: 'Keine Dosisanpassung; schwere Niereninsuffizienz: Daten begrenzt' },
       'HD':    { dosis: '100 mg Ladedosis, dann 50 mg q12h i.v.', hinweis: 'Keine Dosisanpassung; wird NICHT durch HD eliminiert (hohes Vd)' },
-      'CRRT':  { dosis: '100 mg Ladedosis, dann 50 mg q12h i.v.', hinweis: 'Keine Dosisanpassung; hohes Vd → minimale CRRT-Elimination' },
+      'CRRT':  { dosis: '100 mg Ladedosis, dann 50 mg q12h i.v.', hinweis: 'Keine Dosisanpassung; hohes Vd \u2192 minimale CRRT-Elimination' },
       'PD':    { dosis: '100 mg Ladedosis, dann 50 mg q12h i.v.', hinweis: 'Keine Dosisanpassung; geringe PD-Clearance' }
     },
-    tdm: false, cave: '⚠️ Mortalitätssignal in schweren Infektionen (FDA-Warnung); Übelkeit/Erbrechen häufig; NICHT für Pneumonie-Monotherapie; Tetracyclin-Klasse: keine Kinder, keine Schwangerschaft'
+    tdm: false, cave: '\u26a0\ufe0f Mortalit\u00e4tssignal in schweren Infektionen (FDA-Warnung); \u00dcbelkeit/Erbrechen h\u00e4ufig; NICHT f\u00fcr Pneumonie-Monotherapie; Tetracyclin-Klasse: keine Kinder, keine Schwangerschaft'
   },
   {
-    name: 'Cefpodoxim', brand: 'Orelox® / Podomexef®', gruppe: 'Cephalosporin',
+    name: 'Cefpodoxim', brand: 'Orelox\u00ae / Podomexef\u00ae', gruppe: 'Cephalosporin',
     spektrum: ['G+','G-'],
     indikation: 'Oral: HWI, ambulant erworbene Pneumonie, Haut-/Weichgewebeinfektionen, Exazerbation COPD',
     dosierung: {
       '>50':   { dosis: '200 mg q12h p.o. | HWI unkompliziert: 100 mg q12h p.o.', hinweis: '' },
-      '30-50': { dosis: '200 mg q12h p.o.', hinweis: 'eGFR 26–50: Standarddosis' },
-      '15-30': { dosis: '200 mg q24h p.o.', hinweis: 'Intervall auf 24h verlängern (eGFR 10–25)' },
-      '<15':   { dosis: '200 mg q24–48h p.o.', hinweis: 'Dosisreduktion; engmaschige Überwachung' },
-      'HD':    { dosis: '200 mg 3×/Woche p.o. (nach HD)', hinweis: 'HD entfernt ca. 23%; nach Dialyse geben' },
-      'CRRT':  { dosis: '200 mg q24h p.o.', hinweis: 'Wenige Daten; wie eGFR 15–30 dosieren' },
-      'PD':    { dosis: '200 mg q24–48h p.o.', hinweis: 'Wenige Daten; wie <15 ml/min dosieren' }
+      '30-50': { dosis: '200 mg q12h p.o.', hinweis: 'eGFR 26\u201350: Standarddosis' },
+      '15-30': { dosis: '200 mg q24h p.o.', hinweis: 'Intervall auf 24h verl\u00e4ngern (eGFR 10\u201325)' },
+      '<15':   { dosis: '200 mg q24\u201348h p.o.', hinweis: 'Dosisreduktion; engmaschige \u00dcberwachung' },
+      'HD':    { dosis: '200 mg 3\u00d7/Woche p.o. (nach HD)', hinweis: 'HD entfernt ca. 23%; nach Dialyse geben' },
+      'CRRT':  { dosis: '200 mg q24h p.o.', hinweis: 'Wenige Daten; wie eGFR 15\u201330 dosieren' },
+      'PD':    { dosis: '200 mg q24\u201348h p.o.', hinweis: 'Wenige Daten; wie <15 ml/min dosieren' }
     },
     tdm: false, cave: ''
   },
   {
-    name: 'Flucloxacillin', brand: 'Staphylex®', gruppe: 'Penicillin/BLI',
+    name: 'Flucloxacillin', brand: 'Staphylex\u00ae', gruppe: 'Penicillin/BLI',
     spektrum: ['G+'],
     indikation: 'MSSA-Infektionen: Endokarditis, Osteomyelitis, Haut-/Weichgewebeinfektionen, Pneumonie',
     dosierung: {
-      '>50':   { dosis: '1–2 g q4–6h i.v. | Endokarditis/Osteomyelitis: 2 g q4h i.v.', hinweis: '' },
-      '30-50': { dosis: '1–2 g q6h i.v.', hinweis: 'Standarddosis; keine routinemäßige Anpassung' },
-      '15-30': { dosis: '1–2 g q6h i.v.', hinweis: 'Keine strenge Dosisanpassung; hepatische Elimination dominiert' },
-      '<15':   { dosis: '1 g q6h i.v.', hinweis: 'Dosisreduktion möglich; überwiegend hepatisch eliminiert' },
-      'HD':    { dosis: '1 g q6h i.v.', hinweis: 'Kaum dialysierbar; Standardintervall; nicht HD-abhängig dosieren' },
-      'CRRT':  { dosis: '2 g q6h i.v.', hinweis: 'Geringe CRRT-Clearance; Standarddosierung; schwere Inf. höhere Dosen' },
+      '>50':   { dosis: '1\u20132 g q4\u20136h i.v. | Endokarditis/Osteomyelitis: 2 g q4h i.v.', hinweis: '' },
+      '30-50': { dosis: '1\u20132 g q6h i.v.', hinweis: 'Standarddosis; keine routinem\u00e4\u00dfige Anpassung' },
+      '15-30': { dosis: '1\u20132 g q6h i.v.', hinweis: 'Keine strenge Dosisanpassung; hepatische Elimination dominiert' },
+      '<15':   { dosis: '1 g q6h i.v.', hinweis: 'Dosisreduktion m\u00f6glich; \u00fcberwiegend hepatisch eliminiert' },
+      'HD':    { dosis: '1 g q6h i.v.', hinweis: 'Kaum dialysierbar; Standardintervall; nicht HD-abh\u00e4ngig dosieren' },
+      'CRRT':  { dosis: '2 g q6h i.v.', hinweis: 'Geringe CRRT-Clearance; Standarddosierung; schwere Inf. h\u00f6here Dosen' },
       'PD':    { dosis: '1 g q6h i.v.', hinweis: 'Geringe PD-Clearance; Standardintervall' }
     },
-    tdm: false, cave: '⚠️ Cholestatische Hepatitis möglich (bis 2 Monate nach Therapie); LFT überwachen; p.o.-Bioverfügbarkeit 50–70% (nüchtern!)'
+    tdm: false, cave: '\u26a0\ufe0f Cholestatische Hepatitis m\u00f6glich (bis 2 Monate nach Therapie); LFT \u00fcberwachen; p.o.-Bioverfügbarkeit 50\u201370% (n\u00fcchtern!)'
   },
   {
-    name: 'Azithromycin', brand: 'Zithromax®', gruppe: 'Sonstige',
+    name: 'Azithromycin', brand: 'Zithromax\u00ae', gruppe: 'Sonstige',
     spektrum: ['G+','G-','Aty'],
-    indikation: 'CAP (ambulant), atypische Pneumonie (Legionellen, Mykoplasmen, Chlamydien), Exazerbation COPD, Harnröhren-/Zervizitis (Chlamydien)',
+    indikation: 'CAP (ambulant), atypische Pneumonie (Legionellen, Mykoplasmen, Chlamydien), Exazerbation COPD, Harnr\u00f6hren-/Zervizitis (Chlamydien)',
     dosierung: {
-      '>50':   { dosis: '500 mg q24h i.v./p.o. × 3–5 Tage | CAP-Kombination: 500 mg/d × 3d', hinweis: '' },
-      '30-50': { dosis: '500 mg q24h i.v./p.o.', hinweis: 'Keine Dosisanpassung (überwiegend hepatisch/biliär)' },
-      '15-30': { dosis: '500 mg q24h i.v./p.o.', hinweis: 'Keine Dosisanpassung; Vorsicht: AUC ↑ ~35% bei GFR <10' },
+      '>50':   { dosis: '500 mg q24h i.v./p.o. \u00d7 3\u20135 Tage | CAP-Kombination: 500 mg/d \u00d7 3d', hinweis: '' },
+      '30-50': { dosis: '500 mg q24h i.v./p.o.', hinweis: 'Keine Dosisanpassung (\u00fcberwiegend hepatisch/bili\u00e4r)' },
+      '15-30': { dosis: '500 mg q24h i.v./p.o.', hinweis: 'Keine Dosisanpassung; Vorsicht: AUC \u219135% bei GFR <10' },
       '<15':   { dosis: '500 mg q24h i.v./p.o.', hinweis: 'Vorsicht; keine formale Anpassung; begrenzte Daten' },
       'HD':    { dosis: '500 mg q24h p.o.', hinweis: 'Kaum dialysierbar (hohes Vd); Standarddosis' },
       'CRRT':  { dosis: '500 mg q24h p.o./i.v.', hinweis: 'Keine relevante CRRT-Clearance; Standarddosis' },
       'PD':    { dosis: '500 mg q24h p.o.', hinweis: 'Keine relevante PD-Clearance; Standarddosis' }
     },
-    tdm: false, cave: '⚠️ QTc-Verlängerung (Interaktion mit anderen QT-Verlängernden Medikamenten!); Leberfunktion prüfen; CAVE: Torsades de Pointes; lange Halbwertszeit (68h)'
+    tdm: false, cave: '\u26a0\ufe0f QTc-Verl\u00e4ngerung (Interaktion mit anderen QT-Verl\u00e4ngernden Medikamenten!); Leberfunktion pr\u00fcfen; CAVE: Torsades de Pointes; lange Halbwertszeit (68h)'
   },
   {
-    name: 'Doxycyclin', brand: 'Vibramycin® / Doxycyclin AL®', gruppe: 'Sonstige',
+    name: 'Doxycyclin', brand: 'Vibramycin\u00ae / Doxycyclin AL\u00ae', gruppe: 'Sonstige',
     spektrum: ['G+','G-','Aty'],
-    indikation: 'Atypische Pneumonie, Borrelia, Rickettsia, Chlamydien, Syphilis, Malaria-Prophylaxe, akne (Langzeit)',
+    indikation: 'Atypische Pneumonie, Borrelia, Rickettsia, Chlamydien, Syphilis, Malaria-Prophylaxe, Akne (Langzeit)',
     dosierung: {
-      '>50':   { dosis: '200 mg Ladedosis, dann 100 mg q12–24h p.o./i.v.', hinweis: '' },
-      '30-50': { dosis: '200 mg Ladedosis, dann 100 mg q12–24h p.o./i.v.', hinweis: 'Keine Dosisanpassung (nicht renal eliminiert)' },
-      '15-30': { dosis: '200 mg Ladedosis, dann 100 mg q12–24h p.o./i.v.', hinweis: 'Keine Dosisanpassung; bei Niereninsuffizienz sicheres Tetracyclin' },
-      '<15':   { dosis: '200 mg Ladedosis, dann 100 mg q12–24h p.o./i.v.', hinweis: 'Bevorzugtes Tetracyclin bei Niereninsuffizienz (kein Azotämie-Risiko wie ältere Tetracycline)' },
-      'HD':    { dosis: '200 mg Ladedosis, dann 100 mg q12–24h p.o./i.v.', hinweis: 'Keine Dosisanpassung; nicht dialysierbar' },
-      'CRRT':  { dosis: '200 mg Ladedosis, dann 100 mg q12–24h p.o./i.v.', hinweis: 'Keine Dosisanpassung; CRRT-Clearance minimal' },
-      'PD':    { dosis: '200 mg Ladedosis, dann 100 mg q12–24h p.o./i.v.', hinweis: 'Keine Dosisanpassung; PD-Clearance minimal' }
+      '>50':   { dosis: '200 mg Ladedosis, dann 100 mg q12\u201324h p.o./i.v.', hinweis: '' },
+      '30-50': { dosis: '200 mg Ladedosis, dann 100 mg q12\u201324h p.o./i.v.', hinweis: 'Keine Dosisanpassung (nicht renal eliminiert)' },
+      '15-30': { dosis: '200 mg Ladedosis, dann 100 mg q12\u201324h p.o./i.v.', hinweis: 'Keine Dosisanpassung; bei Niereninsuffizienz sicheres Tetracyclin' },
+      '<15':   { dosis: '200 mg Ladedosis, dann 100 mg q12\u201324h p.o./i.v.', hinweis: 'Bevorzugtes Tetracyclin bei Niereninsuffizienz (kein Az\u00f6tamie-Risiko wie \u00e4ltere Tetracycline)' },
+      'HD':    { dosis: '200 mg Ladedosis, dann 100 mg q12\u201324h p.o./i.v.', hinweis: 'Keine Dosisanpassung; nicht dialysierbar' },
+      'CRRT':  { dosis: '200 mg Ladedosis, dann 100 mg q12\u201324h p.o./i.v.', hinweis: 'Keine Dosisanpassung; CRRT-Clearance minimal' },
+      'PD':    { dosis: '200 mg Ladedosis, dann 100 mg q12\u201324h p.o./i.v.', hinweis: 'Keine Dosisanpassung; PD-Clearance minimal' }
     },
-    tdm: false, cave: '⚠️ Nicht mit Milch/Antazida/Eisen (Chelat); Ösophagusulzera (aufrecht einnehmen, viel Wasser); Photosensibilisierung; NICHT bei Kindern <8J oder Schwangerschaft'
+    tdm: false, cave: '\u26a0\ufe0f Nicht mit Milch/Antazida/Eisen (Chelat); \u00d6sophagusulzera (aufrecht einnehmen, viel Wasser); Photosensibilisierung; NICHT bei Kindern <8J oder Schwangerschaft'
+  },
+  // ===== PENICILLINE (pur) =====
+  {
+    name: 'Penicillin G (Benzylpenicillin)', brand: 'Penicillin G Gr\u00fcnenthal\u00ae', gruppe: 'Penicillin/BLI',
+    spektrum: ['G+','Ana'],
+    indikation: 'Streptokokken-Infektionen, Pneumokokken-Meningitis, Syphilis, Erysipel, Endokarditis (Strept.), Gasbrand',
+    dosierung: {
+      '>50':   { dosis: '4\u20136 \u00d7 5 Mio. IE i.v. | Meningitis: 4\u00d7 6\u20138 Mio. IE', hinweis: '' },
+      '30-50': { dosis: '3\u00d7 5 Mio. IE i.v.', hinweis: '' },
+      '15-30': { dosis: '2\u00d7 5 Mio. IE i.v.', hinweis: 'Intervall verl\u00e4ngern' },
+      '<15':   { dosis: '2\u00d7 5 Mio. IE i.v.', hinweis: 'max. 4,8 g/d; erh\u00f6hte Neurotoxizit\u00e4t' },
+      'HD':    { dosis: '2\u00d7 5 Mio. IE i.v.', hinweis: 'nach HD: Supplementierung empfohlen; dialysierbar' },
+      'CRRT':  { dosis: '4\u00d7 5 Mio. IE i.v.', hinweis: 'CRRT erh\u00f6ht Clearance; Standard-/h\u00f6here Dosis' },
+      'PD':    { dosis: '2\u00d7 5 Mio. IE i.v.', hinweis: 'wie <15; geringe PD-Clearance' }
+    },
+    tdm: false, cave: '\u26a0\ufe0f Neurotoxizit\u00e4t/Krampfanfallrisiko bei Akkumulation (besonders bei CKD); Ladedosis immer voll'
+  },
+  {
+    name: 'Penicillin V', brand: 'Penicillin V STADA\u00ae', gruppe: 'Penicillin/BLI',
+    spektrum: ['G+'],
+    indikation: 'Tonsillitis (Streptok.), Scharlach, Otitis media, Erysipel (ambulant, leicht)',
+    dosierung: {
+      '>50':   { dosis: '3\u00d7 1 Mio. IE p.o.', hinweis: '' },
+      '30-50': { dosis: '3\u00d7 1 Mio. IE p.o.', hinweis: 'keine Anpassung' },
+      '15-30': { dosis: '2\u00d7 1 Mio. IE p.o.', hinweis: '' },
+      '<15':   { dosis: '2\u00d7 1 Mio. IE p.o.', hinweis: 'verl\u00e4ngertes Intervall' },
+      'HD':    { dosis: '2\u00d7 1 Mio. IE p.o.', hinweis: 'nach Dialyse geben; dialysierbar' },
+      'CRRT':  { dosis: '3\u00d7 1 Mio. IE p.o.', hinweis: 'Standarddosis; breiter therapeutischer Index' },
+      'PD':    { dosis: '2\u00d7 1 Mio. IE p.o.', hinweis: 'wie <15; keine PD-Daten' }
+    },
+    tdm: false, cave: 'Nur oral; geringe Bioverfügbarkeit n\u00fcchtern (60%). N\u00fcchtern einnehmen!'
+  },
+  {
+    name: 'Ampicillin', brand: 'Ampicillin ratiopharm\u00ae', gruppe: 'Penicillin/BLI',
+    spektrum: ['G+','G-','Ana'],
+    indikation: 'Listerien-Meningitis, Enterokokken-Endokarditis (Synergismus), biliäre Infektionen',
+    dosierung: {
+      '>50':   { dosis: '3\u00d7 2 g i.v. | Meningitis/Endokarditis: 6\u00d7 2 g i.v.', hinweis: '' },
+      '30-50': { dosis: '3\u00d7 2 g i.v.', hinweis: 'keine Anpassung' },
+      '15-30': { dosis: '2\u00d7 2 g i.v.', hinweis: '' },
+      '<15':   { dosis: '2\u00d7 2 g i.v.', hinweis: 'Intervallanpassung' },
+      'HD':    { dosis: '1\u00d7 2 g i.v. + nach HD supplementieren', hinweis: 'Dialysierbar; Gabe nach HDT' },
+      'CRRT':  { dosis: '3\u00d7 2 g i.v.', hinweis: 'CRRT entfernt signifikant; Standarddosis' },
+      'PD':    { dosis: '2\u00d7 2 g i.v.', hinweis: 'kaum PD-dialysierbar; wie HD' }
+    },
+    tdm: false, cave: 'Neurotoxizit\u00e4t bei hohen Dosen/CKD; Listerien-Mittel der Wahl (nicht durch Cephalosporine abgedeckt!)'
+  },
+  {
+    name: 'Amoxicillin', brand: 'Amoxicillin HEXAL\u00ae', gruppe: 'Penicillin/BLI',
+    spektrum: ['G+','G-'],
+    indikation: 'HWI, Otitis media, Sinusitis, H.-pylori-Eradikation (Kombination), ambulante Pneumonie',
+    dosierung: {
+      '>50':   { dosis: '3\u00d7 1 g p.o. | Streptok.-Pharyngitis: 2\u00d7 1 g \u00d7 10 d', hinweis: '' },
+      '30-50': { dosis: '3\u00d7 1 g p.o.', hinweis: 'keine Anpassung' },
+      '15-30': { dosis: '2\u00d7 1 g p.o.', hinweis: '' },
+      '<15':   { dosis: '2\u00d7 500 mg p.o.', hinweis: 'Dosis und Intervall anpassen' },
+      'HD':    { dosis: '2\u00d7 500 mg p.o.', hinweis: 'nach Dialyse geben; dialysierbar' },
+      'CRRT':  { dosis: '3\u00d7 1 g p.o.', hinweis: 'Standarddosis; CRRT erh\u00f6ht Clearance' },
+      'PD':    { dosis: '2\u00d7 500 mg p.o.', hinweis: 'wie <15; geringe PD-Clearance' }
+    },
+    tdm: false, cave: 'Kein Beta-Laktamase-Schutz. Resistenzrate E. coli >50% \u2192 nicht f\u00fcr HWI ohne Antibiogramm!'
+  },
+  {
+    name: 'Pivmecillinam', brand: 'X-Systo\u00ae', gruppe: 'Penicillin/BLI',
+    spektrum: ['G-','Ent'],
+    indikation: 'Unkomplizierter HWI (E. coli, Klebsiella), Zystitis (oral)',
+    dosierung: {
+      '>50':   { dosis: '3\u00d7 400 mg p.o. \u00d7 3\u20135 Tage', hinweis: 'nur unterer HWI' },
+      '30-50': { dosis: '3\u00d7 400 mg p.o.', hinweis: 'keine Anpassung; Wirkung \u00fcber Urinkonzentration' },
+      '15-30': { dosis: '3\u00d7 400 mg p.o.', hinweis: 'mit Vorsicht; eingeschr\u00e4nkte Urinkonzentration' },
+      '<15':   { dosis: 'KONTRAINDIZIERT', hinweis: 'keine ausreichende Urinkonzentration bei fehlender Restdiurese' },
+      'HD':    { dosis: 'KONTRAINDIZIERT', hinweis: 'keine ausreichende Urinkonzentration' },
+      'CRRT':  { dosis: 'KONTRAINDIZIERT', hinweis: 'nicht geeignet' },
+      'PD':    { dosis: 'KONTRAINDIZIERT', hinweis: 'nicht geeignet' }
+    },
+    tdm: false, cave: 'Wirkprinzip: Konzentration im Urin \u2192 unwirksam ohne Restdiurese; KEINE systemischen Infektionen!'
+  },
+  // ===== CEPHALOSPORINE 1. GENERATION =====
+  {
+    name: 'Cefalexin', brand: 'Cefalexin HEXAL\u00ae', gruppe: 'Cephalosporin',
+    spektrum: ['G+','G-'],
+    indikation: 'Haut-/Weichgewebeinfektionen (MSSA), HWI (ambulant), Zahninfektionen (oral)',
+    dosierung: {
+      '>50':   { dosis: '3\u00d7 1 g p.o. | leicht: 3\u00d7 500 mg', hinweis: '' },
+      '30-50': { dosis: '3\u00d7 1 g p.o.', hinweis: 'keine Anpassung' },
+      '15-30': { dosis: '2\u00d7 1 g p.o.', hinweis: '' },
+      '<15':   { dosis: '2\u00d7 500 mg p.o.', hinweis: 'Dosisreduktion' },
+      'HD':    { dosis: '1\u00d7 1 g p.o. nach HD', hinweis: 'dialysierbar; nach HDT geben' },
+      'CRRT':  { dosis: '3\u00d7 1 g p.o.', hinweis: 'wie normale Nierenfunktion' },
+      'PD':    { dosis: '2\u00d7 500 mg p.o.', hinweis: 'geringe PD-Clearance; wie <15' }
+    },
+    tdm: false, cave: 'Nur oral. Gute orale Bioverfügbarkeit (~90%). Kein MRSA!'
+  },
+  // ===== CEPHALOSPORINE 3b/4. GENERATION / BLI =====
+  {
+    name: 'Ceftazidim/Avibactam', brand: 'Zavicefta\u00ae', gruppe: 'Cephalosporin',
+    spektrum: ['G-','PSA','Ent'],
+    indikation: 'KPC-/OXA-48-Carbapenemase-Produzenten, MBL-negative CRKP, schwieriger Pseudomonas',
+    dosierung: {
+      '>50':   { dosis: '3\u00d7 2,5 g i.v. (\u00fcber 2 h)', hinweis: 'Infusion mindestens 2 h!' },
+      '30-50': { dosis: '3\u00d7 1,25 g i.v.', hinweis: 'Dosisreduktion bei eGFR 31\u201350' },
+      '15-30': { dosis: '2\u00d7 0,94 g i.v.', hinweis: 'deutliche Dosisreduktion' },
+      '<15':   { dosis: '1\u00d7 0,94 g i.v.', hinweis: 'weiteres Intervall' },
+      'HD':    { dosis: '2,5 g nach HD + 0,94 g interdialytisch', hinweis: 'dialysierbar; TDM empfohlen' },
+      'CRRT':  { dosis: '3\u00d7 1,25\u20132,5 g i.v.', hinweis: 'CRRT erh\u00f6ht Clearance; h\u00f6here Dosierung wie eGFR >50 anstreben; TDM!' },
+      'PD':    { dosis: '1\u00d7 0,94 g i.v.', hinweis: 'wie <15; PD-Daten fehlend' }
+    },
+    tdm: true, cave: '\u26a0\ufe0f Reserveantibiotikum! Immer EUCAST-Resistenztestung. KEIN MBL-Spektrum (kein NDM, kein VIM). Infusion \u22652 h!'
+  },
+  {
+    name: 'Ceftolozan/Tazobactam', brand: 'Zerbaxa\u00ae', gruppe: 'Cephalosporin',
+    spektrum: ['G-','PSA'],
+    indikation: 'Multiresistenter Pseudomonas (MDR-PA), komplizierter HWI, HAP/VAP (Pseudomonas)',
+    dosierung: {
+      '>50':   { dosis: '3\u00d7 1,5 g i.v. (HAP: 3\u00d7 3 g)', hinweis: 'Infusion \u00fcber 1 h' },
+      '30-50': { dosis: '3\u00d7 750 mg i.v. (HAP: 3\u00d7 1,5 g)', hinweis: 'Dosisreduktion 50%' },
+      '15-30': { dosis: '3\u00d7 375 mg i.v. (HAP: 3\u00d7 750 mg)', hinweis: 'weitere Dosisreduktion' },
+      '<15':   { dosis: 'Loading: 750 mg, dann 3\u00d7 150 mg i.v.', hinweis: 'stark reduziert; TDM empfohlen' },
+      'HD':    { dosis: 'Loading: 2,25 g, dann 3\u00d7 450 mg i.v. (HAP)', hinweis: 'nach HD; HD entfernt ~66% Ceftolozan; TDM!' },
+      'CRRT':  { dosis: '3\u00d7 1,5 g i.v.', hinweis: 'CRRT erh\u00f6ht Clearance erheblich; Standard-/h\u00f6here Dosis; TDM zwingend' },
+      'PD':    { dosis: 'Loading: 750 mg, dann 3\u00d7 150 mg i.v.', hinweis: 'wie <15; begrenzte Daten' }
+    },
+    tdm: true, cave: '\u26a0\ufe0f Reserveantibiotikum! KEIN ESBL-Spektrum (keine Klebsiella ESBL). Nur Pseudomonas + E. coli. Erregerdiagnostik vor Einsatz!'
+  },
+  // ===== MAKROLIDE =====
+  {
+    name: 'Clarithromycin', brand: 'Klacid\u00ae', gruppe: 'Sonstige',
+    spektrum: ['G+','Aty'],
+    indikation: 'CAP (atypische Erreger), H.-pylori-Eradikation (Triple-Therapie), ABECB, Helicobacter',
+    dosierung: {
+      '>50':   { dosis: '2\u00d7 500 mg p.o./i.v.', hinweis: '' },
+      '30-50': { dosis: '2\u00d7 500 mg p.o.', hinweis: 'keine Anpassung' },
+      '15-30': { dosis: '2\u00d7 250 mg p.o. (Ladedosis: 2\u00d7 500 mg)', hinweis: '50% Dosisreduktion' },
+      '<15':   { dosis: '2\u00d7 250 mg p.o.', hinweis: 'kaum dialysierbar; Dosisreduktion' },
+      'HD':    { dosis: '2\u00d7 250 mg p.o.', hinweis: 'nicht signifikant dialysierbar; wie <15' },
+      'CRRT':  { dosis: '2\u00d7 250\u2013500 mg p.o.', hinweis: 'begrenzte Daten; hepatisch dominiert' },
+      'PD':    { dosis: '2\u00d7 250 mg p.o.', hinweis: 'wie HD; geringe PD-Clearance' }
+    },
+    tdm: false, cave: '\u26a0\ufe0f QTc-Verl\u00e4ngerung; starker CYP3A4-Inhibitor (Statine, Tacrolimus, Ciclosporin pausieren!); Interaktionen beachten'
+  },
+  // ===== AMINOGLYKOSIDE =====
+  {
+    name: 'Amikacin', brand: 'Amikacin Fresenius\u00ae', gruppe: 'Aminoglykosid',
+    spektrum: ['G-','PSA','Ent'],
+    indikation: 'Gram-negative Infektionen (breiteres Spektrum als Gentamicin), Kombination bei MDR, Mykobakterien',
+    dosierung: {
+      '>50':   { dosis: '15\u201320 mg/kg q24h i.v. (Extended-Interval)', hinweis: 'TDM: Peak 1h: 56\u201364 mg/l; Talspiegel <5 mg/l' },
+      '30-50': { dosis: '10\u201315 mg/kg q24\u201336h i.v.', hinweis: 'TDM obligat; Talspiegel <5 mg/l' },
+      '15-30': { dosis: '7\u201310 mg/kg q48h i.v.', hinweis: 'TDM obligat; Interval bis Talspiegel <5 mg/l' },
+      '<15':   { dosis: '5\u20137 mg/kg q48\u201372h i.v.', hinweis: 'nur nach TDM; m\u00f6glichst vermeiden' },
+      'HD':    { dosis: '5\u201310 mg/kg nach HD', hinweis: 'HD entfernt ~50%; TDM nach jeder Gabe' },
+      'CRRT':  { dosis: '7\u201310 mg/kg q24\u201336h i.v.', hinweis: 'CRRT erh\u00f6ht Clearance; TDM zwingend; Talspiegel <5 mg/l vor Gabe!' },
+      'PD':    { dosis: '5\u20137 mg/kg q24\u201348h i.v.', hinweis: 'TDM obligat; geringe PD-Clearance' }
+    },
+    tdm: true, cave: '\u26a0\ufe0f Nephrotoxizit\u00e4t + Ototoxizit\u00e4t (kumulativ, irreversibel!); breiter therapeutischer Index \u2192 weniger Resistenz als Gentamicin gegen Enterobacter; TDM zwingend'
+  },
+  // ===== RESERVE / SPEZIAL =====
+  {
+    name: 'Rifampicin', brand: 'Rifa\u00ae / Eremfat\u00ae', gruppe: 'Sonstige',
+    spektrum: ['G+','Aty'],
+    indikation: 'IMMER NUR IN KOMBINATION: Staphylokokken-Protheseninfektion, MRSA (Zusatz), Tuberkulose, Nokardiose, Legionellen (ZNS)',
+    dosierung: {
+      '>50':   { dosis: '2\u00d7 450\u2013600 mg p.o./i.v. | TBC: 10 mg/kg/d', hinweis: 'immer Kombinationstherapie!' },
+      '30-50': { dosis: '2\u00d7 450\u2013600 mg p.o./i.v.', hinweis: 'keine renale Anpassung (hepatisch)' },
+      '15-30': { dosis: '2\u00d7 450\u2013600 mg p.o./i.v.', hinweis: 'keine Anpassung' },
+      '<15':   { dosis: '2\u00d7 450\u2013600 mg p.o./i.v.', hinweis: 'keine Anpassung; \u00fcberwiegend hepatisch/bili\u00e4r eliminiert' },
+      'HD':    { dosis: '2\u00d7 450\u2013600 mg p.o./i.v.', hinweis: 'nicht signifikant dialysierbar; Standarddosis' },
+      'CRRT':  { dosis: '2\u00d7 450\u2013600 mg p.o./i.v.', hinweis: 'keine Anpassung; hepatische Elimination dominiert' },
+      'PD':    { dosis: '2\u00d7 450\u2013600 mg p.o./i.v.', hinweis: 'keine Anpassung' }
+    },
+    tdm: false, cave: '\u26a0\ufe0f MASSIVER CYP3A4/2C9-INDUKTOR: Antikoagulanzien (Marcumar!), Steroide, Immunsuppressiva, Kontrazeptiva, Antiepileptika verlieren Wirksamkeit! NIEMALS Monotherapie (Resistenz nach Tagen). Urin/Tr\u00e4nen orange. LFT \u00fcberwachen'
+  },
+  {
+    name: 'Colistin (Colistimethatsodium)', brand: 'Colistin Infectopharm\u00ae', gruppe: 'Sonstige',
+    spektrum: ['G-','PSA','Ent'],
+    indikation: 'LETZTES MITTEL: Carbapenem-resistente Gram-negative (XDR/PDR), MBL-Produzenten (NDM, VIM, IMP), Acinetobacter XDR',
+    dosierung: {
+      '>50':   { dosis: 'Loading: 9 Mio. IE, dann 2\u00d7 4,5 Mio. IE i.v.', hinweis: 'Ladedosis immer voll!' },
+      '30-50': { dosis: 'Loading: 9 Mio. IE, dann 2\u00d7 3\u20134 Mio. IE i.v.', hinweis: 'TDM empfohlen' },
+      '15-30': { dosis: 'Loading: 9 Mio. IE, dann 2\u00d7 2\u20133 Mio. IE i.v.', hinweis: 'TDM obligat' },
+      '<15':   { dosis: 'Loading: 9 Mio. IE, dann 2\u00d7 2 Mio. IE i.v.', hinweis: 'stark eingeschr\u00e4nkte Dosierung' },
+      'HD':    { dosis: 'Loading: 9 Mio. IE; Nicht-HD-Tage: 2\u00d7 1,1 Mio. IE; HD-Tage: 3 Mio. IE nach HD', hinweis: 'dialysierbar; TDM obligat' },
+      'CRRT':  { dosis: 'Loading: 9 Mio. IE, dann 3\u00d7 3 Mio. IE i.v.', hinweis: 'CRRT entfernt signifikant; erh\u00f6hte Erhaltungsdosis; TDM zwingend' },
+      'PD':    { dosis: 'Loading: 9 Mio. IE, dann 2\u00d7 2 Mio. IE i.v.', hinweis: 'geringe PD-Clearance; wie <15' }
+    },
+    tdm: true, cave: '\u26a0\ufe0f NEPHROTOXIZIT\u00c4T (bis 60% Nierenschaden!); Neurotoxizit\u00e4t (Apnoe, Parästhesien). Reserveantibiotikum der letzten Wahl. Immer Kombination (z.B. mit Meropenem, Fosfomycin). Inhalation zus\u00e4tzlich bei Pneumonie'
+  },
+  {
+    name: 'Fidaxomicin', brand: 'Dificlir\u00ae', gruppe: 'Sonstige',
+    spektrum: ['G+'],
+    indikation: 'C.-difficile-Infektion (CDI), Erstlinien- und Rezidivtherapie (niedrigere Rezidivrate als Vancomycin p.o.)',
+    dosierung: {
+      '>50':   { dosis: '2\u00d7 200 mg p.o. \u00d7 10 Tage', hinweis: '<1% systemische Absorption' },
+      '30-50': { dosis: '2\u00d7 200 mg p.o.', hinweis: 'keine Anpassung n\u00f6tig' },
+      '15-30': { dosis: '2\u00d7 200 mg p.o.', hinweis: 'keine Anpassung; Vorsicht bei schwerer NI (Herstellerhinweis)' },
+      '<15':   { dosis: '2\u00d7 200 mg p.o.', hinweis: 'mit Vorsicht; begrenzte Daten bei GFR <30' },
+      'HD':    { dosis: '2\u00d7 200 mg p.o.', hinweis: 'nicht dialysierbar; Standarddosis' },
+      'CRRT':  { dosis: '2\u00d7 200 mg p.o.', hinweis: 'minimale CRRT-Clearance; Standarddosis' },
+      'PD':    { dosis: '2\u00d7 200 mg p.o.', hinweis: 'keine Anpassung; geringe PD-Clearance' }
+    },
+    tdm: false, cave: 'Lokale Wirkung im Darm (\u226399% nicht resorbiert). \u00dcberlegenheit vs. Vancomycin p.o. bei Nicht-Ribotyp-027. Teuer \u2192 Indikation pr\u00fcfen'
+  },
+  // ===== ANTIMYKOTIKA =====
+  {
+    name: 'Fluconazol', brand: 'Diflucan\u00ae / Fluconazol Pfizer\u00ae', gruppe: 'Antimykotikum',
+    spektrum: ['Pilze'],
+    indikation: 'Candida-Infektionen (nicht C. krusei/glabrata!), H\u00e4matogen-kandidose, Candida-HWI, Prophylaxe',
+    dosierung: {
+      '>50':   { dosis: 'Kandidämie: 800 mg Ladedosis, dann 1\u00d7 400 mg/d i.v./p.o. | HWI: 1\u00d7 200 mg/d', hinweis: '' },
+      '30-50': { dosis: '1\u00d7 400 mg/d (Kandidämie) | 1\u00d7 200 mg/d (HWI)', hinweis: 'keine Anpassung' },
+      '15-30': { dosis: '1\u00d7 200\u2013400 mg/d (Kandidämie) | 1\u00d7 100\u2013200 mg/d (HWI)', hinweis: '50% Dosisreduktion bei eGFR <50' },
+      '<15':   { dosis: '50% der Tagesdosis', hinweis: 'Cl proportional zu GFR; starke Akkumulation' },
+      'HD':    { dosis: '400 mg nach HD (Kandidämie) | 200 mg nach HD (HWI)', hinweis: '50% nach 3h HD entfernt; Ladedosis voll; nach HDT geben' },
+      'CRRT':  { dosis: '1\u00d7 400 mg/d (Kandidämie)', hinweis: 'CRRT entfernt signifikant (renal el.); Standard-/h\u00f6here Dosis; TDM erw\u00e4gen' },
+      'PD':    { dosis: '50% der Tagesdosis', hinweis: 'geringe PD-Clearance; wie <15' }
+    },
+    tdm: false, cave: '\u26a0\ufe0f Starker CYP2C9/3A4-Inhibitor! Tacrolimus, Ciclosporin, Marcumar, Statine, Benzodiazepine: Spiegel/INR anpassen. C. glabrata oft resistent, C. krusei intrinsisch resistent'
+  },
+  {
+    name: 'Voriconazol', brand: 'Vfend\u00ae', gruppe: 'Antimykotikum',
+    spektrum: ['Pilze'],
+    indikation: 'Invasive Aspergillose (Mittel der Wahl!), Candida (incl. fluconazolresistent), Fusarium, Scedosporium',
+    dosierung: {
+      '>50':   { dosis: 'Loading: 2\u00d7 6 mg/kg i.v. (Tag 1), dann 2\u00d7 4 mg/kg i.v. | p.o.: Loading 2\u00d7 400 mg, dann 2\u00d7 200 mg', hinweis: 'TDM Zielspiegel 2\u20135,5 \u00b5g/ml' },
+      '30-50': { dosis: 'Oral: Standarddosis | i.v. vermeiden (SBECD-Akkumulation)', hinweis: 'Ab eGFR <50: orale Gabe bevorzugen!' },
+      '15-30': { dosis: 'Oral: 2\u00d7 200 mg', hinweis: 'IV kontraindiziert (SBECD-Lösungsmittel akkumuliert nephrotoxisch)' },
+      '<15':   { dosis: 'Oral: 2\u00d7 200 mg', hinweis: '\u26a0\ufe0f IV kontraindiziert bei eGFR <50; nur oral!' },
+      'HD':    { dosis: 'Oral: 2\u00d7 200 mg', hinweis: 'Voriconazol selbst kaum dialysierbar; SBECD dialysierbar \u2192 IV nach HD theoretisch m\u00f6glich, aber nicht empfohlen' },
+      'CRRT':  { dosis: 'Oral: 2\u00d7 200 mg | i.v. mit Vorsicht/TDM', hinweis: 'CRRT entfernt SBECD; IV m\u00f6glicherweise sicherer als HD, aber begrenzte Daten; TDM!' },
+      'PD':    { dosis: 'Oral: 2\u00d7 200 mg', hinweis: 'IV kontraindiziert; orale Bioverfügbarkeit 96%' }
+    },
+    tdm: true, cave: '\u26a0\ufe0f TDM zwingend (Zielspiegel 2\u20135,5 µg/ml); Lebertoxizit\u00e4t; Photodermatose/Hautkarzinom bei Langzeittherapie; Sehst\u00f6rungen; Viele Interaktionen (CYP2C19-Polymorphismus!); IV-Formulierung mit SBECD nephrotoxisch'
+  },
+  {
+    name: 'Caspofungin', brand: 'Cancidas\u00ae', gruppe: 'Antimykotikum',
+    spektrum: ['Pilze'],
+    indikation: 'Candida-Infektionen (incl. azolresistent), Aspergillose (2. Wahl), empirische Therapie febrile Neutropenie',
+    dosierung: {
+      '>50':   { dosis: 'Loading: 70 mg i.v. Tag 1, dann 1\u00d7 50 mg/d (>80 kg: 70 mg/d)', hinweis: 'Infusion \u00fcber 1 h' },
+      '30-50': { dosis: 'Loading: 70 mg, dann 1\u00d7 50 mg/d i.v.', hinweis: 'keine Anpassung n\u00f6tig' },
+      '15-30': { dosis: 'Loading: 70 mg, dann 1\u00d7 50 mg/d i.v.', hinweis: 'keine Anpassung' },
+      '<15':   { dosis: 'Loading: 70 mg, dann 1\u00d7 50 mg/d i.v.', hinweis: 'keine Anpassung; Elimination biliar/fäkal' },
+      'HD':    { dosis: 'Loading: 70 mg, dann 1\u00d7 50 mg/d i.v.', hinweis: 'nicht dialysierbar; Standarddosis' },
+      'CRRT':  { dosis: 'Loading: 70 mg, dann 1\u00d7 50 mg/d i.v.', hinweis: 'keine relevante CRRT-Clearance; Standarddosis' },
+      'PD':    { dosis: 'Loading: 70 mg, dann 1\u00d7 50 mg/d i.v.', hinweis: 'keine Anpassung; geringe PD-Clearance' }
+    },
+    tdm: false, cave: 'Bei gleichzeitiger Cyclosporin-Gabe: LFT \u00fcberwachen. Lebertoxizit\u00e4t m\u00f6glich. Keine Candida-parapsilosis-Deckung bei MHK-Erh\u00f6hung'
+  },
+  {
+    name: 'Anidulafungin', brand: 'Ecalta\u00ae', gruppe: 'Antimykotikum',
+    spektrum: ['Pilze'],
+    indikation: 'Invasive Kandidose (bevorzugt bei Leberinsuffizienz), Candida-Sepsis, ICU-Patienten',
+    dosierung: {
+      '>50':   { dosis: 'Loading: 200 mg i.v. Tag 1, dann 1\u00d7 100 mg/d', hinweis: 'Infusion max. 1,1 mg/min' },
+      '30-50': { dosis: 'Loading: 200 mg, dann 1\u00d7 100 mg/d i.v.', hinweis: 'keine Anpassung (<1% renal eliminiert)' },
+      '15-30': { dosis: 'Loading: 200 mg, dann 1\u00d7 100 mg/d i.v.', hinweis: 'keine Anpassung' },
+      '<15':   { dosis: 'Loading: 200 mg, dann 1\u00d7 100 mg/d i.v.', hinweis: 'keine Anpassung; sicherste Echinocandin-Wahl bei schwerer NI' },
+      'HD':    { dosis: 'Loading: 200 mg, dann 1\u00d7 100 mg/d i.v.', hinweis: 'nicht dialysierbar; Standarddosis; Mittel der Wahl bei HD' },
+      'CRRT':  { dosis: 'Loading: 200 mg, dann 1\u00d7 100 mg/d i.v.', hinweis: 'keine CRRT-Clearance; Standarddosis' },
+      'PD':    { dosis: 'Loading: 200 mg, dann 1\u00d7 100 mg/d i.v.', hinweis: 'keine Anpassung; bevorzugte Wahl' }
+    },
+    tdm: false, cave: 'Mittel der Wahl bei Leberinsuffizienz + Niereninsuffizienz (rein hepatisch eliminiert). Infusionsrate beachten!'
+  },
+  // ===== ANTIVIRALE =====
+  {
+    name: 'Aciclovir i.v.', brand: 'Zovirax\u00ae i.v.', gruppe: 'Antiviral',
+    spektrum: ['Viren'],
+    indikation: 'HSV-Enzephalitis, schwere VZV/Zoster-Infektion (Immunsupprimierte), neonataler HSV',
+    dosierung: {
+      '>50':   { dosis: 'HSV: 10 mg/kg q8h i.v. | VZV: 10\u201315 mg/kg q8h | Inf. \u00fcber 1 h', hinweis: 'ausreichende Hydrierung!' },
+      '30-50': { dosis: '10 mg/kg q12h i.v.', hinweis: 'GFR 25\u201350: Intervall auf 12 h verl\u00e4ngern' },
+      '15-30': { dosis: '10 mg/kg q24h i.v. | oder 5\u20137 mg/kg q12h', hinweis: 'weitere Intervallanpassung' },
+      '<15':   { dosis: '5 mg/kg q24h i.v.', hinweis: 'stark reduziert; kristalline Nephropathie-Risiko hoch' },
+      'HD':    { dosis: '2,5\u20135 mg/kg q24h i.v.', hinweis: 'HD entfernt ~60%; nach Dialyse; HWZ 19,5 h bei ESRF' },
+      'CRRT':  { dosis: '7,5\u201310 mg/kg q24h i.v.', hinweis: 'CRRT erh\u00f6ht Clearance; Dosierung wie eGFR 15\u201330' },
+      'PD':    { dosis: '5 mg/kg q24h i.v.', hinweis: 'geringe PD-Clearance; wie <15' }
+    },
+    tdm: false, cave: '\u26a0\ufe0f KRISTALLINE NEPHROPATHIE bei Hypovolämie/schneller Infusion! Mind. 1 h Infusionszeit + >500 ml Hydrierung/Dosis. Neurotoxizit\u00e4t bei Akkumulation. Kreatinin und Neurostatus t\u00e4glich'
+  },
+  {
+    name: 'Aciclovir p.o.', brand: 'Zovirax\u00ae 800 mg', gruppe: 'Antiviral',
+    spektrum: ['Viren'],
+    indikation: 'Herpes labialis (Behandlung/Prophylaxe), Zoster (mild\u2013mittel), HSV-Prophylaxe',
+    dosierung: {
+      '>50':   { dosis: 'Zoster: 5\u00d7 800 mg/d \u00d7 7 d | HSV: 3\u00d7 400 mg/d (Behandlung)', hinweis: '' },
+      '30-50': { dosis: 'Zoster: 3\u00d7 800 mg/d | HSV: 3\u00d7 400 mg/d', hinweis: 'eGFR 25\u201350: Intervall verl\u00e4ngern' },
+      '15-30': { dosis: 'Zoster: 800 mg q8h | HSV: 200 mg q8h', hinweis: '' },
+      '<15':   { dosis: 'Zoster: 800 mg q12h | HSV: 200 mg q12h', hinweis: 'stark reduziert' },
+      'HD':    { dosis: 'Zoster: 800 mg nach HD | HSV: 400 mg nach HD', hinweis: 'dialysierbar; nach HDT' },
+      'CRRT':  { dosis: 'wie eGFR 15\u201330', hinweis: 'angepasst an CRRT-Clearance' },
+      'PD':    { dosis: 'wie <15', hinweis: 'geringe PD-Clearance' }
+    },
+    tdm: false, cave: 'Orale Bioverfügbarkeit nur 15\u201330% \u2192 bei schwerer Infektion IV bevorzugen. Ausreichende Hydrierung auch oral wichtig'
+  },
+  {
+    name: 'Ganciclovir', brand: 'Cymevene\u00ae', gruppe: 'Antiviral',
+    spektrum: ['Viren'],
+    indikation: 'CMV-Retinitis, CMV-Pneumonitis (Immunsupprimierte), CMV-Prophylaxe nach Transplantation',
+    dosierung: {
+      '>50':   { dosis: 'Induktion: 2\u00d7 5 mg/kg i.v. \u00d7 14\u201321 d | Erhaltung: 1\u00d7 5 mg/kg/d', hinweis: 'TDM bei Niereninsuffizienz empfohlen' },
+      '30-50': { dosis: 'Induktion: 2\u00d7 2,5 mg/kg i.v. | Erhaltung: 1\u00d7 2,5 mg/kg/d', hinweis: 'eGFR 50\u201370: Dosisreduktion 50%' },
+      '15-30': { dosis: 'Induktion: 1\u00d7 2,5 mg/kg/d | Erhaltung: 1\u00d7 1,25 mg/kg/d', hinweis: '' },
+      '<15':   { dosis: 'Induktion: 1\u00d7 1,25 mg/kg/d | Erhaltung: 1\u00d7 0,625 mg/kg/d', hinweis: 'stark reduziert' },
+      'HD':    { dosis: 'Induktion: 1,25 mg/kg 3\u00d7/Woche nach HD | Erhaltung: 0,625 mg/kg 3\u00d7/Woche', hinweis: 'HD entfernt ~50%; nach Dialyse' },
+      'CRRT':  { dosis: 'Induktion: 1\u00d7 2,5 mg/kg/d | Erhaltung: 1\u00d7 1,25\u20132,5 mg/kg/d', hinweis: 'CRRT erh\u00f6ht Clearance; Dosierung wie eGFR 15\u201350' },
+      'PD':    { dosis: 'wie <15', hinweis: 'geringe PD-Clearance; nach Spiegel titrieren' }
+    },
+    tdm: true, cave: '\u26a0\ufe0f Myelosuppression (Thrombozytopenie, Neutropenie!) \u2192 BB 2\u00d7/Woche! Teratogen/mutagen. Alternative: Valganciclovir p.o. (Prodrug, falls orale Therapie m\u00f6glich)'
+  },
+  {
+    name: 'Oseltamivir (Tamiflu)', brand: 'Tamiflu\u00ae', gruppe: 'Antiviral',
+    spektrum: ['Viren'],
+    indikation: 'Influenza A+B (Therapie <48 h nach Symptombeginn; ITS ohne Zeitlimit!), Prophylaxe nach Exposition',
+    dosierung: {
+      '>50':   { dosis: 'Therapie: 2\u00d7 75 mg p.o. \u00d7 5 d | Prophylaxe: 1\u00d7 75 mg/d', hinweis: '' },
+      '30-50': { dosis: 'Therapie: 2\u00d7 30 mg p.o. | Prophylaxe: 1\u00d7 30 mg/d', hinweis: 'eGFR 30\u201360: Dosisreduktion' },
+      '15-30': { dosis: 'Therapie: 1\u00d7 30 mg/d p.o. | Prophylaxe: 30 mg alle 2 Tage', hinweis: '' },
+      '<15':   { dosis: 'Therapie: 30 mg sofort, dann individuell', hinweis: 'sehr begrenzte Daten; Dosierung nach Literatur/Pharmakologie' },
+      'HD':    { dosis: '30 mg sofort + nach jeder Dialyse (3\u00d7/Woche)', hinweis: 'dialysierbar; nach HDT geben; Prophylaxe: 30 mg/Woche' },
+      'CRRT':  { dosis: '2\u00d7 75 mg p.o.', hinweis: 'CRRT erh\u00f6ht Clearance deutlich; Standarddosierung wie GFR >60 empfohlen' },
+      'PD':    { dosis: '30 mg w\u00f6chentlich (APD/CAPD)', hinweis: 'sehr geringe PD-Clearance; Vorsicht' }
+    },
+    tdm: false, cave: 'Auf ITS auch nach >48 h sinnvoll! Neuropsychiatrische Nebenwirkungen (bes. Kinder). \u00dcbelkeit h\u00e4ufig (mit Mahlzeit). H1N1/H3N2: aktuell meistens empfindlich'
+  },
+  {
+    name: 'Paxlovid (Nirmatrelvir/Ritonavir)', brand: 'Paxlovid\u00ae', gruppe: 'Antiviral',
+    spektrum: ['Viren'],
+    indikation: 'COVID-19 (ambulant/fr\u00fch): symptomatische Erkrankung + Risikofaktoren f\u00fcr schweren Verlauf; innerhalb 5 Tage nach Symptombeginn',
+    dosierung: {
+      '>50':   { dosis: '2\u00d7 (300 mg Nirmatrelvir + 100 mg Ritonavir) q12h p.o. \u00d7 5 d', hinweis: '' },
+      '30-50': { dosis: '2\u00d7 (150 mg Nirmatrelvir + 100 mg Ritonavir) q12h p.o. \u00d7 5 d', hinweis: 'eGFR 30\u201360: 50% Nirmatrelvir-Reduktion' },
+      '15-30': { dosis: 'KONTRAINDIZIERT', hinweis: 'keine ausreichenden Sicherheitsdaten bei eGFR <30' },
+      '<15':   { dosis: 'KONTRAINDIZIERT', hinweis: 'kontraindiziert' },
+      'HD':    { dosis: 'KONTRAINDIZIERT', hinweis: 'kontraindiziert; Alternativen: Remdesivir i.v. oder Sotrovimab' },
+      'CRRT':  { dosis: 'KONTRAINDIZIERT', hinweis: 'kontraindiziert' },
+      'PD':    { dosis: 'KONTRAINDIZIERT', hinweis: 'kontraindiziert; PD gilt als GFR <30' }
+    },
+    tdm: false, cave: '\u26a0\ufe0f MASSIVER CYP3A4-Inhibitor (Ritonavir!): Statine absetzen, Immunsuppressiva (Tacrolimus, Ciclosporin) PAUSIEREN/stark reduzieren, Antikoagulanzien anpassen! Rebound-Ph\u00e4nomen beschrieben. Nur f\u00fcr ambulante Fr\u00fchtherapie'
   }
 ];
 
