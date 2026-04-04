@@ -5326,8 +5326,20 @@ copdCalcAnthonisen();
             <label>Laktat (mmol/l) <span style="color:#aaa;font-weight:400">opt.</span></label>
             <input type="number" id="sab-lak" placeholder="" step="0.1" oninput="sabWorkup()">
           </div>
+          <div class="sab-field">
+            <label>Osm. gemessen (mOsm/kg) <span style="color:#aaa;font-weight:400">opt.</span></label>
+            <input type="number" id="sab-osm-mess" placeholder="" step="1" oninput="sabWorkup()">
+          </div>
+          <div class="sab-field">
+            <label>Glukose (mg/dl) <span style="color:#aaa;font-weight:400">opt.</span></label>
+            <input type="number" id="sab-glu" placeholder="" step="1" oninput="sabWorkup()">
+          </div>
+          <div class="sab-field">
+            <label>Ethanol (mg/dl) <span style="color:#aaa;font-weight:400">opt.</span></label>
+            <input type="number" id="sab-etoh" placeholder="" step="1" oninput="sabWorkup()">
+          </div>
         </div>
-        <div class="sab-note">HCO₃⁻ aus BGA ablesen ODER berechnen: HCO₃⁻ = 0,03 × pCO₂ × 10^(pH − 6,1)</div>
+        <div class="sab-note">HCO₃⁻ aus BGA ablesen ODER berechnen: HCO₃⁻ = 0,03 × pCO₂ × 10^(pH − 6,1) · Osmolalitätslücke = gemessen − berechnet; normal &lt; 10 mOsm/kg</div>
       </div>
 
       <!-- FLOWCHART RESULTS -->
@@ -5370,17 +5382,37 @@ copdCalcAnthonisen();
       <!-- REFERENCE: GOLD MARK -->
       <div class="sab-ref-card">
         <div class="sab-ref-title">🔴 GOLD MARK — erhöhte Anionenlücke</div>
-        <div class="sab-goldmark-item"><span class="sab-goldmark-letter">G</span><span><strong>G</strong>lykolat / Ethylenglykol-Vergiftung</span></div>
-        <div class="sab-goldmark-item"><span class="sab-goldmark-letter">O</span><span><strong>O</strong>xoprolin (Paracetamol-Überdosierung)</span></div>
-        <div class="sab-goldmark-item"><span class="sab-goldmark-letter">L</span><span><strong>L</strong>aktat-Azidose (Typ A: Hypoxie; Typ B: Metformin etc.)</span></div>
-        <div class="sab-goldmark-item"><span class="sab-goldmark-letter">D</span><span><strong>D</strong>-Laktat (Kurzdarmsyndrom)</span></div>
-        <div class="sab-goldmark-item"><span class="sab-goldmark-letter">M</span><span><strong>M</strong>ethanol-Vergiftung</span></div>
-        <div class="sab-goldmark-item"><span class="sab-goldmark-letter">A</span><span><strong>A</strong>lkoholische Ketoazidose</span></div>
-        <div class="sab-goldmark-item"><span class="sab-goldmark-letter">R</span><span><strong>R</strong>enal — Urämie (CKD Stadium 4–5)</span></div>
-        <div class="sab-goldmark-item"><span class="sab-goldmark-letter">K</span><span><strong>K</strong>etoazidose (DKA, Hungern)</span></div>
-        <div style="margin-top:8px;padding-top:8px;border-top:1px solid #f0e0e0;font-size:.72rem;color:#888;">
-          <strong style="color:#555;">Normale AL (hyperchlorämisch):</strong><br>
-          RTA Typ I/II/IV · Diarrhö · Pankreatitis · Ureterableitung · NaCl-Infusion · Acetazolamid
+        <div class="sab-goldmark-item"><span class="sab-goldmark-letter">G</span><span><strong>G</strong>lykolat (Ethylenglykol) — Osm.-Lücke ↑↑, Oxalat-Kristalle, Ca²⁺ ↓ → <em>Fomepizol</em></span></div>
+        <div class="sab-goldmark-item"><span class="sab-goldmark-letter">O</span><span><strong>O</strong>xoprolin (Paracetamol chron.) — Osm.-Lücke normal → <em>N-Acetylcystein</em></span></div>
+        <div class="sab-goldmark-item"><span class="sab-goldmark-letter">L</span><span><strong>L</strong>aktat Typ A (Hypoxie/Schock) · Typ B (Metformin, Thiaminmangel) → <em>Ursache, Thiamin</em></span></div>
+        <div class="sab-goldmark-item"><span class="sab-goldmark-letter">D</span><span><strong>D</strong>-Laktat (Kurzdarmsyndrom) — Standard-BGA negativ! → <em>KH-Restriktion</em></span></div>
+        <div class="sab-goldmark-item"><span class="sab-goldmark-letter">M</span><span><strong>M</strong>ethanol — Osm.-Lücke ↑↑, Sehstörung, Formiat-Azidose → <em>Fomepizol + HD</em></span></div>
+        <div class="sab-goldmark-item"><span class="sab-goldmark-letter">A</span><span><strong>A</strong>lk. Ketoazidose — Keton+, Glukose normal → <em>Glukose + Thiamin VOR Glukose!</em></span></div>
+        <div class="sab-goldmark-item"><span class="sab-goldmark-letter">R</span><span><strong>R</strong>enal (Urämie CKD 4–5) — Krea ↑↑, keine Osm.-Lücke → <em>NaHCO₃ / KRT</em></span></div>
+        <div class="sab-goldmark-item"><span class="sab-goldmark-letter">K</span><span><strong>K</strong>etoazidose (DKA) — Glukose ↑ (auch euglyk. bei SGLT2i) → <em>NaCl + Insulin + K⁺</em></span></div>
+        <div style="margin-top:8px;padding-top:8px;border-top:1px solid #f0e0e0;font-size:.71rem;color:#555;">
+          <strong>Normale AL (hyperchlorämisch):</strong><br>
+          RTA I/II/IV · Diarrhö · Pankreatitis · NaCl-Infusion · Acetazolamid · Ureterableitung
+        </div>
+        <div style="margin-top:8px;padding-top:8px;border-top:1px solid #f0e0e0;font-size:.71rem;">
+          <strong style="color:#b71c1c;">Osmolalitätslücke:</strong><br>
+          <code style="font-size:.69rem;">Osm<sub>berechnet</sub> = 2×Na + Glukose/18 + Harnstoff/6</code><br>
+          <span style="color:#b71c1c;">Lücke = gemessen − berechnet; <strong>normal &lt; 10</strong></span><br>
+          <strong>&gt; 20 mOsm/kg</strong> → toxische Alkohole (Methanol, Ethylenglykol, Isopropanol)<br>
+          Ethanol-Korrektur: Ethanol (mg/dl) / 4,6 abziehen
+        </div>
+        <div style="margin-top:8px;padding-top:8px;border-top:1px solid #f0e0e0;font-size:.71rem;">
+          <strong style="color:#b71c1c;">Laktatlücke (AG gap minus Laktat):</strong><br>
+          = ΔAL − Laktat<br>
+          <strong>&gt; 5 mmol/l</strong> → andere Säuren vorhanden (Ketonkörper, Glykolat, D-Laktat)
+        </div>
+        <div style="margin-top:8px;padding-top:8px;border-top:1px solid #f0e0e0;font-size:.71rem;background:#fce8e8;border-radius:6px;padding:8px;">
+          <strong style="color:#b71c1c;">🔴 Fomepizol (Antizol®):</strong><br>
+          ADH-Inhibitor · Methanol + Ethylenglykol<br>
+          Loading: <strong>15 mg/kg i.v.</strong> über 30 min<br>
+          Erhalt: 10 mg/kg q12h × 4 Dosen → 15 mg/kg q12h<br>
+          Bei HD: q4h (dialysierbar!)<br>
+          <span style="color:#777;">Giftnotruf Berlin: 030 19240</span>
         </div>
       </div>
 
@@ -5483,13 +5515,16 @@ copdCalcAnthonisen();
   window.sabWorkup = function() {
     saveUalVals();
 
-    var ph   = val('sab-ph');
-    var pco2 = val('sab-pco2');
-    var hco3 = val('sab-hco3');
-    var na   = val('sab-na');
-    var cl   = val('sab-cl');
-    var alb  = val('sab-alb');
-    var lak  = val('sab-lak');
+    var ph      = val('sab-ph');
+    var pco2    = val('sab-pco2');
+    var hco3    = val('sab-hco3');
+    var na      = val('sab-na');
+    var cl      = val('sab-cl');
+    var alb     = val('sab-alb');
+    var lak     = val('sab-lak');
+    var osmMess = val('sab-osm-mess');
+    var glu     = val('sab-glu');
+    var etoh    = val('sab-etoh');
 
     var fc = document.getElementById('sab-flowchart');
 
@@ -5733,16 +5768,106 @@ copdCalcAnthonisen();
         alBody += badge('red', 'Erhöhte Anionenlücke (' + alUse.toFixed(1) + ' mmol/l)') + '<br>';
         alBody += result('danger', '<strong>\u2192 AG-Azidose</strong> \u2014 GOLD MARK-Ursachen (siehe rechte Spalte)');
         if (isset(lak) && lak > 0) {
-          var lakContrib = lak;
-          alBody += result('warn', 'Laktat (' + lak + ' mmol/l) erklärt ca. ' + lakContrib.toFixed(1) + ' mmol/l der AL-Erhöhung (1:1 Beitrag)');
+          alBody += result('warn', 'Laktat (' + lak + ' mmol/l) → trägt ca. ' + lak.toFixed(1) + ' mmol/l zur AL-Erhöhung bei (1:1 Beitrag)');
         }
-        /* GOLDMARK accordion */
-        alBody += '<div id="sab-acc-gm-hd" class="sab-acc-hd" onclick="sabToggleAcc(\'sab-acc-gm\')">' +
-          'GOLD MARK Ursachen anzeigen <span class="sab-acc-arrow">▼</span>' +
+        /* Laktatlücke */
+        if (isset(lak)) {
+          var lakContrib2 = alUse - 12;
+          var lakLuecke = lakContrib2 - lak;
+          alBody += '<br><code>Laktatlücke = ΔAL − Laktat = ' + lakContrib2.toFixed(1) + ' − ' + lak + ' = <strong>' + lakLuecke.toFixed(1) + ' mmol/l</strong></code><br>';
+          if (lakLuecke > 5) {
+            alBody += result('warn', '⚠️ Laktatlücke erhöht (' + lakLuecke.toFixed(1) + ') → andere osmotisch aktive Säuren vorhanden: Ketonkörper, Glykolat, D-Laktat, Salizylat, Methanol/Ethylenglykol');
+          } else if (lakLuecke > 0) {
+            alBody += result('neutral', 'Laktatlücke gering erhöht (' + lakLuecke.toFixed(1) + ') → Laktat erklärt AL-Erhöhung weitgehend');
+          } else {
+            alBody += result('ok', 'Laktatlücke normal → Laktat erklärt AL-Erhöhung vollständig');
+          }
+        }
+
+        /* GOLDMARK accordion with therapy */
+        var gmGlu = val('sab-glu');
+        var gmOsmM = val('sab-osm-mess');
+        var gmOsmB = isset(na) ? (2 * na + (isset(gmGlu) ? gmGlu / 18.016 : 5) + (isset(lak) ? lak : 0)) : null;
+        var osmLuecke = (gmOsmB !== null && isset(gmOsmM)) ? (gmOsmM - gmOsmB) : null;
+
+        var osmInfo = '';
+        if (osmLuecke !== null) {
+          osmInfo = '<br><code>Osmolalitätslücke = ' + gmOsmM + ' − ' + gmOsmB.toFixed(0) + ' = <strong>' + osmLuecke.toFixed(0) + ' mOsm/kg</strong></code><br>';
+          if (osmLuecke > 20) {
+            osmInfo += result('danger', '🚨 Osmolalitätslücke stark erhöht (' + osmLuecke.toFixed(0) + ') → V.a. toxische Alkohole: Methanol, Ethylenglykol, Isopropanol, Propylenglykol → Fomepizol + Dialyse!');
+          } else if (osmLuecke > 10) {
+            osmInfo += result('warn', '⚠️ Osmolalitätslücke erhöht (' + osmLuecke.toFixed(0) + ') → toxische Alkohole möglich; auch: Mannitol, Ethanol, Schock');
+          } else {
+            osmInfo += result('ok', 'Osmolalitätslücke normal (< 10) → keine ungemessenen Osmolyte');
+          }
+        } else if (!isset(gmOsmM)) {
+          osmInfo = '<div style="font-size:.72rem;color:#aaa;margin-top:4px;">→ Osmolalität gemessen eingeben für Osmolalitätslücke</div>';
+        }
+        alBody += osmInfo;
+
+        alBody += '<div id="sab-acc-gm-hd" class="sab-acc-hd" onclick="sabToggleAcc(\'sab-acc-gm\')" style="margin-top:8px;">' +
+          'GOLD MARK — Diagnose & Therapie <span class="sab-acc-arrow" id="sab-acc-gm-arrow">▼</span>' +
           '</div>' +
           '<div id="sab-acc-gm-body" class="sab-acc-body">' +
-          '<strong>G</strong>lykolat · <strong>O</strong>xoprolin · <strong>L</strong>aktat · <strong>D</strong>-Laktat · ' +
-          '<strong>M</strong>ethanol · <strong>A</strong>lk. Ketoazidose · <strong>R</strong>enal (Urämie) · <strong>K</strong>etoazidose (DKA)' +
+
+          '<table style="width:100%;font-size:.72rem;border-collapse:collapse;">' +
+          '<thead><tr style="background:#fce8e8;"><th style="padding:4px 6px;text-align:left;">Ursache</th><th style="padding:4px 6px;">Hinweis</th><th style="padding:4px 6px;">Therapie</th></tr></thead><tbody>' +
+
+          '<tr style="border-bottom:1px solid #f5e0e0;">' +
+          '<td style="padding:4px 6px;font-weight:700;color:#b71c1c;"><strong>G</strong> Glykolat</td>' +
+          '<td style="padding:4px 6px;">Ethylenglykol-Vergiftung; Osm.-Lücke ↑↑; Urin: Oxalat-Kristalle; Ca²⁺ ↓</td>' +
+          '<td style="padding:4px 6px;"><span style="background:#fce8e8;color:#b71c1c;padding:1px 5px;border-radius:4px;font-weight:700;">Fomepizol</span> 15 mg/kg i.v. Loading, dann 10 mg/kg q12h · Hämodialyse · Ca²⁺ substituieren</td>' +
+          '</tr>' +
+
+          '<tr style="border-bottom:1px solid #f5e0e0;">' +
+          '<td style="padding:4px 6px;font-weight:700;color:#b71c1c;"><strong>O</strong> Oxoprolin</td>' +
+          '<td style="padding:4px 6px;">Chronische Paracetamol-Einnahme, Malnutrition, Glutathionmangel; Osm.-Lücke normal</td>' +
+          '<td style="padding:4px 6px;">Paracetamol absetzen · N-Acetylcystein 150 mg/kg i.v. über 60 min → 50 mg/kg über 4h → 100 mg/kg über 16h</td>' +
+          '</tr>' +
+
+          '<tr style="border-bottom:1px solid #f5e0e0;">' +
+          '<td style="padding:4px 6px;font-weight:700;color:#b71c1c;"><strong>L</strong> L-Laktat</td>' +
+          '<td style="padding:4px 6px;">Typ A: Hypoxie, Schock · Typ B: Metformin, Linezolid, Propofol-Infusionssyndrom, Thiaminmangel, Malignom</td>' +
+          '<td style="padding:4px 6px;">Ursache behandeln · Perfusion optimieren · Metformin/Linezolid absetzen · Thiamin 100–500 mg i.v. (Typ B) · CRRT bei Laktat > 10 + Azidose</td>' +
+          '</tr>' +
+
+          '<tr style="border-bottom:1px solid #f5e0e0;">' +
+          '<td style="padding:4px 6px;font-weight:700;color:#b71c1c;"><strong>D</strong> D-Laktat</td>' +
+          '<td style="padding:4px 6px;">Kurzdarmsyndrom, Kolostomie; Standard-Laktat-BGA negativ! Neurologische Symptome (Enzephalopathie); nach KH-reicher Mahlzeit</td>' +
+          '<td style="padding:4px 6px;">Kohlenhydrat-Restriktion · orale Antibiotika (Neomycin, Metronidazol) zur Darmflora-Modulation · spezifische D-Laktat-Messung</td>' +
+          '</tr>' +
+
+          '<tr style="border-bottom:1px solid #f5e0e0;">' +
+          '<td style="padding:4px 6px;font-weight:700;color:#b71c1c;"><strong>M</strong> Methanol</td>' +
+          '<td style="padding:4px 6px;">Osm.-Lücke ↑↑ (früh); Sehstörungen (Optikusneuropathie!); Formiat-Azidose; Osm.-Lücke kann spät normal sein</td>' +
+          '<td style="padding:4px 6px;"><span style="background:#fce8e8;color:#b71c1c;padding:1px 5px;border-radius:4px;font-weight:700;">Fomepizol</span> 15 mg/kg i.v. · Hämodialyse (pH < 7,25, Sehstörungen, Methanol > 50 mg/dl) · Folsäure 1 mg/kg q4–6h · Ethanol-Antidot falls kein Fomepizol</td>' +
+          '</tr>' +
+
+          '<tr style="border-bottom:1px solid #f5e0e0;">' +
+          '<td style="padding:4px 6px;font-weight:700;color:#b71c1c;"><strong>A</strong> Alk. Ketoazidose</td>' +
+          '<td style="padding:4px 6px;">Alkoholentzug + Erbrechen + Nahrungskarenz; Keton-Stix positiv; Glukose normal/niedrig; Osm.-Lücke ggf. erhöht (Restalkohol)</td>' +
+          '<td style="padding:4px 6px;">Glucose 5% + NaCl 0,9% i.v. · Thiamin 100–500 mg i.v. VOR Glukose! · K⁺, Mg²⁺ substituieren · kein Insulin (Hypoglykämie-Risiko)</td>' +
+          '</tr>' +
+
+          '<tr style="border-bottom:1px solid #f5e0e0;">' +
+          '<td style="padding:4px 6px;font-weight:700;color:#b71c1c;"><strong>R</strong> Renal (Urämie)</td>' +
+          '<td style="padding:4px 6px;">CKD Std. 4–5; Retention organischer Säuren (Sulfat, Phosphat, Hippurat, Indoxylsulfat); Krea ↑↑; keine Osm.-Lücke</td>' +
+          '<td style="padding:4px 6px;">Nierenersatztherapie bei schwerer Azidose (pH < 7,1) · Bikarbonat-Substitution als Überbrückung · NaHCO₃ Ziel: HCO₃⁻ > 18 mmol/l</td>' +
+          '</tr>' +
+
+          '<tr>' +
+          '<td style="padding:4px 6px;font-weight:700;color:#b71c1c;"><strong>K</strong> Ketoazidose (DKA)</td>' +
+          '<td style="padding:4px 6px;">Typ-1-DM (meist), Typ-2 möglich; Glukose ↑↑ (selten euglykämische DKA unter SGLT2i); β-Hydroxybutyrat > 3 mmol/l</td>' +
+          '<td style="padding:4px 6px;">NaCl 0,9% 1–2 l/h initial → Übergang auf Ringer-Laktat · Insulin-Perfusor 0,1 IE/kg/h (nach K⁺ > 3,5) · K⁺-Substitution obligat · Glukose 5% parallel ab BZ < 250 mg/dl · Bikarbonat nur bei pH < 6,9</td>' +
+          '</tr>' +
+
+          '</tbody></table>' +
+
+          '<div style="margin-top:8px;padding:6px 8px;background:#f9f9f9;border-radius:6px;font-size:.71rem;color:#546e7a;">' +
+          '<strong>Fomepizol (Antizol®):</strong> Alkohol-Dehydrogenase-Inhibitor. Verhindert Metabolisierung von Methanol → Formiat und Ethylenglykol → Glykolat/Oxalat. ' +
+          'Loading: 15 mg/kg i.v. über 30 min; Erhaltung: 10 mg/kg q12h × 4 Dosen, dann 15 mg/kg q12h. ' +
+          'Bei Hämodialyse: Dosierungsintervall auf q4h verkürzen (dialysierbar). Kontakt Giftnotruf: 030 19240 (Berlin).' +
+          '</div>' +
           '</div>';
       } else if (alUse < 6) {
         alBody += badge('gray', 'Erniedrigte AL (' + alUse.toFixed(1) + ')') + '<br>';
