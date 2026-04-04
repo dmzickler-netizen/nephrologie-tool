@@ -34,6 +34,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 #tool-elektrolyte{display:none;}
 #tool-ernaehrung{display:none;}
 #tool-copd{display:none;}
+#tool-sab{display:none;}
 
 /* ============================================================
    LAE — CSS (vollständig aus lae.html, in Datei isoliert)
@@ -166,6 +167,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <button class="nav-tab-btn" data-tool="tma" onclick="switchTool('tma')">🩸 TTP / HUS</button>
   <button class="nav-tab-btn" data-tool="abx" onclick="switchTool('abx')">💊 ABx-Dosierung</button>
   <button class="nav-tab-btn" data-tool="elektrolyte" onclick="switchTool('elektrolyte')">⚗️ Elektrolyte</button>
+  <button class="nav-tab-btn" data-tool="sab" onclick="switchTool('sab')">🧪 Säure-Basen</button>
   <button class="nav-tab-btn" data-tool="ernaehrung" onclick="switchTool('ernaehrung')">🥗 Ernährung ITS</button>
   <button class="nav-tab-btn" data-tool="copd" onclick="switchTool('copd')">🫁 COPD / AECOPD</button>
   <!-- Platzhalter für weitere Tools: -->
@@ -2717,6 +2719,7 @@ window.switchTool = function(name) {
   document.getElementById('tool-tma').style.display = name === 'tma' ? 'block' : 'none';
   document.getElementById('tool-abx').style.display = name === 'abx' ? 'block' : 'none';
   document.getElementById('tool-elektrolyte').style.display = name === 'elektrolyte' ? 'block' : 'none';
+  document.getElementById('tool-sab').style.display = name === 'sab' ? 'block' : 'none';
   document.getElementById('tool-ernaehrung').style.display = name === 'ernaehrung' ? 'block' : 'none';
   document.getElementById('tool-copd').style.display = name === 'copd' ? 'block' : 'none';
 };
@@ -2948,17 +2951,12 @@ laeCalcRisk();
 
 <div class="elek-container">
   <div class="elek-header">
-    <h2>⚗️ Elektrolyt- &amp; Säure-Basen-Störungen</h2>
-    <p>Hyponatriämie-Algorithmus · BGA-Auswertung · Anionenlücke · Urin-Anionenlücke</p>
-  </div>
-
-  <div class="elek-subtabs">
-    <button class="elek-subtab-btn active" onclick="elekShowSection('hypo', this)">💧 Hyponatriämie</button>
-    <button class="elek-subtab-btn" onclick="elekShowSection('sab', this)">🧪 Säure-Basen-BGA</button>
+    <h2>⚗️ Elektrolytstörungen</h2>
+    <p>Hyponatriämie-Algorithmus · Klinische Einschätzung · Therapieempfehlung</p>
   </div>
 
   <!-- ===== HYPONATRIÄMIE ===== -->
-  <div id="elek-hypo" class="elek-section active">
+  <div id="elek-hypo">
 
     <div class="elek-card">
       <h3><span class="elek-step-badge">1</span> Klinische Daten &amp; Labor</h3>
@@ -3120,77 +3118,11 @@ laeCalcRisk();
     </div>
   </div><!-- end elek-hypo -->
 
-  <!-- ===== SÄURE-BASEN ===== -->
-  <div id="elek-sab" class="elek-section">
-    <div class="elek-card">
-      <h3>🩸 BGA-Werte eingeben</h3>
-      <div class="elek-row">
-        <div class="elek-field"><label>pH</label><input type="number" id="sab-ph" placeholder="7.40" step="0.01" oninput="sabCalc()"></div>
-        <div class="elek-field"><label>pCO₂ (mmHg)</label><input type="number" id="sab-pco2" placeholder="40" oninput="sabCalc()"></div>
-        <div class="elek-field"><label>HCO₃⁻ (mmol/l)</label><input type="number" id="sab-hco3" placeholder="24" oninput="sabCalc()"></div>
-        <div class="elek-field"><label>Na⁺ (mmol/l)</label><input type="number" id="sab-na" placeholder="140" oninput="sabCalc()"></div>
-        <div class="elek-field"><label>Cl⁻ (mmol/l)</label><input type="number" id="sab-cl" placeholder="100" oninput="sabCalc()"></div>
-        <div class="elek-field"><label>K⁺ (mmol/l) <small style="color:#888">opt.</small></label><input type="number" id="sab-k" placeholder="4.0" step="0.1" oninput="sabCalc()"></div>
-        <div class="elek-field"><label>Albumin (g/l) <small style="color:#888">opt.</small></label><input type="number" id="sab-alb" placeholder="40" oninput="sabCalc()"></div>
-        <div class="elek-field"><label>Laktat (mmol/l) <small style="color:#888">opt.</small></label><input type="number" id="sab-lak" placeholder="" oninput="sabCalc()"></div>
-      </div>
-      <div class="elek-row">
-        <div class="elek-field"><label>Urin-Na⁺ (mmol/l) <small style="color:#888">opt.</small></label><input type="number" id="sab-una" placeholder="" oninput="sabCalc()"></div>
-        <div class="elek-field"><label>Urin-K⁺ (mmol/l) <small style="color:#888">opt.</small></label><input type="number" id="sab-uk" placeholder="" oninput="sabCalc()"></div>
-        <div class="elek-field"><label>Urin-Cl⁻ (mmol/l) <small style="color:#888">opt.</small></label><input type="number" id="sab-ucl" placeholder="" oninput="sabCalc()"></div>
-        <div class="elek-field"><label>Urin-Harnstoff (mg/dl) <small style="color:#888">opt.</small></label><input type="number" id="sab-uhst" placeholder="z.B. 200" oninput="sabCalc()"></div>
-        <div class="elek-field"><label>Urin-Osmolalität (mOsm/kg) <small style="color:#888">opt.</small></label><input type="number" id="sab-uosm" placeholder="" oninput="sabCalc()"></div>
-      </div>
-    </div>
-
-    <div id="sab-result-box" style="display:none;">
-      <div class="elek-card"><h3><span class="elek-step-badge">1</span> pH-Beurteilung</h3><div id="sab-r-ph"></div></div>
-      <div class="elek-card"><h3><span class="elek-step-badge">2</span> Primärstörung</h3><div id="sab-r-prim"></div></div>
-      <div class="elek-card"><h3><span class="elek-step-badge">3</span> Kompensationsprüfung</h3><div id="sab-r-komp"></div></div>
-      <div class="elek-card"><h3><span class="elek-step-badge">4</span> Anionenlücke</h3><div id="sab-r-al"></div></div>
-      <div id="sab-r-delta-box" class="elek-card" style="display:none;"><h3><span class="elek-step-badge">5</span> Delta-Ratio (bei erhöhter AL)</h3><div id="sab-r-delta"></div></div>
-      <div id="sab-r-ual-box" class="elek-card" style="display:none;"><h3><span class="elek-step-badge">6</span> Urin-Anionenlücke</h3><div id="sab-r-ual"></div></div>
-      <div class="elek-card"><h3>📋 Zusammenfassung &amp; Differentialdiagnosen</h3><div id="sab-r-summary"></div></div>
-    </div>
-
-    <div id="sab-hint" class="elek-result info">pH und HCO₃⁻ oder pCO₂ eingeben, um die BGA-Auswertung zu starten.</div>
-
-    <div class="elek-card" style="margin-top:8px;">
-      <h3>📐 Kompensationsformeln (Referenz)</h3>
-      <div style="overflow-x:auto;">
-        <table style="width:100%;border-collapse:collapse;font-size:.85rem;">
-          <thead><tr style="background:#fce4ec;"><th style="padding:7px 10px;text-align:left;border-bottom:2px solid #ef9a9a;">Primärstörung</th><th style="padding:7px 10px;text-align:left;border-bottom:2px solid #ef9a9a;">Formel</th><th style="padding:7px 10px;text-align:left;border-bottom:2px solid #ef9a9a;">Erwarteter Bereich</th></tr></thead>
-          <tbody>
-            <tr style="border-bottom:1px solid #eee;"><td style="padding:6px 10px;"><strong>Met. Azidose</strong></td><td style="padding:6px 10px;font-family:monospace;">pCO₂ = 1,5 × HCO₃⁻ + 8 (±2)</td><td style="padding:6px 10px;">z.B. HCO₃⁻ 15 → pCO₂ 28–32</td></tr>
-            <tr style="border-bottom:1px solid #eee;"><td style="padding:6px 10px;"><strong>Met. Alkalose</strong></td><td style="padding:6px 10px;font-family:monospace;">pCO₂ = 0,7 × HCO₃⁻ + 20 (±2)</td><td style="padding:6px 10px;">z.B. HCO₃⁻ 36 → pCO₂ 43–47</td></tr>
-            <tr style="border-bottom:1px solid #eee;"><td style="padding:6px 10px;"><strong>Resp. Azidose akut</strong></td><td style="padding:6px 10px;font-family:monospace;">HCO₃⁻ = 24 + 1 × (pCO₂−40)/10</td><td style="padding:6px 10px;">1 mmol/l pro 10 mmHg ↑ pCO₂</td></tr>
-            <tr style="border-bottom:1px solid #eee;"><td style="padding:6px 10px;"><strong>Resp. Azidose chron.</strong></td><td style="padding:6px 10px;font-family:monospace;">HCO₃⁻ = 24 + 4 × (pCO₂−40)/10</td><td style="padding:6px 10px;">4 mmol/l pro 10 mmHg ↑ pCO₂</td></tr>
-            <tr style="border-bottom:1px solid #eee;"><td style="padding:6px 10px;"><strong>Resp. Alkalose akut</strong></td><td style="padding:6px 10px;font-family:monospace;">HCO₃⁻ = 24 − 2 × (40−pCO₂)/10</td><td style="padding:6px 10px;">2 mmol/l pro 10 mmHg ↓ pCO₂</td></tr>
-            <tr><td style="padding:6px 10px;"><strong>Resp. Alkalose chron.</strong></td><td style="padding:6px 10px;font-family:monospace;">HCO₃⁻ = 24 − 5 × (40−pCO₂)/10</td><td style="padding:6px 10px;">5 mmol/l pro 10 mmHg ↓ pCO₂</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="elek-infobox" style="margin-top:10px;">
-        <strong>Anionenlücke (AL)</strong> = Na⁺ − (HCO₃⁻ + Cl⁻) · Normal: 8–12 mmol/l<br>
-        <strong>Albumin-Korrektur:</strong> für jede 10 g/l Albumin unter 40 g/l → AL um 2,5 mmol/l erhöhen<br>
-        <strong>GOLDMARK</strong> (erhöhte AL): Glycolat · Oxoprolin · L-Laktat · D-Laktat · Methanol · Aspirin · Renal (Urämie) · Ketoazidose<br>
-        <strong>Normale AL</strong> (hyperchlorämisch): RTA · Diarrhö · Diuretika · Ureterableitung · Acetazolamid
-      </div>
-    </div>
-  </div><!-- end elek-sab -->
-
 </div><!-- end elek-container -->
 
 <script>
 (function(){
   'use strict';
-
-  window.elekShowSection = function(id, btn) {
-    document.querySelectorAll('.elek-section').forEach(function(s){ s.classList.remove('active'); });
-    document.querySelectorAll('.elek-subtab-btn').forEach(function(b){ b.classList.remove('active'); });
-    document.getElementById('elek-' + id).classList.add('active');
-    btn.classList.add('active');
-  };
 
   window.elekAutoImport = function() { /* no-op in crit-care context */ };
 
@@ -3346,158 +3278,6 @@ laeCalcRisk();
       if (ods === 'ja') urHtml += ' <span class="elek-tag red">ODS-Risiko: konservative Grenze!</span>';
     }
     document.getElementById('hypo-r-ursache').innerHTML = urHtml;
-  };
-
-  /* ===== SÄURE-BASEN ===== */
-  window.sabCalc = function() {
-    var ph   = parseFloat(document.getElementById('sab-ph').value);
-    var pco2 = parseFloat(document.getElementById('sab-pco2').value);
-    var hco3 = parseFloat(document.getElementById('sab-hco3').value);
-    var na   = parseFloat(document.getElementById('sab-na').value);
-    var cl   = parseFloat(document.getElementById('sab-cl').value);
-    var alb  = parseFloat(document.getElementById('sab-alb').value);
-    var lak  = parseFloat(document.getElementById('sab-lak').value);
-    var una  = parseFloat(document.getElementById('sab-una').value);
-    var uk   = parseFloat(document.getElementById('sab-uk').value);
-    var ucl  = parseFloat(document.getElementById('sab-ucl').value);
-    var uhst = parseFloat(document.getElementById('sab-uhst').value);
-    var uosm = parseFloat(document.getElementById('sab-uosm').value);
-
-    var hasPh   = !isNaN(ph);
-    var hasPco2 = !isNaN(pco2);
-    var hasHco3 = !isNaN(hco3);
-
-    if (!hasPh || (!hasPco2 && !hasHco3)) {
-      document.getElementById('sab-result-box').style.display = 'none';
-      document.getElementById('sab-hint').style.display = 'block';
-      return;
-    }
-    document.getElementById('sab-result-box').style.display = 'block';
-    document.getElementById('sab-hint').style.display = 'none';
-
-    var hco3calc = hasHco3 ? hco3 : (hasPco2 ? (0.03 * pco2 * Math.pow(10, ph - 6.1)) : NaN);
-    if (!hasHco3 && !isNaN(hco3calc)) hco3 = parseFloat(hco3calc.toFixed(1));
-    if (!hasPco2 && hasHco3) pco2 = parseFloat((hco3 / (0.03 * Math.pow(10, ph - 6.1))).toFixed(1));
-
-    var phClass = '', phText = '';
-    if (ph < 6.8 || ph > 7.8) { phClass = 'danger'; phText = '⛔ Lebensbedrohlicher pH!'; }
-    else if (ph < 7.35) { phClass = 'warn'; phText = '<span class="elek-tag red">Azidämie</span>'; }
-    else if (ph > 7.45) { phClass = 'warn'; phText = '<span class="elek-tag orange">Alkalämie</span>'; }
-    else { phText = '<span class="elek-tag green">Normaler pH</span>'; }
-    document.getElementById('sab-r-ph').innerHTML = '<div class="elek-result ' + phClass + '">pH <strong>' + ph + '</strong> — ' + phText + '<br><small>Normal: 7,35–7,45</small></div>';
-
-    var isAzid = ph < 7.35, isAlkal = ph > 7.45;
-    var metComp = hco3 - 24, respComp = pco2 - 40;
-    var primText = '', primType = '';
-
-    if (isAzid) {
-      if (metComp < -2 && respComp > 2) { primType = 'gemischt'; primText = '<span class="elek-tag red">Gemischte Azidose</span> (HCO₃⁻ ↓ + pCO₂ ↑)'; }
-      else if (metComp < -2) { primType = 'metazid'; primText = '<span class="elek-tag red">Metabolische Azidose</span> (HCO₃⁻ ↓ = ' + hco3 + ' mmol/l)'; }
-      else if (respComp > 2) { primType = 'respazid'; primText = '<span class="elek-tag red">Respiratorische Azidose</span> (pCO₂ ↑ = ' + pco2 + ' mmHg)'; }
-      else { primText = '<span class="elek-tag red">Azidose</span> — Primärstörung unklar'; }
-    } else if (isAlkal) {
-      if (metComp > 2 && respComp < -2) { primType = 'gemischt_alk'; primText = '<span class="elek-tag orange">Gemischte Alkalose</span>'; }
-      else if (metComp > 2) { primType = 'metalk'; primText = '<span class="elek-tag orange">Metabolische Alkalose</span> (HCO₃⁻ ↑ = ' + hco3 + ' mmol/l)'; }
-      else if (respComp < -2) { primType = 'respalk'; primText = '<span class="elek-tag orange">Respiratorische Alkalose</span> (pCO₂ ↓ = ' + pco2 + ' mmHg)'; }
-      else { primText = '<span class="elek-tag orange">Alkalose</span> — Primärstörung unklar'; }
-    } else {
-      primText = '<span class="elek-tag green">Keine primäre Störung erkennbar</span> (pH normal)';
-    }
-    primText += '<br><small>HCO₃⁻: ' + hco3 + ' mmol/l (Normal 22–26) | pCO₂: ' + pco2 + ' mmHg (Normal 35–45)</small>';
-    document.getElementById('sab-r-prim').innerHTML = '<div class="elek-result ' + (isAzid || isAlkal ? 'warn' : '') + '">' + primText + '</div>';
-
-    var kompHtml = '';
-    if (primType === 'metazid') {
-      var winters = 1.5 * hco3 + 8;
-      var wLow = winters - 2, wHigh = winters + 2;
-      kompHtml = 'Winters: <code>pCO₂ = ' + wLow.toFixed(1) + '–' + wHigh.toFixed(1) + ' mmHg</code><br><strong>Gemessen: ' + pco2 + ' mmHg</strong> → ';
-      kompHtml += (pco2 >= wLow && pco2 <= wHigh) ? '<span class="elek-tag green">Adäquat</span>' : pco2 < wLow ? '<span class="elek-tag orange">+ resp. Alkalose</span>' : '<span class="elek-tag red">+ resp. Azidose</span>';
-    } else if (primType === 'metalk') {
-      var expPco2 = 0.7 * hco3 + 20;
-      var eLow = expPco2 - 2, eHigh = expPco2 + 2;
-      kompHtml = '<code>pCO₂ = ' + eLow.toFixed(1) + '–' + eHigh.toFixed(1) + ' mmHg</code><br><strong>Gemessen: ' + pco2 + ' mmHg</strong> → ';
-      kompHtml += (pco2 >= eLow && pco2 <= eHigh) ? '<span class="elek-tag green">Adäquat</span>' : pco2 < eLow ? '<span class="elek-tag orange">+ resp. Alkalose</span>' : '<span class="elek-tag red">+ resp. Azidose</span>';
-    } else if (primType === 'respazid') {
-      var hco3expAkut = 24 + 1 * (pco2 - 40) / 10;
-      var hco3expChron = 24 + 4 * (pco2 - 40) / 10;
-      kompHtml = 'Akut: HCO₃⁻ ≈ <strong>' + hco3expAkut.toFixed(1) + '</strong> | Chronisch: <strong>' + hco3expChron.toFixed(1) + '</strong> mmol/l<br><strong>Gemessen: ' + hco3 + ' mmol/l</strong>';
-    } else if (primType === 'respalk') {
-      var hco3expAkutAlk = 24 - 2 * (40 - pco2) / 10;
-      var hco3expChronAlk = 24 - 5 * (40 - pco2) / 10;
-      kompHtml = 'Akut: HCO₃⁻ ≈ <strong>' + hco3expAkutAlk.toFixed(1) + '</strong> | Chronisch: <strong>' + hco3expChronAlk.toFixed(1) + '</strong> mmol/l';
-    } else {
-      kompHtml = '<span class="elek-tag green">Kein Abweichung — keine Kompensation erforderlich</span>';
-    }
-    document.getElementById('sab-r-komp').innerHTML = '<div class="elek-result">' + kompHtml + '</div>';
-
-    var alHtml = '', al = null, alKorr = null;
-    if (!isNaN(na) && !isNaN(cl)) {
-      al = na - (hco3 + cl);
-      var albKorr = (!isNaN(alb) && alb < 40) ? 2.5 * (40 - alb) / 10 : 0;
-      alKorr = al + albKorr;
-      alHtml = '<code>AL = ' + na + ' − (' + hco3 + ' + ' + cl + ') = <strong>' + al.toFixed(1) + ' mmol/l</strong></code><br>';
-      if (!isNaN(alb) && alb < 40) alHtml += '<code>Albumin-Korr. (+' + albKorr.toFixed(1) + '): AL = <strong>' + alKorr.toFixed(1) + ' mmol/l</strong></code><br>';
-      alHtml += '<br>';
-      var alVal = alKorr !== null ? alKorr : al;
-      if (alVal > 12) {
-        alHtml += '<span class="elek-tag red">Erhöhte AL (&gt;12)</span><br><small><strong>GOLDMARK:</strong> Glycolat · Oxoprolin · L-Laktat · D-Laktat · Methanol · Aspirin · Renal · Ketoazidose</small>';
-        if (!isNaN(lak) && lak > 2) alHtml += '<br><span class="elek-tag orange">Laktat: ' + lak + ' mmol/l → Laktatazidose</span>';
-      } else if (alVal < 6) {
-        alHtml += '<span class="elek-tag orange">Erniedrigte AL</span><br><small>Hypoalbuminämie, erhöhte Kationen, Paraproteine</small>';
-      } else {
-        alHtml += '<span class="elek-tag green">Normale AL (8–12)</span><br><small>Hyperchlorämische Azidose: RTA · Diarrhö · Diuretika · Ureterableitung</small>';
-      }
-    } else {
-      alHtml = '<div class="elek-result neutral">Na⁺ und Cl⁻ eingeben für Anionenlücke.</div>';
-    }
-    document.getElementById('sab-r-al').innerHTML = '<div class="elek-result">' + alHtml + '</div>';
-
-    if (al !== null && (alKorr || al) > 12 && !isNaN(hco3)) {
-      var alUse = alKorr !== null ? alKorr : al;
-      var dr = (alUse - 12) / (24 - hco3);
-      var deltaHtml = '<code>Delta-Ratio = (' + alUse.toFixed(1) + ' − 12) / (24 − ' + hco3 + ') = <strong>' + dr.toFixed(2) + '</strong></code><br>';
-      if (dr < 1) deltaHtml += '<span class="elek-tag orange">DR &lt;1 → + met. Azidose mit normaler AL</span>';
-      else if (dr > 2) deltaHtml += '<span class="elek-tag orange">DR &gt;2 → + met. Alkalose</span>';
-      else deltaHtml += '<span class="elek-tag green">DR 1–2 → reine met. Azidose mit erhöhter AL</span>';
-      document.getElementById('sab-r-delta').innerHTML = '<div class="elek-result">' + deltaHtml + '</div>';
-      document.getElementById('sab-r-delta-box').style.display = 'block';
-    } else {
-      document.getElementById('sab-r-delta-box').style.display = 'none';
-    }
-
-    if (!isNaN(una) && !isNaN(uk) && !isNaN(ucl)) {
-      var ual = (una + uk) - ucl;
-      var ualHtml = '<code>UAL = (' + una + ' + ' + uk + ') − ' + ucl + ' = <strong>' + ual.toFixed(1) + ' mmol/l</strong></code><br><br>';
-      if (ual > 0) {
-        ualHtml += '<span class="elek-tag red">UAL positiv → verminderte renale NH₄⁺-Ausscheidung (RTA, CKD)</span>';
-      } else {
-        ualHtml += '<span class="elek-tag green">UAL negativ → adäquate NH₄⁺-Ausscheidung (extrarenale Ursache: Diarrhö)</span>';
-      }
-      if (!isNaN(uhst) && !isNaN(uosm)) {
-        var uosmB = 2 * (una + uk) + uhst / 6.006;
-        var uol = uosm - uosmB;
-        ualHtml += '<br><code>Urin-OL = ' + uosm + ' − ' + uosmB.toFixed(0) + ' = <strong>' + uol.toFixed(0) + ' mOsm/kg</strong></code><br>';
-        ualHtml += uol < 100 ? '<span class="elek-tag red">UOL &lt;100 → renale Ursache</span>' : '<span class="elek-tag green">UOL &gt;100 → extrarenale Ursache</span>';
-      }
-      document.getElementById('sab-r-ual').innerHTML = '<div class="elek-result">' + ualHtml + '</div>';
-      document.getElementById('sab-r-ual-box').style.display = 'block';
-    } else {
-      document.getElementById('sab-r-ual-box').style.display = 'none';
-    }
-
-    var sumHtml = '<div class="elek-result">';
-    var findings = [];
-    if (ph < 7.35) findings.push('Azidämie (pH ' + ph + ')');
-    if (ph > 7.45) findings.push('Alkalämie (pH ' + ph + ')');
-    if (primType === 'metazid') findings.push('Metabolische Azidose (HCO₃⁻ ' + hco3 + ')');
-    if (primType === 'metalk') findings.push('Metabolische Alkalose (HCO₃⁻ ' + hco3 + ')');
-    if (primType === 'respazid') findings.push('Respiratorische Azidose (pCO₂ ' + pco2 + ')');
-    if (primType === 'respalk') findings.push('Respiratorische Alkalose (pCO₂ ' + pco2 + ')');
-    if (al !== null && (alKorr || al) > 12) findings.push('Erhöhte Anionenlücke (' + (alKorr||al).toFixed(1) + ')');
-    if (!isNaN(lak) && lak > 2) findings.push('Laktaterhöhung (' + lak + ' mmol/l)');
-    sumHtml += findings.length === 0 ? '<span class="elek-tag green">Alle Parameter im Normbereich</span>' : findings.map(function(f){ return '• ' + f; }).join('<br>');
-    sumHtml += '</div>';
-    document.getElementById('sab-r-summary').innerHTML = sumHtml;
   };
 
 })();
@@ -5054,6 +4834,695 @@ copdCalcAnthonisen();
 })();
 </script>
 </div><!-- end tool-copd -->
+
+<!-- ══════════════════════════════════════════════════════════
+     TOOL: SÄURE-BASEN
+     ══════════════════════════════════════════════════════════ -->
+<div id="tool-sab">
+<style>
+/* ===== SÄURE-BASEN (SAB) ===== scoped under #tool-sab */
+#tool-sab .sab-wrap { max-width: 1100px; margin: 0 auto; padding: 16px; }
+#tool-sab .sab-header { background: linear-gradient(135deg,#b71c1c,#c62828); color:#fff; border-radius:12px; padding:18px 22px; margin-bottom:18px; }
+#tool-sab .sab-header h2 { margin:0 0 4px; font-size:1.3rem; }
+#tool-sab .sab-header p { margin:0; font-size:.85rem; opacity:.85; }
+
+#tool-sab .sab-layout { display:grid; grid-template-columns:1fr 360px; gap:18px; align-items:start; }
+@media(max-width:860px){ #tool-sab .sab-layout { grid-template-columns:1fr; } }
+
+/* Input card */
+#tool-sab .sab-card { background:#fff; border:1px solid #e0e0e0; border-radius:12px; padding:16px; margin-bottom:14px; box-shadow:0 1px 4px rgba(0,0,0,.07); }
+#tool-sab .sab-card-title { font-size:.82rem; font-weight:800; color:#b71c1c; text-transform:uppercase; letter-spacing:.6px; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+#tool-sab .sab-input-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:10px; }
+#tool-sab .sab-field { display:flex; flex-direction:column; gap:3px; }
+#tool-sab .sab-field label { font-size:.75rem; font-weight:600; color:#555; }
+#tool-sab .sab-field input { padding:7px 9px; border:1.5px solid #ccc; border-radius:7px; font-size:.9rem; outline:none; transition:border-color .15s; width:100%; }
+#tool-sab .sab-field input:focus { border-color:#b71c1c; }
+#tool-sab .sab-note { font-size:.72rem; color:#888; margin-top:6px; line-height:1.5; font-style:italic; }
+
+/* Flowchart steps */
+#tool-sab .sab-steps { position:relative; }
+#tool-sab .sab-step { background:#fff; border:1.5px solid #e0e0e0; border-radius:12px; padding:14px 16px; margin-bottom:10px; position:relative; }
+#tool-sab .sab-step-head { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+#tool-sab .sab-step-num { background:#b71c1c; color:#fff; border-radius:50%; width:26px; height:26px; display:flex; align-items:center; justify-content:center; font-size:.8rem; font-weight:800; flex-shrink:0; }
+#tool-sab .sab-step-title { font-size:.82rem; font-weight:800; color:#37474f; text-transform:uppercase; letter-spacing:.4px; }
+#tool-sab .sab-step-body { font-size:.82rem; line-height:1.55; }
+#tool-sab .sab-connector { width:2px; height:12px; background:#e0e0e0; margin:0 auto 0 12px; }
+
+/* Result badges */
+#tool-sab .sab-badge { display:inline-block; padding:4px 12px; border-radius:20px; font-size:.78rem; font-weight:700; margin:2px 2px 4px; }
+#tool-sab .sab-badge-red { background:#ffebee; color:#b71c1c; border:1.5px solid #ef9a9a; }
+#tool-sab .sab-badge-orange { background:#fff3e0; color:#e65100; border:1.5px solid #ffcc80; }
+#tool-sab .sab-badge-yellow { background:#fffde7; color:#f57f17; border:1.5px solid #ffe082; }
+#tool-sab .sab-badge-green { background:#e8f5e9; color:#2e7d32; border:1.5px solid #a5d6a7; }
+#tool-sab .sab-badge-blue { background:#e3f2fd; color:#0d47a1; border:1.5px solid #90caf9; }
+#tool-sab .sab-badge-gray { background:#f5f5f5; color:#546e7a; border:1.5px solid #cfd8dc; }
+
+/* Result boxes */
+#tool-sab .sab-result { border-radius:9px; padding:10px 13px; margin:6px 0; font-size:.81rem; line-height:1.6; }
+#tool-sab .sab-result-ok { background:#e8f5e9; border-left:3px solid #4caf50; }
+#tool-sab .sab-result-warn { background:#fff8e1; border-left:3px solid #ffc107; }
+#tool-sab .sab-result-danger { background:#ffebee; border-left:3px solid #f44336; }
+#tool-sab .sab-result-info { background:#e3f2fd; border-left:3px solid #1565c0; }
+#tool-sab .sab-result-neutral { background:#f5f5f5; border-left:3px solid #b0bec5; }
+
+/* Summary box */
+#tool-sab .sab-summary { background:linear-gradient(135deg,#ffebee,#fce4ec); border:2px solid #ef9a9a; border-radius:12px; padding:16px; margin-top:6px; font-size:.84rem; line-height:1.65; }
+#tool-sab .sab-summary-title { font-weight:800; color:#b71c1c; font-size:.86rem; margin-bottom:8px; }
+
+/* UAL section */
+#tool-sab .sab-ual-section { background:#fce4ec; border:1.5px solid #ef9a9a; border-radius:10px; padding:14px 16px; margin-top:4px; }
+#tool-sab .sab-ual-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:8px; margin-top:8px; }
+
+/* Accordion */
+#tool-sab .sab-acc-hd { display:flex; align-items:center; justify-content:space-between; cursor:pointer; user-select:none; padding:7px 0 5px; font-size:.74rem; font-weight:800; color:#b71c1c; text-transform:uppercase; letter-spacing:.5px; border-bottom:1.5px solid #ffcdd2; margin:10px 0 0; }
+#tool-sab .sab-acc-arrow { font-size:.8rem; transition:transform .18s; }
+#tool-sab .sab-acc-hd.open .sab-acc-arrow { transform:rotate(180deg); }
+#tool-sab .sab-acc-body { display:none; padding:8px 0 2px; font-size:.78rem; line-height:1.6; }
+#tool-sab .sab-acc-body.open { display:block; }
+
+/* Right column reference card */
+#tool-sab .sab-ref-card { background:#fff; border:1.5px solid #e0e0e0; border-radius:12px; padding:14px; margin-bottom:14px; font-size:.76rem; line-height:1.6; box-shadow:0 1px 4px rgba(0,0,0,.07); }
+#tool-sab .sab-ref-title { font-size:.78rem; font-weight:800; color:#b71c1c; text-transform:uppercase; letter-spacing:.5px; margin-bottom:10px; padding-bottom:6px; border-bottom:2px solid #ffcdd2; }
+#tool-sab .sab-ref-table { width:100%; border-collapse:collapse; font-size:.73rem; }
+#tool-sab .sab-ref-table th { background:#fce4ec; color:#b71c1c; font-weight:700; padding:6px 8px; text-align:left; font-size:.69rem; text-transform:uppercase; letter-spacing:.3px; }
+#tool-sab .sab-ref-table td { padding:5px 8px; border-bottom:1px solid #f0e0e0; vertical-align:top; }
+#tool-sab .sab-ref-table tr:last-child td { border-bottom:none; }
+#tool-sab .sab-norm-row { display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px solid #f5e6e6; }
+#tool-sab .sab-norm-row:last-child { border-bottom:none; }
+#tool-sab .sab-norm-key { font-weight:600; color:#555; }
+#tool-sab .sab-norm-val { color:#b71c1c; font-weight:700; font-family:monospace; }
+#tool-sab .sab-goldmark-item { display:flex; gap:8px; padding:4px 0; font-size:.76rem; }
+#tool-sab .sab-goldmark-letter { font-weight:900; color:#b71c1c; font-size:.9rem; width:16px; flex-shrink:0; }
+#tool-sab .sab-resp-type-row { margin:4px 0; }
+
+/* Formula code */
+#tool-sab code { font-family:monospace; background:#fce4ec; border-radius:4px; padding:2px 6px; font-size:.79rem; color:#7f0000; }
+
+/* Hint text */
+#tool-sab .sab-hint { background:#fce4ec; border:1.5px solid #ef9a9a; border-radius:9px; padding:12px 14px; font-size:.82rem; color:#7f0000; margin-top:4px; }
+
+/* Resp type toggle */
+#tool-sab .sab-resp-toggle { display:inline-flex; gap:4px; margin:6px 0; }
+#tool-sab .sab-resp-toggle input[type=radio] { display:none; }
+#tool-sab .sab-resp-toggle label { padding:4px 11px; border-radius:16px; font-size:.73rem; font-weight:600; cursor:pointer; border:1.5px solid #e0e0e0; color:#607d8b; transition:all .15s; }
+#tool-sab .sab-resp-toggle input[type=radio]:checked + label { background:#b71c1c; border-color:#b71c1c; color:#fff; }
+</style>
+
+<div class="sab-wrap">
+  <div class="sab-header">
+    <h2>🧪 Säure-Basen-Analyse</h2>
+    <p>BGA-Auswertung nach DIVI-Algorithmus · 6-Schritte-Flowchart · Anionenlücke · Delta-Ratio · Urin-Anionenlücke</p>
+  </div>
+
+  <div class="sab-layout">
+    <!-- ═══ LEFT COLUMN ═══ -->
+    <div>
+      <!-- INPUT PANEL -->
+      <div class="sab-card">
+        <div class="sab-card-title">🩸 BGA-Werte eingeben</div>
+        <div class="sab-input-grid">
+          <div class="sab-field">
+            <label>pH</label>
+            <input type="number" id="sab-ph" placeholder="7.40" step="0.01" min="6.5" max="8.0" oninput="sabWorkup()">
+          </div>
+          <div class="sab-field">
+            <label>pCO₂ (mmHg)</label>
+            <input type="number" id="sab-pco2" placeholder="40" step="1" oninput="sabWorkup()">
+          </div>
+          <div class="sab-field">
+            <label>HCO₃⁻ (mmol/l)</label>
+            <input type="number" id="sab-hco3" placeholder="24" step="0.1" oninput="sabWorkup()">
+          </div>
+          <div class="sab-field">
+            <label>Na⁺ (mmol/l)</label>
+            <input type="number" id="sab-na" placeholder="140" step="1" oninput="sabWorkup()">
+          </div>
+          <div class="sab-field">
+            <label>Cl⁻ (mmol/l)</label>
+            <input type="number" id="sab-cl" placeholder="104" step="1" oninput="sabWorkup()">
+          </div>
+          <div class="sab-field">
+            <label>K⁺ (mmol/l) <span style="color:#aaa;font-weight:400">opt.</span></label>
+            <input type="number" id="sab-k" placeholder="4.0" step="0.1" oninput="sabWorkup()">
+          </div>
+          <div class="sab-field">
+            <label>Albumin (g/l) <span style="color:#aaa;font-weight:400">opt.</span></label>
+            <input type="number" id="sab-alb" placeholder="40" step="1" oninput="sabWorkup()">
+          </div>
+          <div class="sab-field">
+            <label>Laktat (mmol/l) <span style="color:#aaa;font-weight:400">opt.</span></label>
+            <input type="number" id="sab-lak" placeholder="" step="0.1" oninput="sabWorkup()">
+          </div>
+        </div>
+        <div class="sab-note">HCO₃⁻ aus BGA ablesen ODER berechnen: HCO₃⁻ = 0,03 × pCO₂ × 10^(pH − 6,1)</div>
+      </div>
+
+      <!-- FLOWCHART RESULTS -->
+      <div id="sab-flowchart">
+        <div class="sab-hint" id="sab-hint-main">pH eingeben (+ HCO₃⁻ oder pCO₂), um die Analyse zu starten.</div>
+      </div>
+    </div>
+
+    <!-- ═══ RIGHT COLUMN ═══ -->
+    <div>
+      <!-- REFERENCE: Compensation Formulas -->
+      <div class="sab-ref-card">
+        <div class="sab-ref-title">📐 Kompensationsformeln</div>
+        <table class="sab-ref-table">
+          <thead>
+            <tr><th>Primärstörung</th><th>Erwartete Kompensation</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Met. Azidose</strong></td><td>pCO₂ = 1,5 × HCO₃⁻ + 8 ± 2<br><em style="font-size:.69rem;color:#888;">Winter-Formel</em></td></tr>
+            <tr><td><strong>Met. Alkalose</strong></td><td>pCO₂ = 0,7 × HCO₃⁻ + 21 ± 2</td></tr>
+            <tr><td><strong>Resp. Az. akut</strong></td><td>HCO₃⁻ steigt 1 pro 10 mmHg ↑ pCO₂</td></tr>
+            <tr><td><strong>Resp. Az. chron.</strong></td><td>HCO₃⁻ steigt 3,5 pro 10 mmHg ↑ pCO₂</td></tr>
+            <tr><td><strong>Resp. Alk. akut</strong></td><td>HCO₃⁻ fällt 2 pro 10 mmHg ↓ pCO₂</td></tr>
+            <tr><td><strong>Resp. Alk. chron.</strong></td><td>HCO₃⁻ fällt 5 pro 10 mmHg ↓ pCO₂</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- REFERENCE: Normal Values -->
+      <div class="sab-ref-card">
+        <div class="sab-ref-title">🎯 Normalwerte</div>
+        <div class="sab-norm-row"><span class="sab-norm-key">pH</span><span class="sab-norm-val">7,35 – 7,45</span></div>
+        <div class="sab-norm-row"><span class="sab-norm-key">pCO₂</span><span class="sab-norm-val">35 – 45 mmHg</span></div>
+        <div class="sab-norm-row"><span class="sab-norm-key">HCO₃⁻</span><span class="sab-norm-val">22 – 26 mmol/l</span></div>
+        <div class="sab-norm-row"><span class="sab-norm-key">BE</span><span class="sab-norm-val">−2 bis +2 mmol/l</span></div>
+        <div class="sab-norm-row"><span class="sab-norm-key">Anionenlücke</span><span class="sab-norm-val">8 – 12 mmol/l</span></div>
+        <div class="sab-norm-row"><span class="sab-norm-key">Laktat</span><span class="sab-norm-val">&lt; 2 mmol/l</span></div>
+      </div>
+
+      <!-- REFERENCE: GOLD MARK -->
+      <div class="sab-ref-card">
+        <div class="sab-ref-title">🔴 GOLD MARK — erhöhte Anionenlücke</div>
+        <div class="sab-goldmark-item"><span class="sab-goldmark-letter">G</span><span><strong>G</strong>lykolat / Ethylenglykol-Vergiftung</span></div>
+        <div class="sab-goldmark-item"><span class="sab-goldmark-letter">O</span><span><strong>O</strong>xoprolin (Paracetamol-Überdosierung)</span></div>
+        <div class="sab-goldmark-item"><span class="sab-goldmark-letter">L</span><span><strong>L</strong>aktat-Azidose (Typ A: Hypoxie; Typ B: Metformin etc.)</span></div>
+        <div class="sab-goldmark-item"><span class="sab-goldmark-letter">D</span><span><strong>D</strong>-Laktat (Kurzdarmsyndrom)</span></div>
+        <div class="sab-goldmark-item"><span class="sab-goldmark-letter">M</span><span><strong>M</strong>ethanol-Vergiftung</span></div>
+        <div class="sab-goldmark-item"><span class="sab-goldmark-letter">A</span><span><strong>A</strong>lkoholische Ketoazidose</span></div>
+        <div class="sab-goldmark-item"><span class="sab-goldmark-letter">R</span><span><strong>R</strong>enal — Urämie (CKD Stadium 4–5)</span></div>
+        <div class="sab-goldmark-item"><span class="sab-goldmark-letter">K</span><span><strong>K</strong>etoazidose (DKA, Hungern)</span></div>
+        <div style="margin-top:8px;padding-top:8px;border-top:1px solid #f0e0e0;font-size:.72rem;color:#888;">
+          <strong style="color:#555;">Normale AL (hyperchlorämisch):</strong><br>
+          RTA Typ I/II/IV · Diarrhö · Pankreatitis · Ureterableitung · NaCl-Infusion · Acetazolamid
+        </div>
+      </div>
+
+      <!-- REFERENCE: Delta-Ratio -->
+      <div class="sab-ref-card">
+        <div class="sab-ref-title">Δ Delta-Ratio Interpretation</div>
+        <table class="sab-ref-table">
+          <thead><tr><th>Delta-Ratio</th><th>Bedeutung</th></tr></thead>
+          <tbody>
+            <tr><td style="color:#b71c1c;">&lt; 0,4</td><td>Reine normale-AL-Azidose</td></tr>
+            <tr><td style="color:#e65100;">0,4 – 1,0</td><td>Kombination: erhöhte + normale AL</td></tr>
+            <tr><td style="color:#2e7d32;">1,0 – 2,0</td><td>Reine erhöhte-AL-Azidose ✓</td></tr>
+            <tr><td style="color:#b71c1c;">&gt; 2,0</td><td>AG-Azidose + zusätzliche met. Alkalose</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div><!-- end sab-layout -->
+</div><!-- end sab-wrap -->
+
+<script>
+(function(){
+  'use strict';
+
+  /* ── helpers ── */
+  function val(id) {
+    var el = document.getElementById(id);
+    return el ? parseFloat(el.value) : NaN;
+  }
+  function isset(v) { return !isNaN(v); }
+
+  /* UAL persistent storage (survives re-render) */
+  var _ualVals = { una: '', uk: '', ucl: '', uhst: '', uosm: '' };
+
+  function saveUalVals() {
+    var ids = ['una','uk','ucl','uhst','uosm'];
+    for (var i = 0; i < ids.length; i++) {
+      var el = document.getElementById('sab-' + ids[i]);
+      if (el) _ualVals[ids[i]] = el.value;
+    }
+  }
+  function restoreUalVals() {
+    var ids = ['una','uk','ucl','uhst','uosm'];
+    for (var i = 0; i < ids.length; i++) {
+      var el = document.getElementById('sab-' + ids[i]);
+      if (el && _ualVals[ids[i]]) el.value = _ualVals[ids[i]];
+    }
+  }
+  function getUalVal(key) {
+    var el = document.getElementById('sab-' + key);
+    if (el && el.value !== '') return parseFloat(el.value);
+    if (_ualVals[key] !== '') return parseFloat(_ualVals[key]);
+    return NaN;
+  }
+
+  function badge(cls, txt) {
+    return '<span class="sab-badge sab-badge-' + cls + '">' + txt + '</span>';
+  }
+  function result(cls, html) {
+    return '<div class="sab-result sab-result-' + cls + '">' + html + '</div>';
+  }
+  function step(num, title, bodyHtml) {
+    return '<div class="sab-step">' +
+      '<div class="sab-step-head">' +
+        '<div class="sab-step-num">' + num + '</div>' +
+        '<div class="sab-step-title">' + title + '</div>' +
+      '</div>' +
+      '<div class="sab-step-body">' + bodyHtml + '</div>' +
+    '</div>';
+  }
+  function connector() {
+    return '<div class="sab-connector"></div>';
+  }
+
+  /* ── acc toggle ── */
+  window.sabToggleAcc = function(id) {
+    var hd = document.getElementById(id + '-hd');
+    var body = document.getElementById(id + '-body');
+    if (!hd || !body) return;
+    var isOpen = body.classList.contains('open');
+    if (isOpen) {
+      body.classList.remove('open');
+      hd.classList.remove('open');
+    } else {
+      body.classList.add('open');
+      hd.classList.add('open');
+    }
+  };
+
+  /* ── resp type selector ── */
+  function getRespType() {
+    var els = document.getElementsByName('sab-resp-type');
+    for (var i = 0; i < els.length; i++) {
+      if (els[i].checked) return els[i].value;
+    }
+    return 'unknown';
+  }
+
+  /* ── main workup ── */
+  window.sabWorkup = function() {
+    saveUalVals();
+
+    var ph   = val('sab-ph');
+    var pco2 = val('sab-pco2');
+    var hco3 = val('sab-hco3');
+    var na   = val('sab-na');
+    var cl   = val('sab-cl');
+    var alb  = val('sab-alb');
+    var lak  = val('sab-lak');
+
+    var fc = document.getElementById('sab-flowchart');
+
+    if (!isset(ph)) {
+      fc.innerHTML = '<div class="sab-hint" id="sab-hint-main">pH eingeben (+ HCO\u2083\u207b oder pCO\u2082), um die Analyse zu starten.</div>';
+      return;
+    }
+
+    /* derive missing value if possible */
+    if (!isset(hco3) && isset(pco2)) {
+      hco3 = parseFloat((0.03 * pco2 * Math.pow(10, ph - 6.1)).toFixed(1));
+    }
+    if (!isset(pco2) && isset(hco3)) {
+      pco2 = parseFloat((hco3 / (0.03 * Math.pow(10, ph - 6.1))).toFixed(1));
+    }
+
+    var hasHco3 = isset(hco3);
+    var hasPco2 = isset(pco2);
+
+    if (!hasHco3 && !hasPco2) {
+      fc.innerHTML = '<div class="sab-hint" id="sab-hint-main">pH eingeben (+ HCO\u2083\u207b oder pCO\u2082), um die Analyse zu starten.</div>';
+      return;
+    }
+
+    var html = '';
+
+    /* ══ SCHRITT 1: pH ══ */
+    var phBadge, phCls, phExtra;
+    if (ph < 7.35) {
+      phBadge = badge('red', '\uD83D\uDD34 Azidose (pH ' + ph + ')');
+      phCls = 'danger';
+      phExtra = 'pH &lt; 7,35 \u2192 Azid\u00e4mie';
+    } else if (ph > 7.45) {
+      phBadge = badge('blue', '\uD83D\uDD35 Alkalose (pH ' + ph + ')');
+      phCls = 'info';
+      phExtra = 'pH &gt; 7,45 \u2192 Alkali\u00e4mie';
+    } else {
+      phBadge = badge('yellow', '\uD83D\uDFE1 Normaler pH (' + ph + ')');
+      phCls = 'warn';
+      phExtra = 'Kompensierte St\u00f6rung m\u00f6glich!';
+    }
+    if (ph < 6.9 || ph > 7.7) {
+      phBadge = badge('red', '\u26D4 Lebensbedrohlicher pH (' + ph + ')');
+      phCls = 'danger';
+      phExtra = '<strong>Notfall!</strong> Sofortige Intervention erforderlich.';
+    }
+    var step1Body = phBadge + '<br>' + result(phCls, phExtra + '<br><small>Normal: 7,35\u20137,45</small>');
+    html += step(1, 'pH beurteilen', step1Body);
+    html += connector();
+
+    /* ══ SCHRITT 2: Primärstörung ══ */
+    var primType = '';
+    var primBody = '';
+    if (hasHco3 && hasPco2) {
+      var isAzid  = ph < 7.35;
+      var isAlkal = ph > 7.45;
+      var hco3Low  = hco3 < 22;
+      var hco3High = hco3 > 26;
+      var pco2High = pco2 > 45;
+      var pco2Low  = pco2 < 35;
+
+      if (ph >= 7.35 && ph <= 7.45 && (hco3Low || hco3High) && (pco2Low || pco2High)) {
+        /* normal pH but both abnormal — could be compensated or mixed */
+        if (hco3Low && pco2Low) {
+          primType = 'metazid';
+          primBody = badge('yellow', 'Kompensierte met. Azidose') +
+            '<br>' + result('warn', 'pH normal, aber HCO\u2083\u207b \u2193 (' + hco3 + ') und pCO\u2082 \u2193 (' + pco2 + ') \u2014 Anionenlücke entscheidend!');
+        } else if (hco3High && pco2High) {
+          primType = 'metalk';
+          primBody = badge('yellow', 'Kompensierte met. Alkalose') +
+            '<br>' + result('warn', 'pH normal, aber HCO\u2083\u207b \u2191 (' + hco3 + ') und pCO\u2082 \u2191 (' + pco2 + ')');
+        } else if (hco3Low && pco2High) {
+          primType = 'gemischt_gegeneinander';
+          primBody = badge('red', 'Gemischte St\u00f6rung') +
+            '<br>' + result('danger', '\u26A0\uFE0F HCO\u2083\u207b \u2193 UND pCO\u2082 \u2191 bei normalem pH \u2014 Met. Azidose + Resp. Azidose oder kompensierende Alkalose. Anionenlücke berechnen!');
+        } else if (hco3High && pco2Low) {
+          primType = 'gemischt_gegeneinander2';
+          primBody = badge('orange', 'Gemischte St\u00f6rung') +
+            '<br>' + result('warn', '\u26A0\uFE0F HCO\u2083\u207b \u2191 UND pCO\u2082 \u2193 bei normalem pH \u2014 Met. Alkalose + Resp. Alkalose.');
+        } else {
+          primType = '';
+          primBody = result('neutral', 'pH und Parameter im Normbereich — keine relevante Störung.');
+        }
+      } else if (isAzid) {
+        if (hco3Low && pco2High) {
+          primType = 'gemischt_azid';
+          primBody = badge('red', 'Gemischte Azidose') +
+            '<br>' + result('danger', 'HCO\u2083\u207b \u2193 (' + hco3 + ') + pCO\u2082 \u2191 (' + pco2 + ') \u2014 Metabolische + respiratorische Azidose gleichzeitig!');
+        } else if (hco3Low) {
+          primType = 'metazid';
+          primBody = badge('red', 'Metabolische Azidose') +
+            '<br>' + result('danger', 'HCO\u2083\u207b \u2193 = ' + hco3 + ' mmol/l (< 22) bei pH ' + ph);
+        } else if (pco2High) {
+          primType = 'respazid';
+          primBody = badge('red', 'Respiratorische Azidose') +
+            '<br>' + result('danger', 'pCO\u2082 \u2191 = ' + pco2 + ' mmHg (> 45) bei pH ' + ph);
+        } else {
+          primType = 'azid_unklar';
+          primBody = badge('red', 'Azidose') + '<br>' + result('warn', 'pH erniedrigt, aber Primärstörung unklar. Vollständige BGA prüfen.');
+        }
+      } else if (isAlkal) {
+        if (hco3High && pco2Low) {
+          primType = 'gemischt_alk';
+          primBody = badge('orange', 'Gemischte Alkalose') +
+            '<br>' + result('warn', 'HCO\u2083\u207b \u2191 (' + hco3 + ') + pCO\u2082 \u2193 (' + pco2 + ') \u2014 Met. + Resp. Alkalose gleichzeitig!');
+        } else if (hco3High) {
+          primType = 'metalk';
+          primBody = badge('orange', 'Metabolische Alkalose') +
+            '<br>' + result('warn', 'HCO\u2083\u207b \u2191 = ' + hco3 + ' mmol/l (> 26) bei pH ' + ph);
+        } else if (pco2Low) {
+          primType = 'respalk';
+          primBody = badge('blue', 'Respiratorische Alkalose') +
+            '<br>' + result('info', 'pCO\u2082 \u2193 = ' + pco2 + ' mmHg (< 35) bei pH ' + ph);
+        } else {
+          primBody = badge('orange', 'Alkalose') + '<br>' + result('warn', 'pH erhöht, aber Primärstörung unklar.');
+        }
+      } else {
+        primBody = result('ok', 'pH, HCO\u2083\u207b und pCO\u2082 im Normbereich \u2014 keine Störung erkennbar.');
+      }
+    } else {
+      primBody = result('neutral', 'HCO\u2083\u207b und pCO\u2082 eingeben f\u00fcr Primärstörung.');
+    }
+    html += step(2, 'Prim\u00e4re St\u00f6rung', primBody);
+    html += connector();
+
+    /* ══ SCHRITT 3: Kompensation ══ */
+    var kompBody = '';
+    if (hasHco3 && hasPco2 && primType) {
+      if (primType === 'metazid') {
+        var wExp  = 1.5 * hco3 + 8;
+        var wLow  = wExp - 2;
+        var wHigh = wExp + 2;
+        kompBody += '<strong>Winter-Formel:</strong> erwartet pCO\u2082 = <code>1,5 \u00d7 ' + hco3 + ' + 8 = ' + wExp.toFixed(1) + ' mmHg</code><br>';
+        kompBody += 'Bereich: <code>' + wLow.toFixed(1) + '\u2013' + wHigh.toFixed(1) + ' mmHg</code> | Gemessen: <strong>' + pco2 + ' mmHg</strong><br>';
+        if (pco2 >= wLow && pco2 <= wHigh) {
+          kompBody += result('ok', '\u2705 Adäquate respiratorische Kompensation');
+        } else if (pco2 > wHigh) {
+          kompBody += result('danger', '\u26A0\uFE0F pCO\u2082 zu hoch \u2192 Zus\u00e4tzliche respiratorische <strong>AZIDOSE</strong> (pCO\u2082 ' + pco2 + ' > ' + wHigh.toFixed(1) + ')');
+        } else {
+          kompBody += result('warn', '\u26A0\uFE0F pCO\u2082 zu niedrig \u2192 Zus\u00e4tzliche respiratorische <strong>ALKALOSE</strong> (pCO\u2082 ' + pco2 + ' < ' + wLow.toFixed(1) + ')');
+        }
+      } else if (primType === 'metalk') {
+        var malkExp  = 0.7 * hco3 + 21;
+        var malkLow  = malkExp - 2;
+        var malkHigh = malkExp + 2;
+        kompBody += '<strong>Erwartetes pCO\u2082:</strong> <code>0,7 \u00d7 ' + hco3 + ' + 21 = ' + malkExp.toFixed(1) + ' mmHg</code><br>';
+        kompBody += 'Bereich: <code>' + malkLow.toFixed(1) + '\u2013' + malkHigh.toFixed(1) + ' mmHg</code> | Gemessen: <strong>' + pco2 + ' mmHg</strong><br>';
+        if (pco2 >= malkLow && pco2 <= malkHigh) {
+          kompBody += result('ok', '\u2705 Adäquate respiratorische Kompensation');
+        } else if (pco2 > malkHigh) {
+          kompBody += result('danger', '\u26A0\uFE0F pCO\u2082 zu hoch \u2192 Zus\u00e4tzliche respiratorische <strong>AZIDOSE</strong>');
+        } else {
+          kompBody += result('warn', '\u26A0\uFE0F pCO\u2082 zu niedrig \u2192 Zus\u00e4tzliche respiratorische <strong>ALKALOSE</strong>');
+        }
+      } else if (primType === 'respazid') {
+        var rAkut  = 24 + 1   * (pco2 - 40) / 10;
+        var rChron = 24 + 3.5 * (pco2 - 40) / 10;
+        kompBody += '<strong>Erwartetes HCO\u2083\u207b:</strong><br>';
+        kompBody += '<span class="sab-resp-type-row">\u2022 Akut: <code>' + rAkut.toFixed(1) + ' mmol/l</code> (1 mmol/l pro 10 mmHg \u2191 pCO\u2082)</span><br>';
+        kompBody += '<span class="sab-resp-type-row">\u2022 Chronisch: <code>' + rChron.toFixed(1) + ' mmol/l</code> (3,5 mmol/l pro 10 mmHg \u2191 pCO\u2082)</span><br>';
+        kompBody += 'Gemessen: <strong>' + hco3 + ' mmol/l</strong><br>';
+        kompBody += '<div style="margin-top:6px;"><label style="font-size:.74rem;font-weight:600;color:#555;">Verlaufstyp:</label> ';
+        kompBody += '<div class="sab-resp-toggle">';
+        kompBody += '<input type="radio" name="sab-resp-type" id="sab-rt-akut" value="akut" onchange="sabWorkup()"><label for="sab-rt-akut">Akut</label>';
+        kompBody += '<input type="radio" name="sab-resp-type" id="sab-rt-chron" value="chronisch" onchange="sabWorkup()"><label for="sab-rt-chron">Chronisch</label>';
+        kompBody += '<input type="radio" name="sab-resp-type" id="sab-rt-unk" value="unknown" checked onchange="sabWorkup()"><label for="sab-rt-unk">Unbekannt</label>';
+        kompBody += '</div></div>';
+        var respType = getRespType();
+        if (respType === 'akut') {
+          var rTol = 1.5;
+          if (Math.abs(hco3 - rAkut) <= rTol) {
+            kompBody += result('ok', '\u2705 Adäquate Kompensation f\u00fcr akute resp. Azidose');
+          } else if (hco3 > rAkut + rTol) {
+            kompBody += result('warn', 'HCO\u2083\u207b erh\u00f6ht \u2192 Zus\u00e4tzliche metabolische <strong>ALKALOSE</strong> oder chronischer Verlauf');
+          } else {
+            kompBody += result('danger', 'HCO\u2083\u207b erniedrigt \u2192 Zus\u00e4tzliche metabolische <strong>AZIDOSE</strong>');
+          }
+        } else if (respType === 'chronisch') {
+          var rTolC = 2;
+          if (Math.abs(hco3 - rChron) <= rTolC) {
+            kompBody += result('ok', '\u2705 Adäquate Kompensation f\u00fcr chronische resp. Azidose');
+          } else if (hco3 > rChron + rTolC) {
+            kompBody += result('warn', 'HCO\u2083\u207b erh\u00f6ht \u2192 Zus\u00e4tzliche metabolische <strong>ALKALOSE</strong>');
+          } else {
+            kompBody += result('danger', 'HCO\u2083\u207b erniedrigt \u2192 Zus\u00e4tzliche metabolische <strong>AZIDOSE</strong>');
+          }
+        } else {
+          if (Math.abs(hco3 - rAkut) < Math.abs(hco3 - rChron)) {
+            kompBody += result('info', 'HCO\u2083\u207b n\u00e4her am Akut-Wert (' + rAkut.toFixed(1) + ') \u2014 eher akuter Verlauf.');
+          } else {
+            kompBody += result('info', 'HCO\u2083\u207b n\u00e4her am Chronisch-Wert (' + rChron.toFixed(1) + ') \u2014 eher chronischer Verlauf.');
+          }
+        }
+      } else if (primType === 'respalk') {
+        var raAkut  = 24 - 2 * (40 - pco2) / 10;
+        var raChron = 24 - 5 * (40 - pco2) / 10;
+        kompBody += '<strong>Erwartetes HCO\u2083\u207b:</strong><br>';
+        kompBody += '\u2022 Akut: <code>' + raAkut.toFixed(1) + ' mmol/l</code><br>';
+        kompBody += '\u2022 Chronisch: <code>' + raChron.toFixed(1) + ' mmol/l</code><br>';
+        kompBody += 'Gemessen: <strong>' + hco3 + ' mmol/l</strong><br>';
+        if (Math.abs(hco3 - raAkut) < Math.abs(hco3 - raChron)) {
+          kompBody += result('info', 'HCO\u2083\u207b n\u00e4her am Akut-Wert \u2014 eher akuter Verlauf.');
+        } else {
+          kompBody += result('info', 'HCO\u2083\u207b n\u00e4her am Chronisch-Wert \u2014 eher chronischer Verlauf.');
+        }
+      } else if (primType.indexOf('gemischt') === 0) {
+        kompBody = result('warn', 'Gemischte Störung — Kompensation nicht standardisiert berechenbar. Klinischen Kontext beachten.');
+      } else {
+        kompBody = result('neutral', 'Keine Kompensationsberechnung notwendig.');
+      }
+    } else if (!primType && hasHco3 && hasPco2) {
+      kompBody = result('ok', 'Keine relevante Primärstörung \u2014 Kompensation nicht erforderlich.');
+    } else {
+      kompBody = result('neutral', 'HCO\u2083\u207b und pCO\u2082 eingeben f\u00fcr Kompensationspr\u00fcfung.');
+    }
+    html += step(3, 'Kompensation adäquat?', kompBody);
+    html += connector();
+
+    /* ══ SCHRITT 4: Anionenlücke ══ */
+    var al = NaN, alKorr = NaN;
+    var alBody = '';
+    var highAG = false;
+    if (isset(na) && isset(cl) && hasHco3) {
+      al = na - (hco3 + cl);
+      var albKorrDelta = 0;
+      if (isset(alb) && alb < 40) {
+        albKorrDelta = 2.5 * (40 - alb);
+        alKorr = al + albKorrDelta;
+      } else {
+        alKorr = al;
+      }
+      alBody += '<code>AL = ' + na + ' \u2212 (' + hco3 + ' + ' + cl + ') = <strong>' + al.toFixed(1) + ' mmol/l</strong></code><br>';
+      if (isset(alb) && alb < 40) {
+        alBody += '<code>AL<sub>korr</sub> = ' + al.toFixed(1) + ' + 2,5 \u00d7 (40 \u2212 ' + alb + ') / 10 = <strong>' + alKorr.toFixed(1) + ' mmol/l</strong></code><br>';
+      }
+      alBody += '<small style="color:#888;">Normal: 8\u201312 mmol/l</small><br><br>';
+
+      var alUse = alKorr;
+      if (alUse > 12) {
+        highAG = true;
+        alBody += badge('red', 'Erhöhte Anionenlücke (' + alUse.toFixed(1) + ' mmol/l)') + '<br>';
+        alBody += result('danger', '<strong>\u2192 AG-Azidose</strong> \u2014 GOLD MARK-Ursachen (siehe rechte Spalte)');
+        if (isset(lak) && lak > 0) {
+          var lakContrib = lak;
+          alBody += result('warn', 'Laktat (' + lak + ' mmol/l) erklärt ca. ' + lakContrib.toFixed(1) + ' mmol/l der AL-Erhöhung (1:1 Beitrag)');
+        }
+        /* GOLDMARK accordion */
+        alBody += '<div id="sab-acc-gm-hd" class="sab-acc-hd" onclick="sabToggleAcc(\'sab-acc-gm\')">' +
+          'GOLD MARK Ursachen anzeigen <span class="sab-acc-arrow">▼</span>' +
+          '</div>' +
+          '<div id="sab-acc-gm-body" class="sab-acc-body">' +
+          '<strong>G</strong>lykolat · <strong>O</strong>xoprolin · <strong>L</strong>aktat · <strong>D</strong>-Laktat · ' +
+          '<strong>M</strong>ethanol · <strong>A</strong>lk. Ketoazidose · <strong>R</strong>enal (Urämie) · <strong>K</strong>etoazidose (DKA)' +
+          '</div>';
+      } else if (alUse < 6) {
+        alBody += badge('gray', 'Erniedrigte AL (' + alUse.toFixed(1) + ')') + '<br>';
+        alBody += result('neutral', 'Hypoalbuminämie · erhöhte Kationen (Mg\u00b2\u207a, Ca\u00b2\u207a) · Paraproteine');
+      } else {
+        alBody += badge('green', 'Normale AL (' + alUse.toFixed(1) + ' mmol/l)') + '<br>';
+        alBody += result('ok', 'Hyperchlorämische Azidose: RTA · Diarrhö · NaCl-Infusion · Diuretika · Ureterableitung');
+      }
+    } else {
+      alBody = result('neutral', 'Na\u207a, Cl\u207b und HCO\u2083\u207b eingeben f\u00fcr Anionenlücke.');
+    }
+    html += step(4, 'Anionenlücke (AL)', alBody);
+    html += connector();
+
+    /* ══ SCHRITT 4b: Delta-Delta ══ */
+    var ddBody = '';
+    if (highAG && hasHco3) {
+      var alUse2 = isset(alKorr) ? alKorr : al;
+      var dAG = alUse2 - 12;
+      var dHco3 = 24 - hco3;
+      var ddBody2 = '';
+      ddBody2 += '<code>\u0394AG = ' + alUse2.toFixed(1) + ' \u2212 12 = ' + dAG.toFixed(1) + ' mmol/l</code><br>';
+      ddBody2 += '<code>\u0394HCO\u2083\u207b = 24 \u2212 ' + hco3 + ' = ' + dHco3.toFixed(1) + ' mmol/l</code><br>';
+      if (dHco3 > 0) {
+        var dr = dAG / dHco3;
+        ddBody2 += '<code>Delta-Ratio = ' + dAG.toFixed(1) + ' / ' + dHco3.toFixed(1) + ' = <strong>' + dr.toFixed(2) + '</strong></code><br><br>';
+        if (dr < 0.4) {
+          ddBody2 += badge('red', 'DR < 0,4') + '<br>' + result('danger', 'Reine normale-AL-Azidose (AG-Erhöhung passt nicht zur HCO\u2083\u207b-Erniedrigung)');
+        } else if (dr < 1.0) {
+          ddBody2 += badge('orange', 'DR 0,4\u20131,0') + '<br>' + result('warn', 'Kombinierte Azidose: erhöhte AL + normale AL (z.B. DKA + Diarrhö)');
+        } else if (dr <= 2.0) {
+          ddBody2 += badge('green', 'DR 1,0\u20132,0') + '<br>' + result('ok', '\u2705 Reine erhöhte-AL-Azidose');
+        } else {
+          ddBody2 += badge('orange', 'DR > 2,0') + '<br>' + result('warn', 'Erhöhte-AL-Azidose + <strong>zusätzliche metabolische ALKALOSE</strong> (HCO\u2083\u207b relativ zu hoch!)');
+        }
+      } else {
+        ddBody2 += result('warn', 'HCO\u2083\u207b normal oder erhöht bei erhöhter AL \u2192 zus. metabolische Alkalose m\u00f6glich!');
+      }
+      html += step('4b', 'Delta-Delta-Verhältnis', ddBody2);
+      html += connector();
+    }
+
+    /* ══ SCHRITT 5: Summary ══ */
+    var sumFindings = [];
+    if (ph < 7.35) sumFindings.push('Azidämie (pH ' + ph + ')');
+    if (ph > 7.45) sumFindings.push('Alkalämie (pH ' + ph + ')');
+    if (primType === 'metazid')      sumFindings.push('Metabolische Azidose (HCO\u2083\u207b ' + hco3 + ' mmol/l)');
+    if (primType === 'metalk')       sumFindings.push('Metabolische Alkalose (HCO\u2083\u207b ' + hco3 + ' mmol/l)');
+    if (primType === 'respazid')     sumFindings.push('Respiratorische Azidose (pCO\u2082 ' + pco2 + ' mmHg)');
+    if (primType === 'respalk')      sumFindings.push('Respiratorische Alkalose (pCO\u2082 ' + pco2 + ' mmHg)');
+    if (primType === 'gemischt_azid') sumFindings.push('Gemischte Azidose (met. + resp.)');
+    if (primType === 'gemischt_alk') sumFindings.push('Gemischte Alkalose (met. + resp.)');
+    if (highAG) {
+      var alStr = isset(alKorr) ? alKorr.toFixed(1) : al.toFixed(1);
+      sumFindings.push('Erhöhte Anionenlücke (AL ' + alStr + ' mmol/l)');
+    } else if (isset(al) && !highAG && isset(na) && isset(cl)) {
+      sumFindings.push('Normale Anionenlücke (AL ' + (isset(alKorr) ? alKorr.toFixed(1) : al.toFixed(1)) + ' mmol/l)');
+    }
+    if (isset(lak) && lak >= 2) sumFindings.push('Laktaterhöhung (' + lak + ' mmol/l)');
+
+    var sumHtml2 = '<div class="sab-summary">';
+    sumHtml2 += '<div class="sab-summary-title">📋 Zusammenfassung</div>';
+    if (sumFindings.length === 0) {
+      sumHtml2 += badge('green', 'Alle Parameter im Normbereich') + ' — Keine Säure-Basen-Störung erkennbar.';
+    } else {
+      sumHtml2 += sumFindings.map(function(f){ return '\u2022 ' + f; }).join('<br>');
+    }
+    sumHtml2 += '</div>';
+    html += step(5, 'Zusammenfassung', sumHtml2);
+
+    /* ══ SCHRITT 6: UAL — only if normal AG or explicitly shown ══ */
+    var showUal = !highAG && isset(na) && isset(cl) && hasHco3 && isset(al);
+    var ualInputHtml = '<div id="sab-ual-section" class="sab-ual-section">' +
+      '<div style="font-size:.78rem;font-weight:700;color:#b71c1c;margin-bottom:8px;">🔍 Schritt 6 — Urin-Anionenlücke (UAL): Renale vs. extrarenale Ursache?</div>';
+    if (highAG) {
+      ualInputHtml += '<div class="sab-result sab-result-neutral" style="font-size:.76rem;">' +
+        '⚠️ UAL bei erhöhter AG-Azidose nicht verwertbar! UAL nur bei normaler Anionenlücke sinnvoll.' +
+        '</div>';
+    } else {
+      ualInputHtml += '<div style="font-size:.76rem;color:#555;margin-bottom:8px;">Urin-Werte eingeben zur Differenzierung RTA vs. extrarenale Ursache (Diarrhö):</div>';
+      ualInputHtml += '<div class="sab-ual-grid">';
+      ualInputHtml += '<div class="sab-field"><label style="font-size:.72rem;">U-Na\u207a (mmol/l)</label><input type="number" id="sab-una" placeholder="" oninput="sabWorkup()"></div>';
+      ualInputHtml += '<div class="sab-field"><label style="font-size:.72rem;">U-K\u207a (mmol/l)</label><input type="number" id="sab-uk" placeholder="" oninput="sabWorkup()"></div>';
+      ualInputHtml += '<div class="sab-field"><label style="font-size:.72rem;">U-Cl\u207b (mmol/l)</label><input type="number" id="sab-ucl" placeholder="" oninput="sabWorkup()"></div>';
+      ualInputHtml += '<div class="sab-field"><label style="font-size:.72rem;">U-Harnstoff (mg/dl)</label><input type="number" id="sab-uhst" placeholder="" oninput="sabWorkup()"></div>';
+      ualInputHtml += '<div class="sab-field"><label style="font-size:.72rem;">U-Osmolalität (mOsm/kg)</label><input type="number" id="sab-uosm" placeholder="" oninput="sabWorkup()"></div>';
+      ualInputHtml += '</div>';
+
+      var una  = getUalVal('una');
+      var uk   = getUalVal('uk');
+      var ucl  = getUalVal('ucl');
+      var uhst = getUalVal('uhst');
+      var uosm = getUalVal('uosm');
+
+      if (isset(una) && isset(uk) && isset(ucl)) {
+        var ual = (una + uk) - ucl;
+        ualInputHtml += '<div style="margin-top:10px;"><code>UAL = (' + una + ' + ' + uk + ') \u2212 ' + ucl + ' = <strong>' + ual.toFixed(1) + ' mmol/l</strong></code></div>';
+        if (ual < -10) {
+          ualInputHtml += result('ok', '\u2705 UAL negativ (&lt; \u221210) \u2192 Adäquate NH\u2084\u207a-Ausscheidung \u2192 <strong>Extrarenale Ursache</strong> (Diarrhö, GI-Verlust)');
+        } else if (ual > 10) {
+          ualInputHtml += result('danger', '\u26A0\uFE0F UAL positiv (&gt; +10) \u2192 Gestörte NH\u2084\u207a-Ausscheidung \u2192 <strong>Renale Ursache</strong> (RTA Typ I/II/IV, CKD)');
+        } else {
+          ualInputHtml += result('warn', 'UAL grenzwertig (\u221210 bis +10) \u2014 Klinischen Kontext beachten');
+        }
+        if (isset(uhst) && isset(uosm)) {
+          var uosmCalc = 2 * (una + uk) + uhst / 6.006;
+          var uol = uosm - uosmCalc;
+          ualInputHtml += '<div style="margin-top:6px;"><code>U-Osmolalitätslücke = ' + uosm + ' \u2212 ' + uosmCalc.toFixed(0) + ' = <strong>' + uol.toFixed(0) + ' mOsm/kg</strong></code><br>';
+          if (uol < 100) {
+            ualInputHtml += result('danger', 'UOL &lt; 100 \u2192 Renale Ursache (konsistent mit UAL)');
+          } else {
+            ualInputHtml += result('ok', 'UOL &gt; 100 \u2192 Extrarenale Ursache (konsistent mit UAL)');
+          }
+          ualInputHtml += '</div>';
+        }
+      } else {
+        ualInputHtml += '<div style="font-size:.74rem;color:#b71c1c;margin-top:6px;">U-Na\u207a, U-K\u207a und U-Cl\u207b eingeben zur Berechnung.</div>';
+      }
+    }
+    ualInputHtml += '</div>';
+
+    html += connector();
+    html += step(6, 'Urin-Anionenlücke (UAL)', ualInputHtml);
+
+    /* render */
+    fc.innerHTML = html;
+    /* restore UAL values into newly rendered inputs */
+    restoreUalVals();
+  };
+
+})();
+</script>
+</div><!-- end tool-sab -->
 
 </body>
 </html>
