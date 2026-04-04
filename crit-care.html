@@ -4316,10 +4316,20 @@ laeCalcRisk();
           <span class="copd-form-unit">mmHg</span>
         </div>
 
-        <div class="copd-form-row">
+        <div class="copd-form-row" style="flex-wrap:wrap;gap:6px;">
           <span class="copd-form-label">pO2</span>
           <input type="number" id="copd-po2" class="copd-form-input" placeholder="80" min="20" max="200" oninput="copdCalcSchweregrad()">
           <span class="copd-form-unit">mmHg</span>
+          <span style="display:flex;gap:4px;align-items:center;margin-left:4px;">
+            <label style="display:flex;align-items:center;gap:3px;font-size:.75rem;font-weight:700;cursor:pointer;">
+              <input type="radio" name="copd-po2-typ" id="copd-po2-art" value="art" checked onchange="copdCalcSchweregrad()" style="accent-color:#b71c1c;">
+              arteriell
+            </label>
+            <label style="display:flex;align-items:center;gap:3px;font-size:.75rem;font-weight:700;cursor:pointer;">
+              <input type="radio" name="copd-po2-typ" id="copd-po2-ven" value="ven" onchange="copdCalcSchweregrad()" style="accent-color:#b71c1c;">
+              venös
+            </label>
+          </span>
         </div>
 
         <div class="copd-form-row">
@@ -4729,6 +4739,8 @@ window.copdCalcSchweregrad = function() {
   var ph = parseFloat(document.getElementById('copd-ph').value);
   var pco2 = parseFloat(document.getElementById('copd-pco2').value);
   var po2 = parseFloat(document.getElementById('copd-po2').value);
+  var po2TypEl = document.querySelector('input[name="copd-po2-typ"]:checked');
+  var po2Typ = po2TypEl ? po2TypEl.value : 'art'; // 'art' = arteriell, 'ven' = venös
 
   var resultDiv = document.getElementById('copd-schweregrad-result');
 
@@ -4743,11 +4755,24 @@ window.copdCalcSchweregrad = function() {
     return;
   }
 
+  // pO2-Warnhinweis bei venöser BGA (venöses pO2 nicht für Oxygenierung verwertbar)
+  var po2WarnHtml = '';
+  if (!isNaN(po2) && po2Typ === 'ven') {
+    po2WarnHtml = '<div style="background:#fff3e0;border-left:3px solid #e65100;border-radius:6px;padding:7px 11px;margin-bottom:8px;font-size:.78rem;color:#bf360c;">' +
+      '⚠️ <strong>Venöses pO2:</strong> Nicht geeignet zur Beurteilung der Oxygenierung! ' +
+      'Venöse Normalwerte 35–45 mmHg (gemischtveniös) / 40–60 mmHg (zentralvenös). ' +
+      'Für Oxygenierung → SpO2 oder <strong>arterielle</strong> BGA verwenden. ' +
+      'pH und pCO2 aus venöser BGA sind verwertbar (pCO2 venös ≈ arteriell +3–8 mmHg).</div>';
+  }
+
+  // pO2-Schwellen nur bei arterieller BGA für Schweregrad verwenden
+  var po2Art = (!isNaN(po2) && po2Typ === 'art') ? po2 : NaN;
+
   /* Kritisch / Lebensbedrohlich */
   var isCritical = (!isNaN(ph) && ph < 7.25) ||
     (!isNaN(af) && af > 30) ||
     (!isNaN(spo2) && spo2 < 85) ||
-    (!isNaN(po2) && po2 < 50);
+    (!isNaN(po2Art) && po2Art < 50);
 
   /* Schwer */
   var isSevere = (!isNaN(ph) && ph < 7.30) ||
@@ -4812,7 +4837,7 @@ window.copdCalcSchweregrad = function() {
       '</div></div>';
   }
 
-  resultDiv.innerHTML = html;
+  resultDiv.innerHTML = po2WarnHtml + html;
 };
 
 /* ── NIV-Indikationsrechner ── */
