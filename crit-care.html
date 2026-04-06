@@ -38,6 +38,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 #tool-del{display:none;}
 #tool-sepsis{display:none;}
 #tool-ards{display:none;}
+#tool-tox{display:none;}
 
 /* ============================================================
    LAE — CSS (vollständig aus lae.html, in Datei isoliert)
@@ -174,7 +175,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <button class="nav-tab-btn" data-tool="ernaehrung" onclick="switchTool('ernaehrung')">🥗 Ernährung ITS</button>
   <button class="nav-tab-btn" data-tool="copd" onclick="switchTool('copd')">🫁 COPD / AECOPD</button>
   <button class="nav-tab-btn" data-tool="del" onclick="switchTool('del')">🧠 Delir</button>
-  <!-- Platzhalter für weitere Tools: -->
+  <button class="nav-tab-btn" data-tool="tox" onclick="switchTool('tox')">☠️ Intoxikationen</button>
   <button class="nav-tab-btn" data-tool="sepsis" onclick="switchTool('sepsis')">🦠 Sepsis</button>
   <button class="nav-tab-btn" data-tool="ards" onclick="switchTool('ards')">💨 ARDS</button>
 </div>
@@ -3079,6 +3080,8 @@ window.switchTool = function(name) {
   document.getElementById('tool-del').style.display  = name === 'del'  ? 'block' : 'none';
   document.getElementById('tool-sepsis').style.display = name === 'sepsis' ? 'block' : 'none';
   document.getElementById('tool-ards').style.display   = name === 'ards'   ? 'block' : 'none';
+  document.getElementById('tool-tox').style.display    = name === 'tox'    ? 'block' : 'none';
+  if (name === 'tox' && window.toxLoadSabValues) { window.toxLoadSabValues(); }
 };
 
 // ── LAE Sub-Tab-Switcher ───────────────────────────────────
@@ -5798,9 +5801,9 @@ copdCalcAnthonisen();
         if (osmLuecke !== null) {
           osmInfo = '<br><code>Osmolalitätslücke = ' + gmOsmM + ' − ' + gmOsmB.toFixed(0) + ' = <strong>' + osmLuecke.toFixed(0) + ' mOsm/kg</strong></code><br>';
           if (osmLuecke > 20) {
-            osmInfo += result('danger', '🚨 Osmolalitätslücke stark erhöht (' + osmLuecke.toFixed(0) + ') → V.a. toxische Alkohole: Methanol, Ethylenglykol, Isopropanol, Propylenglykol → Fomepizol + Dialyse!');
+            osmInfo += result('danger', '🚨 Osmolalitätslücke stark erhöht (' + osmLuecke.toFixed(0) + ') → V.a. toxische Alkohole: Methanol, Ethylenglykol, Isopropanol, Propylenglykol → Fomepizol + Dialyse! <br><a href="#" onclick="switchTool(\'tox\');toxShowTab(\'luecken\',document.querySelector(\'.tox-tab-btn:last-child\'));return false;" style="color:#b71c1c;font-weight:700;">→ Intoxikation: Lücken-Diagnostik öffnen</a>');
           } else if (osmLuecke > 10) {
-            osmInfo += result('warn', '⚠️ Osmolalitätslücke erhöht (' + osmLuecke.toFixed(0) + ') → toxische Alkohole möglich; auch: Mannitol, Ethanol, Schock');
+            osmInfo += result('warn', '⚠️ Osmolalitätslücke erhöht (' + osmLuecke.toFixed(0) + ') → toxische Alkohole möglich; auch: Mannitol, Ethanol, Schock <br><a href="#" onclick="switchTool(\'tox\');toxShowTab(\'luecken\',document.querySelector(\'.tox-tab-btn:last-child\'));return false;" style="color:#e65100;font-weight:700;">→ Intoxikation: Lücken-Diagnostik öffnen</a>');
           } else {
             osmInfo += result('ok', 'Osmolalitätslücke normal (< 10) → keine ungemessenen Osmolyte');
           }
@@ -7685,6 +7688,926 @@ window.sepVolCalc = function() {
 })();
 </script>
 </div><!-- end tool-sepsis -->
+
+<div id="tool-ards" style="display:none;"><div style="max-width:820px;margin:0 auto;padding:40px 16px;text-align:center;color:#999;font-size:.9rem;">💨 ARDS-Tool — in Vorbereitung</div></div>
+
+<!-- ══════════════════════════════════════════════════════════
+     TOOL: INTOXIKATIONEN
+     ══════════════════════════════════════════════════════════ -->
+<div id="tool-tox">
+<style>
+#tool-tox .tox-wrap{max-width:880px;margin:0 auto;padding:16px;}
+#tool-tox .tox-header{background:linear-gradient(135deg,#b71c1c 0%,#c62828 100%);color:#fff;border-radius:14px;padding:18px 20px;margin-bottom:16px;}
+#tool-tox .tox-header h2{margin:0;font-size:1.15rem;font-weight:800;}
+#tool-tox .tox-header p{margin:6px 0 0;font-size:.78rem;opacity:.88;}
+#tool-tox .tox-tab-nav{background:#fff;border-bottom:2px solid #f5e0e0;display:flex;overflow-x:auto;padding:0 12px;gap:2px;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:16px;border-radius:10px 10px 0 0;}
+#tool-tox .tox-tab-btn{border:none;background:none;padding:13px 15px 11px;font-size:.8rem;font-weight:600;color:#78909c;cursor:pointer;border-bottom:2.5px solid transparent;white-space:nowrap;transition:color .15s,border-color .15s;}
+#tool-tox .tox-tab-btn.active{color:#b71c1c;border-bottom-color:#b71c1c;}
+#tool-tox .tox-tab-btn:hover:not(.active){color:#c62828;border-bottom-color:#ef9a9a;}
+#tool-tox .tox-tab{display:none;}
+#tool-tox .tox-tab.active{display:block;}
+#tool-tox .tox-card{background:#fff;border-radius:14px;box-shadow:0 1px 6px rgba(0,0,0,.08);margin-bottom:14px;overflow:hidden;}
+#tool-tox .tox-card-head{padding:13px 16px 10px;border-bottom:1px solid #fce4ec;display:flex;align-items:center;gap:8px;}
+#tool-tox .tox-card-title{font-size:.82rem;font-weight:800;color:#b71c1c;text-transform:uppercase;letter-spacing:.6px;}
+#tool-tox .tox-card-body{padding:14px 16px;}
+#tool-tox .tox-card-body p{margin:0 0 8px;font-size:.8rem;color:#37474f;line-height:1.5;}
+#tool-tox .tox-check-row{display:flex;align-items:center;gap:9px;padding:6px 10px;border-radius:8px;cursor:pointer;transition:background .12s;margin-bottom:2px;}
+#tool-tox .tox-check-row:hover{background:#fce4ec;}
+#tool-tox .tox-check-row input[type=checkbox]{accent-color:#b71c1c;width:15px;height:15px;flex-shrink:0;}
+#tool-tox .tox-check-label{font-size:.79rem;color:#37474f;line-height:1.4;}
+#tool-tox .tox-check-sub{font-size:.7rem;color:#90a4ae;display:block;}
+#tool-tox .tox-sym-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:2px;}
+#tool-tox .tox-result{padding:14px 16px;border-radius:10px;margin-bottom:10px;font-size:.8rem;line-height:1.55;}
+#tool-tox .tox-r-match{background:#fce4ec;border-left:4px solid #b71c1c;color:#b71c1c;font-weight:700;}
+#tool-tox .tox-r-partial{background:#fff3e0;border-left:4px solid #e65100;color:#4e342e;}
+#tool-tox .tox-r-none{background:#f5f5f5;border-left:4px solid #bdbdbd;color:#757575;}
+#tool-tox .tox-r-info{background:#e3f2fd;border-left:4px solid #1565c0;color:#0d47a1;}
+#tool-tox .tox-r-warn{background:#fff8e1;border-left:4px solid #f9a825;color:#4e342e;}
+#tool-tox .tox-r-danger{background:#fce4ec;border-left:4px solid #b71c1c;color:#b71c1c;}
+#tool-tox .tox-r-ok{background:#e8f5e9;border-left:4px solid #2e7d32;color:#1b5e20;}
+#tool-tox .tox-toxidrom-card{background:#fff;border:1.5px solid #e0e0e0;border-radius:12px;padding:14px 16px;margin-bottom:10px;transition:border-color .2s,box-shadow .2s;}
+#tool-tox .tox-toxidrom-card.tox-best-match{border-color:#b71c1c;box-shadow:0 0 0 2px rgba(183,28,28,.15);}
+#tool-tox .tox-toxidrom-name{font-size:.88rem;font-weight:800;color:#37474f;margin-bottom:4px;}
+#tool-tox .tox-toxidrom-score{font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:10px;display:inline-block;margin-bottom:8px;}
+#tool-tox .tox-score-high{background:#fce4ec;color:#b71c1c;}
+#tool-tox .tox-score-mid{background:#fff3e0;color:#e65100;}
+#tool-tox .tox-score-low{background:#f5f5f5;color:#757575;}
+#tool-tox .tox-toxidrom-detail{font-size:.76rem;color:#546e7a;line-height:1.55;}
+#tool-tox .tox-toxidrom-detail strong{color:#37474f;}
+#tool-tox .tox-btn{display:inline-block;padding:8px 18px;border-radius:8px;border:none;font-size:.78rem;font-weight:700;cursor:pointer;transition:background .15s;}
+#tool-tox .tox-btn-primary{background:#b71c1c;color:#fff;}
+#tool-tox .tox-btn-primary:hover{background:#d32f2f;}
+#tool-tox .tox-btn-outline{background:#fff;color:#b71c1c;border:1.5px solid #b71c1c;}
+#tool-tox .tox-btn-outline:hover{background:#fce4ec;}
+#tool-tox .tox-btn-link{background:none;border:none;color:#b71c1c;font-weight:700;cursor:pointer;font-size:.78rem;padding:4px 0;text-decoration:underline;}
+#tool-tox .tox-search{width:100%;padding:10px 14px;border:1.5px solid #cfd8dc;border-radius:10px;font-size:.82rem;outline:none;margin-bottom:12px;transition:border-color .15s;}
+#tool-tox .tox-search:focus{border-color:#b71c1c;}
+#tool-tox .tox-acc{border:1px solid #e0e0e0;border-radius:10px;margin-bottom:8px;overflow:hidden;}
+#tool-tox .tox-acc-head{padding:12px 16px;background:#fafafa;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:.8rem;font-weight:700;color:#37474f;transition:background .15s;}
+#tool-tox .tox-acc-head:hover{background:#fce4ec;}
+#tool-tox .tox-acc-arrow{transition:transform .2s;font-size:.7rem;color:#90a4ae;}
+#tool-tox .tox-acc.open .tox-acc-arrow{transform:rotate(90deg);}
+#tool-tox .tox-acc-body{display:none;padding:12px 16px;font-size:.78rem;color:#37474f;line-height:1.55;border-top:1px solid #e0e0e0;}
+#tool-tox .tox-acc.open .tox-acc-body{display:block;}
+#tool-tox .tox-acc-body table{width:100%;border-collapse:collapse;margin:6px 0;}
+#tool-tox .tox-acc-body th,#tool-tox .tox-acc-body td{padding:6px 10px;font-size:.76rem;border-bottom:1px solid #f0f0f0;text-align:left;}
+#tool-tox .tox-acc-body th{background:#fafafa;font-weight:700;color:#b71c1c;}
+#tool-tox .tox-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.68rem;font-weight:700;margin:1px 2px;}
+#tool-tox .tox-badge-red{background:#fce4ec;color:#b71c1c;}
+#tool-tox .tox-badge-orange{background:#fff3e0;color:#e65100;}
+#tool-tox .tox-badge-green{background:#e8f5e9;color:#2e7d32;}
+#tool-tox .tox-badge-blue{background:#e3f2fd;color:#1565c0;}
+#tool-tox .tox-badge-gray{background:#f5f5f5;color:#616161;}
+#tool-tox .tox-table{width:100%;border-collapse:collapse;margin:8px 0;}
+#tool-tox .tox-table th,#tool-tox .tox-table td{padding:8px 10px;font-size:.76rem;border-bottom:1px solid #f0f0f0;text-align:left;}
+#tool-tox .tox-table th{background:#fafafa;font-weight:700;color:#b71c1c;position:sticky;top:0;}
+#tool-tox .tox-table tr:hover td{background:#fce4ec;}
+#tool-tox .tox-flow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0;}
+#tool-tox .tox-flow-box{padding:12px 14px;border-radius:10px;font-size:.78rem;line-height:1.5;}
+#tool-tox .tox-field{display:flex;flex-direction:column;gap:3px;margin-bottom:8px;}
+#tool-tox .tox-field label{font-size:.74rem;font-weight:600;color:#546e7a;}
+#tool-tox .tox-input{border:1.5px solid #cfd8dc;border-radius:8px;padding:7px 10px;font-size:.82rem;width:120px;outline:none;transition:border-color .15s;}
+#tool-tox .tox-input:focus{border-color:#b71c1c;}
+#tool-tox .tox-input-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px 16px;}
+#tool-tox .tox-select{border:1.5px solid #cfd8dc;border-radius:8px;padding:7px 10px;font-size:.82rem;outline:none;width:100%;transition:border-color .15s;background:#fff;}
+#tool-tox .tox-select:focus{border-color:#b71c1c;}
+@media(max-width:600px){
+  #tool-tox .tox-flow{grid-template-columns:1fr;}
+  #tool-tox .tox-sym-grid{grid-template-columns:1fr;}
+  #tool-tox .tox-input-grid{grid-template-columns:1fr 1fr;}
+}
+</style>
+
+<div class="tox-wrap">
+
+<!-- Header -->
+<div class="tox-header">
+  <h2>☠️ Intoxikationen</h2>
+  <p>Toxidrom-Erkennung, Antidote, Eliminationsverfahren, Lückendiagnostik</p>
+</div>
+
+<!-- Sub-Tab Nav -->
+<div class="tox-tab-nav">
+  <button class="tox-tab-btn active" onclick="toxShowTab('toxidrom',this)">🔍 Toxidrome</button>
+  <button class="tox-tab-btn" onclick="toxShowTab('antidot',this)">💊 Antidote</button>
+  <button class="tox-tab-btn" onclick="toxShowTab('elimination',this)">🩸 Elimination</button>
+  <button class="tox-tab-btn" onclick="toxShowTab('luecken',this)">🧪 Lücken-Diagnostik</button>
+</div>
+
+<!-- ═══ SUB-TAB 1: TOXIDROME ═══ -->
+<div id="tox-toxidrom" class="tox-tab active">
+
+<div class="tox-card">
+  <div class="tox-card-head"><span class="tox-card-title">🔍 Toxidrom-Finder</span></div>
+  <div class="tox-card-body">
+    <p>Beobachtete Symptome ankreuzen — das wahrscheinlichste Toxidrom wird automatisch ermittelt.</p>
+    <div class="tox-sym-grid">
+      <label class="tox-check-row"><input type="checkbox" id="tox-sym-mydriasis" onchange="toxFindToxidrome()"><span class="tox-check-label">Mydriasis<span class="tox-check-sub">weite Pupillen</span></span></label>
+      <label class="tox-check-row"><input type="checkbox" id="tox-sym-miosis" onchange="toxFindToxidrome()"><span class="tox-check-label">Miosis<span class="tox-check-sub">enge Pupillen</span></span></label>
+      <label class="tox-check-row"><input type="checkbox" id="tox-sym-tachy" onchange="toxFindToxidrome()"><span class="tox-check-label">Tachykardie</span></label>
+      <label class="tox-check-row"><input type="checkbox" id="tox-sym-brady" onchange="toxFindToxidrome()"><span class="tox-check-label">Bradykardie</span></label>
+      <label class="tox-check-row"><input type="checkbox" id="tox-sym-hypertonie" onchange="toxFindToxidrome()"><span class="tox-check-label">Hypertonie</span></label>
+      <label class="tox-check-row"><input type="checkbox" id="tox-sym-hypotonie" onchange="toxFindToxidrome()"><span class="tox-check-label">Hypotonie</span></label>
+      <label class="tox-check-row"><input type="checkbox" id="tox-sym-hyperthermie" onchange="toxFindToxidrome()"><span class="tox-check-label">Hyperthermie<span class="tox-check-sub">&gt; 38 °C</span></span></label>
+      <label class="tox-check-row"><input type="checkbox" id="tox-sym-hypothermie" onchange="toxFindToxidrome()"><span class="tox-check-label">Hypothermie<span class="tox-check-sub">&lt; 36 °C</span></span></label>
+      <label class="tox-check-row"><input type="checkbox" id="tox-sym-diaphorese" onchange="toxFindToxidrome()"><span class="tox-check-label">Diaphorese<span class="tox-check-sub">starkes Schwitzen</span></span></label>
+      <label class="tox-check-row"><input type="checkbox" id="tox-sym-trockenhaut" onchange="toxFindToxidrome()"><span class="tox-check-label">Trockene Haut / Schleimhäute</span></label>
+      <label class="tox-check-row"><input type="checkbox" id="tox-sym-agitation" onchange="toxFindToxidrome()"><span class="tox-check-label">Agitation / Unruhe</span></label>
+      <label class="tox-check-row"><input type="checkbox" id="tox-sym-sedierung" onchange="toxFindToxidrome()"><span class="tox-check-label">Sedierung / Koma</span></label>
+      <label class="tox-check-row"><input type="checkbox" id="tox-sym-klonus" onchange="toxFindToxidrome()"><span class="tox-check-label">Klonus / Myoklonus</span></label>
+      <label class="tox-check-row"><input type="checkbox" id="tox-sym-rigiditaet" onchange="toxFindToxidrome()"><span class="tox-check-label">Rigidität / Tremor</span></label>
+      <label class="tox-check-row"><input type="checkbox" id="tox-sym-krampf" onchange="toxFindToxidrome()"><span class="tox-check-label">Krampfanfälle</span></label>
+      <label class="tox-check-row"><input type="checkbox" id="tox-sym-salivation" onchange="toxFindToxidrome()"><span class="tox-check-label">Salivation / Bronchorrhoe</span></label>
+      <label class="tox-check-row"><input type="checkbox" id="tox-sym-diarrhoe" onchange="toxFindToxidrome()"><span class="tox-check-label">Diarrhoe / Erbrechen</span></label>
+      <label class="tox-check-row"><input type="checkbox" id="tox-sym-ileus" onchange="toxFindToxidrome()"><span class="tox-check-label">Ileus<span class="tox-check-sub">fehlende Darmgeräusche</span></span></label>
+      <label class="tox-check-row"><input type="checkbox" id="tox-sym-harnretention" onchange="toxFindToxidrome()"><span class="tox-check-label">Harnretention</span></label>
+      <label class="tox-check-row"><input type="checkbox" id="tox-sym-tachypnoe" onchange="toxFindToxidrome()"><span class="tox-check-label">Tachypnoe</span></label>
+      <label class="tox-check-row"><input type="checkbox" id="tox-sym-bradypnoe" onchange="toxFindToxidrome()"><span class="tox-check-label">Bradypnoe / Atemdepression</span></label>
+    </div>
+    <div style="margin-top:10px;display:flex;gap:8px;">
+      <button class="tox-btn tox-btn-outline" onclick="toxResetSymptoms()">Zurücksetzen</button>
+    </div>
+  </div>
+</div>
+
+<div id="tox-toxidrom-results"></div>
+
+<!-- Statische Toxidrom-Übersicht -->
+<div class="tox-card">
+  <div class="tox-card-head"><span class="tox-card-title">📋 Toxidrom-Übersicht</span></div>
+  <div class="tox-card-body">
+
+    <div class="tox-acc" id="tox-acc-sympatho">
+      <div class="tox-acc-head" onclick="toxToggleAcc('tox-acc-sympatho')">⚡ Sympathomimetisch <span class="tox-acc-arrow">▶</span></div>
+      <div class="tox-acc-body">
+        <p><strong>Substanzen:</strong> Kokain, Amphetamine, MDMA, Methamphetamin, Cathinone</p>
+        <p><strong>Leitsymptome:</strong> Mydriasis, Tachykardie, Hypertonie, Hyperthermie, Diaphorese, Agitation</p>
+        <p><strong>Soforttherapie:</strong></p>
+        <ul>
+          <li>Benzodiazepine (Midazolam 5 mg i.v., Wdh. alle 5 min) — First-Line bei Agitation</li>
+          <li>Aktive Kühlung bei T &gt; 39 °C</li>
+          <li>Keine Betablocker (unbalancierte Alpha-Stimulation) — bei schwerem Hypertonus: Urapidil</li>
+          <li>Bei MDMA: Hyponatriämie ausschließen (SIADH)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="tox-acc" id="tox-acc-antichol">
+      <div class="tox-acc-head" onclick="toxToggleAcc('tox-acc-antichol')">🚫 Anticholinerg <span class="tox-acc-arrow">▶</span></div>
+      <div class="tox-acc-body">
+        <p><strong>Substanzen:</strong> TCA (Amitriptylin, Doxepin), Atropin, Antihistaminika (Diphenhydramin), Scopolamin, Datura</p>
+        <p><strong>Leitsymptome:</strong> Mydriasis, Tachykardie, Hyperthermie, trockene Haut/Schleimhäute, Agitation/Delir, Harnretention, Ileus</p>
+        <p><strong>Merkregel:</strong> <em>„Hot as a hare, blind as a bat, dry as a bone, red as a beet, mad as a hatter"</em></p>
+        <p><strong>Soforttherapie:</strong></p>
+        <ul>
+          <li>Benzodiazepine bei Agitation/Krampfanfällen</li>
+          <li>Physostigmin 1–2 mg langsam i.v. nur bei schwerer zentraler Toxizität (KI: QRS &gt; 120 ms)</li>
+          <li>Bei TCA: NaHCO₃ bei QRS &gt; 100 ms (Ziel-pH 7,45–7,55)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="tox-acc" id="tox-acc-cholin">
+      <div class="tox-acc-head" onclick="toxToggleAcc('tox-acc-cholin')">💧 Cholinerg (SLUDGE) <span class="tox-acc-arrow">▶</span></div>
+      <div class="tox-acc-body">
+        <p><strong>Substanzen:</strong> Organophosphate (E605, Nervenkampfstoffe), Carbamate, Physostigmin-Überdosis</p>
+        <p><strong>SLUDGE:</strong> <strong>S</strong>alivation, <strong>L</strong>akrimation, <strong>U</strong>rination, <strong>D</strong>iarrhoe, <strong>G</strong>I-Krämpfe, <strong>E</strong>mesis</p>
+        <p><strong>+ KILLER B's:</strong> <strong>B</strong>radykardie, <strong>B</strong>ronchospasmus, <strong>B</strong>ronchorrhoe</p>
+        <p><strong>Leitsymptome:</strong> Miosis, Bradykardie, Salivation, Bronchorrhoe, Diaphorese, Diarrhoe</p>
+        <p><strong>Soforttherapie:</strong></p>
+        <ul>
+          <li>Atropin 2–5 mg i.v. alle 5 min bis Sekrettrocknung (kein Dosislimit!)</li>
+          <li>Obidoxim 250 mg i.v. Bolus, dann 750 mg/24 h (Reaktivierung der AChE, innerhalb 24 h)</li>
+          <li>Dekontamination: Kleidung entfernen, Haut waschen</li>
+          <li>Atropin-Endpunkt: trockene Bronchialsekretion, NICHT Pupillenweite</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="tox-acc" id="tox-acc-serotonin">
+      <div class="tox-acc-head" onclick="toxToggleAcc('tox-acc-serotonin')">🌡️ Serotonin-Syndrom <span class="tox-acc-arrow">▶</span></div>
+      <div class="tox-acc-body">
+        <p><strong>Substanzen:</strong> SSRI + MAO-Hemmer, SSRI + Tramadol/Fentanyl, Linezolid + SSRI, MDMA, Tryptophan</p>
+        <p><strong>Leitsymptome:</strong> Mydriasis, Tachykardie, Hypertonie, Hyperthermie, Diaphorese, Klonus (spontan/induzierbar), Agitation, Tremor, Hyperreflexie</p>
+        <p><strong>Hunter-Kriterien</strong> (Diagnose bei serotonerger Substanz + eines der folgenden):</p>
+        <ul>
+          <li>Spontaner Klonus</li>
+          <li>Induzierbarer Klonus + Agitation ODER Diaphorese</li>
+          <li>Okulärer Klonus + Agitation ODER Diaphorese</li>
+          <li>Tremor + Hyperreflexie</li>
+          <li>Temperatur &gt; 38 °C + okulärer ODER induzierbarer Klonus</li>
+        </ul>
+        <p><strong>DD: Malignes neuroleptisches Syndrom (MNS):</strong> langsamer Beginn (Tage), Rigidität &gt; Klonus, Bradykinesie</p>
+        <p><strong>Soforttherapie:</strong></p>
+        <ul>
+          <li>Auslöser absetzen</li>
+          <li>Benzodiazepine (Midazolam, Lorazepam)</li>
+          <li>Aktive Kühlung bei T &gt; 39 °C</li>
+          <li>Cyproheptadin 12 mg p.o. initial, dann 4 mg alle 8 h (nur oral)</li>
+          <li>Bei schwerer Rigidität: Intubation + Relaxierung erwägen</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="tox-acc" id="tox-acc-opioid">
+      <div class="tox-acc-head" onclick="toxToggleAcc('tox-acc-opioid')">💤 Opioid <span class="tox-acc-arrow">▶</span></div>
+      <div class="tox-acc-body">
+        <p><strong>Substanzen:</strong> Morphin, Heroin, Fentanyl, Methadon, Oxycodon, Tramadol</p>
+        <p><strong>Leitsymptome:</strong> Miosis (Stecknadelkopfpupillen), Bradypnoe/Atemdepression, Sedierung/Koma, Hypotonie, Hypothermie</p>
+        <p><strong>Cave:</strong> Fentanyl-Analoga können verzögert wirken (transdermale Pflaster, Depots)</p>
+        <p><strong>Soforttherapie:</strong></p>
+        <ul>
+          <li>Atemwegssicherung — Beatmung hat Priorität vor Antidot</li>
+          <li>Naloxon 0,4–2 mg i.v., Wdh. alle 2–3 min (max 10 mg)</li>
+          <li>Cave kurze HWZ (30–90 min): bei langwirksamen Opioiden Perfusor 2/3 der Wirkdosis/h</li>
+          <li>i.m.-Gabe (0,4 mg) wenn kein i.v.-Zugang</li>
+          <li>Naloxon-Ziel: adäquate Spontanatmung, NICHT volle Wachheit (Entzugssymptome!)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="tox-acc" id="tox-acc-sedativ">
+      <div class="tox-acc-head" onclick="toxToggleAcc('tox-acc-sedativ')">😴 Sedativ-hypnotisch <span class="tox-acc-arrow">▶</span></div>
+      <div class="tox-acc-body">
+        <p><strong>Substanzen:</strong> Benzodiazepine, Barbiturate, GHB/GBL, Zolpidem, Chloralhydrat, Ethanol</p>
+        <p><strong>Leitsymptome:</strong> Sedierung/Koma, Bradypnoe, Hypotonie, Hypothermie, Hyporeflexie, Ataxie</p>
+        <p><strong>Soforttherapie:</strong></p>
+        <ul>
+          <li>Atemwegssicherung — supportiv!</li>
+          <li>Flumazenil 0,2 mg i.v., dann 0,1 mg/min (max 1 mg) — NUR bei reiner BZD-Intox</li>
+          <li><strong>KI Flumazenil:</strong> Krampfanamnese, Mischintox mit TCA/prokonvulsiven Substanzen, Langzeit-BZD-Einnahme (Entzugsanfall!)</li>
+          <li>GHB: Keine spezifische Therapie, Atemwegssicherung, Aufwachen oft abrupt</li>
+          <li>Barbiturate: Alkalische Diurese bei Phenobarbital; MDAC erwägen</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- end tox-toxidrom -->
+
+<!-- ═══ SUB-TAB 2: ANTIDOTE ═══ -->
+<div id="tox-antidot" class="tox-tab">
+
+<div class="tox-card">
+  <div class="tox-card-head"><span class="tox-card-title">💊 Antidot-Schnellreferenz</span></div>
+  <div class="tox-card-body">
+    <input type="text" class="tox-search" id="tox-antidot-search" placeholder="Suche nach Substanz oder Antidot..." oninput="toxFilterAntidote()">
+
+    <div class="tox-acc" id="tox-anti-paracetamol" data-search="paracetamol acetaminophen nac n-acetylcystein lebertoxizität">
+      <div class="tox-acc-head" onclick="toxToggleAcc('tox-anti-paracetamol')">Paracetamol → N-Acetylcystein (NAC) <span class="tox-acc-arrow">▶</span></div>
+      <div class="tox-acc-body">
+        <table>
+          <tr><th>Dosierung</th><td>150 mg/kg i.v. über 1 h, dann 50 mg/kg über 4 h, dann 100 mg/kg über 16 h (21-h-Schema)</td></tr>
+          <tr><th>Indikation</th><td>Spiegel über Behandlungslinie (Rumack-Matthew-Nomogramm ab 4 h post Ingestion); bei unbekanntem Zeitpunkt: NAC starten bei V.a. signifikante Ingestion (&gt; 150 mg/kg)</td></tr>
+          <tr><th>Cave</th><td>Anaphylaktoide Reaktion bei Infusionsstart → Pause, Antihistaminikum, langsamer weiter. NAC auch bei verspäteter Vorstellung wirksam!</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="tox-acc" id="tox-anti-opioid" data-search="opioid naloxon naloxone heroin fentanyl morphin">
+      <div class="tox-acc-head" onclick="toxToggleAcc('tox-anti-opioid')">Opioide → Naloxon <span class="tox-acc-arrow">▶</span></div>
+      <div class="tox-acc-body">
+        <table>
+          <tr><th>Dosierung</th><td>0,4–2 mg i.v., Wdh. alle 2–3 min (max 10 mg); Perfusor: 2/3 der Wirkdosis/h</td></tr>
+          <tr><th>i.m./i.n.</th><td>0,4 mg i.m. oder 2–4 mg intranasal wenn kein i.v.-Zugang</td></tr>
+          <tr><th>Cave</th><td>HWZ 30–90 min — bei Fentanyl/Methadon Nachbeobachtung &gt; 4 h; Ziel: Spontanatmung, nicht volle Wachheit</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="tox-acc" id="tox-anti-bzd" data-search="benzodiazepin flumazenil diazepam midazolam lorazepam">
+      <div class="tox-acc-head" onclick="toxToggleAcc('tox-anti-bzd')">Benzodiazepine → Flumazenil <span class="tox-acc-arrow">▶</span></div>
+      <div class="tox-acc-body">
+        <table>
+          <tr><th>Dosierung</th><td>0,2 mg i.v. initial, dann 0,1 mg/min (max 1 mg Gesamtdosis)</td></tr>
+          <tr><th>KI</th><td>Krampfanamnese, Mischintox mit TCA/prokonvulsiven Substanzen, Langzeit-BZD (→ Entzugsanfall!)</td></tr>
+          <tr><th>Cave</th><td>HWZ 40–80 min — Re-Sedierung möglich. In der Praxis selten indiziert — supportive Therapie bevorzugen</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="tox-acc" id="tox-anti-beta" data-search="betablocker glucagon hochdosis insulin metoprolol propranolol">
+      <div class="tox-acc-head" onclick="toxToggleAcc('tox-anti-beta')">Betablocker → Glucagon / Hochdosis-Insulin <span class="tox-acc-arrow">▶</span></div>
+      <div class="tox-acc-body">
+        <table>
+          <tr><th>Glucagon</th><td>5–10 mg i.v. Bolus, dann 1–5 mg/h Perfusor</td></tr>
+          <tr><th>Hochdosis-Insulin (HIET)</th><td>Insulin 1 IE/kg Bolus + 1–10 IE/kg/h; Glucose 0,5 g/kg/h; K⁺ engmaschig</td></tr>
+          <tr><th>Indikation HIET</th><td>Refraktäre Bradykardie/Hypotonie nach Glucagon</td></tr>
+          <tr><th>Cave</th><td>Bei Sotalol auch QT-Verlängerung → Mg²⁺, Pacing. Lipid-Emulsion als Rescue bei Propranolol</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="tox-acc" id="tox-anti-cca" data-search="calciumantagonist kalzium calcium insulin verapamil amlodipin nifedipin diltiazem">
+      <div class="tox-acc-head" onclick="toxToggleAcc('tox-anti-cca')">Ca-Antagonisten → Ca²⁺ + Hochdosis-Insulin <span class="tox-acc-arrow">▶</span></div>
+      <div class="tox-acc-body">
+        <table>
+          <tr><th>Kalzium</th><td>CaCl₂ 10% 20 ml i.v. (oder Ca-Gluconat 30 ml), Wdh. alle 15–20 min</td></tr>
+          <tr><th>Hochdosis-Insulin</th><td>1 IE/kg Bolus + 1–10 IE/kg/h — First-Line bei hämodynamischer Instabilität!</td></tr>
+          <tr><th>Vasopressoren</th><td>Noradrenalin bei refraktärer Hypotonie; Dopamin bei Bradykardie</td></tr>
+          <tr><th>Cave</th><td>Glukose q15 min monitoren; Lipid-Emulsion als Rescue bei Verapamil/Diltiazem</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="tox-acc" id="tox-anti-digitalis" data-search="digitalis digoxin digitoxin fab antikörper">
+      <div class="tox-acc-head" onclick="toxToggleAcc('tox-anti-digitalis')">Digitalis → Digitalis-Fab <span class="tox-acc-arrow">▶</span></div>
+      <div class="tox-acc-body">
+        <table>
+          <tr><th>Dosierung</th><td>Empirisch: 6–10 Ampullen (bei Reanimation: 20 Ampullen); 1 Amp (40 mg) bindet ~0,5 mg Digoxin</td></tr>
+          <tr><th>Berechnung</th><td>Amp = Digoxin-Spiegel (ng/ml) × KG (kg) / 100</td></tr>
+          <tr><th>Indikation</th><td>Lebensbedrohliche Arrhythmie, K⁺ &gt; 5,5 mmol/l, hämodynamische Instabilität</td></tr>
+          <tr><th>Cave</th><td>Spiegel nach Fab-Gabe nicht verwertbar (misst gebundenes + freies). K⁺ kann abfallen → monitoren</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="tox-acc" id="tox-anti-fomepizol" data-search="methanol ethylenglykol fomepizol frostschutzmittel toxischer alkohol">
+      <div class="tox-acc-head" onclick="toxToggleAcc('tox-anti-fomepizol')">Methanol / Ethylenglykol → Fomepizol <span class="tox-acc-arrow">▶</span></div>
+      <div class="tox-acc-body">
+        <table>
+          <tr><th>Dosierung</th><td>15 mg/kg i.v. Bolus, dann 10 mg/kg alle 12 h (4 Dosen), dann 15 mg/kg alle 12 h</td></tr>
+          <tr><th>Mechanismus</th><td>ADH-Hemmung — verhindert Metabolisierung zu toxischen Metaboliten (Ameisensäure / Oxalsäure)</td></tr>
+          <tr><th>Dialyse zusätzlich</th><td>Bei pH &lt; 7,1, Spiegel &gt; 50 mg/dl, Nierenversagen, Sehstörungen (Methanol), Nierenschädigung (EG)</td></tr>
+          <tr><th>Alternative</th><td>Ethanol 10% i.v. (Zielspiegel 1,0–1,5 ‰) — nur wenn Fomepizol nicht verfügbar</td></tr>
+        </table>
+        <p style="margin-top:8px"><button class="tox-btn-link" onclick="switchTool('tox');toxShowTab('luecken',document.querySelector('.tox-tab-btn:last-child'))">→ Osmolal-/Anionenlücke berechnen</button></p>
+      </div>
+    </div>
+
+    <div class="tox-acc" id="tox-anti-organo" data-search="organophosphat atropin obidoxim nervenkampfstoff e605 cholinesterase">
+      <div class="tox-acc-head" onclick="toxToggleAcc('tox-anti-organo')">Organophosphate → Atropin + Obidoxim <span class="tox-acc-arrow">▶</span></div>
+      <div class="tox-acc-body">
+        <table>
+          <tr><th>Atropin</th><td>2–5 mg i.v. alle 5 min bis Sekrettrocknung — kein Dosislimit!</td></tr>
+          <tr><th>Obidoxim</th><td>250 mg i.v. Bolus, dann 750 mg/24 h; innerhalb 24 h nach Exposition</td></tr>
+          <tr><th>Endpunkt Atropin</th><td>Trockene Bronchialsekretion — NICHT Pupillenweite oder Herzfrequenz</td></tr>
+          <tr><th>Cave</th><td>Dekontamination: Kleidung entfernen, Haut mit Wasser/Seife waschen. Selbstschutz beachten!</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="tox-acc" id="tox-anti-zyanid" data-search="zyanid blausäure cyanid hydroxocobalamin thiosulfat rauchgas">
+      <div class="tox-acc-head" onclick="toxToggleAcc('tox-anti-zyanid')">Zyanid → Hydroxocobalamin <span class="tox-acc-arrow">▶</span></div>
+      <div class="tox-acc-body">
+        <table>
+          <tr><th>Dosierung</th><td>5 g i.v. über 15 min (70 mg/kg); Wiederholung möglich</td></tr>
+          <tr><th>Alternative</th><td>Na-Thiosulfat 12,5 g i.v. (langsamer Wirkbeginn, als Kombinationspartner)</td></tr>
+          <tr><th>Indikation</th><td>Rauchgasinhalation + Bewusstlosigkeit + Laktat &gt; 8 mmol/l; Blausäure-Ingestion</td></tr>
+          <tr><th>Cave</th><td>Hydroxocobalamin färbt Urin/Haut rot — Laborwerte (SpO₂, Bilirubin) verfälscht für 24–48 h</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="tox-acc" id="tox-anti-inh" data-search="isoniazid pyridoxin vitamin b6 tuberkulose krampfanfall">
+      <div class="tox-acc-head" onclick="toxToggleAcc('tox-anti-inh')">Isoniazid → Pyridoxin (Vit B₆) <span class="tox-acc-arrow">▶</span></div>
+      <div class="tox-acc-body">
+        <table>
+          <tr><th>Dosierung</th><td>1 g Pyridoxin pro 1 g INH (oder empirisch 5 g bei unbekannter Menge)</td></tr>
+          <tr><th>Indikation</th><td>INH-assoziierte Krampfanfälle — refraktär auf Benzodiazepine</td></tr>
+          <tr><th>Cave</th><td>Metabolische Azidose mit erhöhter AG häufig. BZD als Ersttherapie bei Krämpfen</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="tox-acc" id="tox-anti-eisen" data-search="eisen iron deferoxamin eisenintoxikation">
+      <div class="tox-acc-head" onclick="toxToggleAcc('tox-anti-eisen')">Eisen → Deferoxamin <span class="tox-acc-arrow">▶</span></div>
+      <div class="tox-acc-body">
+        <table>
+          <tr><th>Dosierung</th><td>15 mg/kg/h i.v. (max 80 mg/kg/24 h)</td></tr>
+          <tr><th>Indikation</th><td>Serum-Eisen &gt; 500 µg/dl, metabolische Azidose, Schock, schwere GI-Blutung</td></tr>
+          <tr><th>Endpunkt</th><td>Klinische Besserung, Sistieren des „Vin-rosé"-Urins, Eisen-Spiegel &lt; 350 µg/dl</td></tr>
+          <tr><th>Cave</th><td>Aktivkohle bindet Eisen NICHT. Ganzdarmspülung bei Röntgennachweis erwägen</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="tox-acc" id="tox-anti-physo" data-search="anticholinergikum physostigmin zentrales anticholinerges syndrom">
+      <div class="tox-acc-head" onclick="toxToggleAcc('tox-anti-physo')">Anticholinergika → Physostigmin <span class="tox-acc-arrow">▶</span></div>
+      <div class="tox-acc-body">
+        <table>
+          <tr><th>Dosierung</th><td>1–2 mg langsam i.v. über 5 min; Wdh. nach 15–20 min möglich</td></tr>
+          <tr><th>Indikation</th><td>Schweres zentrales anticholinerges Syndrom (Agitation, Halluzinationen, Koma) — NICHT routinemäßig</td></tr>
+          <tr><th>KI</th><td>QRS &gt; 120 ms, Überleitungsstörungen, Asthma, mechanische GI-/Harnwegsobstruktion</td></tr>
+          <tr><th>Cave</th><td>Monitoring: EKG, Atropin bereithalten. HWZ kürzer als Anticholinergika → Nachdosierung</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="tox-acc" id="tox-anti-cyprohepta" data-search="serotonin syndrom cyproheptadin">
+      <div class="tox-acc-head" onclick="toxToggleAcc('tox-anti-cyprohepta')">Serotonin-Syndrom → Cyproheptadin <span class="tox-acc-arrow">▶</span></div>
+      <div class="tox-acc-body">
+        <table>
+          <tr><th>Dosierung</th><td>12 mg p.o. initial, dann 4 mg alle 8 h (max 32 mg/d)</td></tr>
+          <tr><th>Cave</th><td>Nur oral verfügbar — bei Intubation über Magensonde. Haupttherapie sind BZD + Kühlung!</td></tr>
+          <tr><th>DD</th><td>MNS vs. Serotonin-Syndrom: MNS = Rigidität, langsamer Beginn, Dopamin-Antagonist; SS = Klonus, schneller Beginn, serotonerge Substanz</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="tox-acc" id="tox-anti-lipid" data-search="lipid emulsion intralipid lokalanästhetikum last bupivacain">
+      <div class="tox-acc-head" onclick="toxToggleAcc('tox-anti-lipid')">Lokalanästhetika (LAST) → Lipid-Emulsion 20% <span class="tox-acc-arrow">▶</span></div>
+      <div class="tox-acc-body">
+        <table>
+          <tr><th>Bolus</th><td>1,5 ml/kg i.v. über 1 min (Intralipid 20%)</td></tr>
+          <tr><th>Perfusor</th><td>0,25 ml/kg/min über 30–60 min</td></tr>
+          <tr><th>Wiederholung</th><td>Bolus bis zu 3× wiederholbar; Gesamtdosis max 12 ml/kg</td></tr>
+          <tr><th>Indikation</th><td>LAST (Bupivacain!), als Rescue auch bei lipophilen Substanzen (TCA, Verapamil, Propranolol)</td></tr>
+          <tr><th>Cave</th><td>Lipämie verfälscht Laborwerte. Propofol ist KEIN Ersatz (zu geringe Lipidkonzentration)</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="tox-acc" id="tox-anti-methb" data-search="methämoglobin methylenblau methb dapson nitrit">
+      <div class="tox-acc-head" onclick="toxToggleAcc('tox-anti-methb')">Methämoglobinämie → Methylenblau <span class="tox-acc-arrow">▶</span></div>
+      <div class="tox-acc-body">
+        <table>
+          <tr><th>Dosierung</th><td>1–2 mg/kg i.v. über 5 min; Wiederholung nach 30–60 min möglich (max 7 mg/kg)</td></tr>
+          <tr><th>Indikation</th><td>MetHb &gt; 30 % oder symptomatisch (Dyspnoe, Bewusstseinstrübung, Laktatazidose)</td></tr>
+          <tr><th>KI</th><td>G6PD-Mangel (→ Hämolyse! → Austauschtransfusion als Alternative)</td></tr>
+          <tr><th>Cave</th><td>SpO₂ unzuverlässig bei MetHb. CO-Oximetrie verwenden! Selbst Blaufärbung nach Gabe normal</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="tox-acc" id="tox-anti-co" data-search="kohlenmonoxid co vergiftung sauerstoff hbo hyperbar">
+      <div class="tox-acc-head" onclick="toxToggleAcc('tox-anti-co')">Kohlenmonoxid → O₂ / HBO <span class="tox-acc-arrow">▶</span></div>
+      <div class="tox-acc-body">
+        <table>
+          <tr><th>Therapie</th><td>100 % O₂ über dichte Maske / Intubation → HWZ COHb: von 4–6 h auf 60–90 min</td></tr>
+          <tr><th>HBO-Indikation</th><td>Bewusstlosigkeit, COHb &gt; 25 %, kardiale Ischämie, Schwangerschaft, persistierende Symptome</td></tr>
+          <tr><th>HBO-Zeitfenster</th><td>Innerhalb 6–12 h; 2,5–3 ATA für 90 min</td></tr>
+          <tr><th>Cave</th><td>SpO₂ falsch hoch bei CO-Intox! CO-Oximetrie + Laktat. An Zyanid-Co-Intox bei Rauchgas denken</td></tr>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- end tox-antidot -->
+
+<!-- ═══ SUB-TAB 3: ELIMINATIONSVERFAHREN ═══ -->
+<div id="tox-elimination" class="tox-tab">
+
+<div class="tox-card">
+  <div class="tox-card-head"><span class="tox-card-title">🔎 Schnellcheck Elimination</span></div>
+  <div class="tox-card-body">
+    <p>Substanz auswählen für Eliminationsempfehlung:</p>
+    <select class="tox-select" id="tox-elim-select" onchange="toxCheckElimination()">
+      <option value="">— Substanz wählen —</option>
+      <option value="methanol">Methanol</option>
+      <option value="ethylenglykol">Ethylenglykol</option>
+      <option value="lithium">Lithium</option>
+      <option value="salicylate">Salicylate (ASS)</option>
+      <option value="metformin">Metformin</option>
+      <option value="valproat">Valproat</option>
+      <option value="theophyllin">Theophyllin</option>
+      <option value="carbamazepin">Carbamazepin</option>
+      <option value="phenobarbital">Phenobarbital</option>
+      <option value="dabigatran">Dabigatran</option>
+      <option value="paracetamol">Paracetamol (bei Leberversagen)</option>
+    </select>
+    <div id="tox-elim-result" style="margin-top:12px;"></div>
+  </div>
+</div>
+
+<div class="tox-card">
+  <div class="tox-card-head"><span class="tox-card-title">🩸 Hämodialyse (EXTRIP-Empfehlungen)</span></div>
+  <div class="tox-card-body">
+    <p>Die EXTRIP-Workgroup gibt evidenzbasierte Empfehlungen zur extrakorporalen Elimination bei Vergiftungen.</p>
+    <table class="tox-table">
+      <thead>
+        <tr><th>Substanz</th><th>HD empfohlen</th><th>Indikation / Schwelle</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Methanol</strong></td><td><span class="tox-badge tox-badge-red">Stark empfohlen</span></td><td>pH &lt; 7,15 · Spiegel &gt; 50 mg/dl · Sehstörungen · Nierenversagen</td></tr>
+        <tr><td><strong>Ethylenglykol</strong></td><td><span class="tox-badge tox-badge-red">Stark empfohlen</span></td><td>pH &lt; 7,1 · Spiegel &gt; 50 mg/dl · Nierenversagen · therapierefraktäre Azidose</td></tr>
+        <tr><td><strong>Lithium</strong></td><td><span class="tox-badge tox-badge-red">Stark empfohlen</span></td><td>Spiegel &gt; 4 mmol/l · schwere Neurotoxizität · Nierenversagen · Spiegel &gt; 2,5 mmol/l + GFR &lt; 30</td></tr>
+        <tr><td><strong>Salicylate</strong></td><td><span class="tox-badge tox-badge-red">Stark empfohlen</span></td><td>Spiegel &gt; 100 mg/dl · pH &lt; 7,2 · Bewusstseinsstörung · Lungenödem · Nierenversagen</td></tr>
+        <tr><td><strong>Metformin</strong></td><td><span class="tox-badge tox-badge-orange">Empfohlen</span></td><td>Laktat &gt; 20 mmol/l · pH &lt; 7,0 · Schock · fehlendes Ansprechen auf Supportivtherapie</td></tr>
+        <tr><td><strong>Valproat</strong></td><td><span class="tox-badge tox-badge-orange">Empfohlen</span></td><td>Spiegel &gt; 1.300 mg/l · Hirnödem · hämodynamische Instabilität · Hyperammonämie &gt; 200 µmol/l</td></tr>
+        <tr><td><strong>Theophyllin</strong></td><td><span class="tox-badge tox-badge-orange">Empfohlen</span></td><td>Spiegel &gt; 100 mg/l (akut) · &gt; 60 mg/l (chronisch) · therapierefraktäre Arrhythmie/Krampfanfälle</td></tr>
+        <tr><td><strong>Phenobarbital</strong></td><td><span class="tox-badge tox-badge-orange">Empfohlen</span></td><td>Prolongiertes Koma · refraktäre Hypotonie · Spiegel &gt; 150 mg/l</td></tr>
+        <tr><td><strong>Dabigatran</strong></td><td><span class="tox-badge tox-badge-green">In Erwägung</span></td><td>Wenn Idarucizumab nicht verfügbar + lebensbedrohliche Blutung</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="tox-card">
+  <div class="tox-card-head"><span class="tox-card-title">💉 Lipid-Emulsionstherapie (ILE)</span></div>
+  <div class="tox-card-body">
+    <p><strong>Indikation:</strong> Kardiovaskulärer Kollaps durch lipophile Substanzen, als Rescue nach Versagen konventioneller Therapie.</p>
+    <table class="tox-table">
+      <thead><tr><th>Schritt</th><th>Dosierung</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Bolus</strong></td><td>Intralipid 20 % — 1,5 ml/kg i.v. über 1 min</td></tr>
+        <tr><td><strong>Perfusor</strong></td><td>0,25 ml/kg/min über 30–60 min</td></tr>
+        <tr><td><strong>Wiederholung</strong></td><td>Bolus bis 3× wiederholbar; Gesamtdosis max 12 ml/kg</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:8px;"><strong>Responsive Substanzen:</strong></p>
+    <span class="tox-badge tox-badge-red">Bupivacain</span>
+    <span class="tox-badge tox-badge-red">TCA</span>
+    <span class="tox-badge tox-badge-orange">Verapamil</span>
+    <span class="tox-badge tox-badge-orange">Amlodipin</span>
+    <span class="tox-badge tox-badge-orange">Propranolol</span>
+    <span class="tox-badge tox-badge-blue">Haloperidol</span>
+    <span class="tox-badge tox-badge-blue">Quetiapin</span>
+    <span class="tox-badge tox-badge-gray">Kokain (Fallberichte)</span>
+    <p style="margin-top:6px;font-size:.74rem;color:#78909c;">Propofol ist KEIN Ersatz (nur 10 % Lipid, zu geringe Konzentration).</p>
+  </div>
+</div>
+
+<div class="tox-card">
+  <div class="tox-card-head"><span class="tox-card-title">⚫ Aktivkohle & Dekontamination</span></div>
+  <div class="tox-card-body">
+    <table class="tox-table">
+      <thead><tr><th>Methode</th><th>Indikation</th><th>Details</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Aktivkohle (Einmaldosis)</strong></td>
+          <td>Innerhalb 1 h nach Ingestion einer potentiell toxischen Dosis</td>
+          <td>1 g/kg (max 50 g); <strong>KI:</strong> ungeschützter Atemweg, Verätzung, Ileus, Perforation<br><strong>Nicht wirksam bei:</strong> Eisen, Lithium, Kalium, Ethanol, Methanol, Ethylenglykol, Säuren/Laugen</td>
+        </tr>
+        <tr>
+          <td><strong>Wiederholte Aktivkohle (MDAC)</strong></td>
+          <td>Substanzen mit enterohepatischem Kreislauf</td>
+          <td>25 g alle 2–4 h für: <span class="tox-badge tox-badge-orange">Carbamazepin</span> <span class="tox-badge tox-badge-orange">Dapson</span> <span class="tox-badge tox-badge-orange">Phenobarbital</span> <span class="tox-badge tox-badge-orange">Chinin</span> <span class="tox-badge tox-badge-orange">Theophyllin</span></td>
+        </tr>
+        <tr>
+          <td><strong>Magenspülung</strong></td>
+          <td>Selten! Nur innerhalb 1 h bei lebensbedrohlicher Ingestion</td>
+          <td>Großlumige Sonde (36–40 Fr); KI: Verätzung, Kohlenwasserstoffe. Atemwegssicherung zuerst!</td>
+        </tr>
+        <tr>
+          <td><strong>Ganzdarmspülung (WBI)</strong></td>
+          <td>Retardpräparate, Eisen, Lithium, Body-Packing</td>
+          <td>PEG-Lösung 1–2 l/h über Sonde bis klarer Abgang. KI: Ileus, Perforation, Blutung</td>
+        </tr>
+        <tr>
+          <td><strong>Alkalische Diurese</strong></td>
+          <td>Salicylate, Phenobarbital</td>
+          <td>NaHCO₃ 150 mmol in 1 l G5W, Ziel Urin-pH &gt; 7,5. Cave: Hypokaliämie verhindert Urin-Alkalisierung</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- end tox-elimination -->
+
+<!-- ═══ SUB-TAB 4: OSMOLAL-/ANIONENLÜCKE ═══ -->
+<div id="tox-luecken" class="tox-tab">
+
+<div class="tox-card">
+  <div class="tox-card-head"><span class="tox-card-title">🔗 Werte aus Säure-Basen-Analyse übernehmen</span></div>
+  <div class="tox-card-body">
+    <p>Wenn Sie bereits Werte im Säure-Basen-Tool eingegeben haben, werden diese automatisch übernommen.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+      <button class="tox-btn tox-btn-primary" onclick="toxLoadSabValues()">↻ SAB-Werte laden</button>
+      <button class="tox-btn tox-btn-outline" onclick="switchTool('sab')">→ Zur Säure-Basen-Analyse</button>
+    </div>
+    <div id="tox-sab-imported" style="margin-top:8px;"></div>
+  </div>
+</div>
+
+<div class="tox-card">
+  <div class="tox-card-head"><span class="tox-card-title">🧮 Lücken-Rechner</span></div>
+  <div class="tox-card-body">
+    <div class="tox-input-grid">
+      <div class="tox-field"><label for="tox-calc-na">Na⁺ (mmol/l)</label><input type="number" class="tox-input" id="tox-calc-na" placeholder="140" step="1" oninput="toxCalcGaps()"></div>
+      <div class="tox-field"><label for="tox-calc-cl">Cl⁻ (mmol/l)</label><input type="number" class="tox-input" id="tox-calc-cl" placeholder="102" step="1" oninput="toxCalcGaps()"></div>
+      <div class="tox-field"><label for="tox-calc-hco3">HCO₃⁻ (mmol/l)</label><input type="number" class="tox-input" id="tox-calc-hco3" placeholder="24" step="0.1" oninput="toxCalcGaps()"></div>
+      <div class="tox-field"><label for="tox-calc-alb">Albumin (g/l)</label><input type="number" class="tox-input" id="tox-calc-alb" placeholder="40" step="1" oninput="toxCalcGaps()"></div>
+      <div class="tox-field"><label for="tox-calc-osm">Osmolalität gemessen (mOsm/kg)</label><input type="number" class="tox-input" id="tox-calc-osm" placeholder="290" step="1" oninput="toxCalcGaps()"></div>
+      <div class="tox-field"><label for="tox-calc-glu">Glukose (mg/dl)</label><input type="number" class="tox-input" id="tox-calc-glu" placeholder="100" step="1" oninput="toxCalcGaps()"></div>
+      <div class="tox-field"><label for="tox-calc-hst">Harnstoff (mg/dl)</label><input type="number" class="tox-input" id="tox-calc-hst" placeholder="30" step="1" oninput="toxCalcGaps()"></div>
+      <div class="tox-field"><label for="tox-calc-etoh">Ethanol (‰)</label><input type="number" class="tox-input" id="tox-calc-etoh" placeholder="0" step="0.1" oninput="toxCalcGaps()"></div>
+    </div>
+    <div id="tox-calc-result" style="margin-top:14px;"></div>
+  </div>
+</div>
+
+<div class="tox-card">
+  <div class="tox-card-head"><span class="tox-card-title">📊 Differentialdiagnostik nach Lücken-Konstellation</span></div>
+  <div class="tox-card-body">
+    <div class="tox-flow">
+      <div class="tox-flow-box tox-r-danger">
+        <strong>AG ↑ + OG ↑</strong><br>
+        Methanol (früh), Ethylenglykol (früh), Propylenglykol, Diethylenglykol<br>
+        <em>→ Fomepizol + ggf. Dialyse</em>
+      </div>
+      <div class="tox-flow-box tox-r-warn">
+        <strong>AG ↑ + OG normal</strong><br>
+        Methanol (spät: Metaboliten gebildet), Salicylate, DKA, Laktatazidose, Nierenversagen, 5-Oxoprolin (Paracetamol chronisch)<br>
+        <em>→ Spiegel bestimmen</em>
+      </div>
+      <div class="tox-flow-box tox-r-info">
+        <strong>AG normal + OG ↑</strong><br>
+        Ethanol, Isopropanol, Mannitol, Kontrastmittel, Aceton<br>
+        <em>→ Isopropanol → Aceton (keine AG-Erhöhung!)</em>
+      </div>
+      <div class="tox-flow-box tox-r-ok">
+        <strong>AG normal + OG normal</strong><br>
+        Toxische Alkohole unwahrscheinlich<br>
+        <em>→ Andere Ursachen evaluieren</em>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tox-card">
+  <div class="tox-card-head"><span class="tox-card-title">⏱️ Zeitverlauf toxische Alkohole</span></div>
+  <div class="tox-card-body">
+    <div class="tox-result tox-r-info">
+      <strong>Frühes Bild (0–6 h):</strong> Muttersubstanz noch vorhanden → OG ↑, AG normal/leicht ↑<br>
+      <strong>Spätes Bild (&gt; 12 h):</strong> Metaboliten (Ameisensäure/Oxalsäure/Glykolsäure) gebildet → OG ↓/normal, AG ↑↑<br>
+      <strong>Konsequenz:</strong> Eine NORMALE Osmolallücke schließt eine Methanol-/EG-Vergiftung NICHT aus, wenn die Vorstellung spät erfolgt!
+    </div>
+    <p><strong>Methanol:</strong> → Formaldehyd → Ameisensäure (→ Sehstörungen, Optikusschädigung)</p>
+    <p><strong>Ethylenglykol:</strong> → Glykolaldehyd → Glykolsäure → Oxalsäure (→ Ca-Oxalat-Kristalle im Urin, Nierenversagen)</p>
+    <p><strong>Isopropanol:</strong> → Aceton (→ OG ↑ aber KEINE AG-Erhöhung, da Aceton kein Anion; Ketose ohne Azidose)</p>
+  </div>
+</div>
+
+<div class="tox-card">
+  <div class="tox-card-head"><span class="tox-card-title">📐 Formeln</span></div>
+  <div class="tox-card-body" style="font-size:.78rem;line-height:1.6;">
+    <p><strong>Anionenlücke (AG)</strong> = Na⁺ − (Cl⁻ + HCO₃⁻)<br>
+    <span style="color:#78909c;">Normal: 12 ± 4 mmol/l · Korrektur für Albumin: AG<sub>korr</sub> = AG + 2,5 × (4,0 − Albumin in g/dl)</span></p>
+    <p><strong>Berechnete Osmolalität</strong> = 2 × Na⁺ + Glukose/18 + Harnstoff/6 + Ethanol × 10/4,6<br>
+    <span style="color:#78909c;">(Glukose in mg/dl, Harnstoff in mg/dl, Ethanol in ‰)</span></p>
+    <p><strong>Osmolallücke (OG)</strong> = gemessene Osmolalität − berechnete Osmolalität<br>
+    <span style="color:#78909c;">Normal: &lt; 10 mOsm/kg · &gt; 10 → V.a. nicht gemessene osmotisch aktive Substanz</span></p>
+  </div>
+</div>
+
+</div><!-- end tox-luecken -->
+
+</div><!-- end tox-wrap -->
+
+<!-- ── JavaScript ── -->
+<script>
+(function(){
+'use strict';
+
+/* ── Sub-Tab-Switcher ── */
+window.toxShowTab = function(id, btn) {
+  document.querySelectorAll('#tool-tox .tox-tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('#tool-tox .tox-tab-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.getElementById('tox-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (id === 'luecken') { window.toxLoadSabValues(); }
+};
+
+/* ── Accordion Toggle ── */
+window.toxToggleAcc = function(id) {
+  var el = document.getElementById(id);
+  if (el) el.classList.toggle('open');
+};
+
+/* ── Toxidrom-Finder ── */
+var toxidromes = [
+  {
+    name: 'Sympathomimetisch',
+    icon: '⚡',
+    symptoms: ['mydriasis','tachy','hypertonie','hyperthermie','diaphorese','agitation','tachypnoe'],
+    agents: 'Kokain, Amphetamine, MDMA, Methamphetamin',
+    sofort: 'BZD (Midazolam 5 mg i.v.), Kühlung bei T > 39 °C, KEINE Betablocker'
+  },
+  {
+    name: 'Anticholinerg',
+    icon: '🚫',
+    symptoms: ['mydriasis','tachy','hyperthermie','trockenhaut','agitation','harnretention','ileus','krampf'],
+    agents: 'TCA, Atropin, Antihistaminika, Scopolamin, Datura',
+    sofort: 'BZD, ggf. Physostigmin (KI: QRS > 120 ms), NaHCO₃ bei TCA + QRS > 100 ms'
+  },
+  {
+    name: 'Cholinerg (SLUDGE)',
+    icon: '💧',
+    symptoms: ['miosis','brady','salivation','diaphorese','diarrhoe','bradypnoe'],
+    agents: 'Organophosphate, Carbamate, Physostigmin',
+    sofort: 'Atropin 2–5 mg i.v. alle 5 min bis Sekrettrocknung + Obidoxim 250 mg i.v.'
+  },
+  {
+    name: 'Serotonin-Syndrom',
+    icon: '🌡️',
+    symptoms: ['mydriasis','tachy','hypertonie','hyperthermie','diaphorese','klonus','agitation','rigiditaet'],
+    agents: 'SSRI + MAO-I, SSRI + Tramadol/Fentanyl, Linezolid + SSRI, MDMA',
+    sofort: 'Auslöser absetzen, BZD, Kühlung, Cyproheptadin 12 mg p.o.'
+  },
+  {
+    name: 'Opioid',
+    icon: '💤',
+    symptoms: ['miosis','bradypnoe','sedierung','hypotonie','hypothermie'],
+    agents: 'Morphin, Heroin, Fentanyl, Methadon, Oxycodon',
+    sofort: 'Atemwegssicherung! Naloxon 0,4–2 mg i.v. (Wdh. alle 2–3 min)'
+  },
+  {
+    name: 'Sedativ-hypnotisch',
+    icon: '😴',
+    symptoms: ['sedierung','bradypnoe','hypotonie','hypothermie'],
+    agents: 'Benzodiazepine, Barbiturate, GHB, Ethanol',
+    sofort: 'Supportiv, Atemwegssicherung; Flumazenil nur bei reiner BZD-Intox (Cave: Krampf-KI)'
+  }
+];
+
+function sym(id) { var el = document.getElementById('tox-sym-' + id); return el && el.checked; }
+
+window.toxFindToxidrome = function() {
+  var checked = [];
+  document.querySelectorAll('#tox-toxidrom input[type=checkbox]').forEach(function(cb) {
+    if (cb.checked) checked.push(cb.id.replace('tox-sym-', ''));
+  });
+  if (checked.length === 0) {
+    document.getElementById('tox-toxidrom-results').innerHTML = '';
+    return;
+  }
+  var scored = toxidromes.map(function(t) {
+    var match = 0;
+    t.symptoms.forEach(function(s) { if (checked.indexOf(s) >= 0) match++; });
+    var pct = Math.round(match / t.symptoms.length * 100);
+    return { t: t, match: match, pct: pct };
+  });
+  scored.sort(function(a, b) { return b.pct - a.pct || b.match - a.match; });
+
+  var html = '';
+  scored.forEach(function(s, i) {
+    var cls = s.pct >= 60 ? 'tox-best-match' : '';
+    var scoreCls = s.pct >= 60 ? 'tox-score-high' : s.pct >= 30 ? 'tox-score-mid' : 'tox-score-low';
+    html += '<div class="tox-toxidrom-card ' + cls + '">';
+    html += '<div class="tox-toxidrom-name">' + s.t.icon + ' ' + s.t.name + '</div>';
+    html += '<span class="tox-toxidrom-score ' + scoreCls + '">' + s.match + '/' + s.t.symptoms.length + ' Symptome (' + s.pct + ' %)</span>';
+    html += '<div class="tox-toxidrom-detail">';
+    html += '<strong>Substanzen:</strong> ' + s.t.agents + '<br>';
+    html += '<strong>Soforttherapie:</strong> ' + s.t.sofort;
+    html += '</div></div>';
+  });
+  document.getElementById('tox-toxidrom-results').innerHTML = html;
+};
+
+window.toxResetSymptoms = function() {
+  document.querySelectorAll('#tox-toxidrom input[type=checkbox]').forEach(function(cb) { cb.checked = false; });
+  document.getElementById('tox-toxidrom-results').innerHTML = '';
+};
+
+/* ── Antidot-Suche ── */
+window.toxFilterAntidote = function() {
+  var q = (document.getElementById('tox-antidot-search').value || '').toLowerCase();
+  document.querySelectorAll('#tox-antidot .tox-acc').forEach(function(acc) {
+    var text = ((acc.getAttribute('data-search') || '') + ' ' + acc.textContent).toLowerCase();
+    acc.style.display = (!q || text.indexOf(q) >= 0) ? '' : 'none';
+  });
+};
+
+/* ── Eliminations-Schnellcheck ── */
+var elimData = {
+  methanol: { method: 'Hämodialyse', strength: 'Stark empfohlen', indication: 'pH < 7,15 · Spiegel > 50 mg/dl · Sehstörungen · Nierenversagen · therapierefraktäre Azidose', note: 'Fomepizol weiter während HD (wird mitdialysiert → Dosis alle 4 h). HD bis Spiegel < 20 mg/dl.' },
+  ethylenglykol: { method: 'Hämodialyse', strength: 'Stark empfohlen', indication: 'pH < 7,1 · Spiegel > 50 mg/dl · Nierenversagen · therapierefraktäre Azidose', note: 'Fomepizol weiter während HD. HD bis Spiegel < 20 mg/dl und pH normalisiert.' },
+  lithium: { method: 'Hämodialyse', strength: 'Stark empfohlen', indication: 'Spiegel > 4 mmol/l · schwere Neurotoxizität · Nierenversagen · Spiegel > 2,5 + GFR < 30', note: 'Rebound nach HD häufig (Redistribution) → Nachkontrolle 6 h nach HD. CVVHD bei hämodynamischer Instabilität.' },
+  salicylate: { method: 'Hämodialyse', strength: 'Stark empfohlen', indication: 'Spiegel > 100 mg/dl · pH < 7,2 · Bewusstseinsstörung · Lungenödem · Nierenversagen', note: 'Vor HD: alkalische Diurese (NaHCO₃). Cave: Intubation kann pH verschlechtern → vorher HD planen.' },
+  metformin: { method: 'Hämodialyse', strength: 'Empfohlen', indication: 'Laktat > 20 mmol/l · pH < 7,0 · Schock · fehlendes Ansprechen auf Supportivtherapie', note: 'Oft als MALA (Metformin-assoziierte Laktatazidose). Bicarbonat-Dialysat verwenden.' },
+  valproat: { method: 'Hämodialyse', strength: 'Empfohlen', indication: 'Spiegel > 1.300 mg/l · Hirnödem · hämodynamische Instabilität · Hyperammonämie > 200 µmol/l', note: 'L-Carnitin 100 mg/kg (max 3 g) i.v. als Komedikation bei Hyperammonämie.' },
+  theophyllin: { method: 'Hämodialyse / Hämoperfusion', strength: 'Empfohlen', indication: 'Spiegel > 100 mg/l (akut) · > 60 mg/l (chronisch) · refraktäre Arrhythmie/Krampfanfälle', note: 'HP kann effizienter sein. MDAC als Brücke bis HD verfügbar.' },
+  carbamazepin: { method: 'MDAC bevorzugt / HP', strength: 'Bedingt empfohlen', indication: 'Prolongiertes Koma · refraktärer Status epilepticus · Spiegel > 40 mg/l', note: 'MDAC (25 g alle 2–4 h) ist First-Line. HP wenn MDAC versagt. HD wenig effektiv (hohe Proteinbindung).' },
+  phenobarbital: { method: 'Hämodialyse / MDAC', strength: 'Empfohlen', indication: 'Prolongiertes Koma · refraktäre Hypotonie · Spiegel > 150 mg/l', note: 'MDAC + alkalische Diurese vor HD. HD wenn refraktär.' },
+  dabigatran: { method: 'Hämodialyse', strength: 'In Erwägung', indication: 'Lebensbedrohliche Blutung + Idarucizumab nicht verfügbar', note: 'Idarucizumab (Praxbind) 5 g i.v. ist First-Line. HD nur als Notfall-Alternative.' },
+  paracetamol: { method: 'Hämodialyse', strength: 'In Erwägung', indication: 'Spiegel > 700 mg/l mit Koma · Laktat > 3 mmol/l · bei ALF als Bridging', note: 'NAC ist Haupttherapie! HD nur bei massiver Überdosis oder beginnendem Leberversagen.' }
+};
+
+window.toxCheckElimination = function() {
+  var sel = document.getElementById('tox-elim-select').value;
+  var out = document.getElementById('tox-elim-result');
+  if (!sel) { out.innerHTML = ''; return; }
+  var d = elimData[sel];
+  if (!d) { out.innerHTML = ''; return; }
+  var strengthCls = d.strength.indexOf('Stark') >= 0 ? 'tox-badge-red' : d.strength.indexOf('Empfohlen') >= 0 ? 'tox-badge-orange' : 'tox-badge-green';
+  var html = '<div class="tox-result tox-r-info">';
+  html += '<strong>' + d.method + '</strong> <span class="tox-badge ' + strengthCls + '">' + d.strength + '</span><br>';
+  html += '<strong>Indikation:</strong> ' + d.indication + '<br>';
+  html += '<strong>Hinweis:</strong> ' + d.note;
+  html += '</div>';
+  out.innerHTML = html;
+};
+
+/* ── SAB-Werte laden ── */
+window.toxLoadSabValues = function() {
+  var out = document.getElementById('tox-sab-imported');
+  if (!out) return;
+  var na = parseFloat((document.getElementById('sab-na') || {}).value);
+  var cl = parseFloat((document.getElementById('sab-cl') || {}).value);
+  var hco3 = parseFloat((document.getElementById('sab-hco3') || {}).value);
+  var osmMess = parseFloat((document.getElementById('sab-osm-mess') || {}).value);
+  var glu = parseFloat((document.getElementById('sab-glu') || {}).value);
+  var etoh = parseFloat((document.getElementById('sab-etoh') || {}).value);
+  var hst = parseFloat((document.getElementById('sab-hst') || {}).value);
+  var alb = parseFloat((document.getElementById('sab-alb') || {}).value);
+
+  if (isNaN(na) && isNaN(cl) && isNaN(hco3)) {
+    out.innerHTML = '<div class="tox-result tox-r-warn">Keine Werte im SAB-Tool vorhanden. Bitte zuerst dort Laborwerte eingeben oder den Rechner unten verwenden.</div>';
+    return;
+  }
+  // Fill the calculator fields with SAB values
+  if (!isNaN(na)) document.getElementById('tox-calc-na').value = na;
+  if (!isNaN(cl)) document.getElementById('tox-calc-cl').value = cl;
+  if (!isNaN(hco3)) document.getElementById('tox-calc-hco3').value = hco3;
+  if (!isNaN(osmMess)) document.getElementById('tox-calc-osm').value = osmMess;
+  if (!isNaN(glu)) document.getElementById('tox-calc-glu').value = glu;
+  if (!isNaN(etoh)) document.getElementById('tox-calc-etoh').value = etoh;
+  if (!isNaN(alb)) document.getElementById('tox-calc-alb').value = alb;
+
+  out.innerHTML = '<div class="tox-result tox-r-ok">✓ Werte aus SAB-Analyse übernommen. Ergebnisse siehe Rechner unten.</div>';
+  window.toxCalcGaps();
+};
+
+/* ── Standalone Lücken-Rechner ── */
+window.toxCalcGaps = function() {
+  var out = document.getElementById('tox-calc-result');
+  if (!out) return;
+  var na = parseFloat(document.getElementById('tox-calc-na').value);
+  var cl = parseFloat(document.getElementById('tox-calc-cl').value);
+  var hco3 = parseFloat(document.getElementById('tox-calc-hco3').value);
+  var alb = parseFloat(document.getElementById('tox-calc-alb').value);
+  var osmMess = parseFloat(document.getElementById('tox-calc-osm').value);
+  var glu = parseFloat(document.getElementById('tox-calc-glu').value);
+  var hst = parseFloat(document.getElementById('tox-calc-hst').value);
+  var etoh = parseFloat(document.getElementById('tox-calc-etoh').value);
+
+  var html = '';
+
+  // Anion Gap
+  if (!isNaN(na) && !isNaN(cl) && !isNaN(hco3)) {
+    var ag = na - (cl + hco3);
+    var agCorr = ag;
+    if (!isNaN(alb)) {
+      agCorr = ag + 2.5 * (4.0 - alb / 10);
+    }
+    var agCls = ag > 16 ? 'tox-r-danger' : ag > 12 ? 'tox-r-warn' : 'tox-r-ok';
+    html += '<div class="tox-result ' + agCls + '">';
+    html += '<strong>Anionenlücke: ' + ag.toFixed(1) + ' mmol/l</strong>';
+    if (!isNaN(alb)) {
+      var agCorrCls = agCorr > 16 ? ' (erhöht!)' : agCorr > 12 ? ' (grenzwertig)' : ' (normal)';
+      html += '<br>Albumin-korrigiert: ' + agCorr.toFixed(1) + ' mmol/l' + agCorrCls;
+    }
+    html += '<br><span style="font-size:.72rem;color:#78909c;">Normal: 12 ± 4 mmol/l</span>';
+    html += '</div>';
+  }
+
+  // Osmolal Gap
+  if (!isNaN(na) && !isNaN(osmMess)) {
+    var osmCalc = 2 * na;
+    if (!isNaN(glu)) osmCalc += glu / 18;
+    if (!isNaN(hst)) osmCalc += hst / 6;
+    if (!isNaN(etoh)) osmCalc += etoh * 10 / 4.6;
+    var og = osmMess - osmCalc;
+    var ogCls = og > 10 ? 'tox-r-danger' : og > 5 ? 'tox-r-warn' : 'tox-r-ok';
+    html += '<div class="tox-result ' + ogCls + '">';
+    html += '<strong>Osmolallücke: ' + og.toFixed(1) + ' mOsm/kg</strong>';
+    html += '<br>Berechnet: ' + osmCalc.toFixed(0) + ' · Gemessen: ' + osmMess.toFixed(0);
+    if (og > 10) {
+      html += '<br><span class="tox-badge tox-badge-red">Erhöht!</span> V.a. nicht gemessene osmotisch aktive Substanz (Methanol, Ethylenglykol, Isopropanol, Propylenglykol)';
+    }
+    html += '<br><span style="font-size:.72rem;color:#78909c;">Normal: < 10 mOsm/kg</span>';
+    html += '</div>';
+  }
+
+  // Interpretation
+  if (!isNaN(na) && !isNaN(cl) && !isNaN(hco3) && !isNaN(osmMess)) {
+    var ag2 = na - (cl + hco3);
+    var osmCalc2 = 2 * na;
+    if (!isNaN(glu)) osmCalc2 += glu / 18;
+    if (!isNaN(hst)) osmCalc2 += hst / 6;
+    if (!isNaN(etoh)) osmCalc2 += etoh * 10 / 4.6;
+    var og2 = osmMess - osmCalc2;
+    var agHigh = ag2 > 16;
+    var ogHigh = og2 > 10;
+
+    html += '<div class="tox-result tox-r-info"><strong>Interpretation:</strong><br>';
+    if (agHigh && ogHigh) {
+      html += '⚠️ <strong>AG ↑ + OG ↑:</strong> V.a. Methanol (früh), Ethylenglykol (früh), Propylenglykol → Fomepizol + ggf. Hämodialyse';
+    } else if (agHigh && !ogHigh) {
+      html += '⚠️ <strong>AG ↑ + OG normal:</strong> Methanol/EG spät (Metaboliten gebildet), Salicylate, DKA, Laktatazidose, Nierenversagen';
+    } else if (!agHigh && ogHigh) {
+      html += 'ℹ️ <strong>AG normal + OG ↑:</strong> Ethanol, Isopropanol, Mannitol, Kontrastmittel, Aceton';
+    } else {
+      html += '✓ <strong>AG normal + OG normal:</strong> Toxische Alkohole unwahrscheinlich';
+    }
+    html += '</div>';
+  }
+
+  if (!html) {
+    html = '<div class="tox-result tox-r-warn">Mindestens Na⁺, Cl⁻ und HCO₃⁻ eingeben für Anionenlücke; zusätzlich gemessene Osmolalität für Osmolallücke.</div>';
+  }
+  out.innerHTML = html;
+};
+
+})();
+</script>
+</div><!-- end tool-tox -->
 
 </body>
 </html>
