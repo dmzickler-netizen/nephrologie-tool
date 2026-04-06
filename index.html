@@ -9007,6 +9007,921 @@ abxRender();
 </div><!-- end tab-abx -->
 
 
+
+<!-- ============================================================
+     HWI — Harnwegsinfekt
+     ============================================================ -->
+<div id="tab-hwi">
+<style>
+#tab-hwi .hwi-container { max-width: 960px; margin: 0 auto; padding: 16px; }
+#tab-hwi .hwi-title-bar { background: linear-gradient(135deg,#1565c0,#1976d2); color:#fff; border-radius:12px; padding:18px 22px; margin-bottom:16px; }
+#tab-hwi .hwi-title-bar h2 { margin:0 0 4px 0; font-size:1.35rem; font-weight:800; }
+#tab-hwi .hwi-title-bar p { margin:0; font-size:.85rem; opacity:.88; }
+#tab-hwi .hwi-card { background:#fff; border-radius:12px; padding:18px 20px; box-shadow:0 2px 8px rgba(0,0,0,.09); margin-bottom:14px; }
+#tab-hwi .hwi-card-title { font-size:.78rem; font-weight:800; text-transform:uppercase; letter-spacing:.5px; color:#455a64; margin-bottom:12px; border-bottom:2px solid #f0f4f8; padding-bottom:6px; }
+#tab-hwi .hwi-step-header { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+#tab-hwi .hwi-step-badge { background:#1565c0; color:#fff; border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.9rem; flex-shrink:0; }
+#tab-hwi .hwi-step-label { font-size:1rem; font-weight:700; color:#1a237e; }
+#tab-hwi .hwi-checkbox-group { display:flex; flex-direction:column; gap:8px; }
+#tab-hwi .hwi-checkbox-item { display:flex; align-items:flex-start; gap:10px; padding:8px 10px; border-radius:8px; background:#f8fafc; border:1.5px solid #e3eaf3; cursor:pointer; transition:.15s; }
+#tab-hwi .hwi-checkbox-item:hover { border-color:#1565c0; background:#e8f0fe; }
+#tab-hwi .hwi-checkbox-item input[type="checkbox"] { width:17px; height:17px; margin-top:1px; accent-color:#1565c0; cursor:pointer; flex-shrink:0; }
+#tab-hwi .hwi-checkbox-item label { font-size:.88rem; color:#37474f; cursor:pointer; line-height:1.45; }
+#tab-hwi .hwi-checkbox-item.hwi-checked { border-color:#1565c0; background:#e3f0ff; }
+#tab-hwi .hwi-radio-group { display:flex; flex-direction:column; gap:8px; }
+#tab-hwi .hwi-radio-item { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px; background:#f8fafc; border:1.5px solid #e3eaf3; cursor:pointer; transition:.15s; }
+#tab-hwi .hwi-radio-item:hover { border-color:#1565c0; background:#e8f0fe; }
+#tab-hwi .hwi-radio-item input[type="radio"] { width:17px; height:17px; accent-color:#1565c0; cursor:pointer; flex-shrink:0; }
+#tab-hwi .hwi-radio-item label { font-size:.88rem; color:#37474f; cursor:pointer; font-weight:600; }
+#tab-hwi .hwi-radio-item.hwi-selected { border-color:#1565c0; background:#e3f0ff; }
+#tab-hwi .hwi-btn { background:#1565c0; color:#fff; border:none; border-radius:8px; padding:10px 20px; font-size:.9rem; font-weight:700; cursor:pointer; transition:.15s; }
+#tab-hwi .hwi-btn:hover { background:#0d47a1; }
+#tab-hwi .hwi-btn-secondary { background:#fff; color:#1565c0; border:2px solid #1565c0; border-radius:8px; padding:8px 18px; font-size:.88rem; font-weight:700; cursor:pointer; transition:.15s; }
+#tab-hwi .hwi-btn-secondary:hover { background:#e8f0fe; }
+#tab-hwi .hwi-result { display:none; }
+#tab-hwi .hwi-result.active { display:block; }
+#tab-hwi .hwi-result-card { border-radius:12px; padding:18px 20px; margin-bottom:14px; }
+#tab-hwi .hwi-result-card.hwi-res-none { background:#e8f5e9; border:2px solid #43a047; }
+#tab-hwi .hwi-result-card.hwi-res-mild { background:#e3f2fd; border:2px solid #1565c0; }
+#tab-hwi .hwi-result-card.hwi-res-mod { background:#fff8e1; border:2px solid #f9a825; }
+#tab-hwi .hwi-result-card.hwi-res-severe { background:#fce4ec; border:2px solid #c62828; }
+#tab-hwi .hwi-result-title { font-size:1.1rem; font-weight:800; margin:0 0 10px 0; display:flex; align-items:center; gap:8px; }
+#tab-hwi .hwi-result-subtitle { font-size:.82rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; margin:12px 0 6px 0; color:#455a64; }
+#tab-hwi .hwi-drug-table { width:100%; border-collapse:collapse; font-size:.85rem; margin-top:6px; }
+#tab-hwi .hwi-drug-table th { background:#e3eaf3; padding:7px 10px; text-align:left; font-size:.78rem; font-weight:700; color:#37474f; }
+#tab-hwi .hwi-drug-table td { padding:7px 10px; border-bottom:1px solid #e8edf3; vertical-align:top; line-height:1.4; }
+#tab-hwi .hwi-drug-table tr:last-child td { border-bottom:none; }
+#tab-hwi .hwi-drug-table tr.hwi-first-choice td { background:#f0f8ff; font-weight:600; }
+#tab-hwi .hwi-warn { background:#fff3e0; border:1.5px solid #ffb74d; border-radius:8px; padding:9px 12px; font-size:.84rem; color:#7b5a00; margin-top:8px; display:flex; gap:8px; align-items:flex-start; }
+#tab-hwi .hwi-warn-icon { font-size:1rem; flex-shrink:0; }
+#tab-hwi .hwi-info { background:#e3f2fd; border:1.5px solid #90caf9; border-radius:8px; padding:9px 12px; font-size:.84rem; color:#0d47a1; margin-top:8px; }
+#tab-hwi .hwi-danger { background:#fce4ec; border:1.5px solid #ef9a9a; border-radius:8px; padding:9px 12px; font-size:.84rem; color:#b71c1c; margin-top:8px; display:flex; gap:8px; align-items:flex-start; }
+#tab-hwi .hwi-success { background:#e8f5e9; border:1.5px solid #a5d6a7; border-radius:8px; padding:9px 12px; font-size:.84rem; color:#1b5e20; margin-top:8px; }
+#tab-hwi .hwi-list { margin:6px 0 0 0; padding-left:18px; }
+#tab-hwi .hwi-list li { font-size:.86rem; color:#37474f; margin-bottom:4px; line-height:1.5; }
+#tab-hwi .hwi-acc-btn { width:100%; text-align:left; background:#f0f4f8; border:1.5px solid #cfd8dc; border-radius:8px; padding:10px 14px; font-size:.88rem; font-weight:700; color:#37474f; cursor:pointer; display:flex; justify-content:space-between; align-items:center; transition:.15s; margin-bottom:4px; }
+#tab-hwi .hwi-acc-btn:hover { background:#e3eaf3; border-color:#1565c0; color:#1565c0; }
+#tab-hwi .hwi-acc-body { display:none; padding:12px 14px; border:1.5px solid #cfd8dc; border-top:none; border-radius:0 0 8px 8px; background:#fff; margin-bottom:10px; font-size:.86rem; color:#37474f; }
+#tab-hwi .hwi-acc-body.open { display:block; }
+#tab-hwi .hwi-acc-row { display:flex; gap:10px; padding:5px 0; border-bottom:1px solid #f0f4f8; line-height:1.45; }
+#tab-hwi .hwi-acc-row:last-child { border-bottom:none; }
+#tab-hwi .hwi-acc-icon { flex-shrink:0; width:18px; }
+#tab-hwi .hwi-tag { display:inline-block; padding:2px 8px; border-radius:12px; font-size:.75rem; font-weight:700; }
+#tab-hwi .hwi-tag-green { background:#c8e6c9; color:#2e7d32; }
+#tab-hwi .hwi-tag-orange { background:#ffe0b2; color:#e65100; }
+#tab-hwi .hwi-tag-red { background:#ffcdd2; color:#c62828; }
+#tab-hwi .hwi-tag-blue { background:#bbdefb; color:#0d47a1; }
+#tab-hwi .hwi-disclaimer { background:#fff8e1; border:1.5px solid #ffca28; border-radius:8px; padding:10px 14px; font-size:.8rem; color:#7b5a00; margin-top:16px; }
+#tab-hwi .hwi-import-hint { background:#e8f0fe; border:1.5px solid #90caf9; border-radius:8px; padding:8px 12px; font-size:.82rem; color:#0d47a1; margin-bottom:10px; }
+#tab-hwi .hwi-grid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+@media(max-width:640px) { #tab-hwi .hwi-grid2 { grid-template-columns:1fr; } }
+#tab-hwi .hwi-sep { border:none; border-top:2px solid #f0f4f8; margin:16px 0; }
+#tab-hwi .hwi-reset-bar { display:flex; justify-content:flex-end; margin-bottom:10px; }
+#tab-hwi .hwi-patient-card { background:linear-gradient(135deg,#e3f2fd,#f0f8ff); border:2px solid #1565c0; border-radius:12px; padding:14px 18px; margin-bottom:14px; }
+#tab-hwi .hwi-patient-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; align-items:end; }
+@media(max-width:640px){ #tab-hwi .hwi-patient-grid { grid-template-columns:1fr 1fr; } }
+#tab-hwi .hwi-patient-field label { display:block; font-size:.75rem; font-weight:700; color:#37474f; margin-bottom:4px; text-transform:uppercase; letter-spacing:.4px; }
+#tab-hwi .hwi-patient-field input { width:100%; padding:7px 10px; border:1.5px solid #bbdefb; border-radius:6px; font-size:.9rem; box-sizing:border-box; background:#fff; }
+#tab-hwi .hwi-patient-field input:focus { border-color:#1565c0; outline:none; }
+#tab-hwi .hwi-route-badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:.76rem; font-weight:800; white-space:nowrap; }
+#tab-hwi .hwi-route-po { background:#e8f5e9; color:#1b5e20; }
+#tab-hwi .hwi-route-iv { background:#fce4ec; color:#b71c1c; }
+#tab-hwi .hwi-drug-table td:nth-child(3) { white-space:nowrap; }
+#tab-hwi .hwi-drug-table .hwi-dose-note { display:block; font-size:.78rem; color:#546e7a; margin-top:2px; line-height:1.35; }
+#tab-hwi .hwi-drug-table .hwi-dose-active { display:block; font-size:.78rem; font-weight:700; color:#b71c1c; margin-top:2px; background:#fce4ec; border-radius:4px; padding:1px 5px; }
+</style>
+
+<div class="hwi-container">
+
+  <!-- Title -->
+  <div class="hwi-title-bar">
+    <h2>🔬 Harnwegsinfekt (HWI) — Klinischer Algorithmus</h2>
+    <p>Diagnose-Wizard · Therapieempfehlung · Komplikationsmanagement | Quelle: Plan 2 ABx V18.2 (09/2024, KSchlieps)</p>
+  </div>
+
+  <div id="hwi-import-hint" class="hwi-import-hint" style="display:none;">
+    <strong>Auto-Import:</strong> <span id="hwi-import-text"></span>
+  </div>
+
+  <!-- ── PATIENTENDATEN ── -->
+  <div class="hwi-patient-card">
+    <div class="hwi-card-title" style="margin-bottom:10px;">👤 Patientendaten — Dosisanpassung</div>
+    <div class="hwi-patient-grid">
+      <div class="hwi-patient-field">
+        <label for="hwi-pat-weight">Körpergewicht (kg)</label>
+        <input type="number" id="hwi-pat-weight" placeholder="z.B. 70" min="30" max="250" oninput="hwiUpdate()">
+      </div>
+      <div class="hwi-patient-field">
+        <label for="hwi-pat-egfr">eGFR (ml/min/1,73m²)</label>
+        <input type="number" id="hwi-pat-egfr" placeholder="z.B. 45" min="0" max="150" oninput="hwiPatEgfrChanged()">
+        <div id="hwi-egfr-badge-wrap" style="margin-top:5px;min-height:22px;"></div>
+      </div>
+      <div class="hwi-patient-field">
+        <label style="color:#546e7a;">Hinweis</label>
+        <div style="font-size:.8rem;color:#546e7a;padding:7px 0;line-height:1.4;">eGFR wird automatisch aus dem CKD-Tab übernommen — oder manuell eingeben</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hwi-reset-bar">
+    <button class="hwi-btn-secondary" onclick="hwiReset()">&#8635; Zurücksetzen</button>
+  </div>
+
+  <!-- ── SCHRITT 1: Symptome ── -->
+  <div class="hwi-card" id="hwi-step1-card">
+    <div class="hwi-step-header">
+      <div class="hwi-step-badge">1</div>
+      <div class="hwi-step-label">Welche Symptome liegen vor?</div>
+    </div>
+    <div class="hwi-checkbox-group">
+      <div class="hwi-checkbox-item" id="hwi-sym-lower-wrap">
+        <input type="checkbox" id="hwi-sym-lower" onchange="hwiUpdate()">
+        <label for="hwi-sym-lower"><strong>Untere Harntraktsymptome:</strong> Dysurie, Pollakisurie, imperativer Harndrang, Strangurie, Hämaturie</label>
+      </div>
+      <div class="hwi-checkbox-item" id="hwi-sym-upper-wrap">
+        <input type="checkbox" id="hwi-sym-upper" onchange="hwiUpdate()">
+        <label for="hwi-sym-upper"><strong>Obere Harntraktsymptome:</strong> Flankenschmerz, Klopfschmerz Nierenlager, Dysurie + Flankenschmerz</label>
+      </div>
+      <div class="hwi-checkbox-item" id="hwi-sym-fever-wrap">
+        <input type="checkbox" id="hwi-sym-fever" onchange="hwiUpdate()">
+        <label for="hwi-sym-fever"><strong>Systemzeichen:</strong> Fieber &gt; 38°C, Schüttelfrost, CRP ↑, Tachykardie</label>
+      </div>
+      <div class="hwi-checkbox-item" id="hwi-sym-sepsis-wrap">
+        <input type="checkbox" id="hwi-sym-sepsis" onchange="hwiUpdate()">
+        <label for="hwi-sym-sepsis"><strong>Sepsis-Zeichen:</strong> RR-Abfall (syst. &lt;90 mmHg), Laktat ↑, Verwirrtheit, Oligurie → <span class="hwi-tag hwi-tag-red">Urosepsis-Verdacht</span></label>
+      </div>
+      <div class="hwi-checkbox-item" id="hwi-sym-none-wrap">
+        <input type="checkbox" id="hwi-sym-none" onchange="hwiUpdate()">
+        <label for="hwi-sym-none"><strong>Keine Symptome</strong> — Nur Zufallsbefund im Urin (asymptomatische Bakteriurie?)</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SCHRITT 1b: Urinbefund bei Asymptomatik ── -->
+  <div class="hwi-card" id="hwi-step1b-card" style="display:none; border-left:4px solid #43a047;">
+    <div class="hwi-step-header">
+      <div class="hwi-step-badge" style="background:#43a047;">1b</div>
+      <div class="hwi-step-label">Welcher Urinbefund liegt vor? <span style="font-size:.8rem;font-weight:400;color:#546e7a;">(ohne klinische Symptomatik)</span></div>
+    </div>
+    <div class="hwi-radio-group">
+      <div class="hwi-radio-item" id="hwi-asym-bak-wrap">
+        <input type="radio" name="hwi-asym" id="hwi-asym-bak" value="bak" onchange="hwiUpdate()">
+        <label for="hwi-asym-bak"><strong>Bakteriurie</strong> — Positive Urinkultur (≥10⁵ KBE/ml) ohne Symptome</label>
+      </div>
+      <div class="hwi-radio-item" id="hwi-asym-leuko-wrap">
+        <input type="radio" name="hwi-asym" id="hwi-asym-leuko" value="leuko" onchange="hwiUpdate()">
+        <label for="hwi-asym-leuko"><strong>Leukozyturie</strong> — Leukozyten im Urin (&gt;10/µl) ohne signifikante Bakteriurie</label>
+      </div>
+      <div class="hwi-radio-item" id="hwi-asym-both-wrap">
+        <input type="radio" name="hwi-asym" id="hwi-asym-both" value="both" onchange="hwiUpdate()">
+        <label for="hwi-asym-both"><strong>Beides</strong> — Leukozyturie + positive Urinkultur ohne Symptome</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SCHRITT 2: Komplizierende Faktoren ── -->
+  <div class="hwi-card" id="hwi-step2-card">
+    <div class="hwi-step-header">
+      <div class="hwi-step-badge">2</div>
+      <div class="hwi-step-label">Komplizierende Faktoren? <span style="font-size:.8rem;font-weight:400;color:#546e7a;">(Mehrfachauswahl möglich)</span></div>
+    </div>
+    <div class="hwi-grid2">
+      <div class="hwi-checkbox-group">
+        <div class="hwi-checkbox-item" id="hwi-cf-cath-wrap">
+          <input type="checkbox" id="hwi-cf-cath" onchange="hwiUpdate()">
+          <label for="hwi-cf-cath">Dauerkatheter (DK) oder Harnleiterschiene (DJ)</label>
+        </div>
+        <div class="hwi-checkbox-item" id="hwi-cf-ckd-wrap">
+          <input type="checkbox" id="hwi-cf-ckd" onchange="hwiUpdate()">
+          <label for="hwi-cf-ckd">CKD ≥ Stadium 3b <em>(eGFR &lt; 45 ml/min)</em></label>
+        </div>
+        <div class="hwi-checkbox-item" id="hwi-cf-dialysis-wrap">
+          <input type="checkbox" id="hwi-cf-dialysis" onchange="hwiUpdate()">
+          <label for="hwi-cf-dialysis">Dialyse (HD / PD)</label>
+        </div>
+        <div class="hwi-checkbox-item" id="hwi-cf-male-wrap">
+          <input type="checkbox" id="hwi-cf-male" onchange="hwiUpdate()">
+          <label for="hwi-cf-male">Männliches Geschlecht</label>
+        </div>
+        <div class="hwi-checkbox-item" id="hwi-cf-dm-wrap">
+          <input type="checkbox" id="hwi-cf-dm" onchange="hwiUpdate()">
+          <label for="hwi-cf-dm">Diabetes mellitus (instabil / schlecht eingestellt)</label>
+        </div>
+      </div>
+      <div class="hwi-checkbox-group">
+        <div class="hwi-checkbox-item" id="hwi-cf-immuno-wrap">
+          <input type="checkbox" id="hwi-cf-immuno" onchange="hwiUpdate()">
+          <label for="hwi-cf-immuno">Immunsuppression / Transplantation (NTX, SOT)</label>
+        </div>
+        <div class="hwi-checkbox-item" id="hwi-cf-obstruct-wrap">
+          <input type="checkbox" id="hwi-cf-obstruct" onchange="hwiUpdate()">
+          <label for="hwi-cf-obstruct">Harnabflussstörung / Nephrolithiasis / anatomische Anomalie</label>
+        </div>
+        <div class="hwi-checkbox-item" id="hwi-cf-preg-wrap">
+          <input type="checkbox" id="hwi-cf-preg" onchange="hwiUpdate()">
+          <label for="hwi-cf-preg">Schwangerschaft</label>
+        </div>
+        <div class="hwi-checkbox-item" id="hwi-cf-nosocomial-wrap">
+          <input type="checkbox" id="hwi-cf-nosocomial" onchange="hwiUpdate()">
+          <label for="hwi-cf-nosocomial">Nosokomial erworben <em>oder</em> Antibiotika in letzten 3 Monaten</label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SCHRITT 3: Lokalisation ── -->
+  <div class="hwi-card" id="hwi-step3-card">
+    <div class="hwi-step-header">
+      <div class="hwi-step-badge">3</div>
+      <div class="hwi-step-label">Lokalisation bestätigen</div>
+    </div>
+    <div class="hwi-radio-group">
+      <div class="hwi-radio-item" id="hwi-loc-lower-wrap">
+        <input type="radio" name="hwi-loc" id="hwi-loc-lower" value="lower" onchange="hwiUpdate()">
+        <label for="hwi-loc-lower">Unterer HWI — Zystitis (Blase / Harnröhre)</label>
+      </div>
+      <div class="hwi-radio-item" id="hwi-loc-upper-wrap">
+        <input type="radio" name="hwi-loc" id="hwi-loc-upper" value="upper" onchange="hwiUpdate()">
+        <label for="hwi-loc-upper">Oberer HWI — Pyelonephritis (Nierenbecken)</label>
+      </div>
+      <div class="hwi-radio-item" id="hwi-loc-sepsis-wrap">
+        <input type="radio" name="hwi-loc" id="hwi-loc-sepsis" value="sepsis" onchange="hwiUpdate()">
+        <label for="hwi-loc-sepsis">Urosepsis — Sepsis mit urogenitalem Fokus</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SCHRITT 4: Schweregrad ── -->
+  <div class="hwi-card" id="hwi-step4-card">
+    <div class="hwi-step-header">
+      <div class="hwi-step-badge">4</div>
+      <div class="hwi-step-label">Schweregrad / Setting</div>
+    </div>
+    <div class="hwi-radio-group">
+      <div class="hwi-radio-item" id="hwi-sev-mild-wrap">
+        <input type="radio" name="hwi-sev" id="hwi-sev-mild" value="mild" onchange="hwiUpdate()">
+        <label for="hwi-sev-mild">Leicht-moderat — Ambulant behandelbar (orale Therapie möglich)</label>
+      </div>
+      <div class="hwi-radio-item" id="hwi-sev-hosp-wrap">
+        <input type="radio" name="hwi-sev" id="hwi-sev-hosp" value="hosp" onchange="hwiUpdate()">
+        <label for="hwi-sev-hosp">Schwer — Stationär (i.v.-Therapie notwendig, systemische Zeichen)</label>
+      </div>
+      <div class="hwi-radio-item" id="hwi-sev-icu-wrap">
+        <input type="radio" name="hwi-sev" id="hwi-sev-icu" value="icu" onchange="hwiUpdate()">
+        <label for="hwi-sev-icu">Intensiv / ITS — Kreislaufinstabilität, Organversagen</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ERGEBNIS ── -->
+  <div id="hwi-result-area"></div>
+
+  <hr class="hwi-sep">
+
+  <!-- ── DIAGNOSTIK ── -->
+  <div class="hwi-card">
+    <div class="hwi-card-title">Diagnostik-Checkliste</div>
+    <button class="hwi-acc-btn" onclick="hwiToggleAcc('diag')">
+      <span>🔍 Urin-Diagnostik &amp; Labor</span><span id="hwi-acc-diag-arrow">▼</span>
+    </button>
+    <div class="hwi-acc-body" id="hwi-acc-diag">
+      <div class="hwi-acc-row"><span class="hwi-acc-icon">🧪</span><div><strong>Urin-Stix:</strong> Nitrit + Leukozyten-Esterase — Achtung: negatives Ergebnis schließt HWI <em>nicht</em> aus! Falsch-negativ bei Proteus, Pseudomonas, niedrigem spez. Gewicht</div></div>
+      <div class="hwi-acc-row"><span class="hwi-acc-icon">🔬</span><div><strong>Urinmikroskopie:</strong> Leukozyturie &gt;10/µl signifikant; Leukozyten-Zylinder → Pyelonephritis</div></div>
+      <div class="hwi-acc-row"><span class="hwi-acc-icon">🧫</span><div><strong>Urinkultur (Mittelstrahlurin):</strong> Indiziert bei kompliziertem HWI, Pyelonephritis, Männern, Rezidiv, Therapieversagen, Schwangerschaft. Signifikant: ≥10⁵ KBE/ml (unkompliziert), ≥10² KBE/ml (katheterisiert)</div></div>
+      <div class="hwi-acc-row"><span class="hwi-acc-icon">🩸</span><div><strong>Blutbild, CRP, Procalcitonin:</strong> Bei Systemzeichen / Fieber / Verdacht auf Pyelonephritis oder Sepsis</div></div>
+      <div class="hwi-acc-row"><span class="hwi-acc-icon">📷</span><div><strong>Sono Nieren / Blase:</strong> Empfohlen bei Pyelonephritis, Männern, Therapieversagen → Ausschluss Obstruktion, Abszess, Steine, Restharn</div></div>
+      <div class="hwi-acc-row"><span class="hwi-acc-icon">🩺</span><div><strong>Blutkulturen 2×2:</strong> Obligat bei Sepsisverdacht — <em>vor</em> Antibiotikagabe abnehmen!</div></div>
+    </div>
+
+    <button class="hwi-acc-btn" onclick="hwiToggleAcc('resist')">
+      <span>🛡️ Resistenzprophylaxe &amp; Antibiotic Stewardship</span><span id="hwi-acc-resist-arrow">▼</span>
+    </button>
+    <div class="hwi-acc-body" id="hwi-acc-resist">
+      <div class="hwi-acc-row"><span class="hwi-acc-icon">⛔</span><div><strong>Kein Fluorchinolon als Erstlinientherapie</strong> — Rote-Hand-Brief, neurologische und tendinöse Nebenwirkungen. Nur nach Resistogramm oder fehlender Alternative.</div></div>
+      <div class="hwi-acc-row"><span class="hwi-acc-icon">📊</span><div><strong>Cotrimoxazol:</strong> Nur wenn lokale Resistenzrate &lt;20%; sonst unzuverlässig bei E. coli</div></div>
+      <div class="hwi-acc-row"><span class="hwi-acc-icon">🔄</span><div><strong>Sequenztherapie:</strong> i.v. → oral sobald klinisch möglich; gezielte Deeskalation nach Antibiogramm</div></div>
+      <div class="hwi-acc-row"><span class="hwi-acc-icon">📅</span><div><strong>Therapiedauern einhalten:</strong> Kurze Therapie bei unkomplizierter Zystitis (3–5 Tage) → geringere Selektion, weniger Resistenzen</div></div>
+      <div class="hwi-acc-row"><span class="hwi-acc-icon">🔍</span><div><strong>Urinkultur bei Therapieversagen:</strong> Keine Besserung nach 48–72 h → Erreger- und Resistogrammtestung</div></div>
+    </div>
+
+    <button class="hwi-acc-btn" onclick="hwiToggleAcc('rezidiv')">
+      <span>🔁 Rezidivprophylaxe (Frauen)</span><span id="hwi-acc-rezidiv-arrow">▼</span>
+    </button>
+    <div class="hwi-acc-body" id="hwi-acc-rezidiv">
+      <div class="hwi-acc-row"><span class="hwi-acc-icon">🌿</span><div><strong>D-Mannose 2 g/Tag:</strong> Moderat evidenzbasiert, gut verträglich</div></div>
+      <div class="hwi-acc-row"><span class="hwi-acc-icon">🍒</span><div><strong>Cranberry-Extrakt:</strong> Schwache Evidenz, individuell versuchsweise</div></div>
+      <div class="hwi-acc-row"><span class="hwi-acc-icon">💊</span><div><strong>Estriol-Vaginalcreme (postmenopausal):</strong> Effektiv zur HWI-Prävention bei genitaler Atrophie</div></div>
+      <div class="hwi-acc-row"><span class="hwi-acc-icon">🧬</span><div><strong>Antibiotika-Langzeitprophylaxe:</strong> Nur nach Resistogramm, bei ≥3 HWI/Jahr; Rücksprache Urologie/Gynäkologie</div></div>
+      <div class="hwi-acc-row"><span class="hwi-acc-icon">🔁</span><div><strong>Uro-Vaxom (E. coli-Lysat):</strong> Immunstimulation, individuell, Urologie-Konsil</div></div>
+    </div>
+  </div>
+
+  <div class="hwi-disclaimer">
+    <strong>Hinweis:</strong> Dieses Tool ersetzt nicht die klinische Beurteilung. Alle Empfehlungen basieren auf Plan 2 ABx V18.2 (09/2024, KSchlieps). Dosierungen bei Niereninsuffizienz gesondert prüfen. Antibiogramm hat Vorrang vor empirischer Therapie.
+  </div>
+
+</div><!-- end hwi-container -->
+
+<script>
+(function(){
+'use strict';
+
+// ── AUTO-IMPORT ──────────────────────────────────────────────
+window.hwiAutoImport = function() {
+  var egfrEl = document.getElementById('egfr-result-val');
+  var egfrText = egfrEl ? egfrEl.textContent.trim() : '';
+  var hints = [];
+
+  // Parse eGFR
+  var isDialysis = /HD|PD|Dialyse/i.test(egfrText);
+  var egfrNum = parseFloat(egfrText.replace(',', '.'));
+
+  // Fill patient eGFR card if empty
+  var patEgfrEl = document.getElementById('hwi-pat-egfr');
+  if (patEgfrEl && !patEgfrEl.value) {
+    if (isDialysis) {
+      patEgfrEl.value = '5';
+      hints.push('eGFR: Dialyse importiert');
+    } else if (!isNaN(egfrNum) && egfrNum > 0) {
+      patEgfrEl.value = Math.round(egfrNum);
+      hints.push('eGFR ' + Math.round(egfrNum) + ' ml/min importiert');
+    }
+    if (patEgfrEl.value) { window.hwiPatEgfrChanged(true); }
+  }
+
+  // Fill weight from CKD tab
+  var weightEl = document.getElementById('weight');
+  var patWeightEl = document.getElementById('hwi-pat-weight');
+  if (weightEl && weightEl.value && patWeightEl && !patWeightEl.value) {
+    patWeightEl.value = weightEl.value;
+    hints.push('Gewicht ' + weightEl.value + ' kg importiert');
+  }
+
+  if (isDialysis) {
+    var cbD = document.getElementById('hwi-cf-dialysis');
+    if (cbD && !cbD.checked) { cbD.checked = true; if(hints.indexOf('Dialyse importiert')<0) hints.push('Dialyse vorausgewählt'); }
+    var cbCkd = document.getElementById('hwi-cf-ckd');
+    if (cbCkd && !cbCkd.checked) { cbCkd.checked = true; }
+  } else if (!isNaN(egfrNum) && egfrNum < 45) {
+    var cbCkd2 = document.getElementById('hwi-cf-ckd');
+    if (cbCkd2 && !cbCkd2.checked) { cbCkd2.checked = true; hints.push('CKD ≥3b vorausgewählt'); }
+  }
+
+  // Sex
+  var sexMaleEl = document.getElementById('sex-male');
+  if (sexMaleEl && sexMaleEl.checked) {
+    var cbMale = document.getElementById('hwi-cf-male');
+    if (cbMale && !cbMale.checked) { cbMale.checked = true; hints.push('Männliches Geschlecht vorausgewählt'); }
+  }
+
+  var hintEl = document.getElementById('hwi-import-hint');
+  var hintText = document.getElementById('hwi-import-text');
+  if (hints.length > 0 && hintEl && hintText) {
+    hintText.textContent = hints.join(' · ') + '.';
+    hintEl.style.display = 'block';
+  } else if (hintEl) {
+    hintEl.style.display = 'none';
+  }
+
+  hwiUpdate();
+};
+
+// ── RESET ────────────────────────────────────────────────────
+window.hwiReset = function() {
+  ['hwi-sym-lower','hwi-sym-upper','hwi-sym-fever','hwi-sym-sepsis','hwi-sym-none',
+   'hwi-cf-cath','hwi-cf-ckd','hwi-cf-dialysis','hwi-cf-male','hwi-cf-dm',
+   'hwi-cf-immuno','hwi-cf-obstruct','hwi-cf-preg','hwi-cf-nosocomial'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) el.checked = false;
+  });
+  var radios = document.querySelectorAll('input[name="hwi-loc"], input[name="hwi-sev"], input[name="hwi-asym"]');
+  radios.forEach(function(r){ r.checked = false; });
+  var step1b = document.getElementById('hwi-step1b-card');
+  if(step1b) step1b.style.display = 'none';
+  // Clear patient card
+  ['hwi-pat-weight','hwi-pat-egfr'].forEach(function(id){
+    var el = document.getElementById(id); if(el) el.value = '';
+  });
+  var badge = document.getElementById('hwi-egfr-badge-wrap'); if(badge) badge.innerHTML = '';
+  document.getElementById('hwi-result-area').innerHTML = '';
+  document.getElementById('hwi-import-hint').style.display = 'none';
+};
+
+// ── EGFR PATIENT INPUT ────────────────────────────────────────
+window.hwiPatEgfrChanged = function(skipUpdate) {
+  var egfr = hwiGetEgfr();
+  var wrap = document.getElementById('hwi-egfr-badge-wrap');
+  if(wrap){
+    if(egfr === null){ wrap.innerHTML = ''; }
+    else if(egfr < 10){ wrap.innerHTML = '<span class="hwi-tag hwi-tag-red">HD/GFR &lt;10</span>'; }
+    else if(egfr < 15){ wrap.innerHTML = '<span class="hwi-tag hwi-tag-red">G5: 10–15</span>'; }
+    else if(egfr < 30){ wrap.innerHTML = '<span class="hwi-tag hwi-tag-orange">G4: 15–30</span>'; }
+    else if(egfr < 45){ wrap.innerHTML = '<span class="hwi-tag hwi-tag-orange">G3b: 30–45</span>'; }
+    else if(egfr < 60){ wrap.innerHTML = '<span class="hwi-tag hwi-tag-blue">G3a: 45–60</span>'; }
+    else { wrap.innerHTML = '<span class="hwi-tag hwi-tag-green">eGFR ≥60 — normal</span>'; }
+  }
+  // Auto-sync checkboxes
+  if(egfr !== null){
+    var cbD = document.getElementById('hwi-cf-dialysis');
+    var cbC = document.getElementById('hwi-cf-ckd');
+    var wD = document.getElementById('hwi-cf-dialysis-wrap');
+    var wC = document.getElementById('hwi-cf-ckd-wrap');
+    if(cbD){ cbD.checked = egfr < 10; if(wD) wD.classList.toggle('hwi-checked', cbD.checked); }
+    if(cbC){ cbC.checked = egfr < 45; if(wC) wC.classList.toggle('hwi-checked', cbC.checked); }
+  }
+  if(!skipUpdate) hwiUpdate();
+};
+
+// ── ACCORDION ────────────────────────────────────────────────
+window.hwiToggleAcc = function(id) {
+  var body = document.getElementById('hwi-acc-' + id);
+  var arrow = document.getElementById('hwi-acc-' + id + '-arrow');
+  if(!body) return;
+  var isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  if(arrow) arrow.textContent = isOpen ? '▼' : '▲';
+};
+
+// ── HELPERS ──────────────────────────────────────────────────
+function checked(id){ var el = document.getElementById(id); return el && el.checked; }
+function locVal(){ var r = document.querySelector('input[name="hwi-loc"]:checked'); return r ? r.value : null; }
+function sevVal(){ var r = document.querySelector('input[name="hwi-sev"]:checked'); return r ? r.value : null; }
+
+function hwiGetEgfr(){
+  var el = document.getElementById('hwi-pat-egfr');
+  if(!el || !el.value) return null;
+  var v = parseFloat(el.value);
+  return isNaN(v) ? null : v;
+}
+function hwiGetWeight(){
+  var el = document.getElementById('hwi-pat-weight');
+  if(!el || !el.value) return null;
+  var v = parseFloat(el.value);
+  return isNaN(v) ? null : v;
+}
+
+function hasComplicating(){
+  return checked('hwi-cf-cath') || checked('hwi-cf-ckd') || checked('hwi-cf-dialysis') ||
+         checked('hwi-cf-male') || checked('hwi-cf-dm') || checked('hwi-cf-immuno') ||
+         checked('hwi-cf-obstruct') || checked('hwi-cf-preg') || checked('hwi-cf-nosocomial');
+}
+
+function isDialysisPatient(){
+  if(checked('hwi-cf-dialysis')) return true;
+  var egfr = hwiGetEgfr();
+  return egfr !== null && egfr < 10;
+}
+
+function isCkdReduced(){
+  if(checked('hwi-cf-ckd') || isDialysisPatient()) return true;
+  var egfr = hwiGetEgfr();
+  return egfr !== null && egfr < 45;
+}
+
+// Returns a highlighted dose note based on current eGFR
+function egfrNote(ranges){
+  // ranges: array of {min, max, text} — text shown when egfr in [min,max)
+  var egfr = hwiGetEgfr();
+  var out = '';
+  ranges.forEach(function(r){
+    var active = egfr !== null && egfr >= r.min && egfr < r.max;
+    if(active){
+      out += '<span class="hwi-dose-active">▶ ' + r.text + '</span>';
+    } else {
+      out += '<span class="hwi-dose-note">' + r.text + '</span>';
+    }
+  });
+  return out;
+}
+
+// ── RESULT BUILDERS ──────────────────────────────────────────
+function buildResultHTML(scenario){
+  var egfr = hwiGetEgfr();
+  var weight = hwiGetWeight();
+  var html = '';
+  var po = '<span class="hwi-route-badge hwi-route-po">p.o.</span>';
+  var iv = '<span class="hwi-route-badge hwi-route-iv">i.v.</span>';
+  var thDrug = '<thead><tr><th>#</th><th>z.B. Substanz</th><th>Route</th><th>Standarddosis &amp; Dauer</th><th>Dosisanpassung bei NI</th></tr></thead>';
+  var thSetting = '<thead><tr><th>Setting</th><th>z.B. Substanz</th><th>Route</th><th>Standarddosis</th><th>Dosisanpassung bei NI</th></tr></thead>';
+
+  // Inline eGFR summary if entered
+  var egfrInfo = egfr !== null ? ' <span style="font-size:.8rem;font-weight:400;color:#546e7a;">(eGFR ' + Math.round(egfr) + ' ml/min)</span>' : '';
+
+  if(scenario === 'asb'){
+    html += '<div class="hwi-result-card hwi-res-none">';
+    html += '<div class="hwi-result-title">✅ Asymptomatische Bakteriurie — Kein Antibiotikum erforderlich</div>';
+    html += '<p style="font-size:.88rem;color:#1b5e20;margin:0 0 10px 0;">Keimnachweis im Urin ohne klinische Symptome ist in der Regelversorgung <strong>keine Therapieindikation</strong>.</p>';
+    html += '<div class="hwi-result-subtitle">Ausnahmen — Antibiotikum indiziert bei:</div>';
+    html += '<ul class="hwi-list"><li><strong>Schwangerschaft:</strong> Obligates Screening + Behandlung (Rezidivkontrolle!)</li><li><strong>Vor invasivem urologischen Eingriff</strong> (z.B. TUR, Zystoskopie mit Manipulation)</li><li><strong>Instabiler Diabetes mellitus:</strong> Individuelle Entscheidung</li></ul>';
+    html += '<div class="hwi-info">Nach Nierentransplantation (NTX): Asymptomatische Bakteriurie <strong>nicht</strong> behandeln (außer innerhalb der ersten 2 Monate post-NTX, individuell). Keimzahl und Erreger dokumentieren.</div>';
+    html += '<div class="hwi-warn"><span class="hwi-warn-icon">⚠️</span><span>Procalcitonin / CRP ohne Symptome nicht aussagekräftig. Urinbefund kontextualisieren!</span></div>';
+    html += '</div>';
+    return html;
+  }
+
+  if(scenario === 'asym-leuko'){
+    html += '<div class="hwi-result-card hwi-res-none" style="border-color:#1565c0; background:#e3f2fd;">';
+    html += '<div class="hwi-result-title" style="color:#0d47a1;">🔬 Asymptomatische Leukozyturie — Kein Antibiotikum!</div>';
+    html += '<p style="font-size:.88rem;color:#0d47a1;margin:0 0 10px 0;">Leukozyten im Urin <strong>ohne Bakteriurie und ohne Symptome</strong> sind <strong>keine Indikation</strong> für eine antibiotische Therapie.</p>';
+    html += '<div class="hwi-result-subtitle">Differentialdiagnosen abklären:</div>';
+    html += '<ul class="hwi-list">';
+    html += '<li><strong>Kontamination:</strong> Vaginaler Fluor, unsaubere Gewinnung → Mittelstrahlurin wiederholen</li>';
+    html += '<li><strong>Interstitielle Nephritis:</strong> Medikamentös (NSAR, PPI, Antibiotika), autoimmun → Eosinophile im Urin? Nierenfunktion?</li>';
+    html += '<li><strong>Urogenital-Tuberkulose:</strong> Sterile Leukozyturie + Risikofaktoren → 3× Morgenurin auf Mykobakterien</li>';
+    html += '<li><strong>Urolithiasis:</strong> Asymptomatische Steine → Sono Nieren/Blase</li>';
+    html += '<li><strong>Urothelkarzinom:</strong> Insbesondere bei >50 J., Raucher, Mikro-/Makrohämaturie → Urologie-Konsil, Zystoskopie</li>';
+    html += '<li><strong>Nephritis / Glomerulonephritis:</strong> Begleitende Proteinurie? Erythrozytenzylinder?</li>';
+    html += '<li><strong>Katheter-assoziiert:</strong> Bei DK ist Leukozyturie fast immer vorhanden → <em>kein</em> Behandlungsgrund</li>';
+    html += '</ul>';
+    html += '<div class="hwi-result-subtitle">Empfohlene Diagnostik:</div>';
+    html += '<ul class="hwi-list">';
+    html += '<li>Urinkultur (Ausschluss okkulte Bakteriurie)</li>';
+    html += '<li>Urinsediment / Mikroskopie (Zylinder, Eosinophile, dysmorphe Erys?)</li>';
+    html += '<li>Sonographie Nieren / Blase</li>';
+    html += '<li>Bei V.a. Tbc: 3× Morgenurin auf Mykobakterien (PCR + Kultur)</li>';
+    html += '<li>Bei >50 J. / Risikofaktoren: Urozytologie, ggf. Zystoskopie</li>';
+    html += '</ul>';
+    html += '<div class="hwi-warn"><span class="hwi-warn-icon">⚠️</span><span><strong>Keine Antibiotikatherapie bei isolierter Leukozyturie!</strong> Persistiert die Leukozyturie >2 Wochen ohne Erklärung → weiterführende Abklärung (Urologie/Nephrologie).</span></div>';
+    html += '</div>';
+    return html;
+  }
+
+  if(scenario === 'asym-both'){
+    html += '<div class="hwi-result-card hwi-res-none">';
+    html += '<div class="hwi-result-title">✅ Asymptomatische Bakteriurie mit Leukozyturie — In der Regel kein Antibiotikum</div>';
+    html += '<p style="font-size:.88rem;color:#1b5e20;margin:0 0 10px 0;">Auch bei gleichzeitiger Leukozyturie + Bakteriurie <strong>ohne klinische Symptome</strong> besteht <strong>keine generelle Therapieindikation</strong>. Die Leukozyturie ist häufig Begleitreaktion und ändert die Empfehlung nicht.</p>';
+    html += '<div class="hwi-result-subtitle">Ausnahmen — Antibiotikum indiziert bei:</div>';
+    html += '<ul class="hwi-list"><li><strong>Schwangerschaft:</strong> Obligates Screening + Behandlung (Rezidivkontrolle!)</li><li><strong>Vor invasivem urologischen Eingriff</strong> (z.B. TUR, Zystoskopie mit Manipulation)</li><li><strong>Instabiler Diabetes mellitus:</strong> Individuelle Entscheidung</li></ul>';
+    html += '<div class="hwi-info">Nach Nierentransplantation (NTX): Asymptomatische Bakteriurie <strong>nicht</strong> behandeln (außer innerhalb der ersten 2 Monate post-NTX, individuell). Keimzahl und Erreger dokumentieren.</div>';
+    html += '<div class="hwi-warn"><span class="hwi-warn-icon">⚠️</span><span><strong>Häufiger Fehler:</strong> Leukozyturie wird als „Zeichen einer Infektion" fehlinterpretiert → bei Asymptomatik ist sie kein Therapiegrund! Klinische Symptome sind entscheidend, nicht der Urinbefund allein.</span></div>';
+    html += '</div>';
+    return html;
+  }
+
+  if(scenario === 'zystitis-f'){
+    html += '<div class="hwi-result-card hwi-res-mild">';
+    html += '<div class="hwi-result-title">💊 Unkomplizierte Zystitis — Frau (ohne komplizierende Faktoren)' + egfrInfo + '</div>';
+    if(isDialysisPatient()){
+      html += '<div class="hwi-danger"><span>⚠️</span><span><strong>Dialyse/eGFR &lt;10:</strong> Nitrofurantoin &amp; Fosfomycin <strong>kontraindiziert</strong>. z.B. Cefalexin (Dosis nach HD-Schema, s. unten).</span></div>';
+    } else if(isCkdReduced()){
+      html += '<div class="hwi-danger"><span>⚠️</span><span><strong>eGFR &lt;45:</strong> Nitrofurantoin <strong>kontraindiziert</strong>. Fosfomycin eingeschränkt wirksam. z.B. Cefalexin bevorzugen (Dosis anpassen, s. Tabelle).</span></div>';
+    }
+    html += '<div class="hwi-result-subtitle">Erstlinientherapie (Kurztherapie bevorzugt):</div>';
+    html += '<table class="hwi-drug-table">' + thDrug + '<tbody>';
+    html += '<tr class="hwi-first-choice"><td>1.</td><td>z.B. Nitrofurantoin retard</td><td>' + po + '</td><td>2×100 mg/Tag × <strong>5 Tage</strong></td>';
+    html += '<td>' + egfrNote([
+      {min:45, max:999, text:'eGFR ≥45: Standarddosis'},
+      {min:30, max:45,  text:'eGFR 30–45: KI (ineffektiv + toxisch)'},
+      {min:0,  max:30,  text:'eGFR &lt;30: kontraindiziert'}
+    ]) + '</td></tr>';
+    html += '<tr class="hwi-first-choice"><td>2.</td><td>z.B. Fosfomycin 3g Granulat</td><td>' + po + '</td><td><strong>Einmaldosis</strong> p.o.</td>';
+    html += '<td>' + egfrNote([
+      {min:45, max:999, text:'eGFR ≥45: Standarddosis'},
+      {min:30, max:45,  text:'eGFR 30–45: eingeschränkt nutzbar'},
+      {min:10, max:30,  text:'eGFR 10–30: nicht empfohlen'},
+      {min:0,  max:10,  text:'HD: kontraindiziert'}
+    ]) + '</td></tr>';
+    html += '<tr><td>3.</td><td>z.B. Pivmecillinam</td><td>' + po + '</td><td>3×400 mg × <strong>3 Tage</strong></td>';
+    html += '<td>' + egfrNote([
+      {min:10, max:999, text:'eGFR ≥10: Standarddosis'},
+      {min:0,  max:10,  text:'eGFR &lt;10/HD: kontraindiziert'}
+    ]) + '</td></tr>';
+    html += '<tr><td>4.</td><td>z.B. Cefalexin</td><td>' + po + '</td><td>3×1g × <strong>3–5 Tage</strong></td>';
+    html += '<td>' + egfrNote([
+      {min:45, max:999, text:'eGFR ≥45: 3×1g'},
+      {min:30, max:45,  text:'eGFR 30–45: 2×1g'},
+      {min:15, max:30,  text:'eGFR 15–30: 2×500 mg'},
+      {min:0,  max:15,  text:'eGFR &lt;15/HD: 1×500 mg nach Dialyse'}
+    ]) + '</td></tr>';
+    html += '</tbody></table>';
+    html += '<div class="hwi-warn"><span class="hwi-warn-icon">🚫</span><span><strong>Kein Fluorchinolon als Erstlinientherapie!</strong> (Rote-Hand-Brief). Cotrimoxazol nur wenn lokale Resistenz &lt;20%.</span></div>';
+    html += '<div class="hwi-result-subtitle">Diagnostik:</div>';
+    html += '<ul class="hwi-list"><li>Urinkultur bei unkomplizierter Zystitis <em>nicht zwingend</em> — empfohlen bei Rezidiv (≥2×/Halbjahr)</li><li>Bei Therapieversagen nach 48–72h: Urinkultur + Resistogramm</li></ul>';
+    html += '</div>';
+    return html;
+  }
+
+  if(scenario === 'zystitis-m'){
+    html += '<div class="hwi-result-card hwi-res-mild">';
+    html += '<div class="hwi-result-title">💊 HWI Mann — immer als kompliziert werten' + egfrInfo + '</div>';
+    html += '<div class="hwi-result-subtitle">Vorgehen:</div>';
+    html += '<ul class="hwi-list"><li><strong>Immer Sonographie</strong> — Ausschluss Restharn, Steine, Obstruktion, Prostatavergrößerung</li><li><strong>Immer Urinkultur</strong> — gezielte Therapie nach Resistogramm</li><li>DD Prostatitis (akut/chronisch) und Urethritis ausschließen</li></ul>';
+    html += '<div class="hwi-result-subtitle">Empirische Therapie — Dauer 7 Tage:</div>';
+    html += '<table class="hwi-drug-table">' + thDrug + '<tbody>';
+    html += '<tr class="hwi-first-choice"><td>1.</td><td>z.B. Cefalexin</td><td>' + po + '</td><td>3×1g × <strong>7 Tage</strong></td>';
+    html += '<td>' + egfrNote([
+      {min:45, max:999, text:'eGFR ≥45: 3×1g'},
+      {min:30, max:45,  text:'eGFR 30–45: 2×1g'},
+      {min:15, max:30,  text:'eGFR 15–30: 2×500 mg'},
+      {min:0,  max:15,  text:'eGFR &lt;15/HD: 1×500 mg nach Dialyse'}
+    ]) + '</td></tr>';
+    html += '<tr><td>2.</td><td>z.B. Ciprofloxacin</td><td>' + po + '</td><td>2×500 mg × <strong>7 Tage</strong></td>';
+    html += '<td>' + egfrNote([
+      {min:50, max:999, text:'eGFR ≥50: 2×500 mg'},
+      {min:30, max:50,  text:'eGFR 30–50: 2×250–500 mg'},
+      {min:15, max:30,  text:'eGFR 15–30: 1×250–500 mg'},
+      {min:0,  max:15,  text:'HD: 1×250 mg nach Dialyse (2. Wahl)'}
+    ]) + '<span class="hwi-dose-note"><span class="hwi-tag hwi-tag-orange">2. Wahl</span> — nur nach Resistogramm / Versagen</span></td></tr>';
+    html += '</tbody></table>';
+    if(isCkdReduced()){
+      html += '<div class="hwi-danger"><span>⚠️</span><span>Niereninsuffizienz: Nitrofurantoin <strong>kontraindiziert</strong>. Dosisanpassung beachten (s. Tabelle).</span></div>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  if(scenario === 'zystitis-compl'){
+    html += '<div class="hwi-result-card hwi-res-mod">';
+    html += '<div class="hwi-result-title">⚠️ Komplizierte Zystitis (mit komplizierenden Faktoren, kein Fieber)' + egfrInfo + '</div>';
+    html += '<div class="hwi-warn"><span class="hwi-warn-icon">🧫</span><span><strong>Urinkultur obligat!</strong> Gezielte Therapie nach Antibiogramm hat Vorrang.</span></div>';
+    if(checked('hwi-cf-cath')){
+      html += '<div class="hwi-info"><strong>Dauerkatheter (CAUTI):</strong> Behandlung NUR bei Symptomen (Fieber, Schüttelfrost, neue Verwirrung, Flankenschmerz). DK-Wechsel wenn möglich <em>vor oder bei</em> Therapiebeginn.</div>';
+    }
+    html += '<div class="hwi-result-subtitle">Empirische Therapie — Dauer 7 Tage:</div>';
+    html += '<table class="hwi-drug-table">' + thDrug + '<tbody>';
+    html += '<tr class="hwi-first-choice"><td>1.</td><td>z.B. Cefalexin</td><td>' + po + '</td><td>3×1g × <strong>7 Tage</strong></td>';
+    html += '<td>' + egfrNote([
+      {min:45, max:999, text:'eGFR ≥45: 3×1g'},
+      {min:30, max:45,  text:'eGFR 30–45: 2×1g'},
+      {min:15, max:30,  text:'eGFR 15–30: 2×500 mg'},
+      {min:0,  max:15,  text:'HD: 1×500 mg nach Dialyse'}
+    ]) + '</td></tr>';
+    html += '<tr><td>2.</td><td>z.B. Ciprofloxacin</td><td>' + po + '</td><td>2×500 mg × <strong>7 Tage</strong></td>';
+    html += '<td>' + egfrNote([
+      {min:50, max:999, text:'eGFR ≥50: 2×500 mg'},
+      {min:30, max:50,  text:'eGFR 30–50: 2×250–500 mg'},
+      {min:0,  max:30,  text:'eGFR &lt;30: 1×250 mg; <span class="hwi-tag hwi-tag-orange">2. Wahl</span>'}
+    ]) + '</td></tr>';
+    if(isDialysisPatient()){
+      html += '<tr><td>3.</td><td>z.B. Cefuroxim</td><td>' + iv + '</td><td>3×750 mg/Tag</td><td>' + egfrNote([
+        {min:0, max:10, text:'HD: 750 mg nach jeder Dialyse (2–3×/Woche)'}
+      ]) + '</td></tr>';
+    }
+    html += '</tbody></table>';
+    if(isCkdReduced()){
+      html += '<div class="hwi-danger"><span>⚠️</span><span>Niereninsuffizienz: Nitrofurantoin <strong>kontraindiziert</strong>. Fosfomycin eingeschränkt. Dosisanpassung s. Tabelle.</span></div>';
+    }
+    if(checked('hwi-cf-cath')){
+      html += '<div class="hwi-info"><strong>Bei DK + MRSA-Risiko:</strong> z.B. Cotrimoxazol hochdosiert p.o. nach Antibiogramm</div>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  if(scenario === 'pyelo-mild'){
+    html += '<div class="hwi-result-card hwi-res-mod">';
+    html += '<div class="hwi-result-title">🔥 Pyelonephritis — leicht/moderat, ambulant' + egfrInfo + '</div>';
+    html += '<div class="hwi-warn"><span class="hwi-warn-icon">🧫</span><span><strong>Urinkultur obligat!</strong> Sequenztherapie nach Resistogramm. Kontrolle 48–72h.</span></div>';
+    html += '<div class="hwi-result-subtitle">Empirische Therapie:</div>';
+    html += '<table class="hwi-drug-table">' + thDrug + '<tbody>';
+    html += '<tr class="hwi-first-choice"><td>1.</td><td>z.B. Ciprofloxacin</td><td>' + po + '</td><td>2×500 mg × <strong>7–10 Tage</strong></td>';
+    html += '<td>' + egfrNote([
+      {min:50, max:999, text:'eGFR ≥50: 2×500 mg'},
+      {min:30, max:50,  text:'eGFR 30–50: 2×250–500 mg'},
+      {min:15, max:30,  text:'eGFR 15–30: 1×250–500 mg; i.v.-Therapie erwägen'},
+      {min:0,  max:15,  text:'eGFR &lt;15/HD: i.v.-Therapie obligat → Szenario wechseln'}
+    ]) + '<span class="hwi-dose-note">Nach Resistogramm, Rote-Hand-Brief beachten</span></td></tr>';
+    html += '<tr><td>2.</td><td>z.B. Cefalexin</td><td>' + po + '</td><td>3×1g × <strong>7–10 Tage</strong></td>';
+    html += '<td>' + egfrNote([
+      {min:45, max:999, text:'eGFR ≥45: 3×1g'},
+      {min:30, max:45,  text:'eGFR 30–45: 2×1g'},
+      {min:15, max:30,  text:'eGFR 15–30: 2×500 mg; i.v. erwägen'},
+      {min:0,  max:15,  text:'HD: i.v.-Therapie bevorzugen'}
+    ]) + '<span class="hwi-dose-note">Alternative bei Chinolon-KI; bei CKD bevorzugt</span></td></tr>';
+    html += '</tbody></table>';
+    html += '<div class="hwi-result-subtitle">Weitere Maßnahmen:</div>';
+    html += '<ul class="hwi-list"><li>Sonographie Nieren (Obstruktion, Abszess?)</li><li>Kontrolle nach <strong>48–72h</strong> — bei fehlendem Ansprechen: Hospitalisierung, i.v.-Therapie</li><li>Gesamttherapiedauer: <strong>7–10 Tage</strong></li></ul>';
+    if(isCkdReduced()){
+      html += '<div class="hwi-danger"><span>⚠️</span><span>Niereninsuffizienz / eGFR &lt;45: Dosisanpassung erforderlich (s. Tabelle). Bei eGFR &lt;30 großzügig stationäre i.v.-Therapie erwägen.</span></div>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  if(scenario === 'pyelo-severe'){
+    html += '<div class="hwi-result-card hwi-res-severe">';
+    html += '<div class="hwi-result-title">🏥 Pyelonephritis — schwer, stationär' + egfrInfo + '</div>';
+    html += '<div class="hwi-warn"><span class="hwi-warn-icon">🧫</span><span><strong>Urinkultur obligat!</strong> Gezielte Deeskalation nach Antibiogramm. Sequenz i.v. → p.o. sobald afebrile &gt;24h.</span></div>';
+    html += '<div class="hwi-result-subtitle">Empirische i.v.-Therapie:</div>';
+    html += '<table class="hwi-drug-table">' + thSetting + '<tbody>';
+    html += '<tr class="hwi-first-choice"><td>Standard</td><td>z.B. Cefuroxim</td><td>' + iv + '</td><td>3×1,5 g/Tag</td>';
+    html += '<td>' + egfrNote([
+      {min:30, max:999, text:'eGFR ≥30: 3×1,5g'},
+      {min:10, max:30,  text:'eGFR 10–30: 2×1,5g'},
+      {min:0,  max:10,  text:'HD: 750 mg–1,5g nach jeder Dialyse'}
+    ]) + '<span class="hwi-dose-note">Sequenz → z.B. Cefalexin p.o.; Gesamtdauer 10–14 Tage</span></td></tr>';
+    html += '<tr><td>MRGN-Risiko / DK / nosokomial</td><td>z.B. Pip/Tazobactam</td><td>' + iv + '</td><td>3×4,5 g/Tag</td>';
+    html += '<td>' + egfrNote([
+      {min:40, max:999, text:'eGFR ≥40: 3×4,5g'},
+      {min:20, max:40,  text:'eGFR 20–40: 3×4,5g (ggf. verlängerte Infusion)'},
+      {min:10, max:20,  text:'eGFR 10–20: 2×4,5g'},
+      {min:0,  max:10,  text:'HD: 2×4,5g (nach HD-Schema)'}
+    ]) + '</td></tr>';
+    if(isDialysisPatient()){
+      html += '<tr><td><strong>Dialyse / MRGN</strong></td><td><strong>z.B. Meropenem</strong></td><td>' + iv + '</td><td>3×1g/Tag</td>';
+      html += '<td>' + egfrNote([
+        {min:0, max:10, text:'HD: 1×1g nach Dialyse (leicht) / 1×2g nach Dialyse (schwer) — TDM erwägen'}
+      ]) + '</td></tr>';
+    } else if(isCkdReduced()){
+      html += '<tr><td>eGFR 15–45 + MRGN</td><td>z.B. Meropenem</td><td>' + iv + '</td><td>3×1g/Tag</td>';
+      html += '<td>' + egfrNote([
+        {min:25, max:50, text:'eGFR 25–50: 3×1g'},
+        {min:10, max:25, text:'eGFR 10–25: 2×1g'},
+        {min:0,  max:10, text:'HD: 1×1g nach Dialyse'}
+      ]) + '</td></tr>';
+    }
+    html += '</tbody></table>';
+    html += '<ul class="hwi-list"><li>Sono Nieren/Blase: Obstruktion? Abszess?</li><li>Urologie-Konsil bei Obstruktion oder Nierenabszess</li><li>Sequenz i.v. → p.o. sobald klinisch möglich (afebrile &gt;24h, orale Resorption ok)</li></ul>';
+    html += '</div>';
+    return html;
+  }
+
+  if(scenario === 'urosepsis'){
+    html += '<div class="hwi-result-card hwi-res-severe">';
+    html += '<div class="hwi-result-title">🚨 Urosepsis — Sepsis-Bundle einleiten!' + egfrInfo + '</div>';
+    html += '<div class="hwi-danger"><span>🩺</span><span><strong>1h-Sepsis-Bundle:</strong> Blutkulturen 2×2 <em>vor</em> Antibiose! Laktat messen. Antibiotikum &lt;1h. Bei Hypotension: Volumen 30 ml/kg. Vasopressoren bei MAP &lt;65 mmHg.</span></div>';
+    html += '<div class="hwi-result-subtitle">Empirische i.v.-Therapie:</div>';
+    html += '<table class="hwi-drug-table">' + thSetting + '<tbody>';
+    html += '<tr class="hwi-first-choice"><td>Standard / ITS</td><td>z.B. Meropenem</td><td>' + iv + '</td><td>3×1g/Tag</td>';
+    html += '<td>' + egfrNote([
+      {min:50, max:999, text:'eGFR ≥50: 3×1g'},
+      {min:25, max:50,  text:'eGFR 25–50: 3×1g (ggf. verlängert)'},
+      {min:10, max:25,  text:'eGFR 10–25: 2×1g'},
+      {min:0,  max:10,  text:'HD: 1×1g nach Dialyse (leicht) / 1×2g nach Dialyse (schwer)'}
+    ]) + '</td></tr>';
+    if(!checked('hwi-cf-nosocomial')){
+      html += '<tr><td>Alternativ (kein MRGN-Risiko)</td><td>z.B. Ceftriaxon</td><td>' + iv + '</td><td>1×2g/Tag</td>';
+      html += '<td>' + egfrNote([
+        {min:10, max:999, text:'eGFR ≥10: 1×2g (keine Dosisreduktion nötig)'},
+        {min:0,  max:10,  text:'HD: 1×2g (keine Reduktion, gut dialysierbar)'}
+      ]) + '<span class="hwi-dose-note">Bei ambulant erworben + kein MRGN-Risiko + kein DK</span></td></tr>';
+    }
+    html += '<tr><td>+ MRSA-Risiko (nosokomial / DK)</td><td>z.B. + Vancomycin</td><td>' + iv + '</td><td>Spiegeladaptiert</td>';
+    html += '<td>' + egfrNote([
+      {min:50, max:999, text:'eGFR ≥50: TDM — Talspiegel 15–20 mg/l'},
+      {min:30, max:50,  text:'eGFR 30–50: Verlängertes Intervall, TDM obligat'},
+      {min:0,  max:30,  text:'eGFR &lt;30/HD: Stark verlängerte HWZ — AUC-TDM, Spezialist fragen'}
+    ]) + '</td></tr>';
+    html += '</tbody></table>';
+    html += '<div class="hwi-result-subtitle">Fokussuche &amp; Maßnahmen:</div>';
+    html += '<ul class="hwi-list">';
+    html += '<li><strong>Sono / CT Abdomen:</strong> Abszess? Obstruktion? Steine? Emphysem?</li>';
+    html += '<li><strong>Urologie-Konsil:</strong> Bei Obstruktion, Abszess, Stauungsniere → Drainage!</li>';
+    html += '<li><strong>Nierenabszess:</strong> Drainage wenn renal &gt;5 cm oder perirenal &gt;3 cm</li>';
+    html += '<li><strong>DK / DJ:</strong> Wechsel wenn möglich vor oder bei Therapiebeginn</li>';
+    html += '<li>Deeskalation nach Blutkulturbefund und Resistogramm</li>';
+    html += '</ul>';
+    html += '</div>';
+    return html;
+  }
+
+  if(scenario === 'cauti'){
+    html += '<div class="hwi-result-card hwi-res-mod">';
+    html += '<div class="hwi-result-title">🔗 Katheter-assoziierter HWI (CAUTI)' + egfrInfo + '</div>';
+    html += '<div class="hwi-success"><strong>Asymptomatische Keimbesiedelung bei Katheter → KEIN Antibiotikum!</strong> Nur bei klinischen Symptomen behandeln.</div>';
+    html += '<div class="hwi-result-subtitle">Symptome die Behandlung erfordern:</div>';
+    html += '<ul class="hwi-list"><li>Fieber (&gt;38°C) ohne andere Ursache</li><li>Schüttelfrost, Rigor</li><li>Neue Flankenschmerzen, Druckschmerz Nierenlager</li><li>Neue Verwirrtheit (bei DK-Träger)</li></ul>';
+    html += '<div class="hwi-result-subtitle">Therapie:</div>';
+    html += '<table class="hwi-drug-table">' + thSetting + '<tbody>';
+    html += '<tr class="hwi-first-choice"><td>Leicht–moderat</td><td>z.B. Cefalexin</td><td>' + po + '</td><td>3×1g × <strong>7 Tage</strong></td>';
+    html += '<td>' + egfrNote([
+      {min:45, max:999, text:'eGFR ≥45: 3×1g'},
+      {min:30, max:45,  text:'eGFR 30–45: 2×1g'},
+      {min:15, max:30,  text:'eGFR 15–30: 2×500 mg'},
+      {min:0,  max:15,  text:'HD: 1×500 mg nach Dialyse'}
+    ]) + '<span class="hwi-dose-note">Gezielt nach Antibiogramm — breite Empirik vermeiden</span></td></tr>';
+    html += '<tr><td>Schwer / systemisch</td><td>z.B. Cefuroxim</td><td>' + iv + '</td><td>3×1,5g/Tag</td>';
+    html += '<td>' + egfrNote([
+      {min:30, max:999, text:'eGFR ≥30: 3×1,5g'},
+      {min:10, max:30,  text:'eGFR 10–30: 2×1,5g'},
+      {min:0,  max:10,  text:'HD: 750 mg–1,5g nach Dialyse'}
+    ]) + '<span class="hwi-dose-note">Bei Therapieversagen: Eskalation nach Antibiogramm</span></td></tr>';
+    if(isDialysisPatient()){
+      html += '<tr><td>Dialyse + schwer</td><td>z.B. Meropenem</td><td>' + iv + '</td><td>3×1g/Tag</td>';
+      html += '<td>' + egfrNote([
+        {min:0, max:10, text:'HD: 1×1g nach Dialyse (leicht) / 1×2g (schwer)'}
+      ]) + '</td></tr>';
+    }
+    html += '</tbody></table>';
+    html += '<ul class="hwi-list">';
+    html += '<li><strong>DK-Wechsel wenn möglich</strong> — vor oder bei Therapiebeginn</li>';
+    html += '<li>Dauer: <strong>7 Tage</strong> (14 Tage wenn langsames Ansprechen)</li>';
+    html += '<li>Bei MRSA-HWI: z.B. Cotrimoxazol hochdosiert p.o. nach Antibiogramm</li>';
+    html += '</ul>';
+    html += '</div>';
+    return html;
+  }
+
+  return '<div class="hwi-result-card hwi-res-mild"><p style="color:#546e7a;font-size:.9rem;">Angaben vervollständigen für Therapieempfehlung.</p></div>';
+}
+
+// ── MAIN UPDATE LOGIC ─────────────────────────────────────────
+window.hwiUpdate = function() {
+  var symLower   = checked('hwi-sym-lower');
+  var symUpper   = checked('hwi-sym-upper');
+  var symFever   = checked('hwi-sym-fever');
+  var symSepsis  = checked('hwi-sym-sepsis');
+  var symNone    = checked('hwi-sym-none');
+  var compl      = hasComplicating();
+  var isMale     = checked('hwi-cf-male');
+  var hasCath    = checked('hwi-cf-cath');
+  var loc        = locVal();
+  var sev        = sevVal();
+
+  // Auto-suggest location
+  if(symSepsis && loc !== 'sepsis'){
+    var r = document.getElementById('hwi-loc-sepsis');
+    if(r) r.checked = true;
+    loc = 'sepsis';
+  } else if((symUpper || symFever) && !symSepsis && loc !== 'upper' && loc !== 'sepsis'){
+    var r2 = document.getElementById('hwi-loc-upper');
+    if(r2) r2.checked = true;
+    loc = 'upper';
+  } else if(symLower && !symUpper && !symFever && !symSepsis && !loc){
+    var r3 = document.getElementById('hwi-loc-lower');
+    if(r3) r3.checked = true;
+    loc = 'lower';
+  }
+
+  // Sync checkbox item highlighting
+  ['hwi-sym-lower','hwi-sym-upper','hwi-sym-fever','hwi-sym-sepsis','hwi-sym-none',
+   'hwi-cf-cath','hwi-cf-ckd','hwi-cf-dialysis','hwi-cf-male','hwi-cf-dm',
+   'hwi-cf-immuno','hwi-cf-obstruct','hwi-cf-preg','hwi-cf-nosocomial'].forEach(function(id){
+    var wrap = document.getElementById(id + '-wrap');
+    var el = document.getElementById(id);
+    if(wrap && el) wrap.classList.toggle('hwi-checked', el.checked);
+  });
+
+  // Show/hide Schritt 1b (Urinbefund bei Asymptomatik)
+  var step1b = document.getElementById('hwi-step1b-card');
+  var isAsym = symNone && !symLower && !symUpper && !symFever && !symSepsis;
+  if(step1b) step1b.style.display = isAsym ? 'block' : 'none';
+
+  // Read asym sub-choice
+  var asymVal = null;
+  var asymR = document.querySelector('input[name="hwi-asym"]:checked');
+  if(asymR) asymVal = asymR.value;
+
+  // Highlight asym radio items
+  document.querySelectorAll('#hwi-step1b-card .hwi-radio-item').forEach(function(el){
+    var inp = el.querySelector('input[type="radio"]');
+    el.classList.toggle('hwi-selected', inp && inp.checked);
+  });
+
+  // Determine scenario
+  var scenario = null;
+
+  if(isAsym){
+    if(asymVal === 'bak') scenario = 'asb';
+    else if(asymVal === 'leuko') scenario = 'asym-leuko';
+    else if(asymVal === 'both') scenario = 'asym-both';
+  } else if(loc === 'sepsis' || symSepsis){
+    scenario = 'urosepsis';
+  } else if(hasCath && (symFever || symUpper || loc === 'upper')){
+    scenario = 'cauti';
+  } else if(loc === 'upper'){
+    if(sev === 'hosp' || sev === 'icu'){
+      scenario = 'pyelo-severe';
+    } else if(sev === 'mild' || (!sev && !symFever)){
+      scenario = 'pyelo-mild';
+    } else if(symFever){
+      scenario = 'pyelo-severe';
+    }
+  } else if(loc === 'lower' || symLower){
+    if(hasCath){
+      scenario = 'cauti';
+    } else if(isMale){
+      scenario = 'zystitis-m';
+    } else if(compl){
+      scenario = 'zystitis-compl';
+    } else {
+      scenario = 'zystitis-f';
+    }
+  }
+
+  // Render
+  var area = document.getElementById('hwi-result-area');
+  if(!area) return;
+  if(scenario){
+    area.innerHTML = buildResultHTML(scenario);
+  } else if(symLower || symUpper || symFever){
+    // have symptoms but no location confirmed yet — show partial guidance
+    if(isMale){
+      area.innerHTML = buildResultHTML('zystitis-m');
+    } else if(compl){
+      area.innerHTML = buildResultHTML('zystitis-compl');
+    } else {
+      area.innerHTML = '<div class="hwi-result-card hwi-res-mild"><p style="color:#1565c0;font-size:.9rem;"><strong>Lokalisation und Schweregrad bestätigen</strong> (Schritt 3/4) für vollständige Therapieempfehlung.</p></div>';
+    }
+  } else {
+    area.innerHTML = '';
+  }
+};
+
+})();
+</script>
+</div><!-- end tab-hwi -->
+
 <div class="shared-footer">
   ⚕️ Nur zur ärztlichen Unterstützung — kein Ersatz für klinisches Urteil &bull;
   CKD: KDIGO 2024 &bull; CKD-EPI 2021 &bull;
@@ -15541,838 +16456,6 @@ window.tahUpdateEgfr       = tahUpdateEgfr;
 </script>
 
 
-<!-- ============================================================
-     HWI — Harnwegsinfekt
-     ============================================================ -->
-<div id="tab-hwi">
-<style>
-#tab-hwi .hwi-container { max-width: 960px; margin: 0 auto; padding: 16px; }
-#tab-hwi .hwi-title-bar { background: linear-gradient(135deg,#1565c0,#1976d2); color:#fff; border-radius:12px; padding:18px 22px; margin-bottom:16px; }
-#tab-hwi .hwi-title-bar h2 { margin:0 0 4px 0; font-size:1.35rem; font-weight:800; }
-#tab-hwi .hwi-title-bar p { margin:0; font-size:.85rem; opacity:.88; }
-#tab-hwi .hwi-card { background:#fff; border-radius:12px; padding:18px 20px; box-shadow:0 2px 8px rgba(0,0,0,.09); margin-bottom:14px; }
-#tab-hwi .hwi-card-title { font-size:.78rem; font-weight:800; text-transform:uppercase; letter-spacing:.5px; color:#455a64; margin-bottom:12px; border-bottom:2px solid #f0f4f8; padding-bottom:6px; }
-#tab-hwi .hwi-step-header { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
-#tab-hwi .hwi-step-badge { background:#1565c0; color:#fff; border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.9rem; flex-shrink:0; }
-#tab-hwi .hwi-step-label { font-size:1rem; font-weight:700; color:#1a237e; }
-#tab-hwi .hwi-checkbox-group { display:flex; flex-direction:column; gap:8px; }
-#tab-hwi .hwi-checkbox-item { display:flex; align-items:flex-start; gap:10px; padding:8px 10px; border-radius:8px; background:#f8fafc; border:1.5px solid #e3eaf3; cursor:pointer; transition:.15s; }
-#tab-hwi .hwi-checkbox-item:hover { border-color:#1565c0; background:#e8f0fe; }
-#tab-hwi .hwi-checkbox-item input[type="checkbox"] { width:17px; height:17px; margin-top:1px; accent-color:#1565c0; cursor:pointer; flex-shrink:0; }
-#tab-hwi .hwi-checkbox-item label { font-size:.88rem; color:#37474f; cursor:pointer; line-height:1.45; }
-#tab-hwi .hwi-checkbox-item.hwi-checked { border-color:#1565c0; background:#e3f0ff; }
-#tab-hwi .hwi-radio-group { display:flex; flex-direction:column; gap:8px; }
-#tab-hwi .hwi-radio-item { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px; background:#f8fafc; border:1.5px solid #e3eaf3; cursor:pointer; transition:.15s; }
-#tab-hwi .hwi-radio-item:hover { border-color:#1565c0; background:#e8f0fe; }
-#tab-hwi .hwi-radio-item input[type="radio"] { width:17px; height:17px; accent-color:#1565c0; cursor:pointer; flex-shrink:0; }
-#tab-hwi .hwi-radio-item label { font-size:.88rem; color:#37474f; cursor:pointer; font-weight:600; }
-#tab-hwi .hwi-radio-item.hwi-selected { border-color:#1565c0; background:#e3f0ff; }
-#tab-hwi .hwi-btn { background:#1565c0; color:#fff; border:none; border-radius:8px; padding:10px 20px; font-size:.9rem; font-weight:700; cursor:pointer; transition:.15s; }
-#tab-hwi .hwi-btn:hover { background:#0d47a1; }
-#tab-hwi .hwi-btn-secondary { background:#fff; color:#1565c0; border:2px solid #1565c0; border-radius:8px; padding:8px 18px; font-size:.88rem; font-weight:700; cursor:pointer; transition:.15s; }
-#tab-hwi .hwi-btn-secondary:hover { background:#e8f0fe; }
-#tab-hwi .hwi-result { display:none; }
-#tab-hwi .hwi-result.active { display:block; }
-#tab-hwi .hwi-result-card { border-radius:12px; padding:18px 20px; margin-bottom:14px; }
-#tab-hwi .hwi-result-card.hwi-res-none { background:#e8f5e9; border:2px solid #43a047; }
-#tab-hwi .hwi-result-card.hwi-res-mild { background:#e3f2fd; border:2px solid #1565c0; }
-#tab-hwi .hwi-result-card.hwi-res-mod { background:#fff8e1; border:2px solid #f9a825; }
-#tab-hwi .hwi-result-card.hwi-res-severe { background:#fce4ec; border:2px solid #c62828; }
-#tab-hwi .hwi-result-title { font-size:1.1rem; font-weight:800; margin:0 0 10px 0; display:flex; align-items:center; gap:8px; }
-#tab-hwi .hwi-result-subtitle { font-size:.82rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; margin:12px 0 6px 0; color:#455a64; }
-#tab-hwi .hwi-drug-table { width:100%; border-collapse:collapse; font-size:.85rem; margin-top:6px; }
-#tab-hwi .hwi-drug-table th { background:#e3eaf3; padding:7px 10px; text-align:left; font-size:.78rem; font-weight:700; color:#37474f; }
-#tab-hwi .hwi-drug-table td { padding:7px 10px; border-bottom:1px solid #e8edf3; vertical-align:top; line-height:1.4; }
-#tab-hwi .hwi-drug-table tr:last-child td { border-bottom:none; }
-#tab-hwi .hwi-drug-table tr.hwi-first-choice td { background:#f0f8ff; font-weight:600; }
-#tab-hwi .hwi-warn { background:#fff3e0; border:1.5px solid #ffb74d; border-radius:8px; padding:9px 12px; font-size:.84rem; color:#7b5a00; margin-top:8px; display:flex; gap:8px; align-items:flex-start; }
-#tab-hwi .hwi-warn-icon { font-size:1rem; flex-shrink:0; }
-#tab-hwi .hwi-info { background:#e3f2fd; border:1.5px solid #90caf9; border-radius:8px; padding:9px 12px; font-size:.84rem; color:#0d47a1; margin-top:8px; }
-#tab-hwi .hwi-danger { background:#fce4ec; border:1.5px solid #ef9a9a; border-radius:8px; padding:9px 12px; font-size:.84rem; color:#b71c1c; margin-top:8px; display:flex; gap:8px; align-items:flex-start; }
-#tab-hwi .hwi-success { background:#e8f5e9; border:1.5px solid #a5d6a7; border-radius:8px; padding:9px 12px; font-size:.84rem; color:#1b5e20; margin-top:8px; }
-#tab-hwi .hwi-list { margin:6px 0 0 0; padding-left:18px; }
-#tab-hwi .hwi-list li { font-size:.86rem; color:#37474f; margin-bottom:4px; line-height:1.5; }
-#tab-hwi .hwi-acc-btn { width:100%; text-align:left; background:#f0f4f8; border:1.5px solid #cfd8dc; border-radius:8px; padding:10px 14px; font-size:.88rem; font-weight:700; color:#37474f; cursor:pointer; display:flex; justify-content:space-between; align-items:center; transition:.15s; margin-bottom:4px; }
-#tab-hwi .hwi-acc-btn:hover { background:#e3eaf3; border-color:#1565c0; color:#1565c0; }
-#tab-hwi .hwi-acc-body { display:none; padding:12px 14px; border:1.5px solid #cfd8dc; border-top:none; border-radius:0 0 8px 8px; background:#fff; margin-bottom:10px; font-size:.86rem; color:#37474f; }
-#tab-hwi .hwi-acc-body.open { display:block; }
-#tab-hwi .hwi-acc-row { display:flex; gap:10px; padding:5px 0; border-bottom:1px solid #f0f4f8; line-height:1.45; }
-#tab-hwi .hwi-acc-row:last-child { border-bottom:none; }
-#tab-hwi .hwi-acc-icon { flex-shrink:0; width:18px; }
-#tab-hwi .hwi-tag { display:inline-block; padding:2px 8px; border-radius:12px; font-size:.75rem; font-weight:700; }
-#tab-hwi .hwi-tag-green { background:#c8e6c9; color:#2e7d32; }
-#tab-hwi .hwi-tag-orange { background:#ffe0b2; color:#e65100; }
-#tab-hwi .hwi-tag-red { background:#ffcdd2; color:#c62828; }
-#tab-hwi .hwi-tag-blue { background:#bbdefb; color:#0d47a1; }
-#tab-hwi .hwi-disclaimer { background:#fff8e1; border:1.5px solid #ffca28; border-radius:8px; padding:10px 14px; font-size:.8rem; color:#7b5a00; margin-top:16px; }
-#tab-hwi .hwi-import-hint { background:#e8f0fe; border:1.5px solid #90caf9; border-radius:8px; padding:8px 12px; font-size:.82rem; color:#0d47a1; margin-bottom:10px; }
-#tab-hwi .hwi-grid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-@media(max-width:640px) { #tab-hwi .hwi-grid2 { grid-template-columns:1fr; } }
-#tab-hwi .hwi-sep { border:none; border-top:2px solid #f0f4f8; margin:16px 0; }
-#tab-hwi .hwi-reset-bar { display:flex; justify-content:flex-end; margin-bottom:10px; }
-#tab-hwi .hwi-patient-card { background:linear-gradient(135deg,#e3f2fd,#f0f8ff); border:2px solid #1565c0; border-radius:12px; padding:14px 18px; margin-bottom:14px; }
-#tab-hwi .hwi-patient-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; align-items:end; }
-@media(max-width:640px){ #tab-hwi .hwi-patient-grid { grid-template-columns:1fr 1fr; } }
-#tab-hwi .hwi-patient-field label { display:block; font-size:.75rem; font-weight:700; color:#37474f; margin-bottom:4px; text-transform:uppercase; letter-spacing:.4px; }
-#tab-hwi .hwi-patient-field input { width:100%; padding:7px 10px; border:1.5px solid #bbdefb; border-radius:6px; font-size:.9rem; box-sizing:border-box; background:#fff; }
-#tab-hwi .hwi-patient-field input:focus { border-color:#1565c0; outline:none; }
-#tab-hwi .hwi-route-badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:.76rem; font-weight:800; white-space:nowrap; }
-#tab-hwi .hwi-route-po { background:#e8f5e9; color:#1b5e20; }
-#tab-hwi .hwi-route-iv { background:#fce4ec; color:#b71c1c; }
-#tab-hwi .hwi-drug-table td:nth-child(3) { white-space:nowrap; }
-#tab-hwi .hwi-drug-table .hwi-dose-note { display:block; font-size:.78rem; color:#546e7a; margin-top:2px; line-height:1.35; }
-#tab-hwi .hwi-drug-table .hwi-dose-active { display:block; font-size:.78rem; font-weight:700; color:#b71c1c; margin-top:2px; background:#fce4ec; border-radius:4px; padding:1px 5px; }
-</style>
-
-<div class="hwi-container">
-
-  <!-- Title -->
-  <div class="hwi-title-bar">
-    <h2>🔬 Harnwegsinfekt (HWI) — Klinischer Algorithmus</h2>
-    <p>Diagnose-Wizard · Therapieempfehlung · Komplikationsmanagement | Quelle: Plan 2 ABx V18.2 (09/2024, KSchlieps)</p>
-  </div>
-
-  <div id="hwi-import-hint" class="hwi-import-hint" style="display:none;">
-    <strong>Auto-Import:</strong> <span id="hwi-import-text"></span>
-  </div>
-
-  <!-- ── PATIENTENDATEN ── -->
-  <div class="hwi-patient-card">
-    <div class="hwi-card-title" style="margin-bottom:10px;">👤 Patientendaten — Dosisanpassung</div>
-    <div class="hwi-patient-grid">
-      <div class="hwi-patient-field">
-        <label for="hwi-pat-weight">Körpergewicht (kg)</label>
-        <input type="number" id="hwi-pat-weight" placeholder="z.B. 70" min="30" max="250" oninput="hwiUpdate()">
-      </div>
-      <div class="hwi-patient-field">
-        <label for="hwi-pat-egfr">eGFR (ml/min/1,73m²)</label>
-        <input type="number" id="hwi-pat-egfr" placeholder="z.B. 45" min="0" max="150" oninput="hwiPatEgfrChanged()">
-        <div id="hwi-egfr-badge-wrap" style="margin-top:5px;min-height:22px;"></div>
-      </div>
-      <div class="hwi-patient-field">
-        <label style="color:#546e7a;">Hinweis</label>
-        <div style="font-size:.8rem;color:#546e7a;padding:7px 0;line-height:1.4;">eGFR wird automatisch aus dem CKD-Tab übernommen — oder manuell eingeben</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="hwi-reset-bar">
-    <button class="hwi-btn-secondary" onclick="hwiReset()">&#8635; Zurücksetzen</button>
-  </div>
-
-  <!-- ── SCHRITT 1: Symptome ── -->
-  <div class="hwi-card" id="hwi-step1-card">
-    <div class="hwi-step-header">
-      <div class="hwi-step-badge">1</div>
-      <div class="hwi-step-label">Welche Symptome liegen vor?</div>
-    </div>
-    <div class="hwi-checkbox-group">
-      <div class="hwi-checkbox-item" id="hwi-sym-lower-wrap">
-        <input type="checkbox" id="hwi-sym-lower" onchange="hwiUpdate()">
-        <label for="hwi-sym-lower"><strong>Untere Harntraktsymptome:</strong> Dysurie, Pollakisurie, imperativer Harndrang, Strangurie, Hämaturie</label>
-      </div>
-      <div class="hwi-checkbox-item" id="hwi-sym-upper-wrap">
-        <input type="checkbox" id="hwi-sym-upper" onchange="hwiUpdate()">
-        <label for="hwi-sym-upper"><strong>Obere Harntraktsymptome:</strong> Flankenschmerz, Klopfschmerz Nierenlager, Dysurie + Flankenschmerz</label>
-      </div>
-      <div class="hwi-checkbox-item" id="hwi-sym-fever-wrap">
-        <input type="checkbox" id="hwi-sym-fever" onchange="hwiUpdate()">
-        <label for="hwi-sym-fever"><strong>Systemzeichen:</strong> Fieber &gt; 38°C, Schüttelfrost, CRP ↑, Tachykardie</label>
-      </div>
-      <div class="hwi-checkbox-item" id="hwi-sym-sepsis-wrap">
-        <input type="checkbox" id="hwi-sym-sepsis" onchange="hwiUpdate()">
-        <label for="hwi-sym-sepsis"><strong>Sepsis-Zeichen:</strong> RR-Abfall (syst. &lt;90 mmHg), Laktat ↑, Verwirrtheit, Oligurie → <span class="hwi-tag hwi-tag-red">Urosepsis-Verdacht</span></label>
-      </div>
-      <div class="hwi-checkbox-item" id="hwi-sym-none-wrap">
-        <input type="checkbox" id="hwi-sym-none" onchange="hwiUpdate()">
-        <label for="hwi-sym-none"><strong>Keine Symptome</strong> — Nur Zufallsbefund im Urin (asymptomatische Bakteriurie?)</label>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── SCHRITT 2: Komplizierende Faktoren ── -->
-  <div class="hwi-card" id="hwi-step2-card">
-    <div class="hwi-step-header">
-      <div class="hwi-step-badge">2</div>
-      <div class="hwi-step-label">Komplizierende Faktoren? <span style="font-size:.8rem;font-weight:400;color:#546e7a;">(Mehrfachauswahl möglich)</span></div>
-    </div>
-    <div class="hwi-grid2">
-      <div class="hwi-checkbox-group">
-        <div class="hwi-checkbox-item" id="hwi-cf-cath-wrap">
-          <input type="checkbox" id="hwi-cf-cath" onchange="hwiUpdate()">
-          <label for="hwi-cf-cath">Dauerkatheter (DK) oder Harnleiterschiene (DJ)</label>
-        </div>
-        <div class="hwi-checkbox-item" id="hwi-cf-ckd-wrap">
-          <input type="checkbox" id="hwi-cf-ckd" onchange="hwiUpdate()">
-          <label for="hwi-cf-ckd">CKD ≥ Stadium 3b <em>(eGFR &lt; 45 ml/min)</em></label>
-        </div>
-        <div class="hwi-checkbox-item" id="hwi-cf-dialysis-wrap">
-          <input type="checkbox" id="hwi-cf-dialysis" onchange="hwiUpdate()">
-          <label for="hwi-cf-dialysis">Dialyse (HD / PD)</label>
-        </div>
-        <div class="hwi-checkbox-item" id="hwi-cf-male-wrap">
-          <input type="checkbox" id="hwi-cf-male" onchange="hwiUpdate()">
-          <label for="hwi-cf-male">Männliches Geschlecht</label>
-        </div>
-        <div class="hwi-checkbox-item" id="hwi-cf-dm-wrap">
-          <input type="checkbox" id="hwi-cf-dm" onchange="hwiUpdate()">
-          <label for="hwi-cf-dm">Diabetes mellitus (instabil / schlecht eingestellt)</label>
-        </div>
-      </div>
-      <div class="hwi-checkbox-group">
-        <div class="hwi-checkbox-item" id="hwi-cf-immuno-wrap">
-          <input type="checkbox" id="hwi-cf-immuno" onchange="hwiUpdate()">
-          <label for="hwi-cf-immuno">Immunsuppression / Transplantation (NTX, SOT)</label>
-        </div>
-        <div class="hwi-checkbox-item" id="hwi-cf-obstruct-wrap">
-          <input type="checkbox" id="hwi-cf-obstruct" onchange="hwiUpdate()">
-          <label for="hwi-cf-obstruct">Harnabflussstörung / Nephrolithiasis / anatomische Anomalie</label>
-        </div>
-        <div class="hwi-checkbox-item" id="hwi-cf-preg-wrap">
-          <input type="checkbox" id="hwi-cf-preg" onchange="hwiUpdate()">
-          <label for="hwi-cf-preg">Schwangerschaft</label>
-        </div>
-        <div class="hwi-checkbox-item" id="hwi-cf-nosocomial-wrap">
-          <input type="checkbox" id="hwi-cf-nosocomial" onchange="hwiUpdate()">
-          <label for="hwi-cf-nosocomial">Nosokomial erworben <em>oder</em> Antibiotika in letzten 3 Monaten</label>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── SCHRITT 3: Lokalisation ── -->
-  <div class="hwi-card" id="hwi-step3-card">
-    <div class="hwi-step-header">
-      <div class="hwi-step-badge">3</div>
-      <div class="hwi-step-label">Lokalisation bestätigen</div>
-    </div>
-    <div class="hwi-radio-group">
-      <div class="hwi-radio-item" id="hwi-loc-lower-wrap">
-        <input type="radio" name="hwi-loc" id="hwi-loc-lower" value="lower" onchange="hwiUpdate()">
-        <label for="hwi-loc-lower">Unterer HWI — Zystitis (Blase / Harnröhre)</label>
-      </div>
-      <div class="hwi-radio-item" id="hwi-loc-upper-wrap">
-        <input type="radio" name="hwi-loc" id="hwi-loc-upper" value="upper" onchange="hwiUpdate()">
-        <label for="hwi-loc-upper">Oberer HWI — Pyelonephritis (Nierenbecken)</label>
-      </div>
-      <div class="hwi-radio-item" id="hwi-loc-sepsis-wrap">
-        <input type="radio" name="hwi-loc" id="hwi-loc-sepsis" value="sepsis" onchange="hwiUpdate()">
-        <label for="hwi-loc-sepsis">Urosepsis — Sepsis mit urogenitalem Fokus</label>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── SCHRITT 4: Schweregrad ── -->
-  <div class="hwi-card" id="hwi-step4-card">
-    <div class="hwi-step-header">
-      <div class="hwi-step-badge">4</div>
-      <div class="hwi-step-label">Schweregrad / Setting</div>
-    </div>
-    <div class="hwi-radio-group">
-      <div class="hwi-radio-item" id="hwi-sev-mild-wrap">
-        <input type="radio" name="hwi-sev" id="hwi-sev-mild" value="mild" onchange="hwiUpdate()">
-        <label for="hwi-sev-mild">Leicht-moderat — Ambulant behandelbar (orale Therapie möglich)</label>
-      </div>
-      <div class="hwi-radio-item" id="hwi-sev-hosp-wrap">
-        <input type="radio" name="hwi-sev" id="hwi-sev-hosp" value="hosp" onchange="hwiUpdate()">
-        <label for="hwi-sev-hosp">Schwer — Stationär (i.v.-Therapie notwendig, systemische Zeichen)</label>
-      </div>
-      <div class="hwi-radio-item" id="hwi-sev-icu-wrap">
-        <input type="radio" name="hwi-sev" id="hwi-sev-icu" value="icu" onchange="hwiUpdate()">
-        <label for="hwi-sev-icu">Intensiv / ITS — Kreislaufinstabilität, Organversagen</label>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── ERGEBNIS ── -->
-  <div id="hwi-result-area"></div>
-
-  <hr class="hwi-sep">
-
-  <!-- ── DIAGNOSTIK ── -->
-  <div class="hwi-card">
-    <div class="hwi-card-title">Diagnostik-Checkliste</div>
-    <button class="hwi-acc-btn" onclick="hwiToggleAcc('diag')">
-      <span>🔍 Urin-Diagnostik &amp; Labor</span><span id="hwi-acc-diag-arrow">▼</span>
-    </button>
-    <div class="hwi-acc-body" id="hwi-acc-diag">
-      <div class="hwi-acc-row"><span class="hwi-acc-icon">🧪</span><div><strong>Urin-Stix:</strong> Nitrit + Leukozyten-Esterase — Achtung: negatives Ergebnis schließt HWI <em>nicht</em> aus! Falsch-negativ bei Proteus, Pseudomonas, niedrigem spez. Gewicht</div></div>
-      <div class="hwi-acc-row"><span class="hwi-acc-icon">🔬</span><div><strong>Urinmikroskopie:</strong> Leukozyturie &gt;10/µl signifikant; Leukozyten-Zylinder → Pyelonephritis</div></div>
-      <div class="hwi-acc-row"><span class="hwi-acc-icon">🧫</span><div><strong>Urinkultur (Mittelstrahlurin):</strong> Indiziert bei kompliziertem HWI, Pyelonephritis, Männern, Rezidiv, Therapieversagen, Schwangerschaft. Signifikant: ≥10⁵ KBE/ml (unkompliziert), ≥10² KBE/ml (katheterisiert)</div></div>
-      <div class="hwi-acc-row"><span class="hwi-acc-icon">🩸</span><div><strong>Blutbild, CRP, Procalcitonin:</strong> Bei Systemzeichen / Fieber / Verdacht auf Pyelonephritis oder Sepsis</div></div>
-      <div class="hwi-acc-row"><span class="hwi-acc-icon">📷</span><div><strong>Sono Nieren / Blase:</strong> Empfohlen bei Pyelonephritis, Männern, Therapieversagen → Ausschluss Obstruktion, Abszess, Steine, Restharn</div></div>
-      <div class="hwi-acc-row"><span class="hwi-acc-icon">🩺</span><div><strong>Blutkulturen 2×2:</strong> Obligat bei Sepsisverdacht — <em>vor</em> Antibiotikagabe abnehmen!</div></div>
-    </div>
-
-    <button class="hwi-acc-btn" onclick="hwiToggleAcc('resist')">
-      <span>🛡️ Resistenzprophylaxe &amp; Antibiotic Stewardship</span><span id="hwi-acc-resist-arrow">▼</span>
-    </button>
-    <div class="hwi-acc-body" id="hwi-acc-resist">
-      <div class="hwi-acc-row"><span class="hwi-acc-icon">⛔</span><div><strong>Kein Fluorchinolon als Erstlinientherapie</strong> — Rote-Hand-Brief, neurologische und tendinöse Nebenwirkungen. Nur nach Resistogramm oder fehlender Alternative.</div></div>
-      <div class="hwi-acc-row"><span class="hwi-acc-icon">📊</span><div><strong>Cotrimoxazol:</strong> Nur wenn lokale Resistenzrate &lt;20%; sonst unzuverlässig bei E. coli</div></div>
-      <div class="hwi-acc-row"><span class="hwi-acc-icon">🔄</span><div><strong>Sequenztherapie:</strong> i.v. → oral sobald klinisch möglich; gezielte Deeskalation nach Antibiogramm</div></div>
-      <div class="hwi-acc-row"><span class="hwi-acc-icon">📅</span><div><strong>Therapiedauern einhalten:</strong> Kurze Therapie bei unkomplizierter Zystitis (3–5 Tage) → geringere Selektion, weniger Resistenzen</div></div>
-      <div class="hwi-acc-row"><span class="hwi-acc-icon">🔍</span><div><strong>Urinkultur bei Therapieversagen:</strong> Keine Besserung nach 48–72 h → Erreger- und Resistogrammtestung</div></div>
-    </div>
-
-    <button class="hwi-acc-btn" onclick="hwiToggleAcc('rezidiv')">
-      <span>🔁 Rezidivprophylaxe (Frauen)</span><span id="hwi-acc-rezidiv-arrow">▼</span>
-    </button>
-    <div class="hwi-acc-body" id="hwi-acc-rezidiv">
-      <div class="hwi-acc-row"><span class="hwi-acc-icon">🌿</span><div><strong>D-Mannose 2 g/Tag:</strong> Moderat evidenzbasiert, gut verträglich</div></div>
-      <div class="hwi-acc-row"><span class="hwi-acc-icon">🍒</span><div><strong>Cranberry-Extrakt:</strong> Schwache Evidenz, individuell versuchsweise</div></div>
-      <div class="hwi-acc-row"><span class="hwi-acc-icon">💊</span><div><strong>Estriol-Vaginalcreme (postmenopausal):</strong> Effektiv zur HWI-Prävention bei genitaler Atrophie</div></div>
-      <div class="hwi-acc-row"><span class="hwi-acc-icon">🧬</span><div><strong>Antibiotika-Langzeitprophylaxe:</strong> Nur nach Resistogramm, bei ≥3 HWI/Jahr; Rücksprache Urologie/Gynäkologie</div></div>
-      <div class="hwi-acc-row"><span class="hwi-acc-icon">🔁</span><div><strong>Uro-Vaxom (E. coli-Lysat):</strong> Immunstimulation, individuell, Urologie-Konsil</div></div>
-    </div>
-  </div>
-
-  <div class="hwi-disclaimer">
-    <strong>Hinweis:</strong> Dieses Tool ersetzt nicht die klinische Beurteilung. Alle Empfehlungen basieren auf Plan 2 ABx V18.2 (09/2024, KSchlieps). Dosierungen bei Niereninsuffizienz gesondert prüfen. Antibiogramm hat Vorrang vor empirischer Therapie.
-  </div>
-
-</div><!-- end hwi-container -->
-
-<script>
-(function(){
-'use strict';
-
-// ── AUTO-IMPORT ──────────────────────────────────────────────
-window.hwiAutoImport = function() {
-  var egfrEl = document.getElementById('egfr-result-val');
-  var egfrText = egfrEl ? egfrEl.textContent.trim() : '';
-  var hints = [];
-
-  // Parse eGFR
-  var isDialysis = /HD|PD|Dialyse/i.test(egfrText);
-  var egfrNum = parseFloat(egfrText.replace(',', '.'));
-
-  // Fill patient eGFR card if empty
-  var patEgfrEl = document.getElementById('hwi-pat-egfr');
-  if (patEgfrEl && !patEgfrEl.value) {
-    if (isDialysis) {
-      patEgfrEl.value = '5';
-      hints.push('eGFR: Dialyse importiert');
-    } else if (!isNaN(egfrNum) && egfrNum > 0) {
-      patEgfrEl.value = Math.round(egfrNum);
-      hints.push('eGFR ' + Math.round(egfrNum) + ' ml/min importiert');
-    }
-    if (patEgfrEl.value) { window.hwiPatEgfrChanged(true); }
-  }
-
-  // Fill weight from CKD tab
-  var weightEl = document.getElementById('weight');
-  var patWeightEl = document.getElementById('hwi-pat-weight');
-  if (weightEl && weightEl.value && patWeightEl && !patWeightEl.value) {
-    patWeightEl.value = weightEl.value;
-    hints.push('Gewicht ' + weightEl.value + ' kg importiert');
-  }
-
-  if (isDialysis) {
-    var cbD = document.getElementById('hwi-cf-dialysis');
-    if (cbD && !cbD.checked) { cbD.checked = true; if(hints.indexOf('Dialyse importiert')<0) hints.push('Dialyse vorausgewählt'); }
-    var cbCkd = document.getElementById('hwi-cf-ckd');
-    if (cbCkd && !cbCkd.checked) { cbCkd.checked = true; }
-  } else if (!isNaN(egfrNum) && egfrNum < 45) {
-    var cbCkd2 = document.getElementById('hwi-cf-ckd');
-    if (cbCkd2 && !cbCkd2.checked) { cbCkd2.checked = true; hints.push('CKD ≥3b vorausgewählt'); }
-  }
-
-  // Sex
-  var sexMaleEl = document.getElementById('sex-male');
-  if (sexMaleEl && sexMaleEl.checked) {
-    var cbMale = document.getElementById('hwi-cf-male');
-    if (cbMale && !cbMale.checked) { cbMale.checked = true; hints.push('Männliches Geschlecht vorausgewählt'); }
-  }
-
-  var hintEl = document.getElementById('hwi-import-hint');
-  var hintText = document.getElementById('hwi-import-text');
-  if (hints.length > 0 && hintEl && hintText) {
-    hintText.textContent = hints.join(' · ') + '.';
-    hintEl.style.display = 'block';
-  } else if (hintEl) {
-    hintEl.style.display = 'none';
-  }
-
-  hwiUpdate();
-};
-
-// ── RESET ────────────────────────────────────────────────────
-window.hwiReset = function() {
-  ['hwi-sym-lower','hwi-sym-upper','hwi-sym-fever','hwi-sym-sepsis','hwi-sym-none',
-   'hwi-cf-cath','hwi-cf-ckd','hwi-cf-dialysis','hwi-cf-male','hwi-cf-dm',
-   'hwi-cf-immuno','hwi-cf-obstruct','hwi-cf-preg','hwi-cf-nosocomial'].forEach(function(id){
-    var el = document.getElementById(id);
-    if(el) el.checked = false;
-  });
-  var radios = document.querySelectorAll('input[name="hwi-loc"], input[name="hwi-sev"]');
-  radios.forEach(function(r){ r.checked = false; });
-  // Clear patient card
-  ['hwi-pat-weight','hwi-pat-egfr'].forEach(function(id){
-    var el = document.getElementById(id); if(el) el.value = '';
-  });
-  var badge = document.getElementById('hwi-egfr-badge-wrap'); if(badge) badge.innerHTML = '';
-  document.getElementById('hwi-result-area').innerHTML = '';
-  document.getElementById('hwi-import-hint').style.display = 'none';
-};
-
-// ── EGFR PATIENT INPUT ────────────────────────────────────────
-window.hwiPatEgfrChanged = function(skipUpdate) {
-  var egfr = hwiGetEgfr();
-  var wrap = document.getElementById('hwi-egfr-badge-wrap');
-  if(wrap){
-    if(egfr === null){ wrap.innerHTML = ''; }
-    else if(egfr < 10){ wrap.innerHTML = '<span class="hwi-tag hwi-tag-red">HD/GFR &lt;10</span>'; }
-    else if(egfr < 15){ wrap.innerHTML = '<span class="hwi-tag hwi-tag-red">G5: 10–15</span>'; }
-    else if(egfr < 30){ wrap.innerHTML = '<span class="hwi-tag hwi-tag-orange">G4: 15–30</span>'; }
-    else if(egfr < 45){ wrap.innerHTML = '<span class="hwi-tag hwi-tag-orange">G3b: 30–45</span>'; }
-    else if(egfr < 60){ wrap.innerHTML = '<span class="hwi-tag hwi-tag-blue">G3a: 45–60</span>'; }
-    else { wrap.innerHTML = '<span class="hwi-tag hwi-tag-green">eGFR ≥60 — normal</span>'; }
-  }
-  // Auto-sync checkboxes
-  if(egfr !== null){
-    var cbD = document.getElementById('hwi-cf-dialysis');
-    var cbC = document.getElementById('hwi-cf-ckd');
-    var wD = document.getElementById('hwi-cf-dialysis-wrap');
-    var wC = document.getElementById('hwi-cf-ckd-wrap');
-    if(cbD){ cbD.checked = egfr < 10; if(wD) wD.classList.toggle('hwi-checked', cbD.checked); }
-    if(cbC){ cbC.checked = egfr < 45; if(wC) wC.classList.toggle('hwi-checked', cbC.checked); }
-  }
-  if(!skipUpdate) hwiUpdate();
-};
-
-// ── ACCORDION ────────────────────────────────────────────────
-window.hwiToggleAcc = function(id) {
-  var body = document.getElementById('hwi-acc-' + id);
-  var arrow = document.getElementById('hwi-acc-' + id + '-arrow');
-  if(!body) return;
-  var isOpen = body.classList.contains('open');
-  body.classList.toggle('open', !isOpen);
-  if(arrow) arrow.textContent = isOpen ? '▼' : '▲';
-};
-
-// ── HELPERS ──────────────────────────────────────────────────
-function checked(id){ var el = document.getElementById(id); return el && el.checked; }
-function locVal(){ var r = document.querySelector('input[name="hwi-loc"]:checked'); return r ? r.value : null; }
-function sevVal(){ var r = document.querySelector('input[name="hwi-sev"]:checked'); return r ? r.value : null; }
-
-function hwiGetEgfr(){
-  var el = document.getElementById('hwi-pat-egfr');
-  if(!el || !el.value) return null;
-  var v = parseFloat(el.value);
-  return isNaN(v) ? null : v;
-}
-function hwiGetWeight(){
-  var el = document.getElementById('hwi-pat-weight');
-  if(!el || !el.value) return null;
-  var v = parseFloat(el.value);
-  return isNaN(v) ? null : v;
-}
-
-function hasComplicating(){
-  return checked('hwi-cf-cath') || checked('hwi-cf-ckd') || checked('hwi-cf-dialysis') ||
-         checked('hwi-cf-male') || checked('hwi-cf-dm') || checked('hwi-cf-immuno') ||
-         checked('hwi-cf-obstruct') || checked('hwi-cf-preg') || checked('hwi-cf-nosocomial');
-}
-
-function isDialysisPatient(){
-  if(checked('hwi-cf-dialysis')) return true;
-  var egfr = hwiGetEgfr();
-  return egfr !== null && egfr < 10;
-}
-
-function isCkdReduced(){
-  if(checked('hwi-cf-ckd') || isDialysisPatient()) return true;
-  var egfr = hwiGetEgfr();
-  return egfr !== null && egfr < 45;
-}
-
-// Returns a highlighted dose note based on current eGFR
-function egfrNote(ranges){
-  // ranges: array of {min, max, text} — text shown when egfr in [min,max)
-  var egfr = hwiGetEgfr();
-  var out = '';
-  ranges.forEach(function(r){
-    var active = egfr !== null && egfr >= r.min && egfr < r.max;
-    if(active){
-      out += '<span class="hwi-dose-active">▶ ' + r.text + '</span>';
-    } else {
-      out += '<span class="hwi-dose-note">' + r.text + '</span>';
-    }
-  });
-  return out;
-}
-
-// ── RESULT BUILDERS ──────────────────────────────────────────
-function buildResultHTML(scenario){
-  var egfr = hwiGetEgfr();
-  var weight = hwiGetWeight();
-  var html = '';
-  var po = '<span class="hwi-route-badge hwi-route-po">p.o.</span>';
-  var iv = '<span class="hwi-route-badge hwi-route-iv">i.v.</span>';
-  var thDrug = '<thead><tr><th>#</th><th>z.B. Substanz</th><th>Route</th><th>Standarddosis &amp; Dauer</th><th>Dosisanpassung bei NI</th></tr></thead>';
-  var thSetting = '<thead><tr><th>Setting</th><th>z.B. Substanz</th><th>Route</th><th>Standarddosis</th><th>Dosisanpassung bei NI</th></tr></thead>';
-
-  // Inline eGFR summary if entered
-  var egfrInfo = egfr !== null ? ' <span style="font-size:.8rem;font-weight:400;color:#546e7a;">(eGFR ' + Math.round(egfr) + ' ml/min)</span>' : '';
-
-  if(scenario === 'asb'){
-    html += '<div class="hwi-result-card hwi-res-none">';
-    html += '<div class="hwi-result-title">✅ Asymptomatische Bakteriurie — Kein Antibiotikum erforderlich</div>';
-    html += '<p style="font-size:.88rem;color:#1b5e20;margin:0 0 10px 0;">Keimnachweis im Urin ohne klinische Symptome ist in der Regelversorgung <strong>keine Therapieindikation</strong>.</p>';
-    html += '<div class="hwi-result-subtitle">Ausnahmen — Antibiotikum indiziert bei:</div>';
-    html += '<ul class="hwi-list"><li><strong>Schwangerschaft:</strong> Obligates Screening + Behandlung (Rezidivkontrolle!)</li><li><strong>Vor invasivem urologischen Eingriff</strong> (z.B. TUR, Zystoskopie mit Manipulation)</li><li><strong>Instabiler Diabetes mellitus:</strong> Individuelle Entscheidung</li></ul>';
-    html += '<div class="hwi-info">Nach Nierentransplantation (NTX): Asymptomatische Bakteriurie <strong>nicht</strong> behandeln (außer innerhalb der ersten 2 Monate post-NTX, individuell). Keimzahl und Erreger dokumentieren.</div>';
-    html += '<div class="hwi-warn"><span class="hwi-warn-icon">⚠️</span><span>Procalcitonin / CRP ohne Symptome nicht aussagekräftig. Urinbefund kontextualisieren!</span></div>';
-    html += '</div>';
-    return html;
-  }
-
-  if(scenario === 'zystitis-f'){
-    html += '<div class="hwi-result-card hwi-res-mild">';
-    html += '<div class="hwi-result-title">💊 Unkomplizierte Zystitis — Frau (ohne komplizierende Faktoren)' + egfrInfo + '</div>';
-    if(isDialysisPatient()){
-      html += '<div class="hwi-danger"><span>⚠️</span><span><strong>Dialyse/eGFR &lt;10:</strong> Nitrofurantoin &amp; Fosfomycin <strong>kontraindiziert</strong>. z.B. Cefalexin (Dosis nach HD-Schema, s. unten).</span></div>';
-    } else if(isCkdReduced()){
-      html += '<div class="hwi-danger"><span>⚠️</span><span><strong>eGFR &lt;45:</strong> Nitrofurantoin <strong>kontraindiziert</strong>. Fosfomycin eingeschränkt wirksam. z.B. Cefalexin bevorzugen (Dosis anpassen, s. Tabelle).</span></div>';
-    }
-    html += '<div class="hwi-result-subtitle">Erstlinientherapie (Kurztherapie bevorzugt):</div>';
-    html += '<table class="hwi-drug-table">' + thDrug + '<tbody>';
-    html += '<tr class="hwi-first-choice"><td>1.</td><td>z.B. Nitrofurantoin retard</td><td>' + po + '</td><td>2×100 mg/Tag × <strong>5 Tage</strong></td>';
-    html += '<td>' + egfrNote([
-      {min:45, max:999, text:'eGFR ≥45: Standarddosis'},
-      {min:30, max:45,  text:'eGFR 30–45: KI (ineffektiv + toxisch)'},
-      {min:0,  max:30,  text:'eGFR &lt;30: kontraindiziert'}
-    ]) + '</td></tr>';
-    html += '<tr class="hwi-first-choice"><td>2.</td><td>z.B. Fosfomycin 3g Granulat</td><td>' + po + '</td><td><strong>Einmaldosis</strong> p.o.</td>';
-    html += '<td>' + egfrNote([
-      {min:45, max:999, text:'eGFR ≥45: Standarddosis'},
-      {min:30, max:45,  text:'eGFR 30–45: eingeschränkt nutzbar'},
-      {min:10, max:30,  text:'eGFR 10–30: nicht empfohlen'},
-      {min:0,  max:10,  text:'HD: kontraindiziert'}
-    ]) + '</td></tr>';
-    html += '<tr><td>3.</td><td>z.B. Pivmecillinam</td><td>' + po + '</td><td>3×400 mg × <strong>3 Tage</strong></td>';
-    html += '<td>' + egfrNote([
-      {min:10, max:999, text:'eGFR ≥10: Standarddosis'},
-      {min:0,  max:10,  text:'eGFR &lt;10/HD: kontraindiziert'}
-    ]) + '</td></tr>';
-    html += '<tr><td>4.</td><td>z.B. Cefalexin</td><td>' + po + '</td><td>3×1g × <strong>3–5 Tage</strong></td>';
-    html += '<td>' + egfrNote([
-      {min:45, max:999, text:'eGFR ≥45: 3×1g'},
-      {min:30, max:45,  text:'eGFR 30–45: 2×1g'},
-      {min:15, max:30,  text:'eGFR 15–30: 2×500 mg'},
-      {min:0,  max:15,  text:'eGFR &lt;15/HD: 1×500 mg nach Dialyse'}
-    ]) + '</td></tr>';
-    html += '</tbody></table>';
-    html += '<div class="hwi-warn"><span class="hwi-warn-icon">🚫</span><span><strong>Kein Fluorchinolon als Erstlinientherapie!</strong> (Rote-Hand-Brief). Cotrimoxazol nur wenn lokale Resistenz &lt;20%.</span></div>';
-    html += '<div class="hwi-result-subtitle">Diagnostik:</div>';
-    html += '<ul class="hwi-list"><li>Urinkultur bei unkomplizierter Zystitis <em>nicht zwingend</em> — empfohlen bei Rezidiv (≥2×/Halbjahr)</li><li>Bei Therapieversagen nach 48–72h: Urinkultur + Resistogramm</li></ul>';
-    html += '</div>';
-    return html;
-  }
-
-  if(scenario === 'zystitis-m'){
-    html += '<div class="hwi-result-card hwi-res-mild">';
-    html += '<div class="hwi-result-title">💊 HWI Mann — immer als kompliziert werten' + egfrInfo + '</div>';
-    html += '<div class="hwi-result-subtitle">Vorgehen:</div>';
-    html += '<ul class="hwi-list"><li><strong>Immer Sonographie</strong> — Ausschluss Restharn, Steine, Obstruktion, Prostatavergrößerung</li><li><strong>Immer Urinkultur</strong> — gezielte Therapie nach Resistogramm</li><li>DD Prostatitis (akut/chronisch) und Urethritis ausschließen</li></ul>';
-    html += '<div class="hwi-result-subtitle">Empirische Therapie — Dauer 7 Tage:</div>';
-    html += '<table class="hwi-drug-table">' + thDrug + '<tbody>';
-    html += '<tr class="hwi-first-choice"><td>1.</td><td>z.B. Cefalexin</td><td>' + po + '</td><td>3×1g × <strong>7 Tage</strong></td>';
-    html += '<td>' + egfrNote([
-      {min:45, max:999, text:'eGFR ≥45: 3×1g'},
-      {min:30, max:45,  text:'eGFR 30–45: 2×1g'},
-      {min:15, max:30,  text:'eGFR 15–30: 2×500 mg'},
-      {min:0,  max:15,  text:'eGFR &lt;15/HD: 1×500 mg nach Dialyse'}
-    ]) + '</td></tr>';
-    html += '<tr><td>2.</td><td>z.B. Ciprofloxacin</td><td>' + po + '</td><td>2×500 mg × <strong>7 Tage</strong></td>';
-    html += '<td>' + egfrNote([
-      {min:50, max:999, text:'eGFR ≥50: 2×500 mg'},
-      {min:30, max:50,  text:'eGFR 30–50: 2×250–500 mg'},
-      {min:15, max:30,  text:'eGFR 15–30: 1×250–500 mg'},
-      {min:0,  max:15,  text:'HD: 1×250 mg nach Dialyse (2. Wahl)'}
-    ]) + '<span class="hwi-dose-note"><span class="hwi-tag hwi-tag-orange">2. Wahl</span> — nur nach Resistogramm / Versagen</span></td></tr>';
-    html += '</tbody></table>';
-    if(isCkdReduced()){
-      html += '<div class="hwi-danger"><span>⚠️</span><span>Niereninsuffizienz: Nitrofurantoin <strong>kontraindiziert</strong>. Dosisanpassung beachten (s. Tabelle).</span></div>';
-    }
-    html += '</div>';
-    return html;
-  }
-
-  if(scenario === 'zystitis-compl'){
-    html += '<div class="hwi-result-card hwi-res-mod">';
-    html += '<div class="hwi-result-title">⚠️ Komplizierte Zystitis (mit komplizierenden Faktoren, kein Fieber)' + egfrInfo + '</div>';
-    html += '<div class="hwi-warn"><span class="hwi-warn-icon">🧫</span><span><strong>Urinkultur obligat!</strong> Gezielte Therapie nach Antibiogramm hat Vorrang.</span></div>';
-    if(checked('hwi-cf-cath')){
-      html += '<div class="hwi-info"><strong>Dauerkatheter (CAUTI):</strong> Behandlung NUR bei Symptomen (Fieber, Schüttelfrost, neue Verwirrung, Flankenschmerz). DK-Wechsel wenn möglich <em>vor oder bei</em> Therapiebeginn.</div>';
-    }
-    html += '<div class="hwi-result-subtitle">Empirische Therapie — Dauer 7 Tage:</div>';
-    html += '<table class="hwi-drug-table">' + thDrug + '<tbody>';
-    html += '<tr class="hwi-first-choice"><td>1.</td><td>z.B. Cefalexin</td><td>' + po + '</td><td>3×1g × <strong>7 Tage</strong></td>';
-    html += '<td>' + egfrNote([
-      {min:45, max:999, text:'eGFR ≥45: 3×1g'},
-      {min:30, max:45,  text:'eGFR 30–45: 2×1g'},
-      {min:15, max:30,  text:'eGFR 15–30: 2×500 mg'},
-      {min:0,  max:15,  text:'HD: 1×500 mg nach Dialyse'}
-    ]) + '</td></tr>';
-    html += '<tr><td>2.</td><td>z.B. Ciprofloxacin</td><td>' + po + '</td><td>2×500 mg × <strong>7 Tage</strong></td>';
-    html += '<td>' + egfrNote([
-      {min:50, max:999, text:'eGFR ≥50: 2×500 mg'},
-      {min:30, max:50,  text:'eGFR 30–50: 2×250–500 mg'},
-      {min:0,  max:30,  text:'eGFR &lt;30: 1×250 mg; <span class="hwi-tag hwi-tag-orange">2. Wahl</span>'}
-    ]) + '</td></tr>';
-    if(isDialysisPatient()){
-      html += '<tr><td>3.</td><td>z.B. Cefuroxim</td><td>' + iv + '</td><td>3×750 mg/Tag</td><td>' + egfrNote([
-        {min:0, max:10, text:'HD: 750 mg nach jeder Dialyse (2–3×/Woche)'}
-      ]) + '</td></tr>';
-    }
-    html += '</tbody></table>';
-    if(isCkdReduced()){
-      html += '<div class="hwi-danger"><span>⚠️</span><span>Niereninsuffizienz: Nitrofurantoin <strong>kontraindiziert</strong>. Fosfomycin eingeschränkt. Dosisanpassung s. Tabelle.</span></div>';
-    }
-    if(checked('hwi-cf-cath')){
-      html += '<div class="hwi-info"><strong>Bei DK + MRSA-Risiko:</strong> z.B. Cotrimoxazol hochdosiert p.o. nach Antibiogramm</div>';
-    }
-    html += '</div>';
-    return html;
-  }
-
-  if(scenario === 'pyelo-mild'){
-    html += '<div class="hwi-result-card hwi-res-mod">';
-    html += '<div class="hwi-result-title">🔥 Pyelonephritis — leicht/moderat, ambulant' + egfrInfo + '</div>';
-    html += '<div class="hwi-warn"><span class="hwi-warn-icon">🧫</span><span><strong>Urinkultur obligat!</strong> Sequenztherapie nach Resistogramm. Kontrolle 48–72h.</span></div>';
-    html += '<div class="hwi-result-subtitle">Empirische Therapie:</div>';
-    html += '<table class="hwi-drug-table">' + thDrug + '<tbody>';
-    html += '<tr class="hwi-first-choice"><td>1.</td><td>z.B. Ciprofloxacin</td><td>' + po + '</td><td>2×500 mg × <strong>7–10 Tage</strong></td>';
-    html += '<td>' + egfrNote([
-      {min:50, max:999, text:'eGFR ≥50: 2×500 mg'},
-      {min:30, max:50,  text:'eGFR 30–50: 2×250–500 mg'},
-      {min:15, max:30,  text:'eGFR 15–30: 1×250–500 mg; i.v.-Therapie erwägen'},
-      {min:0,  max:15,  text:'eGFR &lt;15/HD: i.v.-Therapie obligat → Szenario wechseln'}
-    ]) + '<span class="hwi-dose-note">Nach Resistogramm, Rote-Hand-Brief beachten</span></td></tr>';
-    html += '<tr><td>2.</td><td>z.B. Cefalexin</td><td>' + po + '</td><td>3×1g × <strong>7–10 Tage</strong></td>';
-    html += '<td>' + egfrNote([
-      {min:45, max:999, text:'eGFR ≥45: 3×1g'},
-      {min:30, max:45,  text:'eGFR 30–45: 2×1g'},
-      {min:15, max:30,  text:'eGFR 15–30: 2×500 mg; i.v. erwägen'},
-      {min:0,  max:15,  text:'HD: i.v.-Therapie bevorzugen'}
-    ]) + '<span class="hwi-dose-note">Alternative bei Chinolon-KI; bei CKD bevorzugt</span></td></tr>';
-    html += '</tbody></table>';
-    html += '<div class="hwi-result-subtitle">Weitere Maßnahmen:</div>';
-    html += '<ul class="hwi-list"><li>Sonographie Nieren (Obstruktion, Abszess?)</li><li>Kontrolle nach <strong>48–72h</strong> — bei fehlendem Ansprechen: Hospitalisierung, i.v.-Therapie</li><li>Gesamttherapiedauer: <strong>7–10 Tage</strong></li></ul>';
-    if(isCkdReduced()){
-      html += '<div class="hwi-danger"><span>⚠️</span><span>Niereninsuffizienz / eGFR &lt;45: Dosisanpassung erforderlich (s. Tabelle). Bei eGFR &lt;30 großzügig stationäre i.v.-Therapie erwägen.</span></div>';
-    }
-    html += '</div>';
-    return html;
-  }
-
-  if(scenario === 'pyelo-severe'){
-    html += '<div class="hwi-result-card hwi-res-severe">';
-    html += '<div class="hwi-result-title">🏥 Pyelonephritis — schwer, stationär' + egfrInfo + '</div>';
-    html += '<div class="hwi-warn"><span class="hwi-warn-icon">🧫</span><span><strong>Urinkultur obligat!</strong> Gezielte Deeskalation nach Antibiogramm. Sequenz i.v. → p.o. sobald afebrile &gt;24h.</span></div>';
-    html += '<div class="hwi-result-subtitle">Empirische i.v.-Therapie:</div>';
-    html += '<table class="hwi-drug-table">' + thSetting + '<tbody>';
-    html += '<tr class="hwi-first-choice"><td>Standard</td><td>z.B. Cefuroxim</td><td>' + iv + '</td><td>3×1,5 g/Tag</td>';
-    html += '<td>' + egfrNote([
-      {min:30, max:999, text:'eGFR ≥30: 3×1,5g'},
-      {min:10, max:30,  text:'eGFR 10–30: 2×1,5g'},
-      {min:0,  max:10,  text:'HD: 750 mg–1,5g nach jeder Dialyse'}
-    ]) + '<span class="hwi-dose-note">Sequenz → z.B. Cefalexin p.o.; Gesamtdauer 10–14 Tage</span></td></tr>';
-    html += '<tr><td>MRGN-Risiko / DK / nosokomial</td><td>z.B. Pip/Tazobactam</td><td>' + iv + '</td><td>3×4,5 g/Tag</td>';
-    html += '<td>' + egfrNote([
-      {min:40, max:999, text:'eGFR ≥40: 3×4,5g'},
-      {min:20, max:40,  text:'eGFR 20–40: 3×4,5g (ggf. verlängerte Infusion)'},
-      {min:10, max:20,  text:'eGFR 10–20: 2×4,5g'},
-      {min:0,  max:10,  text:'HD: 2×4,5g (nach HD-Schema)'}
-    ]) + '</td></tr>';
-    if(isDialysisPatient()){
-      html += '<tr><td><strong>Dialyse / MRGN</strong></td><td><strong>z.B. Meropenem</strong></td><td>' + iv + '</td><td>3×1g/Tag</td>';
-      html += '<td>' + egfrNote([
-        {min:0, max:10, text:'HD: 1×1g nach Dialyse (leicht) / 1×2g nach Dialyse (schwer) — TDM erwägen'}
-      ]) + '</td></tr>';
-    } else if(isCkdReduced()){
-      html += '<tr><td>eGFR 15–45 + MRGN</td><td>z.B. Meropenem</td><td>' + iv + '</td><td>3×1g/Tag</td>';
-      html += '<td>' + egfrNote([
-        {min:25, max:50, text:'eGFR 25–50: 3×1g'},
-        {min:10, max:25, text:'eGFR 10–25: 2×1g'},
-        {min:0,  max:10, text:'HD: 1×1g nach Dialyse'}
-      ]) + '</td></tr>';
-    }
-    html += '</tbody></table>';
-    html += '<ul class="hwi-list"><li>Sono Nieren/Blase: Obstruktion? Abszess?</li><li>Urologie-Konsil bei Obstruktion oder Nierenabszess</li><li>Sequenz i.v. → p.o. sobald klinisch möglich (afebrile &gt;24h, orale Resorption ok)</li></ul>';
-    html += '</div>';
-    return html;
-  }
-
-  if(scenario === 'urosepsis'){
-    html += '<div class="hwi-result-card hwi-res-severe">';
-    html += '<div class="hwi-result-title">🚨 Urosepsis — Sepsis-Bundle einleiten!' + egfrInfo + '</div>';
-    html += '<div class="hwi-danger"><span>🩺</span><span><strong>1h-Sepsis-Bundle:</strong> Blutkulturen 2×2 <em>vor</em> Antibiose! Laktat messen. Antibiotikum &lt;1h. Bei Hypotension: Volumen 30 ml/kg. Vasopressoren bei MAP &lt;65 mmHg.</span></div>';
-    html += '<div class="hwi-result-subtitle">Empirische i.v.-Therapie:</div>';
-    html += '<table class="hwi-drug-table">' + thSetting + '<tbody>';
-    html += '<tr class="hwi-first-choice"><td>Standard / ITS</td><td>z.B. Meropenem</td><td>' + iv + '</td><td>3×1g/Tag</td>';
-    html += '<td>' + egfrNote([
-      {min:50, max:999, text:'eGFR ≥50: 3×1g'},
-      {min:25, max:50,  text:'eGFR 25–50: 3×1g (ggf. verlängert)'},
-      {min:10, max:25,  text:'eGFR 10–25: 2×1g'},
-      {min:0,  max:10,  text:'HD: 1×1g nach Dialyse (leicht) / 1×2g nach Dialyse (schwer)'}
-    ]) + '</td></tr>';
-    if(!checked('hwi-cf-nosocomial')){
-      html += '<tr><td>Alternativ (kein MRGN-Risiko)</td><td>z.B. Ceftriaxon</td><td>' + iv + '</td><td>1×2g/Tag</td>';
-      html += '<td>' + egfrNote([
-        {min:10, max:999, text:'eGFR ≥10: 1×2g (keine Dosisreduktion nötig)'},
-        {min:0,  max:10,  text:'HD: 1×2g (keine Reduktion, gut dialysierbar)'}
-      ]) + '<span class="hwi-dose-note">Bei ambulant erworben + kein MRGN-Risiko + kein DK</span></td></tr>';
-    }
-    html += '<tr><td>+ MRSA-Risiko (nosokomial / DK)</td><td>z.B. + Vancomycin</td><td>' + iv + '</td><td>Spiegeladaptiert</td>';
-    html += '<td>' + egfrNote([
-      {min:50, max:999, text:'eGFR ≥50: TDM — Talspiegel 15–20 mg/l'},
-      {min:30, max:50,  text:'eGFR 30–50: Verlängertes Intervall, TDM obligat'},
-      {min:0,  max:30,  text:'eGFR &lt;30/HD: Stark verlängerte HWZ — AUC-TDM, Spezialist fragen'}
-    ]) + '</td></tr>';
-    html += '</tbody></table>';
-    html += '<div class="hwi-result-subtitle">Fokussuche &amp; Maßnahmen:</div>';
-    html += '<ul class="hwi-list">';
-    html += '<li><strong>Sono / CT Abdomen:</strong> Abszess? Obstruktion? Steine? Emphysem?</li>';
-    html += '<li><strong>Urologie-Konsil:</strong> Bei Obstruktion, Abszess, Stauungsniere → Drainage!</li>';
-    html += '<li><strong>Nierenabszess:</strong> Drainage wenn renal &gt;5 cm oder perirenal &gt;3 cm</li>';
-    html += '<li><strong>DK / DJ:</strong> Wechsel wenn möglich vor oder bei Therapiebeginn</li>';
-    html += '<li>Deeskalation nach Blutkulturbefund und Resistogramm</li>';
-    html += '</ul>';
-    html += '</div>';
-    return html;
-  }
-
-  if(scenario === 'cauti'){
-    html += '<div class="hwi-result-card hwi-res-mod">';
-    html += '<div class="hwi-result-title">🔗 Katheter-assoziierter HWI (CAUTI)' + egfrInfo + '</div>';
-    html += '<div class="hwi-success"><strong>Asymptomatische Keimbesiedelung bei Katheter → KEIN Antibiotikum!</strong> Nur bei klinischen Symptomen behandeln.</div>';
-    html += '<div class="hwi-result-subtitle">Symptome die Behandlung erfordern:</div>';
-    html += '<ul class="hwi-list"><li>Fieber (&gt;38°C) ohne andere Ursache</li><li>Schüttelfrost, Rigor</li><li>Neue Flankenschmerzen, Druckschmerz Nierenlager</li><li>Neue Verwirrtheit (bei DK-Träger)</li></ul>';
-    html += '<div class="hwi-result-subtitle">Therapie:</div>';
-    html += '<table class="hwi-drug-table">' + thSetting + '<tbody>';
-    html += '<tr class="hwi-first-choice"><td>Leicht–moderat</td><td>z.B. Cefalexin</td><td>' + po + '</td><td>3×1g × <strong>7 Tage</strong></td>';
-    html += '<td>' + egfrNote([
-      {min:45, max:999, text:'eGFR ≥45: 3×1g'},
-      {min:30, max:45,  text:'eGFR 30–45: 2×1g'},
-      {min:15, max:30,  text:'eGFR 15–30: 2×500 mg'},
-      {min:0,  max:15,  text:'HD: 1×500 mg nach Dialyse'}
-    ]) + '<span class="hwi-dose-note">Gezielt nach Antibiogramm — breite Empirik vermeiden</span></td></tr>';
-    html += '<tr><td>Schwer / systemisch</td><td>z.B. Cefuroxim</td><td>' + iv + '</td><td>3×1,5g/Tag</td>';
-    html += '<td>' + egfrNote([
-      {min:30, max:999, text:'eGFR ≥30: 3×1,5g'},
-      {min:10, max:30,  text:'eGFR 10–30: 2×1,5g'},
-      {min:0,  max:10,  text:'HD: 750 mg–1,5g nach Dialyse'}
-    ]) + '<span class="hwi-dose-note">Bei Therapieversagen: Eskalation nach Antibiogramm</span></td></tr>';
-    if(isDialysisPatient()){
-      html += '<tr><td>Dialyse + schwer</td><td>z.B. Meropenem</td><td>' + iv + '</td><td>3×1g/Tag</td>';
-      html += '<td>' + egfrNote([
-        {min:0, max:10, text:'HD: 1×1g nach Dialyse (leicht) / 1×2g (schwer)'}
-      ]) + '</td></tr>';
-    }
-    html += '</tbody></table>';
-    html += '<ul class="hwi-list">';
-    html += '<li><strong>DK-Wechsel wenn möglich</strong> — vor oder bei Therapiebeginn</li>';
-    html += '<li>Dauer: <strong>7 Tage</strong> (14 Tage wenn langsames Ansprechen)</li>';
-    html += '<li>Bei MRSA-HWI: z.B. Cotrimoxazol hochdosiert p.o. nach Antibiogramm</li>';
-    html += '</ul>';
-    html += '</div>';
-    return html;
-  }
-
-  return '<div class="hwi-result-card hwi-res-mild"><p style="color:#546e7a;font-size:.9rem;">Angaben vervollständigen für Therapieempfehlung.</p></div>';
-}
-
-// ── MAIN UPDATE LOGIC ─────────────────────────────────────────
-window.hwiUpdate = function() {
-  var symLower   = checked('hwi-sym-lower');
-  var symUpper   = checked('hwi-sym-upper');
-  var symFever   = checked('hwi-sym-fever');
-  var symSepsis  = checked('hwi-sym-sepsis');
-  var symNone    = checked('hwi-sym-none');
-  var compl      = hasComplicating();
-  var isMale     = checked('hwi-cf-male');
-  var hasCath    = checked('hwi-cf-cath');
-  var loc        = locVal();
-  var sev        = sevVal();
-
-  // Auto-suggest location
-  if(symSepsis && loc !== 'sepsis'){
-    var r = document.getElementById('hwi-loc-sepsis');
-    if(r) r.checked = true;
-    loc = 'sepsis';
-  } else if((symUpper || symFever) && !symSepsis && loc !== 'upper' && loc !== 'sepsis'){
-    var r2 = document.getElementById('hwi-loc-upper');
-    if(r2) r2.checked = true;
-    loc = 'upper';
-  } else if(symLower && !symUpper && !symFever && !symSepsis && !loc){
-    var r3 = document.getElementById('hwi-loc-lower');
-    if(r3) r3.checked = true;
-    loc = 'lower';
-  }
-
-  // Sync checkbox item highlighting
-  ['hwi-sym-lower','hwi-sym-upper','hwi-sym-fever','hwi-sym-sepsis','hwi-sym-none',
-   'hwi-cf-cath','hwi-cf-ckd','hwi-cf-dialysis','hwi-cf-male','hwi-cf-dm',
-   'hwi-cf-immuno','hwi-cf-obstruct','hwi-cf-preg','hwi-cf-nosocomial'].forEach(function(id){
-    var wrap = document.getElementById(id + '-wrap');
-    var el = document.getElementById(id);
-    if(wrap && el) wrap.classList.toggle('hwi-checked', el.checked);
-  });
-
-  // Determine scenario
-  var scenario = null;
-
-  if(symNone && !symLower && !symUpper && !symFever && !symSepsis){
-    scenario = 'asb';
-  } else if(loc === 'sepsis' || symSepsis){
-    scenario = 'urosepsis';
-  } else if(hasCath && (symFever || symUpper || loc === 'upper')){
-    scenario = 'cauti';
-  } else if(loc === 'upper'){
-    if(sev === 'hosp' || sev === 'icu'){
-      scenario = 'pyelo-severe';
-    } else if(sev === 'mild' || (!sev && !symFever)){
-      scenario = 'pyelo-mild';
-    } else if(symFever){
-      scenario = 'pyelo-severe';
-    }
-  } else if(loc === 'lower' || symLower){
-    if(hasCath){
-      scenario = 'cauti';
-    } else if(isMale){
-      scenario = 'zystitis-m';
-    } else if(compl){
-      scenario = 'zystitis-compl';
-    } else {
-      scenario = 'zystitis-f';
-    }
-  }
-
-  // Render
-  var area = document.getElementById('hwi-result-area');
-  if(!area) return;
-  if(scenario){
-    area.innerHTML = buildResultHTML(scenario);
-  } else if(symLower || symUpper || symFever){
-    // have symptoms but no location confirmed yet — show partial guidance
-    if(isMale){
-      area.innerHTML = buildResultHTML('zystitis-m');
-    } else if(compl){
-      area.innerHTML = buildResultHTML('zystitis-compl');
-    } else {
-      area.innerHTML = '<div class="hwi-result-card hwi-res-mild"><p style="color:#1565c0;font-size:.9rem;"><strong>Lokalisation und Schweregrad bestätigen</strong> (Schritt 3/4) für vollständige Therapieempfehlung.</p></div>';
-    }
-  } else {
-    area.innerHTML = '';
-  }
-};
-
-})();
-</script>
-</div><!-- end tab-hwi -->
 
 </body>
 </html>
