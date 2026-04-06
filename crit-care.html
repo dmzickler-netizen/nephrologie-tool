@@ -7689,7 +7689,678 @@ window.sepVolCalc = function() {
 </script>
 </div><!-- end tool-sepsis -->
 
-<div id="tool-ards" style="display:none;"><div style="max-width:820px;margin:0 auto;padding:40px 16px;text-align:center;color:#999;font-size:.9rem;">💨 ARDS-Tool — in Vorbereitung</div></div>
+<!-- ══════════════════════════════════════════════════════════
+     TOOL: ARDS
+     ══════════════════════════════════════════════════════════ -->
+<div id="tool-ards">
+<style>
+#tool-ards .ards-wrap{max-width:880px;margin:0 auto;padding:16px;}
+#tool-ards .ards-header{background:linear-gradient(135deg,#b71c1c 0%,#c62828 100%);color:#fff;border-radius:14px;padding:18px 20px;margin-bottom:16px;}
+#tool-ards .ards-header h2{margin:0;font-size:1.15rem;font-weight:800;}
+#tool-ards .ards-header p{margin:6px 0 0;font-size:.78rem;opacity:.88;}
+#tool-ards .ards-tab-nav{background:#fff;border-bottom:2px solid #f5e0e0;display:flex;overflow-x:auto;padding:0 12px;gap:2px;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:16px;border-radius:10px 10px 0 0;}
+#tool-ards .ards-tab-btn{border:none;background:none;padding:13px 15px 11px;font-size:.8rem;font-weight:600;color:#78909c;cursor:pointer;border-bottom:2.5px solid transparent;white-space:nowrap;transition:color .15s,border-color .15s;}
+#tool-ards .ards-tab-btn.active{color:#b71c1c;border-bottom-color:#b71c1c;}
+#tool-ards .ards-tab-btn:hover:not(.active){color:#c62828;border-bottom-color:#ef9a9a;}
+#tool-ards .ards-tab{display:none;}
+#tool-ards .ards-tab.active{display:block;}
+#tool-ards .ards-card{background:#fff;border-radius:14px;box-shadow:0 1px 6px rgba(0,0,0,.08);margin-bottom:14px;overflow:hidden;}
+#tool-ards .ards-card-head{padding:13px 16px 10px;border-bottom:1px solid #fce4ec;display:flex;align-items:center;gap:8px;}
+#tool-ards .ards-card-title{font-size:.82rem;font-weight:800;color:#b71c1c;text-transform:uppercase;letter-spacing:.6px;}
+#tool-ards .ards-card-body{padding:14px 16px;}
+#tool-ards .ards-card-body p{margin:0 0 8px;font-size:.8rem;color:#37474f;line-height:1.5;}
+#tool-ards .ards-input-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
+#tool-ards .ards-field{display:flex;flex-direction:column;gap:3px;margin-bottom:8px;}
+#tool-ards .ards-field label{font-size:.74rem;font-weight:600;color:#546e7a;}
+#tool-ards .ards-input{border:1.5px solid #cfd8dc;border-radius:8px;padding:7px 10px;font-size:.82rem;width:110px;outline:none;transition:border-color .15s;}
+#tool-ards .ards-input:focus{border-color:#b71c1c;}
+#tool-ards .ards-input-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px 16px;}
+#tool-ards .ards-toggle{display:flex;gap:6px;flex-wrap:wrap;}
+#tool-ards .ards-toggle input[type=radio]{display:none;}
+#tool-ards .ards-toggle label{padding:5px 13px;border-radius:20px;font-size:.76rem;font-weight:600;cursor:pointer;border:1.5px solid #cfd8dc;color:#607d8b;transition:all .15s;user-select:none;}
+#tool-ards .ards-toggle input[type=radio]:checked+label{background:#b71c1c;border-color:#b71c1c;color:#fff;}
+#tool-ards .ards-result{padding:14px 16px;border-radius:10px;margin-bottom:10px;font-size:.8rem;line-height:1.55;}
+#tool-ards .ards-r-mild{background:#e8f5e9;border-left:4px solid #2e7d32;color:#1b5e20;}
+#tool-ards .ards-r-mod{background:#fff8e1;border-left:4px solid #f9a825;color:#4e342e;}
+#tool-ards .ards-r-severe{background:#fce4ec;border-left:4px solid #b71c1c;color:#b71c1c;}
+#tool-ards .ards-r-info{background:#e3f2fd;border-left:4px solid #1565c0;color:#0d47a1;}
+#tool-ards .ards-r-ok{background:#e8f5e9;border-left:4px solid #2e7d32;color:#1b5e20;}
+#tool-ards .ards-r-warn{background:#fff3e0;border-left:4px solid #e65100;color:#4e342e;}
+#tool-ards .ards-r-danger{background:#fce4ec;border-left:4px solid #b71c1c;color:#b71c1c;}
+#tool-ards .ards-r-none{background:#f5f5f5;border-left:4px solid #bdbdbd;color:#616161;}
+#tool-ards .ards-check-row{display:flex;align-items:center;gap:9px;padding:6px 10px;border-radius:8px;cursor:pointer;transition:background .12s;margin-bottom:2px;}
+#tool-ards .ards-check-row:hover{background:#fce4ec;}
+#tool-ards .ards-check-row input[type=checkbox]{accent-color:#b71c1c;width:15px;height:15px;flex-shrink:0;}
+#tool-ards .ards-check-label{font-size:.79rem;color:#37474f;line-height:1.4;}
+#tool-ards .ards-check-sub{font-size:.7rem;color:#90a4ae;display:block;}
+#tool-ards .ards-dd-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0;}
+#tool-ards .ards-dd-card{background:#fafafa;border-radius:10px;padding:12px 14px;border:1px solid #e0e0e0;}
+#tool-ards .ards-dd-card h4{margin:0 0 6px;font-size:.8rem;font-weight:700;color:#b71c1c;}
+#tool-ards .ards-dd-card ul{margin:0;padding-left:18px;font-size:.76rem;color:#37474f;line-height:1.6;}
+#tool-ards .ards-table{width:100%;border-collapse:collapse;margin:8px 0;font-size:.74rem;}
+#tool-ards .ards-table th,#tool-ards .ards-table td{padding:6px 8px;border:1px solid #e0e0e0;text-align:center;}
+#tool-ards .ards-table th{background:#fafafa;font-weight:700;color:#b71c1c;}
+#tool-ards .ards-table td.ards-peep-hl{background:#fce4ec;font-weight:700;}
+#tool-ards .ards-acc{border:1px solid #e0e0e0;border-radius:10px;margin-bottom:8px;overflow:hidden;}
+#tool-ards .ards-acc-head{padding:12px 16px;background:#fafafa;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:.8rem;font-weight:700;color:#37474f;transition:background .15s;}
+#tool-ards .ards-acc-head:hover{background:#fce4ec;}
+#tool-ards .ards-acc-arrow{transition:transform .2s;font-size:.7rem;color:#90a4ae;}
+#tool-ards .ards-acc.open .ards-acc-arrow{transform:rotate(90deg);}
+#tool-ards .ards-acc-body{display:none;padding:12px 16px;font-size:.78rem;color:#37474f;line-height:1.55;border-top:1px solid #e0e0e0;}
+#tool-ards .ards-acc.open .ards-acc-body{display:block;}
+#tool-ards .ards-acc-body ul{margin:4px 0;padding-left:18px;}
+#tool-ards .ards-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.68rem;font-weight:700;margin:1px 2px;}
+#tool-ards .ards-badge-red{background:#fce4ec;color:#b71c1c;}
+#tool-ards .ards-badge-orange{background:#fff3e0;color:#e65100;}
+#tool-ards .ards-badge-green{background:#e8f5e9;color:#2e7d32;}
+#tool-ards .ards-badge-blue{background:#e3f2fd;color:#1565c0;}
+#tool-ards .ards-badge-gray{background:#f5f5f5;color:#616161;}
+#tool-ards .ards-warn-box{background:#fff3e0;border:1.5px solid #e65100;border-radius:10px;padding:12px 16px;margin:10px 0;font-size:.78rem;color:#4e342e;line-height:1.5;}
+#tool-ards .ards-warn-red{background:#fce4ec;border:1.5px solid #b71c1c;border-radius:10px;padding:12px 16px;margin:10px 0;font-size:.78rem;color:#b71c1c;line-height:1.5;}
+#tool-ards .ards-dose-card{background:#fafafa;border:1px solid #e0e0e0;border-radius:10px;padding:12px 14px;margin-bottom:8px;}
+#tool-ards .ards-dose-card strong{color:#b71c1c;}
+#tool-ards .ards-peep-tables{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+#tool-ards .ards-btn{display:inline-block;padding:8px 18px;border-radius:8px;border:none;font-size:.78rem;font-weight:700;cursor:pointer;transition:background .15s;}
+#tool-ards .ards-btn-primary{background:#b71c1c;color:#fff;}
+#tool-ards .ards-btn-primary:hover{background:#d32f2f;}
+@media(max-width:600px){
+  #tool-ards .ards-dd-grid{grid-template-columns:1fr;}
+  #tool-ards .ards-peep-tables{grid-template-columns:1fr;}
+  #tool-ards .ards-input-grid{grid-template-columns:1fr 1fr;}
+}
+</style>
+
+<div class="ards-wrap">
+
+<!-- Header -->
+<div class="ards-header">
+  <h2>💨 ARDS</h2>
+  <p>Acute Respiratory Distress Syndrome — Berlin-Kriterien, lungenprotektive Beatmung, Proning, adjuvante Therapie</p>
+</div>
+
+<!-- Sub-Tab Nav -->
+<div class="ards-tab-nav">
+  <button class="ards-tab-btn active" onclick="ardsShowTab('diagnose',this)">🔍 Diagnose</button>
+  <button class="ards-tab-btn" onclick="ardsShowTab('beatmung',this)">🫁 Beatmung</button>
+  <button class="ards-tab-btn" onclick="ardsShowTab('adjuvant',this)">💊 Adjuvant</button>
+  <button class="ards-tab-btn" onclick="ardsShowTab('monitoring',this)">📋 Monitoring</button>
+</div>
+
+<!-- ═══ SUB-TAB 1: DIAGNOSE & KLASSIFIKATION ═══ -->
+<div id="ards-diagnose" class="ards-tab active">
+
+<div class="ards-card">
+  <div class="ards-card-head"><span class="ards-card-title">📐 PaO₂/FiO₂-Rechner (Horovitz-Index)</span></div>
+  <div class="ards-card-body">
+    <div class="ards-input-grid">
+      <div class="ards-field"><label for="ards-pao2">PaO₂ (mmHg)</label><input type="number" class="ards-input" id="ards-pao2" placeholder="z.B. 75" step="1" oninput="ardsCalcPF()"></div>
+      <div class="ards-field"><label for="ards-fio2">FiO₂ (0,21–1,0)</label><input type="number" class="ards-input" id="ards-fio2" placeholder="z.B. 0.6" step="0.01" min="0.21" max="1.0" oninput="ardsCalcPF()"></div>
+      <div class="ards-field"><label for="ards-peep-input">PEEP (cmH₂O)</label><input type="number" class="ards-input" id="ards-peep-input" placeholder="z.B. 10" step="1" oninput="ardsCalcPF()"></div>
+    </div>
+    <div id="ards-pf-result" style="margin-top:10px;"></div>
+  </div>
+</div>
+
+<div class="ards-card">
+  <div class="ards-card-head"><span class="ards-card-title">✅ Berlin-Kriterien (2012)</span></div>
+  <div class="ards-card-body">
+    <p>Alle 4 Kriterien müssen erfüllt sein:</p>
+    <label class="ards-check-row"><input type="checkbox"><span class="ards-check-label"><strong>Akuter Beginn</strong><span class="ards-check-sub">Innerhalb von 7 Tagen nach bekanntem klinischem Auslöser oder neuen/verschlechterten respiratorischen Symptomen</span></span></label>
+    <label class="ards-check-row"><input type="checkbox"><span class="ards-check-label"><strong>Bilaterale Infiltrate</strong><span class="ards-check-sub">Im Rö-Thorax oder CT — nicht vollständig durch Erguss, Atelektase oder Rundherde erklärbar</span></span></label>
+    <label class="ards-check-row"><input type="checkbox"><span class="ards-check-label"><strong>Nicht kardial bedingt</strong><span class="ards-check-sub">Respiratorisches Versagen nicht primär durch Herzinsuffizienz oder Volumenüberladung erklärbar (ggf. Echokardiografie)</span></span></label>
+    <label class="ards-check-row"><input type="checkbox"><span class="ards-check-label"><strong>Oxygenierungsstörung</strong><span class="ards-check-sub">PaO₂/FiO₂ ≤ 300 mmHg bei PEEP/CPAP ≥ 5 cmH₂O</span></span></label>
+  </div>
+</div>
+
+<div class="ards-card">
+  <div class="ards-card-head"><span class="ards-card-title">🔬 Ätiologie</span></div>
+  <div class="ards-card-body">
+    <div class="ards-dd-grid">
+      <div class="ards-dd-card">
+        <h4>🫁 Pulmonal (direkt)</h4>
+        <ul>
+          <li><strong>Pneumonie</strong> — häufigste Ursache</li>
+          <li>Aspiration</li>
+          <li>Inhalationstrauma (Rauchgas, toxische Gase)</li>
+          <li>Lungenkontusion</li>
+          <li>Beinahe-Ertrinken</li>
+          <li>Fettembolie</li>
+        </ul>
+      </div>
+      <div class="ards-dd-card">
+        <h4>🏥 Extrapulmonal (indirekt)</h4>
+        <ul>
+          <li><strong>Sepsis</strong> — zweithäufigste Ursache</li>
+          <li>Pankreatitis</li>
+          <li>Polytrauma / Massentransfusion</li>
+          <li>TRALI (Transfusion)</li>
+          <li>Verbrennungen</li>
+          <li>Medikamenten-/Drogenreaktion</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="ards-card">
+  <div class="ards-card-head"><span class="ards-card-title">🔄 Differentialdiagnosen</span></div>
+  <div class="ards-card-body">
+    <div class="ards-acc" id="ards-acc-dd-kardial">
+      <div class="ards-acc-head" onclick="ardsToggleAcc('ards-acc-dd-kardial')">Kardiales Lungenödem <span class="ards-acc-arrow">▶</span></div>
+      <div class="ards-acc-body">
+        <p><strong>Abgrenzung:</strong> BNP/NT-proBNP ↑, Echo: EF ↓ oder diastolische Dysfunktion, Pleuraergüsse bilateral, schnelle Besserung unter Diuretika</p>
+        <p><strong>Cave:</strong> Mischbilder häufig — ARDS und kardiale Stauung können koexistieren</p>
+      </div>
+    </div>
+    <div class="ards-acc" id="ards-acc-dd-dah">
+      <div class="ards-acc-head" onclick="ardsToggleAcc('ards-acc-dd-dah')">Diffuse alveoläre Hämorrhagie (DAH) <span class="ards-acc-arrow">▶</span></div>
+      <div class="ards-acc-body">
+        <p><strong>Hinweise:</strong> Hb-Abfall ohne erkennbare Blutungsquelle, Hämoptysen (können fehlen!), BAL zunehmend blutig</p>
+        <p><strong>Ursachen:</strong> ANCA-Vaskulitis, Goodpasture, SLE, Gerinnungsstörung</p>
+      </div>
+    </div>
+    <div class="ards-acc" id="ards-acc-dd-eosino">
+      <div class="ards-acc-head" onclick="ardsToggleAcc('ards-acc-dd-eosino')">Eosinophile Pneumonie <span class="ards-acc-arrow">▶</span></div>
+      <div class="ards-acc-body">
+        <p><strong>Hinweise:</strong> Eosinophilie in BAL (&gt; 25 %) ± Blut, periphere Infiltrate, schnelles Ansprechen auf Steroide</p>
+        <p><strong>Cave:</strong> Akute eosinophile Pneumonie kann ARDS-Bild imitieren</p>
+      </div>
+    </div>
+    <div class="ards-acc" id="ards-acc-dd-cop">
+      <div class="ards-acc-head" onclick="ardsToggleAcc('ards-acc-dd-cop')">COP (kryptogene organisierende Pneumonie) <span class="ards-acc-arrow">▶</span></div>
+      <div class="ards-acc-body">
+        <p><strong>Hinweise:</strong> Subakuter Verlauf, wandernde Infiltrate, gutes Steroid-Ansprechen, Biopsie diagnostisch</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end ards-diagnose -->
+
+<!-- ═══ SUB-TAB 2: BEATMUNG & LAGERUNG ═══ -->
+<div id="ards-beatmung" class="ards-tab">
+
+<div class="ards-card">
+  <div class="ards-card-head"><span class="ards-card-title">⚖️ IBW & Tidalvolumen-Rechner</span></div>
+  <div class="ards-card-body">
+    <p>Tidalvolumen wird anhand des <strong>idealen Körpergewichts (IBW)</strong> berechnet, nicht des tatsächlichen Gewichts.</p>
+    <div class="ards-input-grid">
+      <div class="ards-field">
+        <label>Geschlecht</label>
+        <div class="ards-toggle">
+          <input type="radio" name="ards-sex" id="ards-sex-m" value="m" checked onchange="ardsCalcIBW()"><label for="ards-sex-m">♂ Männlich</label>
+          <input type="radio" name="ards-sex" id="ards-sex-f" value="f" onchange="ardsCalcIBW()"><label for="ards-sex-f">♀ Weiblich</label>
+        </div>
+      </div>
+      <div class="ards-field"><label for="ards-height">Körpergröße (cm)</label><input type="number" class="ards-input" id="ards-height" placeholder="z.B. 175" step="1" oninput="ardsCalcIBW()"></div>
+    </div>
+    <div id="ards-ibw-result" style="margin-top:10px;"></div>
+  </div>
+</div>
+
+<div class="ards-card">
+  <div class="ards-card-head"><span class="ards-card-title">📊 Driving-Pressure-Rechner</span></div>
+  <div class="ards-card-body">
+    <p>Driving Pressure = P<sub>plateau</sub> − PEEP · Ziel: <strong>≤ 15 cmH₂O</strong> (Amato et al., NEJM 2015)</p>
+    <div class="ards-input-grid">
+      <div class="ards-field"><label for="ards-pplat">P<sub>plateau</sub> (cmH₂O)</label><input type="number" class="ards-input" id="ards-pplat" placeholder="z.B. 26" step="1" oninput="ardsCalcDP()"></div>
+      <div class="ards-field"><label for="ards-peep-dp">PEEP (cmH₂O)</label><input type="number" class="ards-input" id="ards-peep-dp" placeholder="z.B. 12" step="1" oninput="ardsCalcDP()"></div>
+    </div>
+    <div id="ards-dp-result" style="margin-top:10px;"></div>
+  </div>
+</div>
+
+<div class="ards-card">
+  <div class="ards-card-head"><span class="ards-card-title">🫁 Lungenprotektive Beatmung (ARDSNet)</span></div>
+  <div class="ards-card-body">
+    <table class="ards-table">
+      <thead><tr><th>Parameter</th><th>Ziel</th><th>Hinweis</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Tidalvolumen</strong></td><td>6 ml/kg IBW</td><td>Bereich 4–8 ml/kg; bei Pplat &gt; 30 → auf 4 ml/kg reduzieren</td></tr>
+        <tr><td><strong>Plateaudruck</strong></td><td>≤ 30 cmH₂O</td><td>Inspiratorische Pause 0,5 s; Messung alle 4 h</td></tr>
+        <tr><td><strong>Driving Pressure</strong></td><td>≤ 15 cmH₂O</td><td>Unabhängiger Mortalitätsprädiktor</td></tr>
+        <tr><td><strong>Atemfrequenz</strong></td><td>≤ 35/min</td><td>Anpassen an pH-Ziel (≥ 7,20)</td></tr>
+        <tr><td><strong>pH-Ziel</strong></td><td>≥ 7,20</td><td>Permissive Hyperkapnie akzeptabel</td></tr>
+        <tr><td><strong>SpO₂-Ziel</strong></td><td>88–95 %</td><td>PaO₂ 55–80 mmHg</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="ards-card">
+  <div class="ards-card-head"><span class="ards-card-title">📋 PEEP-FiO₂-Tabelle (ARDSNet)</span></div>
+  <div class="ards-card-body">
+    <p>FiO₂ wählen für empfohlenen PEEP-Bereich:</p>
+    <div class="ards-field"><label for="ards-fio2-select">FiO₂</label>
+      <select class="ards-input" id="ards-fio2-select" style="width:140px;" onchange="ardsPeepTable()">
+        <option value="">— wählen —</option>
+        <option value="0.3">0,3</option>
+        <option value="0.4">0,4</option>
+        <option value="0.5">0,5</option>
+        <option value="0.6">0,6</option>
+        <option value="0.7">0,7</option>
+        <option value="0.8">0,8</option>
+        <option value="0.9">0,9</option>
+        <option value="1.0">1,0</option>
+      </select>
+    </div>
+    <div class="ards-peep-tables">
+      <div>
+        <p style="font-size:.74rem;font-weight:700;color:#b71c1c;text-align:center;">Lower PEEP / Higher FiO₂</p>
+        <table class="ards-table" id="ards-peep-low">
+          <thead><tr><th>FiO₂</th><th>0,3</th><th>0,4</th><th>0,5</th><th>0,6</th><th>0,7</th><th>0,8</th><th>0,9</th><th>1,0</th></tr></thead>
+          <tbody><tr><td><strong>PEEP</strong></td><td data-fio2="0.3">5</td><td data-fio2="0.4">5–8</td><td data-fio2="0.5">8–10</td><td data-fio2="0.6">10</td><td data-fio2="0.7">10–14</td><td data-fio2="0.8">14</td><td data-fio2="0.9">14–18</td><td data-fio2="1.0">18–24</td></tr></tbody>
+        </table>
+      </div>
+      <div>
+        <p style="font-size:.74rem;font-weight:700;color:#b71c1c;text-align:center;">Higher PEEP / Lower FiO₂</p>
+        <table class="ards-table" id="ards-peep-high">
+          <thead><tr><th>FiO₂</th><th>0,3</th><th>0,4</th><th>0,5</th><th>0,6</th><th>0,7</th><th>0,8</th><th>0,9</th><th>1,0</th></tr></thead>
+          <tbody><tr><td><strong>PEEP</strong></td><td data-fio2="0.3">12</td><td data-fio2="0.4">12–14</td><td data-fio2="0.5">14–16</td><td data-fio2="0.6">16–18</td><td data-fio2="0.7">18</td><td data-fio2="0.8">20–22</td><td data-fio2="0.9">22</td><td data-fio2="1.0">22–24</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="ards-card">
+  <div class="ards-card-head"><span class="ards-card-title">🔄 Bauchlagerung (Proning)</span></div>
+  <div class="ards-card-body">
+    <div class="ards-result ards-r-danger">
+      <strong>Indikation:</strong> PaO₂/FiO₂ &lt; 150 mmHg trotz FiO₂ ≥ 0,6 und PEEP ≥ 5 cmH₂O
+    </div>
+    <table class="ards-table">
+      <tr><td><strong>Dauer</strong></td><td>≥ 16 h pro Sitzung (PROSEVA-Studie: NNT = 6 für Mortalitätsreduktion)</td></tr>
+      <tr><td><strong>Beginn</strong></td><td>Frühzeitig innerhalb 12–24 h nach ARDS-Diagnose</td></tr>
+      <tr><td><strong>Beenden</strong></td><td>Wenn PaO₂/FiO₂ ≥ 150 über &gt; 4 h in Rückenlage nach Proning-Session</td></tr>
+    </table>
+    <div class="ards-acc" id="ards-acc-proning-ki" style="margin-top:10px;">
+      <div class="ards-acc-head" onclick="ardsToggleAcc('ards-acc-proning-ki')">⚠️ Kontraindikationen <span class="ards-acc-arrow">▶</span></div>
+      <div class="ards-acc-body">
+        <ul>
+          <li>Instabile Wirbelsäulenfraktur</li>
+          <li>Offenes Abdomen</li>
+          <li>Erhöhter ICP (&gt; 30 mmHg) oder zerebrale Herniation</li>
+          <li>Massive Hämoptysen</li>
+          <li>Innerhalb 48 h nach Sternotomie (relativ)</li>
+          <li>Schwere hämodynamische Instabilität (relativ — Proning kann Hämodynamik verbessern)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="ards-card">
+  <div class="ards-card-head"><span class="ards-card-title">🚨 Rescue-Therapien</span></div>
+  <div class="ards-card-body">
+    <div class="ards-acc" id="ards-acc-ino">
+      <div class="ards-acc-head" onclick="ardsToggleAcc('ards-acc-ino')">iNO (inhalatives Stickstoffmonoxid) <span class="ards-acc-arrow">▶</span></div>
+      <div class="ards-acc-body">
+        <p><strong>Dosierung:</strong> 5–20 ppm; Beginn 10 ppm, Titration nach Oxygenierung</p>
+        <p><strong>Wirkung:</strong> Selektive pulmonale Vasodilatation → V/Q-Verbesserung</p>
+        <p><strong>Evidenz:</strong> Verbessert Oxygenierung temporär, KEIN Mortalitätsbenefit. Rescue bei refraktärer Hypoxämie</p>
+        <p><strong>Cave:</strong> MetHb-Monitoring, Rebound-Hypertonie bei abruptem Absetzen → langsam ausschleichen</p>
+      </div>
+    </div>
+    <div class="ards-acc" id="ards-acc-ecmo">
+      <div class="ards-acc-head" onclick="ardsToggleAcc('ards-acc-ecmo')">VV-ECMO (EOLIA-Kriterien) <span class="ards-acc-arrow">▶</span></div>
+      <div class="ards-acc-body">
+        <p><strong>Indikation (EOLIA-Trial):</strong></p>
+        <ul>
+          <li>PaO₂/FiO₂ &lt; 50 mmHg für &gt; 3 h</li>
+          <li>PaO₂/FiO₂ &lt; 80 mmHg für &gt; 6 h</li>
+          <li>pH &lt; 7,25 + pCO₂ &gt; 60 mmHg für &gt; 6 h trotz optimaler Beatmung</li>
+        </ul>
+        <p><strong>Voraussetzung:</strong> Lungenprotektive Beatmung + Proning bereits durchgeführt</p>
+        <p><strong>Kontraindikationen:</strong> Irreversible Grunderkrankung, schwere Komorbidität, prolongierte Beatmung &gt; 7 Tage (relativ)</p>
+      </div>
+    </div>
+    <div class="ards-acc" id="ards-acc-hfov">
+      <div class="ards-acc-head" onclick="ardsToggleAcc('ards-acc-hfov')">Hochfrequenzoszillation (HFOV) <span class="ards-acc-arrow">▶</span></div>
+      <div class="ards-acc-body">
+        <p><strong>Status:</strong> Nach OSCAR- und OSCILLATE-Studien NICHT routinemäßig empfohlen (Trend zu erhöhter Mortalität in OSCILLATE)</p>
+        <p><strong>Möglicherweise:</strong> Ultima Ratio bei refraktärer Hypoxämie wenn ECMO nicht verfügbar</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end ards-beatmung -->
+
+<!-- ═══ SUB-TAB 3: ADJUVANTE THERAPIE ═══ -->
+<div id="ards-adjuvant" class="ards-tab">
+
+<div class="ards-card">
+  <div class="ards-card-head"><span class="ards-card-title">💧 Flüssigkeitsmanagement</span></div>
+  <div class="ards-card-body">
+    <div class="ards-result ards-r-info">
+      <strong>Strategie:</strong> Konservativ (FACTT-Trial) — nach hämodynamischer Stabilisierung negative Flüssigkeitsbilanz anstreben
+    </div>
+    <table class="ards-table">
+      <tr><td><strong>Akutphase (Schock)</strong></td><td>Adäquate Volumensubstitution, Vasopressoren. Laktat-/Perfusionsgesteuert</td></tr>
+      <tr><td><strong>Post-Stabilisierung</strong></td><td>Restriktive Strategie: Ziel-Bilanz neutral bis negativ; Diuretika wenn möglich</td></tr>
+      <tr><td><strong>Evidenz</strong></td><td>FACTT: Konservativ = weniger Beatmungstage (14,6 vs. 17,7), kein Mortalitätsunterschied</td></tr>
+    </table>
+    <div class="ards-warn-box">⚠️ Keine Hypotonie/Minderperfusion provozieren — Diurese nur bei stabiler Hämodynamik!</div>
+  </div>
+</div>
+
+<div class="ards-card">
+  <div class="ards-card-head"><span class="ards-card-title">💉 Neuromuskuläre Blockade</span></div>
+  <div class="ards-card-body">
+    <div class="ards-dose-card">
+      <strong>Cisatracurium</strong><br>
+      Bolus 15 mg i.v., dann 37,5 mg/h Perfusor<br>
+      Dauer: 48 h (ACURASYS-Studie)
+    </div>
+    <table class="ards-table">
+      <tr><td><strong>Indikation</strong></td><td>Schweres ARDS (PaO₂/FiO₂ &lt; 150), Patient-Ventilator-Asynchronie trotz tiefer Sedierung, Proning</td></tr>
+      <tr><td><strong>ACURASYS (2010)</strong></td><td>48 h Cisatracurium: Mortalitätsbenefit bei schwerem ARDS (HR 0,68)</td></tr>
+      <tr><td><strong>ROSE (2019)</strong></td><td>Kein Mortalitätsbenefit bei liberaler Sedierungsstrategie als Kontrollgruppe</td></tr>
+      <tr><td><strong>Praxis</strong></td><td>Individuell: NMB bei schwerer Asynchronie, Bauchlagerung, refraktärer Hypoxämie</td></tr>
+    </table>
+    <div class="ards-warn-box">⚠️ TOF-Monitoring! ICU-acquired Weakness bei prolongierter Anwendung. Tiefe Sedierung VOR NMB sicherstellen.</div>
+  </div>
+</div>
+
+<div class="ards-card">
+  <div class="ards-card-head"><span class="ards-card-title">💊 Steroide</span></div>
+  <div class="ards-card-body">
+    <div class="ards-dose-card">
+      <strong>Dexamethason (DEXA-ARDS-Schema):</strong><br>
+      Tag 1–5: 20 mg i.v. 1×/d<br>
+      Tag 6–10: 10 mg i.v. 1×/d<br>
+      <span style="font-size:.72rem;color:#78909c;">Villar et al., Lancet Respir Med 2020: Reduktion Beatmungstage + Mortalität</span>
+    </div>
+    <div class="ards-dose-card" style="margin-top:8px;">
+      <strong>Methylprednisolon (persistierendes ARDS &gt; 7 d):</strong><br>
+      2 mg/kg/d Tag 1, dann schrittweise Reduktion über 2–3 Wochen<br>
+      <span style="font-size:.72rem;color:#78909c;">Meduri-Schema; Beginn NICHT nach Tag 14 (potentiell schädlich)</span>
+    </div>
+    <div class="ards-warn-box">⚠️ Steroide bei ARDS durch Influenza/COVID: Dexamethason 6 mg/d (RECOVERY). Bei aktiver Infektion nur mit adäquater antimikrobieller Therapie!</div>
+  </div>
+</div>
+
+<div class="ards-card">
+  <div class="ards-card-head"><span class="ards-card-title">😴 Sedierung</span></div>
+  <div class="ards-card-body">
+    <table class="ards-table">
+      <thead><tr><th>Situation</th><th>RASS-Ziel</th><th>Regime</th></tr></thead>
+      <tbody>
+        <tr><td>Standard</td><td>0 bis −1</td><td>Leichte Sedierung, tägliches Aufwachen (SAT)</td></tr>
+        <tr><td>Bauchlagerung</td><td>−3 bis −4</td><td>Tiefe Sedierung für Toleranz; Propofol + Opiat</td></tr>
+        <tr><td>NMB-Therapie</td><td>−4 bis −5</td><td>Tiefe Sedierung VOR Relaxierung! BIS-Monitoring erwägen</td></tr>
+        <tr><td>Asynchronie</td><td>−2 bis −3</td><td>Titrieren bis Patient-Ventilator-Synchronie</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="ards-card">
+  <div class="ards-card-head"><span class="ards-card-title">🔧 Recruitment-Manöver</span></div>
+  <div class="ards-card-body">
+    <div class="ards-warn-red">
+      <strong>⚠️ Cave — ART-Trial (JAMA 2017):</strong> Aggressive Recruitment-Manöver (bis PEEP 45 cmH₂O) zeigten ERHÖHTE Mortalität (HR 1,20)! Recruitment-Manöver sind NICHT routinemäßig empfohlen.
+    </div>
+    <p style="margin-top:10px;"><strong>Wenn überhaupt:</strong> Vorsichtiges Recruitment mit moderatem PEEP (max 30–35 cmH₂O für 30–40 s), nur unter hämodynamischem Monitoring und mit sofortiger Abbruchmöglichkeit.</p>
+  </div>
+</div>
+
+</div><!-- end ards-adjuvant -->
+
+<!-- ═══ SUB-TAB 4: MONITORING & WEANING ═══ -->
+<div id="ards-monitoring" class="ards-tab">
+
+<div class="ards-card">
+  <div class="ards-card-head"><span class="ards-card-title">🎯 Oxygenierungsziele</span></div>
+  <div class="ards-card-body">
+    <div class="ards-dd-grid">
+      <div class="ards-dd-card" style="text-align:center;">
+        <h4>PaO₂</h4>
+        <div style="font-size:1.3rem;font-weight:800;color:#b71c1c;">55–80 mmHg</div>
+      </div>
+      <div class="ards-dd-card" style="text-align:center;">
+        <h4>SpO₂</h4>
+        <div style="font-size:1.3rem;font-weight:800;color:#b71c1c;">88–95 %</div>
+      </div>
+    </div>
+    <div class="ards-result ards-r-info" style="margin-top:8px;">
+      <strong>Konservative O₂-Therapie:</strong> Hyperoxie vermeiden (SpO₂ &gt; 96 % → FiO₂ reduzieren). Permissive Hypoxämie bei schwerem ARDS akzeptabel.
+    </div>
+  </div>
+</div>
+
+<div class="ards-card">
+  <div class="ards-card-head"><span class="ards-card-title">🧮 Compliance-Rechner</span></div>
+  <div class="ards-card-body">
+    <p>C<sub>stat</sub> = V<sub>t</sub> / (P<sub>plateau</sub> − PEEP)</p>
+    <div class="ards-input-grid">
+      <div class="ards-field"><label for="ards-vt-comp">Tidalvolumen (ml)</label><input type="number" class="ards-input" id="ards-vt-comp" placeholder="z.B. 400" step="10" oninput="ardsCalcCompliance()"></div>
+      <div class="ards-field"><label for="ards-pplat-comp">P<sub>plateau</sub> (cmH₂O)</label><input type="number" class="ards-input" id="ards-pplat-comp" placeholder="z.B. 25" step="1" oninput="ardsCalcCompliance()"></div>
+      <div class="ards-field"><label for="ards-peep-comp">PEEP (cmH₂O)</label><input type="number" class="ards-input" id="ards-peep-comp" placeholder="z.B. 10" step="1" oninput="ardsCalcCompliance()"></div>
+    </div>
+    <div id="ards-comp-result" style="margin-top:10px;"></div>
+  </div>
+</div>
+
+<div class="ards-card">
+  <div class="ards-card-head"><span class="ards-card-title">📉 Driving-Pressure-Monitoring</span></div>
+  <div class="ards-card-body">
+    <div class="ards-result ards-r-info">
+      <strong>Ziel: Driving Pressure ≤ 15 cmH₂O</strong><br>
+      Tägliche Messung! Bei DP &gt; 15 → V<sub>t</sub> reduzieren oder PEEP optimieren.<br>
+      Driving Pressure = P<sub>plateau</sub> − PEEP (korreliert mit Strain = Vt/FRC)<br>
+      <span style="font-size:.72rem;">Amato et al., NEJM 2015: Stärkster Mediator zwischen Beatmung und Mortalität</span>
+    </div>
+  </div>
+</div>
+
+<div class="ards-card">
+  <div class="ards-card-head"><span class="ards-card-title">🔓 Weaning & Extubation</span></div>
+  <div class="ards-card-body">
+    <p><strong>Readiness-to-Wean-Kriterien:</strong></p>
+    <table class="ards-table">
+      <tr><td><strong>FiO₂</strong></td><td>≤ 0,4</td></tr>
+      <tr><td><strong>PEEP</strong></td><td>≤ 8 cmH₂O</td></tr>
+      <tr><td><strong>Hämodynamik</strong></td><td>Stabil, keine/niedrige Vasopressoren</td></tr>
+      <tr><td><strong>Bewusstsein</strong></td><td>Wach, kooperativ (RASS 0 bis −1)</td></tr>
+      <tr><td><strong>Hustenreflex</strong></td><td>Adäquat, Sekretclearance möglich</td></tr>
+    </table>
+
+    <p style="margin-top:12px;"><strong>SBT-Protokoll (Spontaneous Breathing Trial):</strong></p>
+    <table class="ards-table">
+      <tr><td><strong>Methode</strong></td><td>T-Stück oder PS 5–8 / PEEP 0–5 für 30–120 min</td></tr>
+      <tr><td><strong>RSBI</strong></td><td>f/Vt &lt; 105 (Atemfrequenz/Tidalvolumen in L) → Extubation wahrscheinlich erfolgreich</td></tr>
+      <tr><td><strong>Abbruchkriterien</strong></td><td>SpO₂ &lt; 88 %, f &gt; 35/min, Agitation, Diaphorese, hämodynamische Instabilität</td></tr>
+    </table>
+
+    <p style="margin-top:12px;"><strong>Extubationskriterien:</strong></p>
+    <div class="ards-result ards-r-ok">
+      ✓ SBT bestanden · ✓ Adäquater Hustenreflex · ✓ Keine übermäßige Sekretion · ✓ Bewusst & kooperativ · ✓ Cuff-Leak vorhanden (bei Risiko für Stridor)
+    </div>
+    <div class="ards-warn-box">⚠️ Bei ARDS-Patienten: hohes Re-Intubationsrisiko! Prophylaktische NIV post-Extubation erwägen (v.a. bei Alter &gt; 65, Herzinsuffizienz, Adipositas)</div>
+  </div>
+</div>
+
+<div class="ards-card">
+  <div class="ards-card-head"><span class="ards-card-title">📋 Tägliche Checkliste</span></div>
+  <div class="ards-card-body">
+    <label class="ards-check-row"><input type="checkbox"><span class="ards-check-label">Sedierungspause / SAT durchgeführt?</span></label>
+    <label class="ards-check-row"><input type="checkbox"><span class="ards-check-label">SBT-Eignung geprüft?</span></label>
+    <label class="ards-check-row"><input type="checkbox"><span class="ards-check-label">Driving Pressure gemessen &amp; dokumentiert?</span></label>
+    <label class="ards-check-row"><input type="checkbox"><span class="ards-check-label">Compliance berechnet?</span></label>
+    <label class="ards-check-row"><input type="checkbox"><span class="ards-check-label">Proning-Indikation geprüft (P/F &lt; 150)?</span></label>
+    <label class="ards-check-row"><input type="checkbox"><span class="ards-check-label">Flüssigkeitsbilanz evaluiert?</span></label>
+    <label class="ards-check-row"><input type="checkbox"><span class="ards-check-label">FiO₂ auf niedrigstes Niveau titriert?</span></label>
+    <label class="ards-check-row"><input type="checkbox"><span class="ards-check-label">NMB noch indiziert? (Stopp nach 48 h prüfen)</span></label>
+    <label class="ards-check-row"><input type="checkbox"><span class="ards-check-label">Steroide laufend / Tapering-Phase?</span></label>
+  </div>
+</div>
+
+</div><!-- end ards-monitoring -->
+
+</div><!-- end ards-wrap -->
+
+<!-- ── JavaScript ── -->
+<script>
+(function(){
+'use strict';
+
+/* ── Sub-Tab-Switcher ── */
+window.ardsShowTab = function(id, btn) {
+  document.querySelectorAll('#tool-ards .ards-tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('#tool-ards .ards-tab-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.getElementById('ards-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+};
+
+/* ── Accordion ── */
+window.ardsToggleAcc = function(id) {
+  var el = document.getElementById(id);
+  if (el) el.classList.toggle('open');
+};
+
+/* ── PaO2/FiO2-Rechner ── */
+window.ardsCalcPF = function() {
+  var pao2 = parseFloat(document.getElementById('ards-pao2').value);
+  var fio2 = parseFloat(document.getElementById('ards-fio2').value);
+  var peep = parseFloat(document.getElementById('ards-peep-input').value);
+  var out = document.getElementById('ards-pf-result');
+  if (isNaN(pao2) || isNaN(fio2) || fio2 <= 0) { out.innerHTML = ''; return; }
+
+  var pf = pao2 / fio2;
+  var html = '<div class="ards-result ';
+  var label = '';
+
+  if (!isNaN(peep) && peep < 5) {
+    out.innerHTML = '<div class="ards-result ards-r-warn">⚠️ PEEP &lt; 5 cmH₂O — Berlin-Kriterien erfordern PEEP/CPAP ≥ 5!</div>';
+    return;
+  }
+
+  if (pf > 300) {
+    html += 'ards-r-ok">'; label = 'Kein ARDS';
+  } else if (pf > 200) {
+    html += 'ards-r-mild">'; label = 'Mildes ARDS';
+  } else if (pf > 100) {
+    html += 'ards-r-mod">'; label = 'Moderates ARDS';
+  } else {
+    html += 'ards-r-severe">'; label = 'Schweres ARDS';
+  }
+
+  html += '<strong>PaO₂/FiO₂ = ' + pf.toFixed(0) + ' mmHg → ' + label + '</strong>';
+
+  if (pf <= 300 && pf > 200) {
+    html += '<br><span class="ards-badge ards-badge-green">Mild</span> Mortalität ~27 %';
+  } else if (pf <= 200 && pf > 100) {
+    html += '<br><span class="ards-badge ards-badge-orange">Moderat</span> Mortalität ~32 %';
+    html += '<br>→ Lungenprotektive Beatmung, Bauchlagerung evaluieren';
+  } else if (pf <= 100) {
+    html += '<br><span class="ards-badge ards-badge-red">Schwer</span> Mortalität ~45 %';
+    html += '<br>→ Bauchlagerung! NMB erwägen. ECMO-Indikation prüfen.';
+  }
+
+  html += '</div>';
+  out.innerHTML = html;
+};
+
+/* ── IBW + Tidalvolumen ── */
+window.ardsCalcIBW = function() {
+  var male = document.getElementById('ards-sex-m').checked;
+  var height = parseFloat(document.getElementById('ards-height').value);
+  var out = document.getElementById('ards-ibw-result');
+  if (isNaN(height) || height < 100 || height > 230) { out.innerHTML = ''; return; }
+
+  var ibw = male ? 50 + 0.91 * (height - 152.4) : 45.5 + 0.91 * (height - 152.4);
+  ibw = Math.max(ibw, 30);
+  var vt6 = ibw * 6;
+  var vtLow = ibw * 4;
+  var vtHigh = ibw * 8;
+
+  var html = '<div class="ards-result ards-r-info">';
+  html += '<strong>IBW = ' + ibw.toFixed(1) + ' kg</strong> (' + (male ? '♂' : '♀') + ', ' + height + ' cm)<br>';
+  html += '<strong>Tidalvolumen (6 ml/kg IBW): ' + vt6.toFixed(0) + ' ml</strong><br>';
+  html += 'Bereich: ' + vtLow.toFixed(0) + '–' + vtHigh.toFixed(0) + ' ml (4–8 ml/kg IBW)<br>';
+  html += '<span style="font-size:.72rem;color:#78909c;">Formel: ' + (male ? '50' : '45,5') + ' + 0,91 × (' + height + ' − 152,4)</span>';
+  html += '</div>';
+  out.innerHTML = html;
+};
+
+/* ── Driving Pressure ── */
+window.ardsCalcDP = function() {
+  var pplat = parseFloat(document.getElementById('ards-pplat').value);
+  var peep = parseFloat(document.getElementById('ards-peep-dp').value);
+  var out = document.getElementById('ards-dp-result');
+  if (isNaN(pplat) || isNaN(peep)) { out.innerHTML = ''; return; }
+
+  var dp = pplat - peep;
+  var html = '';
+
+  if (pplat > 30) {
+    html += '<div class="ards-result ards-r-danger">⚠️ P<sub>plateau</sub> = ' + pplat + ' cmH₂O — <strong>über 30!</strong> → Tidalvolumen reduzieren!</div>';
+  }
+
+  var cls = dp <= 13 ? 'ards-r-ok' : dp <= 15 ? 'ards-r-mild' : 'ards-r-severe';
+  html += '<div class="ards-result ' + cls + '">';
+  html += '<strong>Driving Pressure = ' + dp + ' cmH₂O</strong>';
+  if (dp <= 15) {
+    html += ' ✓ im Zielbereich (≤ 15)';
+  } else {
+    html += ' ⚠️ <strong>Erhöht!</strong> → Vt reduzieren oder PEEP anpassen';
+  }
+  html += '</div>';
+  out.innerHTML = html;
+};
+
+/* ── PEEP-FiO2-Tabelle Highlighting ── */
+window.ardsPeepTable = function() {
+  var val = document.getElementById('ards-fio2-select').value;
+  // Clear all highlights
+  document.querySelectorAll('#tool-ards .ards-table td[data-fio2]').forEach(function(td) {
+    td.classList.remove('ards-peep-hl');
+  });
+  if (!val) return;
+  // Highlight matching columns
+  document.querySelectorAll('#tool-ards .ards-table td[data-fio2="' + val + '"]').forEach(function(td) {
+    td.classList.add('ards-peep-hl');
+  });
+};
+
+/* ── Compliance-Rechner ── */
+window.ardsCalcCompliance = function() {
+  var vt = parseFloat(document.getElementById('ards-vt-comp').value);
+  var pplat = parseFloat(document.getElementById('ards-pplat-comp').value);
+  var peep = parseFloat(document.getElementById('ards-peep-comp').value);
+  var out = document.getElementById('ards-comp-result');
+  if (isNaN(vt) || isNaN(pplat) || isNaN(peep)) { out.innerHTML = ''; return; }
+
+  if (pplat <= peep) {
+    out.innerHTML = '<div class="ards-result ards-r-warn">⚠️ Pplateau muss größer als PEEP sein!</div>';
+    return;
+  }
+
+  var cstat = vt / (pplat - peep);
+  var html = '<div class="ards-result ';
+  var label = '';
+
+  if (cstat >= 50) {
+    html += 'ards-r-ok">'; label = 'Normal';
+  } else if (cstat >= 40) {
+    html += 'ards-r-mild">'; label = 'Leicht reduziert';
+  } else if (cstat >= 20) {
+    html += 'ards-r-mod">'; label = 'Moderat reduziert — typisch für ARDS';
+  } else {
+    html += 'ards-r-severe">'; label = 'Schwer reduziert — „Baby Lung"';
+  }
+
+  html += '<strong>C<sub>stat</sub> = ' + cstat.toFixed(1) + ' ml/cmH₂O → ' + label + '</strong>';
+  html += '<br><span style="font-size:.72rem;color:#78909c;">Normal: 50–80 ml/cmH₂O · ARDS mild: 40–50 · moderat: 25–40 · schwer: &lt; 25</span>';
+  html += '</div>';
+  out.innerHTML = html;
+};
+
+})();
+</script>
+</div><!-- end tool-ards -->
 
 <!-- ══════════════════════════════════════════════════════════
      TOOL: INTOXIKATIONEN
