@@ -399,26 +399,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       </div>
     </div>
 
-    <!-- HESTIA -->
-    <div class="lae-card">
-      <div class="lae-card-head"><span class="lae-card-icon">🏠</span><span class="lae-card-title">HESTIA — Ambulante Eignung</span></div>
-      <div class="lae-card-body">
-        <div class="lae-info">Wenn <b>ein Kriterium</b> zutrifft → stationäre Behandlung empfohlen.</div>
-        <label class="lae-check"><input type="checkbox" class="hestia-item" onchange="laeCalcHESTIA()"><span class="lae-check-label">Hämodynamisch instabil</span></label>
-        <label class="lae-check"><input type="checkbox" class="hestia-item" onchange="laeCalcHESTIA()"><span class="lae-check-label">Thrombolyse / Katheterintervention / Embolektomie notwendig</span></label>
-        <label class="lae-check"><input type="checkbox" class="hestia-item" onchange="laeCalcHESTIA()"><span class="lae-check-label">Aktive Blutung oder erhöhtes Blutungsrisiko</span></label>
-        <label class="lae-check"><input type="checkbox" class="hestia-item" onchange="laeCalcHESTIA()"><span class="lae-check-label">O₂-Gabe erforderlich für SpO₂ &gt; 90%</span></label>
-        <label class="lae-check"><input type="checkbox" class="hestia-item" onchange="laeCalcHESTIA()"><span class="lae-check-label">LE unter vorbestehender therapeutischer Antikoagulation</span></label>
-        <label class="lae-check"><input type="checkbox" class="hestia-item" onchange="laeCalcHESTIA()"><span class="lae-check-label">I.v. Schmerztherapie notwendig</span></label>
-        <label class="lae-check"><input type="checkbox" class="hestia-item" onchange="laeCalcHESTIA()"><span class="lae-check-label">Schwere Niereninsuffizienz (GFR &lt; 30 ml/min)</span></label>
-        <label class="lae-check"><input type="checkbox" class="hestia-item" onchange="laeCalcHESTIA()"><span class="lae-check-label">Schwere Leberinsuffizienz</span></label>
-        <label class="lae-check"><input type="checkbox" class="hestia-item" onchange="laeCalcHESTIA()"><span class="lae-check-label">Schwangerschaft</span></label>
-        <label class="lae-check"><input type="checkbox" class="hestia-item" onchange="laeCalcHESTIA()"><span class="lae-check-label">Dokumentierte HIT in der Vorgeschichte</span></label>
-        <label class="lae-check"><input type="checkbox" class="hestia-item" onchange="laeCalcHESTIA()"><span class="lae-check-label">Medizinische oder soziale Gründe gegen Entlassung</span></label>
-        <div id="hestia-result" style="margin-top:10px;"></div>
-      </div>
-    </div>
-
   </div><!-- end lae-risiko -->
 
   <!-- ══ THERAPIE ══ -->
@@ -3187,7 +3167,7 @@ window.laeCalcSPESI = function() {
   document.getElementById('spesi-score').textContent = sum;
   var low = sum === 0;
   document.getElementById('spesi-result').innerHTML =
-    '<div class="lae-result '+(low?'lae-r-low':'lae-r-mid')+'"><div class="lae-result-title">sPESI '+sum+' — '+(low?'Niedriges Risiko':'Intermediäres Risiko')+'</div><div class="lae-result-text">30-Tage-Mortalität: '+(low?'~1%':'~10,9%')+'<br>'+(low?'→ Ambulante Therapie möglich wenn keine HESTIA-Kriterien + keine RV-Dysfunktion + Troponin normal':'→ Stationäre Behandlung; EchoKG + Troponin zur Stratifizierung')+'</div></div>';
+    '<div class="lae-result '+(low?'lae-r-low':'lae-r-mid')+'"><div class="lae-result-title">sPESI '+sum+' — '+(low?'Niedriges Risiko':'Intermediäres Risiko')+'</div><div class="lae-result-text">30-Tage-Mortalität: '+(low?'~1%':'~10,9%')+'<br>'+(low?'→ Niedriges Risiko — EchoKG + Troponin zur weiteren Stratifizierung':'→ Stationäre Behandlung; EchoKG + Troponin zur Stratifizierung')+'</div></div>';
   laeCalcRisk();
 };
 
@@ -3205,7 +3185,7 @@ window.laeCalcRisk = function() {
   } else if(spesi>=1 && (rv==='yes'||troponin==='erhoht')){
     rc='lae-r-mid';rl='🟡 INTERMEDIÄR-NIEDRIGES RISIKO';mort='3–8%';emp='Therapeutische Antikoagulation (parenteral oder DOAK); Normalstation';
   } else if(spesi===0){
-    rc='lae-r-low';rl='🟢 NIEDRIGES RISIKO';mort='&lt;1%';emp='DOAK bevorzugt (Apixaban oder Rivaroxaban Initialdosis); ambulante Therapie wenn alle HESTIA-Kriterien negativ';
+    rc='lae-r-low';rl='🟢 NIEDRIGES RISIKO';mort='&lt;1%';emp='DOAK bevorzugt (Apixaban oder Rivaroxaban Initialdosis)';
   } else {
     document.getElementById('risk-result').innerHTML='<div class="lae-info">Bitte alle Parameter (sPESI, Troponin, RV-Dysfunktion) ausfüllen.</div>'; return;
   }
@@ -3213,12 +3193,8 @@ window.laeCalcRisk = function() {
     '<div class="lae-result '+rc+'"><div class="lae-result-title" style="font-size:.88rem;">'+rl+'</div><div class="lae-result-text"><b>30-Tage-Mortalität:</b> '+mort+'<br><b>Empfehlung:</b> '+emp+'</div></div>';
 };
 
-// ── HESTIA ────────────────────────────────────────────────
-window.laeCalcHESTIA = function() {
-  var any = document.querySelectorAll('.hestia-item:checked').length > 0;
-  document.getElementById('hestia-result').innerHTML = any
-    ? '<div class="lae-result lae-r-high"><div class="lae-result-title">HESTIA positiv — Stationäre Behandlung</div><div class="lae-result-text">Mindestens ein Kriterium erfüllt → ambulante Therapie nicht geeignet.</div></div>'
-    : '<div class="lae-result lae-r-low"><div class="lae-result-title">HESTIA negativ — Ambulante Therapie möglich</div><div class="lae-result-text">Alle Kriterien negativ. Voraussetzung ambulant: <b>sPESI = 0</b> + keine RV-Dysfunktion + Troponin normal + sichergestellte Nachsorge.</div></div>';
+// ── HESTIA (entfernt — ambulant nicht ITS-relevant) ──────
+window.laeCalcHESTIA = function() {};
 };
 
 // ── NMH Kalkulator ────────────────────────────────────────
