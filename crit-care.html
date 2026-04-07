@@ -9148,7 +9148,7 @@ window.crrtCalcFF = function() {
 <!-- Header -->
 <div class="wean-header">
   <h2>🔓 Weaning-Protokoll</h2>
-  <p>Standardisierter Weaningversuch — nach VA Weaning S32B (Charité CBF, V4, 12/2020)</p>
+  <p>Standardisierter Weaningversuch — SBT-Protokoll, Weaning-Stufen, Extubation</p>
 </div>
 
 <!-- Sub-Tab Nav -->
@@ -9188,6 +9188,14 @@ window.crrtCalcFF = function() {
       <div class="wean-field"><label for="wean-rsbi-vt">Tidalvolumen (ml)</label><input type="number" class="wean-input" id="wean-rsbi-vt" placeholder="z.B. 350" step="10" oninput="weanCalcRSBI()"></div>
     </div>
     <div id="wean-rsbi-result" style="margin-top:10px;"></div>
+
+    <div class="wean-result wean-r-info" style="margin-top:12px;">
+      <strong>Evidenz zum RSBI</strong><br>
+      <strong>Yang & Tobin, NEJM 1991:</strong> Originalpublikation. RSBI &lt; 105 als Schwellenwert: Sensitivität 97 %, Spezifität 64 % für erfolgreiches Weaning. Messung während 1 min Spontanatmung am T-Stück.<br>
+      <strong>Meade et al., Chest 2001:</strong> Systematisches Review — RSBI ist der beste einzelne Prädiktor, aber diagnostische Genauigkeit variiert stark je nach Population. Positiver prädiktiver Wert 78 %, negativer prädiktiver Wert 95 %.<br>
+      <strong>Karthika et al., Respir Care 2018:</strong> RSBI allein hat in heterogenen ICU-Populationen begrenzte Spezifität (viele falsch-positive). Am besten als Screening-Instrument zusammen mit klinischer Beurteilung verwenden.<br>
+      <strong>Praxis-Empfehlung:</strong> RSBI &lt; 80 = günstig · 80–104 = grenzwertig (SBT versuchen) · ≥ 105 = ungünstig. Immer im klinischen Kontext bewerten — RSBI allein ist NICHT ausreichend für eine Extubationsentscheidung.
+    </div>
   </div>
 </div>
 
@@ -9269,7 +9277,7 @@ window.crrtCalcFF = function() {
 <div id="wean-stufen" class="wean-tab">
 
 <div class="wean-card">
-  <div class="wean-card-head"><span class="wean-card-title">📊 Modifiziertes Weaning-Konzept S32B</span></div>
+  <div class="wean-card-head"><span class="wean-card-title">📊 Stufenweises Weaning-Konzept (Tracheotomie)</span></div>
   <div class="wean-card-body">
     <p>Für <strong>tracheotomierte Patienten</strong>. Aktuelle Weaning-Stufe auswählen — neben täglichem SBT werden Spontanatmungsphasen stufenweise gesteigert.</p>
 
@@ -9431,7 +9439,7 @@ window.crrtCalcFF = function() {
       <li>Atemmuskeltraining (Inspiratory Muscle Training, IMT)</li>
       <li>Verlegung in Weaning-Zentrum erwägen</li>
     </ul>
-    <div class="wean-source">Quelle: VA Weaning S32B, Charité CBF, Version 4 (10.12.2020) · Erstellt: T. Weidehoff · Geprüft/Freigegeben: F. Compton</div>
+    <div class="wean-source">Quellen: Boles et al., Eur Respir J 2007 (WIND-Klassifikation) · Girard et al., Lancet 2008 (ABC-Trial, täglicher SAT+SBT) · McConville & Kress, NEJM 2012 (Weaning Strategies)</div>
   </div>
 </div>
 
