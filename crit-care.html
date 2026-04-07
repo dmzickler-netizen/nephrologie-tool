@@ -40,6 +40,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 #tool-ards{display:none;}
 #tool-tox{display:none;}
 #tool-crrt{display:none;}
+#tool-wean{display:none;}
 
 /* ============================================================
    LAE — CSS (vollständig aus lae.html, in Datei isoliert)
@@ -179,6 +180,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <button class="nav-tab-btn" data-tool="crrt" onclick="switchTool('crrt')">🩸 CRRT</button>
   <button class="nav-tab-btn" data-tool="tox" onclick="switchTool('tox')">☠️ Intoxikationen</button>
   <button class="nav-tab-btn" data-tool="sepsis" onclick="switchTool('sepsis')">🦠 Sepsis</button>
+  <button class="nav-tab-btn" data-tool="wean" onclick="switchTool('wean')">🔓 Weaning</button>
   <button class="nav-tab-btn" data-tool="ards" onclick="switchTool('ards')">💨 ARDS</button>
 </div>
 
@@ -3083,6 +3085,7 @@ window.switchTool = function(name) {
   document.getElementById('tool-sepsis').style.display = name === 'sepsis' ? 'block' : 'none';
   document.getElementById('tool-ards').style.display   = name === 'ards'   ? 'block' : 'none';
   document.getElementById('tool-crrt').style.display   = name === 'crrt'   ? 'block' : 'none';
+  document.getElementById('tool-wean').style.display   = name === 'wean'   ? 'block' : 'none';
   document.getElementById('tool-tox').style.display    = name === 'tox'    ? 'block' : 'none';
   if (name === 'tox' && window.toxLoadSabValues) { window.toxLoadSabValues(); }
 };
@@ -9067,6 +9070,503 @@ window.crrtCalcFF = function() {
 })();
 </script>
 </div><!-- end tool-crrt -->
+
+<!-- ══════════════════════════════════════════════════════════
+     TOOL: WEANING
+     ══════════════════════════════════════════════════════════ -->
+<div id="tool-wean">
+<style>
+#tool-wean .wean-wrap{max-width:880px;margin:0 auto;padding:16px;}
+#tool-wean .wean-header{background:linear-gradient(135deg,#b71c1c 0%,#c62828 100%);color:#fff;border-radius:14px;padding:18px 20px;margin-bottom:16px;}
+#tool-wean .wean-header h2{margin:0;font-size:1.15rem;font-weight:800;}
+#tool-wean .wean-header p{margin:6px 0 0;font-size:.78rem;opacity:.88;}
+#tool-wean .wean-tab-nav{background:#fff;border-bottom:2px solid #f5e0e0;display:flex;overflow-x:auto;padding:0 12px;gap:2px;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:16px;border-radius:10px 10px 0 0;}
+#tool-wean .wean-tab-btn{border:none;background:none;padding:13px 15px 11px;font-size:.8rem;font-weight:600;color:#78909c;cursor:pointer;border-bottom:2.5px solid transparent;white-space:nowrap;transition:color .15s,border-color .15s;}
+#tool-wean .wean-tab-btn.active{color:#b71c1c;border-bottom-color:#b71c1c;}
+#tool-wean .wean-tab-btn:hover:not(.active){color:#c62828;border-bottom-color:#ef9a9a;}
+#tool-wean .wean-tab{display:none;}
+#tool-wean .wean-tab.active{display:block;}
+#tool-wean .wean-card{background:#fff;border-radius:14px;box-shadow:0 1px 6px rgba(0,0,0,.08);margin-bottom:14px;overflow:hidden;}
+#tool-wean .wean-card-head{padding:13px 16px 10px;border-bottom:1px solid #fce4ec;display:flex;align-items:center;gap:8px;}
+#tool-wean .wean-card-title{font-size:.82rem;font-weight:800;color:#b71c1c;text-transform:uppercase;letter-spacing:.6px;}
+#tool-wean .wean-card-body{padding:14px 16px;}
+#tool-wean .wean-card-body p{margin:0 0 8px;font-size:.8rem;color:#37474f;line-height:1.5;}
+#tool-wean .wean-check-row{display:flex;align-items:flex-start;gap:9px;padding:8px 12px;border-radius:8px;cursor:pointer;transition:background .12s;margin-bottom:3px;}
+#tool-wean .wean-check-row:hover{background:#fce4ec;}
+#tool-wean .wean-check-row input[type=checkbox]{accent-color:#b71c1c;width:16px;height:16px;flex-shrink:0;margin-top:2px;}
+#tool-wean .wean-check-label{font-size:.8rem;color:#37474f;line-height:1.45;}
+#tool-wean .wean-check-sub{font-size:.7rem;color:#90a4ae;display:block;}
+#tool-wean .wean-result{padding:14px 16px;border-radius:10px;margin-bottom:10px;font-size:.8rem;line-height:1.55;}
+#tool-wean .wean-r-ok{background:#e8f5e9;border-left:4px solid #2e7d32;color:#1b5e20;}
+#tool-wean .wean-r-warn{background:#fff3e0;border-left:4px solid #e65100;color:#4e342e;}
+#tool-wean .wean-r-danger{background:#fce4ec;border-left:4px solid #b71c1c;color:#b71c1c;}
+#tool-wean .wean-r-info{background:#e3f2fd;border-left:4px solid #1565c0;color:#0d47a1;}
+#tool-wean .wean-r-stop{background:#b71c1c;border-left:4px solid #7f0000;color:#fff;font-weight:700;}
+#tool-wean .wean-table{width:100%;border-collapse:collapse;margin:8px 0;font-size:.76rem;}
+#tool-wean .wean-table th,#tool-wean .wean-table td{padding:8px 10px;border:1px solid #e0e0e0;text-align:left;}
+#tool-wean .wean-table th{background:#fafafa;font-weight:700;color:#b71c1c;}
+#tool-wean .wean-table tr:hover td{background:#fce4ec;}
+#tool-wean .wean-stufe{border:2px solid #e0e0e0;border-radius:12px;padding:0;margin-bottom:8px;overflow:hidden;transition:border-color .2s;}
+#tool-wean .wean-stufe.wean-stufe-active{border-color:#b71c1c;box-shadow:0 0 0 2px rgba(183,28,28,.15);}
+#tool-wean .wean-stufe-head{display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;transition:background .12s;}
+#tool-wean .wean-stufe-head:hover{background:#fce4ec;}
+#tool-wean .wean-stufe-num{width:36px;height:36px;border-radius:50%;background:#e0e0e0;display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:800;color:#757575;flex-shrink:0;transition:all .2s;}
+#tool-wean .wean-stufe-active .wean-stufe-num{background:#b71c1c;color:#fff;}
+#tool-wean .wean-stufe-text{font-size:.82rem;font-weight:600;color:#37474f;}
+#tool-wean .wean-stufe-detail{font-size:.72rem;color:#90a4ae;}
+#tool-wean .wean-stufe-check{margin-left:auto;font-size:1.1rem;color:#bdbdbd;transition:color .2s;}
+#tool-wean .wean-stufe-active .wean-stufe-check{color:#2e7d32;}
+#tool-wean .wean-field{display:flex;flex-direction:column;gap:3px;margin-bottom:8px;}
+#tool-wean .wean-field label{font-size:.74rem;font-weight:600;color:#546e7a;}
+#tool-wean .wean-input{border:1.5px solid #cfd8dc;border-radius:8px;padding:7px 10px;font-size:.82rem;width:110px;outline:none;transition:border-color .15s;}
+#tool-wean .wean-input:focus{border-color:#b71c1c;}
+#tool-wean .wean-input-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px 16px;}
+#tool-wean .wean-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.68rem;font-weight:700;margin:1px 2px;}
+#tool-wean .wean-badge-red{background:#fce4ec;color:#b71c1c;}
+#tool-wean .wean-badge-green{background:#e8f5e9;color:#2e7d32;}
+#tool-wean .wean-badge-blue{background:#e3f2fd;color:#1565c0;}
+#tool-wean .wean-badge-gray{background:#f5f5f5;color:#616161;}
+#tool-wean .wean-btn{display:inline-block;padding:8px 18px;border-radius:8px;border:none;font-size:.78rem;font-weight:700;cursor:pointer;transition:background .15s;}
+#tool-wean .wean-btn-primary{background:#b71c1c;color:#fff;}
+#tool-wean .wean-btn-primary:hover{background:#d32f2f;}
+#tool-wean .wean-btn-outline{background:#fff;color:#b71c1c;border:1.5px solid #b71c1c;}
+#tool-wean .wean-btn-outline:hover{background:#fce4ec;}
+#tool-wean .wean-btn-green{background:#2e7d32;color:#fff;}
+#tool-wean .wean-btn-green:hover{background:#388e3c;}
+#tool-wean .wean-warn-box{background:#fff3e0;border:1.5px solid #e65100;border-radius:10px;padding:12px 16px;margin:10px 0;font-size:.78rem;color:#4e342e;line-height:1.5;}
+#tool-wean .wean-sbt-flow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0;}
+#tool-wean .wean-sbt-box{padding:14px;border-radius:10px;font-size:.78rem;line-height:1.5;}
+#tool-wean .wean-source{font-size:.68rem;color:#90a4ae;margin-top:12px;padding-top:8px;border-top:1px solid #f0f0f0;}
+@media(max-width:600px){
+  #tool-wean .wean-sbt-flow{grid-template-columns:1fr;}
+  #tool-wean .wean-input-grid{grid-template-columns:1fr 1fr;}
+}
+</style>
+
+<div class="wean-wrap">
+
+<!-- Header -->
+<div class="wean-header">
+  <h2>🔓 Weaning-Protokoll</h2>
+  <p>Standardisierter Weaningversuch — nach VA Weaning S32B (Charité CBF, V4, 12/2020)</p>
+</div>
+
+<!-- Sub-Tab Nav -->
+<div class="wean-tab-nav">
+  <button class="wean-tab-btn active" onclick="weanShowTab('readiness',this)">✅ Readiness</button>
+  <button class="wean-tab-btn" onclick="weanShowTab('sbt',this)">🫁 SBT</button>
+  <button class="wean-tab-btn" onclick="weanShowTab('stufen',this)">📊 Weaning-Stufen</button>
+  <button class="wean-tab-btn" onclick="weanShowTab('extub',this)">🔓 Extubation</button>
+</div>
+
+<!-- ═══ SUB-TAB 1: READINESS TO WEAN ═══ -->
+<div id="wean-readiness" class="wean-tab active">
+
+<div class="wean-card">
+  <div class="wean-card-head"><span class="wean-card-title">✅ „Readiness to Wean" — Kriterien</span></div>
+  <div class="wean-card-body">
+    <p>Tägliche Überprüfung und Dokumentation (COPRA® Seite 9). <strong>Alle Kriterien</strong> müssen erfüllt sein, bevor ein SBT durchgeführt wird.</p>
+
+    <label class="wean-check-row"><input type="checkbox" id="wean-rtw-1" onchange="weanCheckReadiness()"><span class="wean-check-label"><strong>Ursache der resp. Insuffizienz gebessert</strong><span class="wean-check-sub">Grunderkrankung behandelt / rückläufig</span></span></label>
+    <label class="wean-check-row"><input type="checkbox" id="wean-rtw-2" onchange="weanCheckReadiness()"><span class="wean-check-label"><strong>Adäquater Gasaustausch</strong><span class="wean-check-sub">FiO₂ ≤ 0,4 · PEEP ≤ 8 cmH₂O · SpO₂ ≥ 90 %</span></span></label>
+    <label class="wean-check-row"><input type="checkbox" id="wean-rtw-3" onchange="weanCheckReadiness()"><span class="wean-check-label"><strong>Adäquater Atemantrieb & Atemmechanik</strong><span class="wean-check-sub">RSBI (AF/TV) &lt; 105</span></span></label>
+    <label class="wean-check-row"><input type="checkbox" id="wean-rtw-4" onchange="weanCheckReadiness()"><span class="wean-check-label"><strong>Adäquate zerebrale Funktion</strong><span class="wean-check-sub">Vigilanz ausreichend, Schutzreflexe vorhanden</span></span></label>
+    <label class="wean-check-row"><input type="checkbox" id="wean-rtw-5" onchange="weanCheckReadiness()"><span class="wean-check-label"><strong>Stabile Hämodynamik</strong><span class="wean-check-sub">Keine/niedrige Vasopressoren (Noradrenalin ≤ 0,1 µg/kg/min)</span></span></label>
+    <label class="wean-check-row"><input type="checkbox" id="wean-rtw-6" onchange="weanCheckReadiness()"><span class="wean-check-label"><strong>Suffiziente Sekretclearance</strong><span class="wean-check-sub">Ausreichender Hustenstoß, keine exzessive bronchiale Sekretion</span></span></label>
+    <label class="wean-check-row"><input type="checkbox" id="wean-rtw-7" onchange="weanCheckReadiness()"><span class="wean-check-label"><strong>Keine operativen/diagnostischen Interventionen am gleichen Tag</strong></span></label>
+
+    <div id="wean-rtw-result" style="margin-top:12px;"></div>
+  </div>
+</div>
+
+<div class="wean-card">
+  <div class="wean-card-head"><span class="wean-card-title">📐 RSBI-Rechner</span></div>
+  <div class="wean-card-body">
+    <p>Rapid Shallow Breathing Index = Atemfrequenz / Tidalvolumen (in Litern). <strong>Ziel: &lt; 105</strong></p>
+    <div class="wean-input-grid">
+      <div class="wean-field"><label for="wean-rsbi-af">Atemfrequenz (/min)</label><input type="number" class="wean-input" id="wean-rsbi-af" placeholder="z.B. 22" step="1" oninput="weanCalcRSBI()"></div>
+      <div class="wean-field"><label for="wean-rsbi-vt">Tidalvolumen (ml)</label><input type="number" class="wean-input" id="wean-rsbi-vt" placeholder="z.B. 350" step="10" oninput="weanCalcRSBI()"></div>
+    </div>
+    <div id="wean-rsbi-result" style="margin-top:10px;"></div>
+  </div>
+</div>
+
+</div><!-- end wean-readiness -->
+
+<!-- ═══ SUB-TAB 2: SBT ═══ -->
+<div id="wean-sbt" class="wean-tab">
+
+<div class="wean-card">
+  <div class="wean-card-head"><span class="wean-card-title">🫁 Spontanatmungstest (SBT)</span></div>
+  <div class="wean-card-body">
+    <p><strong>Dauer: 30 Minuten</strong> — in den ersten 30 min dauerhafte Anwesenheit von Arzt, Atemtherapeut oder Pflegekraft!</p>
+
+    <p style="margin-top:12px;"><strong>1. Ausschlusskriterien prüfen:</strong></p>
+    <label class="wean-check-row"><input type="checkbox" id="wean-sbt-ex1" onchange="weanCheckSBT()"><span class="wean-check-label">FiO₂ &gt; 40 % und SpO₂ &lt; 90 % OHNE pulmonale Grunderkrankung ODER FiO₂ &gt; 50 % und SpO₂ &lt; 85 % MIT pulmonaler Grunderkrankung<span class="wean-check-sub">→ Ausschlusskriterium</span></span></label>
+    <label class="wean-check-row"><input type="checkbox" id="wean-sbt-ex2" onchange="weanCheckSBT()"><span class="wean-check-label">pH &lt; 7,35, signifikante metabolische Azidose<span class="wean-check-sub">→ Ausschlusskriterium</span></span></label>
+    <label class="wean-check-row"><input type="checkbox" id="wean-sbt-ex3" onchange="weanCheckSBT()"><span class="wean-check-label">PEEP &gt; 8 cmH₂O<span class="wean-check-sub">→ Ausschlusskriterium</span></span></label>
+    <label class="wean-check-row"><input type="checkbox" id="wean-sbt-ex4" onchange="weanCheckSBT()"><span class="wean-check-label">Fieber, Temp &gt; 38 °C<span class="wean-check-sub">→ Ausschlusskriterium</span></span></label>
+    <label class="wean-check-row"><input type="checkbox" id="wean-sbt-ex5" onchange="weanCheckSBT()"><span class="wean-check-label">Inadäquate Vigilanz (RASS &lt; −2 oder &gt; +1)<span class="wean-check-sub">→ Ausschlusskriterium</span></span></label>
+    <label class="wean-check-row"><input type="checkbox" id="wean-sbt-ex6" onchange="weanCheckSBT()"><span class="wean-check-label">Größere operative/diagnostische Intervention am gleichen Tag<span class="wean-check-sub">→ Ausschlusskriterium</span></span></label>
+    <label class="wean-check-row"><input type="checkbox" id="wean-sbt-ex7" onchange="weanCheckSBT()"><span class="wean-check-label">Instabile Hämodynamik / maligne Arrhythmie / Noradrenalin &gt; 0,1 µg/kg/min<span class="wean-check-sub">→ Ausschlusskriterium</span></span></label>
+    <label class="wean-check-row"><input type="checkbox" id="wean-sbt-ex8" onchange="weanCheckSBT()"><span class="wean-check-label">Inadäquate Atmung am Respirator: Spontan-AF &gt; 35, RSBI ≥ 105, erhöhte Atemarbeit<span class="wean-check-sub">→ Ausschlusskriterium</span></span></label>
+    <label class="wean-check-row"><input type="checkbox" id="wean-sbt-ex9" onchange="weanCheckSBT()"><span class="wean-check-label">Nicht ausreichender Hustenstoß / exzessive bronchiale Sekretion<span class="wean-check-sub">→ Ausschlusskriterium</span></span></label>
+    <label class="wean-check-row"><input type="checkbox" id="wean-sbt-ex10" onchange="weanCheckSBT()"><span class="wean-check-label">Keine Schutzreflexe / Atemantrieb vorhanden<span class="wean-check-sub">→ Ausschlusskriterium</span></span></label>
+
+    <div id="wean-sbt-exclusion-result" style="margin-top:10px;"></div>
+  </div>
+</div>
+
+<div class="wean-card">
+  <div class="wean-card-head"><span class="wean-card-title">⚙️ SBT-Methode</span></div>
+  <div class="wean-card-body">
+    <table class="wean-table">
+      <thead><tr><th>Atemweg</th><th>Methode</th><th>Einstellung</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Endotrachealtubus</strong></td><td>CPAP / PSV</td><td>FiO₂ &lt; 40 %, PEEP &lt; 8 cmH₂O, PS 0–5 cmH₂O</td></tr>
+        <tr><td><strong>Trachealkanüle</strong></td><td>Feuchte Nase / Sprechaufsatz</td><td>O₂ nach Bedarf über Trachealinterface</td></tr>
+        <tr><td><strong>Trachealkanüle</strong></td><td>Highflow über Trachealinterface</td><td>Flow 20–40 l/min, FiO₂ nach SpO₂</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="wean-card">
+  <div class="wean-card-head"><span class="wean-card-title">📊 SBT-Abbruchkriterien (≤ 30 min)</span></div>
+  <div class="wean-card-body">
+    <p>SBT sofort abbrechen bei Auftreten folgender Zeichen:</p>
+    <table class="wean-table">
+      <thead><tr><th>Parameter</th><th>Abbruchschwelle</th></tr></thead>
+      <tbody>
+        <tr><td><strong>SpO₂</strong></td><td>&lt; 90 % OHNE pulm. Grunderkrankung · &lt; 85 % MIT pulm. Grunderkrankung</td></tr>
+        <tr><td><strong>AF-Spontan</strong></td><td>&gt; 35/min</td></tr>
+        <tr><td><strong>RSBI</strong></td><td>≥ 105 (AF/Vt in L)</td></tr>
+        <tr><td><strong>pH</strong></td><td>&lt; 7,35 bei respiratorischer Azidose</td></tr>
+        <tr><td><strong>Vigilanz</strong></td><td>RASS ≥ 2 ODER RASS &lt; −2 · Angst, Unruhe, vegetativer Stress</td></tr>
+        <tr><td><strong>Kardial</strong></td><td>Neu aufgetretene Arrhythmie, Angina Pectoris</td></tr>
+        <tr><td><strong>Klinisch</strong></td><td>Dyspnoe, sichtbar erhöhte Atemarbeit, Diaphorese</td></tr>
+      </tbody>
+    </table>
+    <div class="wean-sbt-flow" style="margin-top:12px;">
+      <div class="wean-sbt-box wean-r-ok">
+        <strong>✓ SBT erfolgreich (&gt; 30 min)</strong><br>
+        → <strong>Extubation</strong> (bei intubiertem Patient)<br>
+        → <strong>Weaningstufe anpassen</strong> (bei tracheotomiertem Patient)
+      </div>
+      <div class="wean-sbt-box wean-r-danger">
+        <strong>✗ SBT gescheitert (&lt; 30 min)</strong><br>
+        → Abbruchgrund dokumentieren<br>
+        → Ursache optimieren<br>
+        → Reevaluation nach 24 h
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end wean-sbt -->
+
+<!-- ═══ SUB-TAB 3: WEANING-STUFEN ═══ -->
+<div id="wean-stufen" class="wean-tab">
+
+<div class="wean-card">
+  <div class="wean-card-head"><span class="wean-card-title">📊 Modifiziertes Weaning-Konzept S32B</span></div>
+  <div class="wean-card-body">
+    <p>Für <strong>tracheotomierte Patienten</strong>. Aktuelle Weaning-Stufe auswählen — neben täglichem SBT werden Spontanatmungsphasen stufenweise gesteigert.</p>
+
+    <div class="wean-stufe" id="wean-st-1" onclick="weanSelectStufe(1)">
+      <div class="wean-stufe-head">
+        <div class="wean-stufe-num">1</div>
+        <div><div class="wean-stufe-text">15–30 min Spontanatmung, 2× täglich</div><div class="wean-stufe-detail">Erste Mobilisierung der Atemmuskulatur</div></div>
+        <div class="wean-stufe-check">○</div>
+      </div>
+    </div>
+
+    <div class="wean-stufe" id="wean-st-2" onclick="weanSelectStufe(2)">
+      <div class="wean-stufe-head">
+        <div class="wean-stufe-num">2</div>
+        <div><div class="wean-stufe-text">1 h Spontanatmung, 2× täglich</div><div class="wean-stufe-detail">Zwischendurch assistiert-kontrollierte Beatmung</div></div>
+        <div class="wean-stufe-check">○</div>
+      </div>
+    </div>
+
+    <div class="wean-stufe" id="wean-st-3" onclick="weanSelectStufe(3)">
+      <div class="wean-stufe-head">
+        <div class="wean-stufe-num">3</div>
+        <div><div class="wean-stufe-text">2 h Spontanatmung, 2× täglich</div><div class="wean-stufe-detail">Zwischendurch assistiert-kontrollierte Beatmung</div></div>
+        <div class="wean-stufe-check">○</div>
+      </div>
+    </div>
+
+    <div class="wean-stufe" id="wean-st-4" onclick="weanSelectStufe(4)">
+      <div class="wean-stufe-head">
+        <div class="wean-stufe-num">4</div>
+        <div><div class="wean-stufe-text">4 h Spontanatmung, 2× täglich</div><div class="wean-stufe-detail">Zwischendurch assistiert-kontrollierte Beatmung</div></div>
+        <div class="wean-stufe-check">○</div>
+      </div>
+    </div>
+
+    <div class="wean-stufe" id="wean-st-5" onclick="weanSelectStufe(5)">
+      <div class="wean-stufe-head">
+        <div class="wean-stufe-num">5</div>
+        <div><div class="wean-stufe-text">6 h Spontanatmung, 2× täglich</div><div class="wean-stufe-detail">Zwischendurch assistiert-kontrollierte Beatmung</div></div>
+        <div class="wean-stufe-check">○</div>
+      </div>
+    </div>
+
+    <div class="wean-stufe" id="wean-st-6" onclick="weanSelectStufe(6)">
+      <div class="wean-stufe-head">
+        <div class="wean-stufe-num">6</div>
+        <div><div class="wean-stufe-text">12 h tagsüber Spontanatmung</div><div class="wean-stufe-detail">Nachts assistiert-kontrollierte Beatmung</div></div>
+        <div class="wean-stufe-check">○</div>
+      </div>
+    </div>
+
+    <div class="wean-stufe" id="wean-st-7" onclick="weanSelectStufe(7)">
+      <div class="wean-stufe-head">
+        <div class="wean-stufe-num">7</div>
+        <div><div class="wean-stufe-text">24 h Spontanatmungsphase</div><div class="wean-stufe-detail">Alle 2 h für 15–30 min CPAP/ASB</div></div>
+        <div class="wean-stufe-check">○</div>
+      </div>
+    </div>
+
+    <div class="wean-stufe" id="wean-st-8" onclick="weanSelectStufe(8)">
+      <div class="wean-stufe-head">
+        <div class="wean-stufe-num">8</div>
+        <div><div class="wean-stufe-text">Dekanülierung</div><div class="wean-stufe-detail">Alle 2 h für 15 min Masken-CPAP/ASB · Dekanülierungskriterien prüfen</div></div>
+        <div class="wean-stufe-check">○</div>
+      </div>
+    </div>
+
+    <div id="wean-stufe-result" style="margin-top:12px;"></div>
+
+    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="wean-btn wean-btn-outline" onclick="weanResetStufe()">Zurücksetzen</button>
+    </div>
+  </div>
+</div>
+
+<div class="wean-card">
+  <div class="wean-card-head"><span class="wean-card-title">📋 Dokumentation (COPRA® Seite 9)</span></div>
+  <div class="wean-card-body">
+    <p>Für jeden SBT im Rahmen des Weanings dokumentieren:</p>
+    <table class="wean-table">
+      <tr><td><strong>Methode</strong></td><td>Trachealkanüle mit feuchter Nase / Sprechaufsatz / Trachealinterface (Highflow)</td></tr>
+      <tr><td><strong>Zeitraum</strong></td><td>Start — Stopp (Uhrzeit)</td></tr>
+      <tr><td><strong>Ergebnis</strong></td><td>SBT erfolgreich (&gt; 30 min) → Weaning-Stufe anpassen / SBT gescheitert → Abbruchgrund</td></tr>
+      <tr><td><strong>Weaning-Stufe</strong></td><td>Aktuelle Stufe (1–8) + Anordnung für nächsten Tag</td></tr>
+    </table>
+  </div>
+</div>
+
+</div><!-- end wean-stufen -->
+
+<!-- ═══ SUB-TAB 4: EXTUBATION / DEKANÜLIERUNG ═══ -->
+<div id="wean-extub" class="wean-tab">
+
+<div class="wean-card">
+  <div class="wean-card-head"><span class="wean-card-title">🔓 Extubationskriterien</span></div>
+  <div class="wean-card-body">
+    <p>Checkliste vor Extubation — alle Kriterien sollten erfüllt sein:</p>
+    <label class="wean-check-row"><input type="checkbox" id="wean-ext-1" onchange="weanCheckExtub()"><span class="wean-check-label"><strong>SBT erfolgreich bestanden</strong> (≥ 30 min)</span></label>
+    <label class="wean-check-row"><input type="checkbox" id="wean-ext-2" onchange="weanCheckExtub()"><span class="wean-check-label"><strong>Adäquater Hustenreflex</strong><span class="wean-check-sub">Ausreichende Kraft zur Sekretclearance</span></span></label>
+    <label class="wean-check-row"><input type="checkbox" id="wean-ext-3" onchange="weanCheckExtub()"><span class="wean-check-label"><strong>Keine exzessive Sekretion</strong><span class="wean-check-sub">Absaugen &lt; alle 2 h</span></span></label>
+    <label class="wean-check-row"><input type="checkbox" id="wean-ext-4" onchange="weanCheckExtub()"><span class="wean-check-label"><strong>Vigilanz adäquat</strong><span class="wean-check-sub">Wach, kooperativ, Schutzreflexe vorhanden (RASS 0 bis −1)</span></span></label>
+    <label class="wean-check-row"><input type="checkbox" id="wean-ext-5" onchange="weanCheckExtub()"><span class="wean-check-label"><strong>Stabile Hämodynamik</strong></span></label>
+    <label class="wean-check-row"><input type="checkbox" id="wean-ext-6" onchange="weanCheckExtub()"><span class="wean-check-label"><strong>Cuff-Leak vorhanden</strong><span class="wean-check-sub">Bei Risiko für postextubalen Stridor (Intubation &gt; 48 h, weiblich, traumatische Intubation)</span></span></label>
+    <label class="wean-check-row"><input type="checkbox" id="wean-ext-7" onchange="weanCheckExtub()"><span class="wean-check-label"><strong>Nüchtern / Magen entlastet</strong></span></label>
+
+    <div id="wean-ext-result" style="margin-top:12px;"></div>
+  </div>
+</div>
+
+<div class="wean-card">
+  <div class="wean-card-head"><span class="wean-card-title">🔓 Dekanülierungskriterien (Trachealkanüle)</span></div>
+  <div class="wean-card-body">
+    <p>Voraussetzungen für Dekanülierung (nach erfolgreicher Stufe 7–8):</p>
+    <label class="wean-check-row"><input type="checkbox"><span class="wean-check-label"><strong>24 h Spontanatmung ohne Beatmung toleriert</strong></span></label>
+    <label class="wean-check-row"><input type="checkbox"><span class="wean-check-label"><strong>Adäquater Hustenstoß</strong><span class="wean-check-sub">Effektives Abhusten bei verschlossener Kanüle</span></span></label>
+    <label class="wean-check-row"><input type="checkbox"><span class="wean-check-label"><strong>Schluckfunktion geprüft</strong><span class="wean-check-sub">Logopädische Evaluation, ggf. FEES (fiberendoskopische Schluckuntersuchung)</span></span></label>
+    <label class="wean-check-row"><input type="checkbox"><span class="wean-check-label"><strong>Kein relevanter Speichelfluss über Kanüle</strong></span></label>
+    <label class="wean-check-row"><input type="checkbox"><span class="wean-check-label"><strong>Stabile Oxygenierung ohne Kanülenbeatmung</strong></span></label>
+    <label class="wean-check-row"><input type="checkbox"><span class="wean-check-label"><strong>Obere Atemwege durchgängig</strong><span class="wean-check-sub">Bronchoskopische Kontrolle bei V.a. Trachealstenose</span></span></label>
+  </div>
+</div>
+
+<div class="wean-card">
+  <div class="wean-card-head"><span class="wean-card-title">⚠️ Post-Extubation</span></div>
+  <div class="wean-card-body">
+    <table class="wean-table">
+      <thead><tr><th>Maßnahme</th><th>Details</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Monitoring</strong></td><td>Engmaschig für 24–48 h: SpO₂, AF, Vigilanz, Atemarbeit</td></tr>
+        <tr><td><strong>O₂-Therapie</strong></td><td>Highflow-Nasenkanüle (HFNC) 40–60 l/min oder O₂-Maske nach Bedarf</td></tr>
+        <tr><td><strong>NIV prophylaktisch</strong></td><td>Erwägen bei: Alter &gt; 65, Herzinsuffizienz, Adipositas, COPD, prolongierte Beatmung</td></tr>
+        <tr><td><strong>Stridor</strong></td><td>Adrenalin-Inhalation 1 mg vernebelt; Dexamethason 8 mg i.v. wenn noch nicht gegeben</td></tr>
+        <tr><td><strong>Re-Intubation</strong></td><td>Bei Versagen: frühzeitig re-intubieren (Verzögerung erhöht Mortalität!)</td></tr>
+      </tbody>
+    </table>
+    <div class="wean-warn-box">⚠️ Re-Intubationsrate ~15 %. Risikofaktoren: Alter, COPD, Herzinsuffizienz, Adipositas, schwacher Husten, exzessive Sekretion. Bei diesen Patienten prophylaktische NIV/HFNC!</div>
+  </div>
+</div>
+
+<div class="wean-card">
+  <div class="wean-card-head"><span class="wean-card-title">🔄 Prolongiertes Weaning / Weaning-Versagen</span></div>
+  <div class="wean-card-body">
+    <table class="wean-table">
+      <thead><tr><th>Kategorie</th><th>Definition (WIND-Klassifikation)</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Gruppe 1: Einfach</strong></td><td>Erfolgreiche Extubation nach erstem SBT</td></tr>
+        <tr><td><strong>Gruppe 2: Schwierig</strong></td><td>Bis zu 3 SBT oder ≤ 7 Tage nach erstem SBT bis erfolgreiche Extubation</td></tr>
+        <tr><td><strong>Gruppe 3: Prolongiert</strong></td><td>&gt; 3 SBT oder &gt; 7 Tage nach erstem SBT</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:8px;"><strong>Bei prolongiertem Weaning evaluieren:</strong></p>
+    <ul style="font-size:.78rem;color:#37474f;padding-left:18px;line-height:1.6;">
+      <li>Tracheotomie erwägen (Indikation ab ~10 Tagen Beatmung)</li>
+      <li>Critical-Illness-Polyneuropathie/-Myopathie (ICU-acquired Weakness)</li>
+      <li>Zwerchfelldysfunktion (Sono: Diaphragma-Exkursion &lt; 10 mm)</li>
+      <li>Kardiale Ursache: Volumenüberladung, diastolische Dysfunktion (BNP?)</li>
+      <li>Delirium / Agitation (Delir-Screening!)</li>
+      <li>Ernährungsstatus: Malnutrition, Phosphat ↓, Mg ↓</li>
+      <li>Atemmuskeltraining (Inspiratory Muscle Training, IMT)</li>
+      <li>Verlegung in Weaning-Zentrum erwägen</li>
+    </ul>
+    <div class="wean-source">Quelle: VA Weaning S32B, Charité CBF, Version 4 (10.12.2020) · Erstellt: T. Weidehoff · Geprüft/Freigegeben: F. Compton</div>
+  </div>
+</div>
+
+</div><!-- end wean-extub -->
+
+</div><!-- end wean-wrap -->
+
+<!-- ── JavaScript ── -->
+<script>
+(function(){
+'use strict';
+
+/* ── Sub-Tab-Switcher ── */
+window.weanShowTab = function(id, btn) {
+  document.querySelectorAll('#tool-wean .wean-tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('#tool-wean .wean-tab-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.getElementById('wean-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+};
+
+/* ── Readiness-to-Wean Checker ── */
+window.weanCheckReadiness = function() {
+  var total = 7, checked = 0;
+  for (var i = 1; i <= total; i++) {
+    if (document.getElementById('wean-rtw-' + i).checked) checked++;
+  }
+  var out = document.getElementById('wean-rtw-result');
+  if (checked === 0) { out.innerHTML = ''; return; }
+  if (checked === total) {
+    out.innerHTML = '<div class="wean-result wean-r-ok"><strong>✓ Alle Readiness-Kriterien erfüllt — SBT durchführen!</strong><br>→ Zum SBT-Tab wechseln und Ausschlusskriterien prüfen.</div>';
+  } else {
+    out.innerHTML = '<div class="wean-result wean-r-warn"><strong>' + checked + '/' + total + ' Kriterien erfüllt</strong> — Fehlende Kriterien optimieren, Reevaluation nach 24 h.</div>';
+  }
+};
+
+/* ── SBT Ausschluss-Checker ── */
+window.weanCheckSBT = function() {
+  var excluded = 0;
+  for (var i = 1; i <= 10; i++) {
+    if (document.getElementById('wean-sbt-ex' + i).checked) excluded++;
+  }
+  var out = document.getElementById('wean-sbt-exclusion-result');
+  if (excluded === 0) {
+    out.innerHTML = '<div class="wean-result wean-r-ok"><strong>✓ Keine Ausschlusskriterien — SBT für 30 min durchführen!</strong><br>Start/Stopp dokumentieren. Anwesenheit sicherstellen.</div>';
+  } else {
+    out.innerHTML = '<div class="wean-result wean-r-danger"><strong>⚠️ ' + excluded + ' Ausschlusskriterium(en) vorhanden!</strong><br>Dokumentation des Grundes. Optimierung und Reevaluation nach 24 h.<br><span style="font-size:.74rem;">Wenn SBT trotz Ausschlusskriterium: Begründung dokumentieren, dann SBT für 30 min durchführen.</span></div>';
+  }
+};
+
+/* ── RSBI-Rechner ── */
+window.weanCalcRSBI = function() {
+  var af = parseFloat(document.getElementById('wean-rsbi-af').value);
+  var vt = parseFloat(document.getElementById('wean-rsbi-vt').value);
+  var out = document.getElementById('wean-rsbi-result');
+  if (isNaN(af) || isNaN(vt) || vt <= 0) { out.innerHTML = ''; return; }
+
+  var vtL = vt / 1000;
+  var rsbi = af / vtL;
+  var cls = rsbi < 80 ? 'wean-r-ok' : rsbi < 105 ? 'wean-r-warn' : 'wean-r-danger';
+
+  var html = '<div class="wean-result ' + cls + '">';
+  html += '<strong>RSBI = ' + rsbi.toFixed(0) + '</strong> (AF ' + af + '/min ÷ Vt ' + vtL.toFixed(2) + ' L)';
+  if (rsbi < 80) {
+    html += '<br><span class="wean-badge wean-badge-green">Günstig</span> Hohe Wahrscheinlichkeit für erfolgreiches Weaning';
+  } else if (rsbi < 105) {
+    html += '<br><span class="wean-badge wean-badge-blue">Grenzwertig</span> SBT-Versuch möglich, engmaschig beobachten';
+  } else {
+    html += '<br><span class="wean-badge wean-badge-red">Ungünstig (≥ 105)</span> Weaning-Versagen wahrscheinlich — Ursachen optimieren';
+  }
+  html += '</div>';
+  out.innerHTML = html;
+};
+
+/* ── Weaning-Stufe auswählen ── */
+var currentStufe = 0;
+
+window.weanSelectStufe = function(n) {
+  currentStufe = (currentStufe === n) ? 0 : n;
+  for (var i = 1; i <= 8; i++) {
+    var el = document.getElementById('wean-st-' + i);
+    var check = el.querySelector('.wean-stufe-check');
+    if (i === currentStufe) {
+      el.classList.add('wean-stufe-active');
+      check.textContent = '●';
+    } else {
+      el.classList.remove('wean-stufe-active');
+      check.textContent = '○';
+    }
+  }
+  var out = document.getElementById('wean-stufe-result');
+  if (currentStufe === 0) { out.innerHTML = ''; return; }
+
+  var msgs = {
+    1: 'Stufe 1 — Beginn des Weanings. 2× tgl. 15–30 min Spontanatmung mit feuchter Nase/Sprechaufsatz. Zwischendurch assistiert-kontrollierte Beatmung.',
+    2: 'Stufe 2 — 2× tgl. 1 h Spontanatmung. Assistiert-kontrollierte Beatmung im Wechsel.',
+    3: 'Stufe 3 — 2× tgl. 2 h Spontanatmung. Assistiert-kontrollierte Beatmung im Wechsel.',
+    4: 'Stufe 4 — 2× tgl. 4 h Spontanatmung. Assistiert-kontrollierte Beatmung im Wechsel.',
+    5: 'Stufe 5 — 2× tgl. 6 h Spontanatmung (= 12 h/d). Assistiert-kontrollierte Beatmung im Wechsel.',
+    6: 'Stufe 6 — Tagsüber 12 h Spontanatmung. Nachts kontrollierte Beatmung. Alle 2 h für 15–30 min CPAP/ASB.',
+    7: 'Stufe 7 — 24 h Spontanatmungsphase. Alle 2 h für 15–30 min CPAP/ASB zur Kontrolle.',
+    8: 'Stufe 8 — Dekanülierung! Alle 2 h für 15 min Masken-CPAP/ASB. Dekanülierungskriterien prüfen (Schluckfunktion, Hustenstoß, Atemwege frei).'
+  };
+  var cls = currentStufe >= 7 ? 'wean-r-ok' : 'wean-r-info';
+  out.innerHTML = '<div class="wean-result ' + cls + '"><strong>Aktuelle Anordnung: ' + msgs[currentStufe] + '</strong></div>';
+};
+
+window.weanResetStufe = function() {
+  currentStufe = 0;
+  for (var i = 1; i <= 8; i++) {
+    document.getElementById('wean-st-' + i).classList.remove('wean-stufe-active');
+    document.getElementById('wean-st-' + i).querySelector('.wean-stufe-check').textContent = '○';
+  }
+  document.getElementById('wean-stufe-result').innerHTML = '';
+};
+
+/* ── Extubations-Checker ── */
+window.weanCheckExtub = function() {
+  var total = 7, checked = 0;
+  for (var i = 1; i <= total; i++) {
+    if (document.getElementById('wean-ext-' + i).checked) checked++;
+  }
+  var out = document.getElementById('wean-ext-result');
+  if (checked === 0) { out.innerHTML = ''; return; }
+  if (checked === total) {
+    out.innerHTML = '<div class="wean-result wean-r-ok"><strong>✓ Alle Extubationskriterien erfüllt — Extubation durchführen!</strong><br>Post-Extubation-Monitoring sicherstellen. HFNC/NIV bereithalten.</div>';
+  } else if (checked >= 5) {
+    out.innerHTML = '<div class="wean-result wean-r-warn"><strong>' + checked + '/' + total + ' Kriterien erfüllt</strong> — Fehlende Kriterien evaluieren. Individuelle Entscheidung.</div>';
+  } else {
+    out.innerHTML = '<div class="wean-result wean-r-danger"><strong>' + checked + '/' + total + ' Kriterien erfüllt</strong> — Extubation noch nicht empfohlen. Weiter optimieren.</div>';
+  }
+};
+
+})();
+</script>
+</div><!-- end tool-wean -->
 
 <!-- ══════════════════════════════════════════════════════════
      TOOL: INTOXIKATIONEN
