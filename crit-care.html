@@ -39,6 +39,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 #tool-sepsis{display:none;}
 #tool-ards{display:none;}
 #tool-tox{display:none;}
+#tool-crrt{display:none;}
 
 /* ============================================================
    LAE — CSS (vollständig aus lae.html, in Datei isoliert)
@@ -175,6 +176,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <button class="nav-tab-btn" data-tool="ernaehrung" onclick="switchTool('ernaehrung')">🥗 Ernährung ITS</button>
   <button class="nav-tab-btn" data-tool="copd" onclick="switchTool('copd')">🫁 COPD / AECOPD</button>
   <button class="nav-tab-btn" data-tool="del" onclick="switchTool('del')">🧠 Delir</button>
+  <button class="nav-tab-btn" data-tool="crrt" onclick="switchTool('crrt')">🩸 CRRT</button>
   <button class="nav-tab-btn" data-tool="tox" onclick="switchTool('tox')">☠️ Intoxikationen</button>
   <button class="nav-tab-btn" data-tool="sepsis" onclick="switchTool('sepsis')">🦠 Sepsis</button>
   <button class="nav-tab-btn" data-tool="ards" onclick="switchTool('ards')">💨 ARDS</button>
@@ -3080,6 +3082,7 @@ window.switchTool = function(name) {
   document.getElementById('tool-del').style.display  = name === 'del'  ? 'block' : 'none';
   document.getElementById('tool-sepsis').style.display = name === 'sepsis' ? 'block' : 'none';
   document.getElementById('tool-ards').style.display   = name === 'ards'   ? 'block' : 'none';
+  document.getElementById('tool-crrt').style.display   = name === 'crrt'   ? 'block' : 'none';
   document.getElementById('tool-tox').style.display    = name === 'tox'    ? 'block' : 'none';
   if (name === 'tox' && window.toxLoadSabValues) { window.toxLoadSabValues(); }
 };
@@ -8361,6 +8364,709 @@ window.ardsCalcCompliance = function() {
 })();
 </script>
 </div><!-- end tool-ards -->
+
+<!-- ══════════════════════════════════════════════════════════
+     TOOL: CRRT
+     ══════════════════════════════════════════════════════════ -->
+<div id="tool-crrt">
+<style>
+#tool-crrt .crrt-wrap{max-width:900px;margin:0 auto;padding:16px;}
+#tool-crrt .crrt-header{background:linear-gradient(135deg,#b71c1c 0%,#c62828 100%);color:#fff;border-radius:14px;padding:18px 20px;margin-bottom:16px;}
+#tool-crrt .crrt-header h2{margin:0;font-size:1.15rem;font-weight:800;}
+#tool-crrt .crrt-header p{margin:6px 0 0;font-size:.78rem;opacity:.88;}
+#tool-crrt .crrt-device-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+#tool-crrt .crrt-device-btn{padding:10px 20px;border-radius:10px;border:2px solid #cfd8dc;background:#fff;font-size:.82rem;font-weight:700;cursor:pointer;transition:all .15s;color:#607d8b;}
+#tool-crrt .crrt-device-btn.active{border-color:#b71c1c;background:#b71c1c;color:#fff;box-shadow:0 2px 8px rgba(183,28,28,.25);}
+#tool-crrt .crrt-device-btn:hover:not(.active){border-color:#ef9a9a;background:#fce4ec;}
+#tool-crrt .crrt-tab-nav{background:#fff;border-bottom:2px solid #f5e0e0;display:flex;overflow-x:auto;padding:0 12px;gap:2px;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:16px;border-radius:10px 10px 0 0;}
+#tool-crrt .crrt-tab-btn{border:none;background:none;padding:13px 15px 11px;font-size:.8rem;font-weight:600;color:#78909c;cursor:pointer;border-bottom:2.5px solid transparent;white-space:nowrap;transition:color .15s,border-color .15s;}
+#tool-crrt .crrt-tab-btn.active{color:#b71c1c;border-bottom-color:#b71c1c;}
+#tool-crrt .crrt-tab-btn:hover:not(.active){color:#c62828;border-bottom-color:#ef9a9a;}
+#tool-crrt .crrt-tab{display:none;}
+#tool-crrt .crrt-tab.active{display:block;}
+#tool-crrt .crrt-card{background:#fff;border-radius:14px;box-shadow:0 1px 6px rgba(0,0,0,.08);margin-bottom:14px;overflow:hidden;}
+#tool-crrt .crrt-card-head{padding:13px 16px 10px;border-bottom:1px solid #fce4ec;display:flex;align-items:center;gap:8px;}
+#tool-crrt .crrt-card-title{font-size:.82rem;font-weight:800;color:#b71c1c;text-transform:uppercase;letter-spacing:.6px;}
+#tool-crrt .crrt-card-body{padding:14px 16px;}
+#tool-crrt .crrt-card-body p{margin:0 0 8px;font-size:.8rem;color:#37474f;line-height:1.5;}
+#tool-crrt .crrt-field{display:flex;flex-direction:column;gap:3px;margin-bottom:8px;}
+#tool-crrt .crrt-field label{font-size:.74rem;font-weight:600;color:#546e7a;}
+#tool-crrt .crrt-input{border:1.5px solid #cfd8dc;border-radius:8px;padding:7px 10px;font-size:.82rem;width:120px;outline:none;transition:border-color .15s;}
+#tool-crrt .crrt-input:focus{border-color:#b71c1c;}
+#tool-crrt .crrt-input-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px 16px;}
+#tool-crrt .crrt-select{border:1.5px solid #cfd8dc;border-radius:8px;padding:7px 10px;font-size:.82rem;outline:none;width:100%;transition:border-color .15s;background:#fff;}
+#tool-crrt .crrt-select:focus{border-color:#b71c1c;}
+#tool-crrt .crrt-toggle{display:flex;gap:6px;flex-wrap:wrap;}
+#tool-crrt .crrt-toggle input[type=radio]{display:none;}
+#tool-crrt .crrt-toggle label{padding:5px 13px;border-radius:20px;font-size:.76rem;font-weight:600;cursor:pointer;border:1.5px solid #cfd8dc;color:#607d8b;transition:all .15s;user-select:none;}
+#tool-crrt .crrt-toggle input[type=radio]:checked+label{background:#b71c1c;border-color:#b71c1c;color:#fff;}
+#tool-crrt .crrt-result{padding:14px 16px;border-radius:10px;margin-bottom:10px;font-size:.8rem;line-height:1.55;}
+#tool-crrt .crrt-r-ok{background:#e8f5e9;border-left:4px solid #2e7d32;color:#1b5e20;}
+#tool-crrt .crrt-r-warn{background:#fff3e0;border-left:4px solid #e65100;color:#4e342e;}
+#tool-crrt .crrt-r-danger{background:#fce4ec;border-left:4px solid #b71c1c;color:#b71c1c;}
+#tool-crrt .crrt-r-info{background:#e3f2fd;border-left:4px solid #1565c0;color:#0d47a1;}
+#tool-crrt .crrt-r-critical{background:#b71c1c;border-left:4px solid #7f0000;color:#fff;font-weight:700;}
+#tool-crrt .crrt-table{width:100%;border-collapse:collapse;margin:8px 0;font-size:.76rem;}
+#tool-crrt .crrt-table th,#tool-crrt .crrt-table td{padding:7px 10px;border:1px solid #e0e0e0;text-align:left;}
+#tool-crrt .crrt-table th{background:#fafafa;font-weight:700;color:#b71c1c;}
+#tool-crrt .crrt-table tr:hover td{background:#fce4ec;}
+#tool-crrt .crrt-acc{border:1px solid #e0e0e0;border-radius:10px;margin-bottom:8px;overflow:hidden;}
+#tool-crrt .crrt-acc-head{padding:12px 16px;background:#fafafa;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:.8rem;font-weight:700;color:#37474f;transition:background .15s;}
+#tool-crrt .crrt-acc-head:hover{background:#fce4ec;}
+#tool-crrt .crrt-acc-arrow{transition:transform .2s;font-size:.7rem;color:#90a4ae;}
+#tool-crrt .crrt-acc.open .crrt-acc-arrow{transform:rotate(90deg);}
+#tool-crrt .crrt-acc-body{display:none;padding:12px 16px;font-size:.78rem;color:#37474f;line-height:1.55;border-top:1px solid #e0e0e0;}
+#tool-crrt .crrt-acc.open .crrt-acc-body{display:block;}
+#tool-crrt .crrt-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.68rem;font-weight:700;margin:1px 2px;}
+#tool-crrt .crrt-badge-red{background:#fce4ec;color:#b71c1c;}
+#tool-crrt .crrt-badge-orange{background:#fff3e0;color:#e65100;}
+#tool-crrt .crrt-badge-green{background:#e8f5e9;color:#2e7d32;}
+#tool-crrt .crrt-badge-blue{background:#e3f2fd;color:#1565c0;}
+#tool-crrt .crrt-badge-gray{background:#f5f5f5;color:#616161;}
+#tool-crrt .crrt-warn-box{background:#fff3e0;border:1.5px solid #e65100;border-radius:10px;padding:12px 16px;margin:10px 0;font-size:.78rem;color:#4e342e;line-height:1.5;}
+#tool-crrt .crrt-warn-red{background:#fce4ec;border:1.5px solid #b71c1c;border-radius:10px;padding:12px 16px;margin:10px 0;font-size:.78rem;color:#b71c1c;line-height:1.5;}
+#tool-crrt .crrt-dose-card{background:#fafafa;border:1px solid #e0e0e0;border-radius:10px;padding:12px 14px;margin-bottom:8px;font-size:.78rem;line-height:1.55;}
+#tool-crrt .crrt-dose-card strong{color:#b71c1c;}
+#tool-crrt .crrt-device-info{font-size:.72rem;color:#78909c;margin-top:4px;font-style:italic;}
+#tool-crrt .crrt-monitor-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin:10px 0;}
+#tool-crrt .crrt-monitor-box{background:#fff;border:1.5px solid #e0e0e0;border-radius:10px;padding:12px;text-align:center;}
+#tool-crrt .crrt-monitor-val{font-size:1.4rem;font-weight:800;color:#37474f;}
+#tool-crrt .crrt-monitor-label{font-size:.7rem;color:#78909c;margin-top:2px;}
+#tool-crrt .crrt-monitor-box.crrt-mon-ok{border-color:#2e7d32;}.crrt-monitor-box.crrt-mon-ok .crrt-monitor-val{color:#2e7d32;}
+#tool-crrt .crrt-monitor-box.crrt-mon-warn{border-color:#e65100;}.crrt-monitor-box.crrt-mon-warn .crrt-monitor-val{color:#e65100;}
+#tool-crrt .crrt-monitor-box.crrt-mon-danger{border-color:#b71c1c;}.crrt-monitor-box.crrt-mon-danger .crrt-monitor-val{color:#b71c1c;}
+#tool-crrt .crrt-flow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0;}
+#tool-crrt .crrt-flow-box{padding:12px 14px;border-radius:10px;font-size:.78rem;line-height:1.5;}
+@media(max-width:600px){
+  #tool-crrt .crrt-flow{grid-template-columns:1fr;}
+  #tool-crrt .crrt-input-grid{grid-template-columns:1fr 1fr;}
+  #tool-crrt .crrt-monitor-grid{grid-template-columns:1fr 1fr;}
+  #tool-crrt .crrt-peep-tables{grid-template-columns:1fr;}
+}
+</style>
+
+<div class="crrt-wrap">
+
+<!-- Header -->
+<div class="crrt-header">
+  <h2>🩸 CRRT — Kontinuierliche Nierenersatztherapie</h2>
+  <p>Einstellungen, Citrat-Antikoagulation, Monitoring, Troubleshooting</p>
+</div>
+
+<!-- Geräte-Auswahl -->
+<div class="crrt-card">
+  <div class="crrt-card-head"><span class="crrt-card-title">🖥️ Gerät auswählen</span></div>
+  <div class="crrt-card-body">
+    <div class="crrt-device-bar">
+      <button class="crrt-device-btn active" id="crrt-dev-multi" onclick="crrtSelectDevice('multi')">
+        <strong>multiFiltrate</strong><br><span style="font-size:.7rem;font-weight:400;">Fresenius · CiCa-Modul</span>
+      </button>
+      <button class="crrt-device-btn" id="crrt-dev-prisma" onclick="crrtSelectDevice('prisma')">
+        <strong>PrisMax / Prismaflex</strong><br><span style="font-size:.7rem;font-weight:400;">Baxter · Prismocitrat 18/0</span>
+      </button>
+    </div>
+    <div id="crrt-device-desc" class="crrt-device-info">multiFiltrate (Fresenius): Ci-Ca-Modul mit separater Citrat- und Calcium-Pumpe. Citrat-Lösung: Ci-Ca Citrat K4 (136 mmol/l Citrat). Calcium: CaCl₂ 100 mmol/l.</div>
+  </div>
+</div>
+
+<!-- Sub-Tab Nav -->
+<div class="crrt-tab-nav">
+  <button class="crrt-tab-btn active" onclick="crrtShowTab('settings',this)">⚙️ Einstellungen</button>
+  <button class="crrt-tab-btn" onclick="crrtShowTab('citrat',this)">🧪 Citrat-AK</button>
+  <button class="crrt-tab-btn" onclick="crrtShowTab('monitor',this)">📊 Monitoring</button>
+  <button class="crrt-tab-btn" onclick="crrtShowTab('trouble',this)">🔧 Troubleshooting</button>
+</div>
+
+<!-- ═══ SUB-TAB 1: EINSTELLUNGEN ═══ -->
+<div id="crrt-settings" class="crrt-tab active">
+
+<div class="crrt-card">
+  <div class="crrt-card-head"><span class="crrt-card-title">🔧 CRRT-Modus & Dosis</span></div>
+  <div class="crrt-card-body">
+    <div class="crrt-input-grid">
+      <div class="crrt-field">
+        <label>Modus</label>
+        <div class="crrt-toggle">
+          <input type="radio" name="crrt-mode" id="crrt-mode-cvvhd" value="cvvhd" checked onchange="crrtCalcDose()"><label for="crrt-mode-cvvhd">CVVHD</label>
+          <input type="radio" name="crrt-mode" id="crrt-mode-cvvhdf" value="cvvhdf" onchange="crrtCalcDose()"><label for="crrt-mode-cvvhdf">CVVHDF</label>
+          <input type="radio" name="crrt-mode" id="crrt-mode-cvvh" value="cvvh" onchange="crrtCalcDose()"><label for="crrt-mode-cvvh">CVVH</label>
+        </div>
+      </div>
+      <div class="crrt-field"><label for="crrt-weight">Körpergewicht (kg)</label><input type="number" class="crrt-input" id="crrt-weight" placeholder="z.B. 80" step="1" oninput="crrtCalcDose()"></div>
+    </div>
+    <div id="crrt-dose-result" style="margin-top:12px;"></div>
+
+    <div class="crrt-acc" id="crrt-acc-dose-info" style="margin-top:10px;">
+      <div class="crrt-acc-head" onclick="crrtToggleAcc('crrt-acc-dose-info')">📖 KDIGO-Empfehlung zur Effluent-Dosis <span class="crrt-acc-arrow">▶</span></div>
+      <div class="crrt-acc-body">
+        <p><strong>KDIGO 2012:</strong> Effluent-Dosis 20–25 ml/kg/h. Verordnete Dosis ≥ 25 ml/kg/h, da effektiv gelieferte Dosis immer niedriger (Unterbrechungen, Clogging).</p>
+        <p><strong>RENAL-Trial + ATN-Trial:</strong> Kein Benefit von &gt; 25 ml/kg/h gegenüber 20–25 ml/kg/h. Höhere Dosen = mehr Elektrolytstörungen, kein Mortalitätsbenefit.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="crrt-card" id="crrt-settings-multi">
+  <div class="crrt-card-head"><span class="crrt-card-title">🖥️ multiFiltrate — Standardeinstellungen</span></div>
+  <div class="crrt-card-body">
+    <table class="crrt-table">
+      <thead><tr><th>Parameter</th><th>CVVHD</th><th>CVVHDF</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Dialysat</strong></td><td>2.000–2.500 ml/h</td><td>1.000–1.500 ml/h</td></tr>
+        <tr><td><strong>Ersatzlösung (Post-Dilution)</strong></td><td>—</td><td>500–1.000 ml/h</td></tr>
+        <tr><td><strong>Blutfluss</strong></td><td>100–150 ml/min</td><td>150–180 ml/min</td></tr>
+        <tr><td><strong>Citrat (Ci-Ca K4)</strong></td><td>Automatisch über CiCa-Modul</td><td>Automatisch über CiCa-Modul</td></tr>
+        <tr><td><strong>Calcium (CaCl₂ 100 mmol/l)</strong></td><td>Automatisch über CiCa-Modul</td><td>Automatisch über CiCa-Modul</td></tr>
+        <tr><td><strong>iCa Ziel postfilter</strong></td><td>0,25–0,35 mmol/l</td><td>0,25–0,35 mmol/l</td></tr>
+        <tr><td><strong>iCa Ziel systemisch</strong></td><td>1,12–1,20 mmol/l</td><td>1,12–1,20 mmol/l</td></tr>
+        <tr><td><strong>Dialysatlösung</strong></td><td colspan="2">Ci-Ca Dialysat K2 oder K4 (calcium-frei)</td></tr>
+        <tr><td><strong>Filter</strong></td><td colspan="2">Ultraflux AV 1000S (1,8 m²) oder EMiC2 (bei Middle Molecules)</td></tr>
+      </tbody>
+    </table>
+    <div class="crrt-device-info">CiCa-Modul steuert Citrat- und Ca-Zufuhr automatisch anhand der iCa-Messungen. Manuelle Anpassung nur bei Alarm oder Zielwertänderung.</div>
+  </div>
+</div>
+
+<div class="crrt-card" id="crrt-settings-prisma" style="display:none;">
+  <div class="crrt-card-head"><span class="crrt-card-title">🖥️ PrisMax / Prismaflex — Standardeinstellungen</span></div>
+  <div class="crrt-card-body">
+    <table class="crrt-table">
+      <thead><tr><th>Parameter</th><th>CVVHD</th><th>CVVHDF</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Dialysat</strong></td><td>1.500–2.500 ml/h</td><td>1.000–1.500 ml/h</td></tr>
+        <tr><td><strong>Ersatzlösung (Post-Dilution)</strong></td><td>—</td><td>500–1.000 ml/h</td></tr>
+        <tr><td><strong>Blutfluss</strong></td><td>100–150 ml/min</td><td>150–200 ml/min</td></tr>
+        <tr><td><strong>Citrat (Prismocitrat 18/0)</strong></td><td colspan="2">Startrate: 2,5 mmol Citrat pro Liter Blutfluss → typisch 180–250 ml/h</td></tr>
+        <tr><td><strong>Calcium (CaCl₂ 10 %)</strong></td><td colspan="2">Startrate: ~5–8 ml/h CaCl₂ 10 % über separaten ZVK-Schenkel</td></tr>
+        <tr><td><strong>iCa Ziel postfilter</strong></td><td>0,25–0,35 mmol/l</td><td>0,25–0,35 mmol/l</td></tr>
+        <tr><td><strong>iCa Ziel systemisch</strong></td><td>1,12–1,20 mmol/l</td><td>1,12–1,20 mmol/l</td></tr>
+        <tr><td><strong>Dialysatlösung</strong></td><td colspan="2">Biphozyl oder Phoxilium (calcium-arm/-frei)</td></tr>
+        <tr><td><strong>Filter</strong></td><td colspan="2">Prismaflex ST 150 Set (1,5 m²) oder HF 1400 (1,4 m²)</td></tr>
+      </tbody>
+    </table>
+    <div class="crrt-device-info">Prismocitrat 18/0: Trinatriumcitrat 18 mmol/l, calciumfrei. Citrat-Rate über PBP (Pre-Blood Pump) Segment. Calcium-Substitution MANUELL über separaten Zugang.</div>
+  </div>
+</div>
+
+<div class="crrt-card">
+  <div class="crrt-card-head"><span class="crrt-card-title">🔌 Gefäßzugang</span></div>
+  <div class="crrt-card-body">
+    <table class="crrt-table">
+      <thead><tr><th>Zugang</th><th>Empfehlung</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Erste Wahl</strong></td><td>V. jugularis interna rechts (Shaldon 13,5 Fr, 20 cm)</td></tr>
+        <tr><td><strong>Zweite Wahl</strong></td><td>V. femoralis (Shaldon 13,5 Fr, 24 cm)</td></tr>
+        <tr><td><strong>Vermeiden</strong></td><td>V. subclavia (Stenoserisiko!) — nur bei fehlender Alternative</td></tr>
+        <tr><td><strong>Blutfluss Ziel</strong></td><td>≥ 150 ml/min bei Citrat-AK (arterieller Schenkel mindestens −150 mmHg)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- end crrt-settings -->
+
+<!-- ═══ SUB-TAB 2: CITRAT-ANTIKOAGULATION ═══ -->
+<div id="crrt-citrat" class="crrt-tab">
+
+<div class="crrt-card">
+  <div class="crrt-card-head"><span class="crrt-card-title">🧪 Citrat-Antikoagulationsprinzip</span></div>
+  <div class="crrt-card-body">
+    <div class="crrt-result crrt-r-info">
+      <strong>Wirkprinzip:</strong> Citrat cheliert Ca²⁺ im Extrakorporalkreislauf → iCa postfilter ↓ → Gerinnungshemmung. Citrat-Ca-Komplexe werden in der Leber metabolisiert (1 Citrat → 3 HCO₃⁻). Systemisches Ca²⁺ wird separat substituiert.
+    </div>
+    <p><strong>Vorteile gegenüber Heparin:</strong></p>
+    <ul style="font-size:.78rem;color:#37474f;padding-left:18px;line-height:1.6;">
+      <li>Kein systemisches Blutungsrisiko (regionale Antikoagulation)</li>
+      <li>Längere Filterstandzeit</li>
+      <li>Kein HIT-Risiko</li>
+      <li>KDIGO-Empfehlung: Citrat > Heparin bei CRRT (wenn keine KI)</li>
+    </ul>
+  </div>
+</div>
+
+<div class="crrt-card" id="crrt-citrat-multi">
+  <div class="crrt-card-head"><span class="crrt-card-title">🖥️ multiFiltrate — Ci-Ca-Protokoll</span></div>
+  <div class="crrt-card-body">
+    <div class="crrt-dose-card">
+      <strong>Citrat-Lösung:</strong> Ci-Ca Citrat K4 (136 mmol/l Citrat, 4 mmol/l K⁺)<br>
+      <strong>Calcium-Lösung:</strong> CaCl₂ 100 mmol/l<br>
+      <strong>Dialysat:</strong> Ci-Ca Dialysat K2 (calciumfrei, 2 mmol/l K⁺) oder K4
+    </div>
+    <table class="crrt-table">
+      <thead><tr><th>Schritt</th><th>Aktion</th></tr></thead>
+      <tbody>
+        <tr><td><strong>1. Start</strong></td><td>CiCa-Modul aktivieren, Blutfluss 100 ml/min, Dialysat 2.000 ml/h</td></tr>
+        <tr><td><strong>2. Citrat</strong></td><td>Automatische Steuerung → Modul berechnet Citrat-Rate aus Blutfluss (Ziel 3–4 mmol Citrat/l Blut)</td></tr>
+        <tr><td><strong>3. iCa postfilter</strong></td><td>Messen nach 30 min, dann alle 6 h · <strong>Ziel: 0,25–0,35 mmol/l</strong></td></tr>
+        <tr><td><strong>4. iCa systemisch</strong></td><td>Messen nach 1 h, dann alle 6 h · <strong>Ziel: 1,12–1,20 mmol/l</strong></td></tr>
+        <tr><td><strong>5. Anpassung</strong></td><td>CiCa-Modul passt Ca-Substitution automatisch an · bei manueller Korrektur: Ca-Rate ± 10–20 %</td></tr>
+      </tbody>
+    </table>
+    <div class="crrt-warn-box">⚠️ <strong>Ci-Ca-Alarm „Ca-Bedarf hoch":</strong> V.a. Citratakkumulation! → Systemisches iCa und Gesamt-Ca kontrollieren, Ca/iCa-Ratio berechnen (siehe Monitoring).</div>
+  </div>
+</div>
+
+<div class="crrt-card" id="crrt-citrat-prisma" style="display:none;">
+  <div class="crrt-card-head"><span class="crrt-card-title">🖥️ PrisMax / Prismaflex — Citrat-Protokoll</span></div>
+  <div class="crrt-card-body">
+    <div class="crrt-dose-card">
+      <strong>Citrat-Lösung:</strong> Prismocitrat 18/0 (18 mmol/l Trinatriumcitrat, kein Ca²⁺)<br>
+      <strong>Calcium-Lösung:</strong> CaCl₂ 10 % (6,8 mmol/ml) über separaten ZVK<br>
+      <strong>Dialysat:</strong> Biphozyl oder Phoxilium
+    </div>
+    <table class="crrt-table">
+      <thead><tr><th>Schritt</th><th>Aktion</th></tr></thead>
+      <tbody>
+        <tr><td><strong>1. Citrat-Rate berechnen</strong></td><td>Ziel: 2,5–3 mmol Citrat pro Liter Blutfluss<br>Startrate Prismocitrat 18/0: ca. Blutfluss (ml/min) × 1,0–1,5 → ml/h</td></tr>
+        <tr><td><strong>2. Blutfluss</strong></td><td>Start 120–150 ml/min</td></tr>
+        <tr><td><strong>3. Ca-Substitution</strong></td><td>CaCl₂ 10 %: Start 5–8 ml/h über separaten ZVK-Schenkel (NICHT im CRRT-Kreislauf!)</td></tr>
+        <tr><td><strong>4. iCa postfilter</strong></td><td>Messen nach 30 min, dann alle 6 h · <strong>Ziel: 0,25–0,35 mmol/l</strong></td></tr>
+        <tr><td><strong>5. iCa systemisch</strong></td><td>Messen nach 1 h, dann alle 6 h · <strong>Ziel: 1,12–1,20 mmol/l</strong></td></tr>
+        <tr><td><strong>6. Anpassung</strong></td><td>iCa postfilter zu hoch → Citrat ↑ 10 %; iCa systemisch zu niedrig → CaCl₂ ↑ 1–2 ml/h</td></tr>
+      </tbody>
+    </table>
+    <div class="crrt-warn-box">⚠️ <strong>Cave:</strong> Bei Prismaflex ist die Ca-Substitution MANUELL — keine automatische Steuerung! Engmaschiges iCa-Monitoring essentiell.</div>
+  </div>
+</div>
+
+<div class="crrt-card">
+  <div class="crrt-card-head"><span class="crrt-card-title">⚠️ Kontraindikationen Citrat</span></div>
+  <div class="crrt-card-body">
+    <table class="crrt-table">
+      <thead><tr><th>Kontraindikation</th><th>Grund</th><th>Alternative</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Schweres Leberversagen</strong></td><td>Citrat kann nicht metabolisiert werden → Akkumulation</td><td>Heparin oder heparinfreie CRRT</td></tr>
+        <tr><td><strong>Laktat &gt; 8 mmol/l + Schock</strong></td><td>Leberperfusion ↓ → Citrat-Metabolismus ↓</td><td>Engmaschig monitoren oder Heparin</td></tr>
+        <tr><td><strong>Bekannte Citratakkumulation</strong></td><td>Re-Exposition vermeiden</td><td>Heparin, Argatroban (bei HIT)</td></tr>
+      </tbody>
+    </table>
+    <div class="crrt-result crrt-r-info" style="margin-top:8px;">
+      <strong>Relative KI:</strong> Massive Transfusionen (Citrat-Load aus Blutprodukten!), schwere Hypokalzämie, Schock mit Laktat &gt; 4 mmol/l → engmaschiges Monitoring alle 2–4 h.
+    </div>
+  </div>
+</div>
+
+</div><!-- end crrt-citrat -->
+
+<!-- ═══ SUB-TAB 3: MONITORING ═══ -->
+<div id="crrt-monitor" class="crrt-tab">
+
+<div class="crrt-card">
+  <div class="crrt-card-head"><span class="crrt-card-title">🧮 Citratakkumulations-Rechner</span></div>
+  <div class="crrt-card-body">
+    <p>Gesamt-Ca und iCa eingeben → Ca/iCa-Ratio und Akkumulationsrisiko werden berechnet.</p>
+    <div class="crrt-input-grid">
+      <div class="crrt-field"><label for="crrt-ca-total">Gesamt-Calcium (mmol/l)</label><input type="number" class="crrt-input" id="crrt-ca-total" placeholder="z.B. 2.4" step="0.01" oninput="crrtCalcAccum()"></div>
+      <div class="crrt-field"><label for="crrt-ica-sys">iCa systemisch (mmol/l)</label><input type="number" class="crrt-input" id="crrt-ica-sys" placeholder="z.B. 1.15" step="0.01" oninput="crrtCalcAccum()"></div>
+      <div class="crrt-field"><label for="crrt-ica-post">iCa postfilter (mmol/l)</label><input type="number" class="crrt-input" id="crrt-ica-post" placeholder="z.B. 0.30" step="0.01" oninput="crrtCalcAccum()"></div>
+      <div class="crrt-field"><label for="crrt-ph-val">pH (optional)</label><input type="number" class="crrt-input" id="crrt-ph-val" placeholder="z.B. 7.35" step="0.01" oninput="crrtCalcAccum()"></div>
+      <div class="crrt-field"><label for="crrt-lak-val">Laktat (mmol/l, optional)</label><input type="number" class="crrt-input" id="crrt-lak-val" placeholder="z.B. 2.0" step="0.1" oninput="crrtCalcAccum()"></div>
+      <div class="crrt-field"><label for="crrt-na-val">Natrium (mmol/l, optional)</label><input type="number" class="crrt-input" id="crrt-na-val" placeholder="z.B. 140" step="1" oninput="crrtCalcAccum()"></div>
+    </div>
+    <div id="crrt-accum-result" style="margin-top:12px;"></div>
+  </div>
+</div>
+
+<div class="crrt-card">
+  <div class="crrt-card-head"><span class="crrt-card-title">📋 Monitoring-Intervalle</span></div>
+  <div class="crrt-card-body">
+    <table class="crrt-table">
+      <thead><tr><th>Parameter</th><th>Start</th><th>Stabil</th><th>Ziel</th></tr></thead>
+      <tbody>
+        <tr><td><strong>iCa postfilter</strong></td><td>30 min, 1 h, 2 h</td><td>alle 6 h</td><td>0,25–0,35 mmol/l</td></tr>
+        <tr><td><strong>iCa systemisch</strong></td><td>1 h, 2 h, 4 h</td><td>alle 6 h</td><td>1,12–1,20 mmol/l</td></tr>
+        <tr><td><strong>Gesamt-Ca</strong></td><td>4 h</td><td>alle 12–24 h</td><td>2,10–2,55 mmol/l</td></tr>
+        <tr><td><strong>Na⁺, K⁺, Cl⁻, Mg²⁺, Phosphat</strong></td><td>4 h</td><td>alle 8–12 h</td><td>Normbereich</td></tr>
+        <tr><td><strong>pH / BGA</strong></td><td>2 h</td><td>alle 6–8 h</td><td>pH 7,35–7,45</td></tr>
+        <tr><td><strong>Laktat</strong></td><td>bei Start</td><td>alle 6–12 h</td><td>&lt; 2 mmol/l</td></tr>
+        <tr><td><strong>Effluent-Dosis / Bilanzen</strong></td><td>—</td><td>stündlich</td><td>25 ml/kg/h effektiv</td></tr>
+        <tr><td><strong>Filterdruck (TMP, Access)</strong></td><td>—</td><td>stündlich</td><td>TMP &lt; 200 mmHg, steigende Tendenz beachten</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="crrt-card">
+  <div class="crrt-card-head"><span class="crrt-card-title">🔍 Zeichen der Citratakkumulation</span></div>
+  <div class="crrt-card-body">
+    <div class="crrt-warn-red">
+      <strong>⚠️ Citratakkumulation = toxikologischer Notfall bei CRRT!</strong><br>
+      Citrat wird nicht metabolisiert → bindet Ca²⁺ systemisch → iCa ↓ trotz steigender Ca-Zufuhr.
+    </div>
+    <table class="crrt-table" style="margin-top:10px;">
+      <thead><tr><th>Zeichen</th><th>Erklärung</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Ca/iCa-Ratio &gt; 2,5</strong></td><td>Wichtigstes Frühzeichen! Gesamt-Ca ↑ (durch Ca-Citrat-Komplexe), iCa ↓ oder niedrig-normal</td></tr>
+        <tr><td><strong>Steigender Ca-Bedarf</strong></td><td>Immer mehr Ca-Substitution nötig, um systemisches iCa im Ziel zu halten</td></tr>
+        <tr><td><strong>Metabolische Alkalose</strong></td><td>Citrat → 3 HCO₃⁻ (bei intakter Leber). Bei Akkumulation paradoxe Azidose möglich (Chelierung überwiegt)</td></tr>
+        <tr><td><strong>Metabolische Azidose</strong></td><td>Bei komplettem Citrat-Metabolismus-Versagen: AG↑ (Citrat = Anion)</td></tr>
+        <tr><td><strong>Laktat ↑ (falsch-hoch)</strong></td><td>Manche BGA-Geräte messen Citrat als „Laktat" → Laktat-Lücke prüfen</td></tr>
+      </tbody>
+    </table>
+    <div class="crrt-result crrt-r-danger" style="margin-top:10px;">
+      <strong>Sofortmaßnahmen bei Citratakkumulation:</strong><br>
+      1. Citrat STOPPEN (oder auf Minimum reduzieren)<br>
+      2. Ca-Substitution erhöhen (CaCl₂ 10 % Bolus 10 ml i.v.)<br>
+      3. CRRT-Dosis ↑ (Citrat-Ca-Komplexe werden dialysiert)<br>
+      4. Heparin-AK erwägen wenn Citrat nicht fortführbar<br>
+      5. Engmaschig iCa alle 1–2 h, BGA alle 2 h
+    </div>
+  </div>
+</div>
+
+<div class="crrt-card">
+  <div class="crrt-card-head"><span class="crrt-card-title">🧪 iCa-Steuerungsprotokoll</span></div>
+  <div class="crrt-card-body">
+    <p><strong>iCa postfilter</strong> (Ziel: 0,25–0,35 mmol/l) → Citrat-Rate anpassen:</p>
+    <table class="crrt-table">
+      <thead><tr><th>iCa postfilter</th><th>Maßnahme</th></tr></thead>
+      <tbody>
+        <tr><td>&lt; 0,20 mmol/l</td><td><span class="crrt-badge crrt-badge-orange">Citrat ↓ 10–20 %</span></td></tr>
+        <tr><td>0,20–0,25 mmol/l</td><td><span class="crrt-badge crrt-badge-green">Citrat ↓ 10 %</span></td></tr>
+        <tr><td><strong>0,25–0,35 mmol/l</strong></td><td><span class="crrt-badge crrt-badge-green">✓ Zielbereich — keine Änderung</span></td></tr>
+        <tr><td>0,35–0,45 mmol/l</td><td><span class="crrt-badge crrt-badge-orange">Citrat ↑ 10 %</span></td></tr>
+        <tr><td>&gt; 0,45 mmol/l</td><td><span class="crrt-badge crrt-badge-red">Citrat ↑ 20 % — Antikoagulation insuffizient!</span></td></tr>
+      </tbody>
+    </table>
+
+    <p style="margin-top:12px;"><strong>iCa systemisch</strong> (Ziel: 1,12–1,20 mmol/l) → Ca-Substitution anpassen:</p>
+    <table class="crrt-table">
+      <thead><tr><th>iCa systemisch</th><th>Maßnahme</th></tr></thead>
+      <tbody>
+        <tr><td>&lt; 0,9 mmol/l</td><td><span class="crrt-badge crrt-badge-red">AKUT: CaCl₂ 10 % 10 ml Bolus + Rate ↑ 50 %</span></td></tr>
+        <tr><td>0,9–1,0 mmol/l</td><td><span class="crrt-badge crrt-badge-orange">Ca-Rate ↑ 20–30 %</span></td></tr>
+        <tr><td>1,0–1,12 mmol/l</td><td><span class="crrt-badge crrt-badge-orange">Ca-Rate ↑ 10 %</span></td></tr>
+        <tr><td><strong>1,12–1,20 mmol/l</strong></td><td><span class="crrt-badge crrt-badge-green">✓ Zielbereich — keine Änderung</span></td></tr>
+        <tr><td>1,20–1,35 mmol/l</td><td><span class="crrt-badge crrt-badge-green">Ca-Rate ↓ 10 %</span></td></tr>
+        <tr><td>&gt; 1,35 mmol/l</td><td><span class="crrt-badge crrt-badge-orange">Ca-Rate ↓ 20–30 %</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- end crrt-monitor -->
+
+<!-- ═══ SUB-TAB 4: TROUBLESHOOTING ═══ -->
+<div id="crrt-trouble" class="crrt-tab">
+
+<div class="crrt-card">
+  <div class="crrt-card-head"><span class="crrt-card-title">🔧 Häufige Probleme & Alarme</span></div>
+  <div class="crrt-card-body">
+
+    <div class="crrt-acc" id="crrt-acc-clogging">
+      <div class="crrt-acc-head" onclick="crrtToggleAcc('crrt-acc-clogging')">🩸 Filter-Clogging / TMP-Alarm <span class="crrt-acc-arrow">▶</span></div>
+      <div class="crrt-acc-body">
+        <p><strong>Zeichen:</strong> TMP ↑ (&gt; 200–250 mmHg), Effluent-Fluss ↓, Filter dunkel verfärbt</p>
+        <p><strong>Ursachen:</strong></p>
+        <ul>
+          <li>Unzureichende Antikoagulation (iCa postfilter &gt; 0,35)</li>
+          <li>Blutfluss zu niedrig (&lt; 100 ml/min)</li>
+          <li>Hkt &gt; 35 % (Hämokonzentration)</li>
+          <li>Filtrations-Fraktion &gt; 25 % (bei CVVH/CVVHDF)</li>
+          <li>Katheter-Malposition / Rezirkulation</li>
+        </ul>
+        <p><strong>Maßnahmen:</strong></p>
+        <ul>
+          <li>iCa postfilter kontrollieren → Citrat ↑ wenn &gt; 0,35</li>
+          <li>Blutfluss ↑ auf 150–180 ml/min</li>
+          <li>Filtrations-Fraktion berechnen: FF = Ultrafiltrat / (Blutfluss × (1 − Hkt)) → Ziel &lt; 20–25 %</li>
+          <li>Katheter-Umkehr versuchen (arteriell ↔ venös)</li>
+          <li>Filter wechseln wenn TMP &gt; 300 mmHg</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="crrt-acc" id="crrt-acc-access">
+      <div class="crrt-acc-head" onclick="crrtToggleAcc('crrt-acc-access')">🔴 Access-Druck-Alarm (Zugangs-Problem) <span class="crrt-acc-arrow">▶</span></div>
+      <div class="crrt-acc-body">
+        <p><strong>Access-Druck zu negativ (&lt; −200 mmHg):</strong></p>
+        <ul>
+          <li>Katheter knickt / klemmt → Lage prüfen, Kopfposition ändern</li>
+          <li>Katheter-Thrombose → Spülen mit NaCl, ggf. Urokinase-Lock</li>
+          <li>Blutfluss reduzieren auf 100 ml/min und langsam steigern</li>
+        </ul>
+        <p><strong>Return-Druck zu hoch (&gt; +250 mmHg):</strong></p>
+        <ul>
+          <li>Katheter-Thrombose venöser Schenkel</li>
+          <li>Katheter-Knick</li>
+          <li>Gefäßstenose / Thrombose am Katheter-Tip</li>
+          <li>→ Katheter-Umkehr versuchen, ggf. Katheter-Wechsel</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="crrt-acc" id="crrt-acc-air">
+      <div class="crrt-acc-head" onclick="crrtToggleAcc('crrt-acc-air')">💨 Luft-Alarm <span class="crrt-acc-arrow">▶</span></div>
+      <div class="crrt-acc-body">
+        <p><strong>Ursachen:</strong></p>
+        <ul>
+          <li>Lufteinschluss im Katheter (häufig nach Diskonnektion)</li>
+          <li>Undichte Konnektionen im arteriellen Schenkel</li>
+          <li>Leerer Beutel an der Pre-Blood-Pumpe (Citrat/Substitut)</li>
+        </ul>
+        <p><strong>Maßnahme:</strong> Alle Konnektionen prüfen, System entlüften, Beutel prüfen. Bei wiederholtem Alarm → Schlauchsystem auf Risse untersuchen.</p>
+      </div>
+    </div>
+
+    <div class="crrt-acc" id="crrt-acc-hypotn">
+      <div class="crrt-acc-head" onclick="crrtToggleAcc('crrt-acc-hypotn')">📉 Hypotension bei CRRT-Start <span class="crrt-acc-arrow">▶</span></div>
+      <div class="crrt-acc-body">
+        <p><strong>Ursachen:</strong></p>
+        <ul>
+          <li>Extrakorporales Volumen (150–200 ml) → relativer Volumenmangel</li>
+          <li>Zu schneller Start mit hohem Blutfluss</li>
+          <li>Kalte Lösungen → Vasodilatation</li>
+        </ul>
+        <p><strong>Prävention:</strong></p>
+        <ul>
+          <li>NaCl-Priming (Kreislauf mit NaCl füllen, NICHT retransfundieren)</li>
+          <li>Blutfluss langsam steigern (Start 50–80 ml/min, über 15 min auf Ziel)</li>
+          <li>Vasopressor vor CRRT-Start optimieren</li>
+          <li>Netto-UF erst nach Stabilisierung (1–2 h) starten</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="crrt-acc" id="crrt-acc-elyte">
+      <div class="crrt-acc-head" onclick="crrtToggleAcc('crrt-acc-elyte')">⚗️ Elektrolytstörungen unter CRRT <span class="crrt-acc-arrow">▶</span></div>
+      <div class="crrt-acc-body">
+        <table class="crrt-table">
+          <thead><tr><th>Störung</th><th>Ursache</th><th>Maßnahme</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Hypokaliämie</strong></td><td>Kalium wird dialysiert</td><td>K⁺ im Dialysat erhöhen (K4-Lösung) oder i.v.-Substitution</td></tr>
+            <tr><td><strong>Hypophosphatämie</strong></td><td>Phosphat wird effizient dialysiert!</td><td>Na-Phosphat i.v. (20–40 mmol/24 h) oder Phoxilium als Dialysat</td></tr>
+            <tr><td><strong>Hypomagnesiämie</strong></td><td>Mg wird dialysiert</td><td>MgSO₄ 2–4 g/24 h i.v.</td></tr>
+            <tr><td><strong>Metabolische Alkalose</strong></td><td>Citrat → 3 HCO₃⁻ bei guter Leberfunktion</td><td>Dialysat-Bicarbonat ↓, Citrat-Rate ↓ wenn möglich</td></tr>
+            <tr><td><strong>Hypernatriämie</strong></td><td>Trinatriumcitrat = Na-Last</td><td>Dialysat-Na reduzieren, freies Wasser oral/enteral</td></tr>
+          </tbody>
+        </table>
+        <div class="crrt-warn-box">⚠️ Phosphat-Monitoring besonders wichtig! Hypophosphatämie ist eine der häufigsten Komplikationen bei CRRT und wird oft übersehen.</div>
+      </div>
+    </div>
+
+    <div class="crrt-acc" id="crrt-acc-dose-loss">
+      <div class="crrt-acc-head" onclick="crrtToggleAcc('crrt-acc-dose-loss')">💊 Medikamenten-Clearance unter CRRT <span class="crrt-acc-arrow">▶</span></div>
+      <div class="crrt-acc-body">
+        <p>CRRT entfernt Medikamente abhängig von:</p>
+        <ul>
+          <li><strong>Proteinbindung:</strong> Nur freie Fraktion wird dialysiert (hohe PB → wenig Clearance)</li>
+          <li><strong>Verteilungsvolumen:</strong> Hohes Vd → wenig Clearance</li>
+          <li><strong>Molekülgröße:</strong> Konvektion (CVVH) entfernt Middle Molecules besser</li>
+          <li><strong>CRRT-Dosis:</strong> Höhere Dosis = mehr Medikamenten-Clearance</li>
+        </ul>
+        <p><strong>Klinisch relevant (Dosisanpassung nötig):</strong></p>
+        <p>
+          <span class="crrt-badge crrt-badge-red">Vancomycin</span>
+          <span class="crrt-badge crrt-badge-red">Meropenem</span>
+          <span class="crrt-badge crrt-badge-red">Piperacillin/Tazobactam</span>
+          <span class="crrt-badge crrt-badge-orange">Aminoglykoside</span>
+          <span class="crrt-badge crrt-badge-orange">Fluconazol</span>
+          <span class="crrt-badge crrt-badge-blue">Linezolid</span>
+          <span class="crrt-badge crrt-badge-gray">Aciclovir</span>
+        </p>
+        <p style="margin-top:6px;font-size:.74rem;color:#78909c;">→ Spiegelbestimmungen! Siehe ABx-Dosierung Tab für CRRT-spezifische Dosierungen.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="crrt-card">
+  <div class="crrt-card-head"><span class="crrt-card-title">📊 Filtrations-Fraktion-Rechner</span></div>
+  <div class="crrt-card-body">
+    <p>FF = Ultrafiltratfluss / (Blutfluss × (1 − Hkt)). Ziel: <strong>&lt; 20–25 %</strong></p>
+    <div class="crrt-input-grid">
+      <div class="crrt-field"><label for="crrt-ff-uf">Ultrafiltratfluss (ml/h)</label><input type="number" class="crrt-input" id="crrt-ff-uf" placeholder="z.B. 2500" step="50" oninput="crrtCalcFF()"></div>
+      <div class="crrt-field"><label for="crrt-ff-bf">Blutfluss (ml/min)</label><input type="number" class="crrt-input" id="crrt-ff-bf" placeholder="z.B. 150" step="5" oninput="crrtCalcFF()"></div>
+      <div class="crrt-field"><label for="crrt-ff-hkt">Hämatokrit (%)</label><input type="number" class="crrt-input" id="crrt-ff-hkt" placeholder="z.B. 30" step="1" oninput="crrtCalcFF()"></div>
+    </div>
+    <div id="crrt-ff-result" style="margin-top:10px;"></div>
+  </div>
+</div>
+
+</div><!-- end crrt-trouble -->
+
+</div><!-- end crrt-wrap -->
+
+<!-- ── JavaScript ── -->
+<script>
+(function(){
+'use strict';
+
+var currentDevice = 'multi'; // 'multi' or 'prisma'
+
+/* ── Geräte-Auswahl ── */
+window.crrtSelectDevice = function(dev) {
+  currentDevice = dev;
+  document.getElementById('crrt-dev-multi').classList.toggle('active', dev === 'multi');
+  document.getElementById('crrt-dev-prisma').classList.toggle('active', dev === 'prisma');
+
+  // Toggle device-specific cards
+  var multiCards = document.querySelectorAll('#tool-crrt [id$="-multi"]');
+  var prismaCards = document.querySelectorAll('#tool-crrt [id$="-prisma"]');
+  multiCards.forEach(function(c){ c.style.display = dev === 'multi' ? '' : 'none'; });
+  prismaCards.forEach(function(c){ c.style.display = dev === 'prisma' ? '' : 'none'; });
+
+  // Update description
+  var desc = document.getElementById('crrt-device-desc');
+  if (dev === 'multi') {
+    desc.textContent = 'multiFiltrate (Fresenius): Ci-Ca-Modul mit separater Citrat- und Calcium-Pumpe. Citrat-Lösung: Ci-Ca Citrat K4 (136 mmol/l Citrat). Calcium: CaCl\u2082 100 mmol/l.';
+  } else {
+    desc.textContent = 'PrisMax / Prismaflex (Baxter): Prismocitrat 18/0 (18 mmol/l Trinatriumcitrat). Calcium-Substitution manuell \u00fcber separaten ZVK. Dialysat: Biphozyl oder Phoxilium.';
+  }
+};
+
+/* ── Sub-Tab-Switcher ── */
+window.crrtShowTab = function(id, btn) {
+  document.querySelectorAll('#tool-crrt .crrt-tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('#tool-crrt .crrt-tab-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.getElementById('crrt-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+};
+
+/* ── Accordion ── */
+window.crrtToggleAcc = function(id) {
+  var el = document.getElementById(id);
+  if (el) el.classList.toggle('open');
+};
+
+/* ── Dosis-Rechner ── */
+window.crrtCalcDose = function() {
+  var wt = parseFloat(document.getElementById('crrt-weight').value);
+  var out = document.getElementById('crrt-dose-result');
+  if (isNaN(wt) || wt <= 0) { out.innerHTML = ''; return; }
+
+  var mode = document.querySelector('input[name="crrt-mode"]:checked').value;
+  var dose25 = wt * 25; // ml/h target at 25 ml/kg/h
+  var dose20 = wt * 20;
+  var dose30 = wt * 30;
+
+  var html = '<div class="crrt-result crrt-r-info">';
+  html += '<strong>Verordnete Effluent-Dosis (KDIGO: 25 ml/kg/h):</strong><br>';
+  html += 'Ziel: <strong>' + dose25.toFixed(0) + ' ml/h</strong> (' + dose20.toFixed(0) + '–' + dose30.toFixed(0) + ' ml/h Bereich)<br>';
+
+  if (mode === 'cvvhd') {
+    html += '<br><strong>CVVHD:</strong> Dialysatfluss ' + dose25.toFixed(0) + ' ml/h';
+  } else if (mode === 'cvvhdf') {
+    var dialysat = Math.round(dose25 * 0.6);
+    var substitut = Math.round(dose25 * 0.4);
+    html += '<br><strong>CVVHDF:</strong> Dialysat ~' + dialysat + ' ml/h + Ersatzlösung (post) ~' + substitut + ' ml/h';
+  } else {
+    html += '<br><strong>CVVH:</strong> Ersatzlösung ' + dose25.toFixed(0) + ' ml/h (Post-Dilution)';
+    html += '<br><span style="font-size:.72rem;">Cave: Filtrations-Fraktion beachten! Bei reiner CVVH ggf. Pre-Dilution nötig.</span>';
+  }
+
+  html += '<br><span style="font-size:.72rem;color:#78909c;">Verordne 25–30 ml/kg/h, da effektiv gelieferte Dosis durch Unterbrechungen ~15–20 % niedriger ist.</span>';
+  html += '</div>';
+  out.innerHTML = html;
+};
+
+/* ── Citratakkumulations-Rechner ── */
+window.crrtCalcAccum = function() {
+  var caTotal = parseFloat(document.getElementById('crrt-ca-total').value);
+  var icaSys = parseFloat(document.getElementById('crrt-ica-sys').value);
+  var icaPost = parseFloat(document.getElementById('crrt-ica-post').value);
+  var ph = parseFloat(document.getElementById('crrt-ph-val').value);
+  var lak = parseFloat(document.getElementById('crrt-lak-val').value);
+  var na = parseFloat(document.getElementById('crrt-na-val').value);
+  var out = document.getElementById('crrt-accum-result');
+
+  var html = '';
+
+  // Ca/iCa Ratio
+  if (!isNaN(caTotal) && !isNaN(icaSys) && icaSys > 0) {
+    var ratio = caTotal / icaSys;
+    var cls = ratio > 2.5 ? 'crrt-r-critical' : ratio > 2.25 ? 'crrt-r-danger' : ratio > 2.0 ? 'crrt-r-warn' : 'crrt-r-ok';
+
+    html += '<div class="crrt-result ' + cls + '">';
+    html += '<strong>Ca/iCa-Ratio = ' + ratio.toFixed(2) + '</strong>';
+    if (ratio > 2.5) {
+      html += '<br>\u26a0\ufe0f <strong>CITRATAKKUMULATION!</strong> Ratio &gt; 2,5 → Citrat STOPPEN oder stark reduzieren, CaCl\u2082 Bolus, CRRT-Dosis \u2191';
+    } else if (ratio > 2.25) {
+      html += '<br>\u26a0\ufe0f <strong>V.a. beginnende Citratakkumulation!</strong> Engmaschig kontrollieren (alle 2 h), Citrat-Rate \u2193 20 %';
+    } else if (ratio > 2.0) {
+      html += '<br>Grenzwertig \u2014 in 4 h erneut kontrollieren. Bei steigender Tendenz Citrat \u2193';
+    } else {
+      html += '<br>\u2713 Ratio normal \u2014 keine Akkumulation';
+    }
+    html += '<br><span style="font-size:.72rem;opacity:.8;">Normal: &lt; 2,0 \u00b7 Grauzone: 2,0\u20132,25 \u00b7 V.a. Akkumulation: 2,25\u20132,5 \u00b7 Akkumulation: &gt; 2,5</span>';
+    html += '</div>';
+  }
+
+  // iCa systemisch
+  if (!isNaN(icaSys)) {
+    var icaCls = icaSys < 0.9 ? 'crrt-r-critical' : icaSys < 1.0 ? 'crrt-r-danger' : icaSys < 1.12 ? 'crrt-r-warn' : icaSys <= 1.20 ? 'crrt-r-ok' : icaSys <= 1.35 ? 'crrt-r-ok' : 'crrt-r-warn';
+    html += '<div class="crrt-result ' + icaCls + '">';
+    html += '<strong>iCa systemisch: ' + icaSys.toFixed(2) + ' mmol/l</strong>';
+    if (icaSys < 0.9) html += ' \u2014 <strong>KRITISCH!</strong> CaCl\u2082 Bolus + Rate \u2191 50 %';
+    else if (icaSys < 1.0) html += ' \u2014 Ca-Rate \u2191 20\u201330 %';
+    else if (icaSys < 1.12) html += ' \u2014 Ca-Rate \u2191 10 %';
+    else if (icaSys <= 1.20) html += ' \u2014 \u2713 Zielbereich';
+    else if (icaSys <= 1.35) html += ' \u2014 Ca-Rate \u2193 10 %';
+    else html += ' \u2014 Ca-Rate \u2193 20\u201330 %';
+    html += '</div>';
+  }
+
+  // iCa postfilter
+  if (!isNaN(icaPost)) {
+    var postCls = icaPost < 0.20 ? 'crrt-r-warn' : icaPost <= 0.35 ? 'crrt-r-ok' : icaPost <= 0.45 ? 'crrt-r-warn' : 'crrt-r-danger';
+    html += '<div class="crrt-result ' + postCls + '">';
+    html += '<strong>iCa postfilter: ' + icaPost.toFixed(2) + ' mmol/l</strong>';
+    if (icaPost < 0.20) html += ' \u2014 Citrat \u2193 10\u201320 % (\u00fcberantikoaguliert)';
+    else if (icaPost <= 0.35) html += ' \u2014 \u2713 Zielbereich (0,25\u20130,35)';
+    else if (icaPost <= 0.45) html += ' \u2014 Citrat \u2191 10 %';
+    else html += ' \u2014 <strong>Antikoagulation insuffizient!</strong> Citrat \u2191 20 %, Clogging-Risiko!';
+    html += '</div>';
+  }
+
+  // Additional warnings
+  var warnings = [];
+  if (!isNaN(ph) && ph > 7.50) warnings.push('\u26a0\ufe0f pH ' + ph.toFixed(2) + ' \u2014 Metabolische Alkalose: Citrat-Metabolismus \u2191 HCO\u2083\u207b. Citrat-Rate \u2193 erwägen.');
+  if (!isNaN(ph) && ph < 7.25) warnings.push('\u26a0\ufe0f pH ' + ph.toFixed(2) + ' \u2014 Azidose: Citrat wird nicht metabolisiert? Akkumulation pr\u00fcfen!');
+  if (!isNaN(lak) && lak > 4) warnings.push('\u26a0\ufe0f Laktat ' + lak.toFixed(1) + ' mmol/l \u2014 Erh\u00f6ht! Cave: Manche BGA messen Citrat als Laktat (Laktat-L\u00fccke?). Leberfunktion pr\u00fcfen.');
+  if (!isNaN(na) && na > 148) warnings.push('\u26a0\ufe0f Na\u207a ' + na + ' mmol/l \u2014 Hypernatri\u00e4mie durch Trinatriumcitrat. Dialysat-Na \u2193, freies Wasser.');
+  if (!isNaN(na) && na < 132) warnings.push('\u26a0\ufe0f Na\u207a ' + na + ' mmol/l \u2014 Hyponatri\u00e4mie. Dialysat-Zusammensetzung pr\u00fcfen.');
+
+  warnings.forEach(function(w) {
+    html += '<div class="crrt-result crrt-r-warn">' + w + '</div>';
+  });
+
+  if (!html) {
+    html = '<div class="crrt-result crrt-r-info">Gesamt-Ca und iCa systemisch eingeben f\u00fcr Ca/iCa-Ratio (wichtigster Akkumulationsmarker).</div>';
+  }
+  out.innerHTML = html;
+};
+
+/* ── Filtrations-Fraktion ── */
+window.crrtCalcFF = function() {
+  var uf = parseFloat(document.getElementById('crrt-ff-uf').value);
+  var bf = parseFloat(document.getElementById('crrt-ff-bf').value);
+  var hkt = parseFloat(document.getElementById('crrt-ff-hkt').value);
+  var out = document.getElementById('crrt-ff-result');
+  if (isNaN(uf) || isNaN(bf) || isNaN(hkt) || bf <= 0 || hkt >= 100) { out.innerHTML = ''; return; }
+
+  var bfH = bf * 60; // ml/min → ml/h
+  var plasmaFlow = bfH * (1 - hkt / 100);
+  var ff = (uf / plasmaFlow) * 100;
+
+  var cls = ff > 25 ? 'crrt-r-danger' : ff > 20 ? 'crrt-r-warn' : 'crrt-r-ok';
+  var html = '<div class="crrt-result ' + cls + '">';
+  html += '<strong>Filtrations-Fraktion = ' + ff.toFixed(1) + ' %</strong>';
+  if (ff > 25) {
+    html += '<br>\u26a0\ufe0f <strong>\u00dcber 25 % \u2014 hohes Clogging-Risiko!</strong> \u2192 Blutfluss \u2191, Ultrafiltrat \u2193, oder Pre-Dilution verwenden';
+  } else if (ff > 20) {
+    html += '<br>\u26a0\ufe0f Grenzwertig \u2014 Pre-Dilution erwägen';
+  } else {
+    html += '<br>\u2713 Im Zielbereich (&lt; 20\u201325 %)';
+  }
+  html += '<br><span style="font-size:.72rem;color:#78909c;">Plasmafluss: ' + (plasmaFlow / 60).toFixed(0) + ' ml/min \u00b7 Blutfluss: ' + bf + ' ml/min \u00b7 Hkt: ' + hkt + ' %</span>';
+  html += '</div>';
+  out.innerHTML = html;
+};
+
+})();
+</script>
+</div><!-- end tool-crrt -->
 
 <!-- ══════════════════════════════════════════════════════════
      TOOL: INTOXIKATIONEN
