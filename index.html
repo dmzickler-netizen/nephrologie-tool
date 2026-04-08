@@ -2288,7 +2288,7 @@ label .lip-optional {
       <!-- Imaging-confirmed atherosclerosis -->
       <div class="lip-form-group">
         <label>Bildmorphologisch nachgewiesene Arteriosklerose</label>
-        <p class="lip-text-sm" style="margin-bottom:.5rem">Asymptomatische Plaques / subklinische ASCVD (ACC/AHA 2026: Äquivalent zu sehr hohem Risiko)</p>
+        <p class="lip-text-sm" style="margin-bottom:.5rem">Subklinische Arteriosklerose — Risiko-Verstärker (ESC/EAS 2019 + Focused Update 2025; ACC/AHA 2026)</p>
         <div class="lip-check-list">
           <div class="lip-check-item" onclick="lipToggleCheck(this, 'imagingCarotid')" data-key="imagingCarotid">
             <input type="checkbox" id="imagingCarotid">
@@ -2645,7 +2645,7 @@ label .lip-optional {
       <span class="lip-icon">⚕️</span>
       <span style="font-size:.78rem; color:var(--lip-gray-600)">
         <strong>Hinweis:</strong> Dieses Tool dient der ärztlichen Entscheidungsunterstützung und ersetzt keine individuelle klinische Beurteilung.
-        Empfehlungen basieren auf der 2026 ACC/AHA Guideline on the Management of Dyslipidemia. Alle Angaben ohne Gewähr.
+        Empfehlungen basieren auf der 2026 ACC/AHA Guideline on the Management of Dyslipidemia sowie dem ESC/EAS Focused Update 2025 (EHJ 2025; 46:4359–4378). Alle Angaben ohne Gewähr.
       </span>
     </div>
   </div>
@@ -12890,12 +12890,14 @@ function calculateRisk(s) {
     if (s.pad)    { reasons.push('Periphere arterielle Verschlusskrankheit (pAVK)');      shortReasons.push('pAVK'); }
   }
 
-  // 2. Bildmorphologisch nachgewiesene Arteriosklerose (ACC/AHA 2026: = dokumentierte ASCVD → sehr hohes Risiko)
+  // 2. Bildmorphologisch nachgewiesene Arteriosklerose → Risiko-Verstärker (ESC/EAS 2019/2025)
+  //    Subklinische Arteriosklerose = mindestens hohes Risiko (nicht automatisch sehr hoch)
+  //    Bei gleichzeitig dokumentierter ASCVD (hasCVD) wird sehr hohes Risiko über Block 1 gesetzt
   if (hasImaging) {
-    level = 'very-high';
-    if (s.imagingCarotid)  { reasons.push('Bildmorphologisch: Karotis-Plaques (Sonographie)');            shortReasons.push('Karotis-Plaques'); }
-    if (s.imagingCoronary) { reasons.push('Bildmorphologisch: Koronarkalk nachgewiesen (CAC > 0, CT)');   shortReasons.push('Koronarkalk (CAC)'); }
-    if (s.imagingAortic)   { reasons.push('Bildmorphologisch: Aortale / sonstige Gefäßplaques');          shortReasons.push('Aorten-/Gefäßplaques'); }
+    if (level !== 'very-high') level = 'high';
+    if (s.imagingCarotid)  { reasons.push('Bildmorphologisch: Karotis-Plaques (Sonographie) — Risiko-Verstärker');  shortReasons.push('Karotis-Plaques'); }
+    if (s.imagingCoronary) { reasons.push('Bildmorphologisch: Koronarkalk nachgewiesen (CAC > 0) — Risiko-Verstärker'); shortReasons.push('Koronarkalk (CAC)'); }
+    if (s.imagingAortic)   { reasons.push('Bildmorphologisch: Aortale / sonstige Gefäßplaques — Risiko-Verstärker');    shortReasons.push('Aorten-/Gefäßplaques'); }
   }
 
   // 2. CKD Stage 4/5 (eGFR < 30) → very high
@@ -13007,7 +13009,7 @@ function calculateRisk(s) {
 /**
  * determineLDLTarget()
  * Returns LDL target in mg/dl and percentage reduction requirement
- * Based on 2026 ACC/AHA Guideline on the Management of Dyslipidemia
+ * Based on 2026 ACC/AHA Guideline + ESC/EAS Focused Update 2025
  */
 function determineLDLTarget(riskLevel, s) {
   // ACC/AHA 2026 (COR 2b): Dialysepatienten – kein Statin-Neubeginn empfohlen (4D, AURORA)
@@ -13076,14 +13078,20 @@ function generateRecommendation(s, riskResult, ldlTarget) {
         steps.push({
           type: 'current',
           title: 'Ezetimib 10 mg initiieren',
-          detail: 'Bei Statin-Unverträglichkeit: Ezetimib als Monotherapie. Weitere PCSK9-Inhibitor-Therapie bei sehr hohem Risiko erwägen.',
+          detail: 'Bei Statin-Unverträglichkeit: Ezetimib als Monotherapie (~18% LDL-Senkung). Weitere Eskalation bei hohem/sehr hohem Risiko.',
           letterPhrase: 'die Initiierung von Ezetimib 10 mg als Monotherapie bei bekannter Statin-Unverträglichkeit'
+        });
+        if (level === 'very-high' || level === 'high') steps.push({
+          type: 'escalate',
+          title: '+ Bempedoinsäure 180 mg',
+          detail: 'Bempedoinsäure 180 mg/Tag — zusätzliche ~18% LDL-Senkung (ESC/EAS 2025 Class I/B; CLEAR-Outcomes). Als Fixkombination mit Ezetimib (Nustendi®) verfügbar (~38% LDL-Senkung).',
+          letterPhrase: 'die Ergänzung von Bempedoinsäure 180 mg (ggf. als Fixkombination mit Ezetimib)'
         });
         if (level === 'very-high') steps.push({
           type: 'escalate',
-          title: 'PCSK9-Inhibitor ergänzen',
-          detail: 'Bei sehr hohem Risiko und Statin-Kontraindikation: PCSK9-Inhibitor (Evolocumab oder Alirocumab) in Kombination mit Ezetimib.',
-          letterPhrase: 'die Ergänzung eines PCSK9-Inhibitors (Evolocumab oder Alirocumab) in Kombination mit Ezetimib'
+          title: '+ PCSK9-Inhibitor',
+          detail: 'PCSK9-Inhibitor (Evolocumab 140 mg s.c. Q2W oder 420 mg/Monat; Alirocumab 75–150 mg s.c. Q2W; ~60% LDL-Senkung). Alternative: Inclisiran 284 mg s.c. alle 6 Monate (~50% LDL-Senkung).',
+          letterPhrase: 'die Ergänzung eines PCSK9-Inhibitors (Evolocumab, Alirocumab oder Inclisiran)'
         });
       } else {
         steps.push({
@@ -13096,16 +13104,22 @@ function generateRecommendation(s, riskResult, ldlTarget) {
           steps.push({
             type: 'escalate',
             title: 'Bei unzureichendem Ansprechen: + Ezetimib 10 mg',
-            detail: 'Falls LDL-Zielwert nach 6–8 Wochen nicht erreicht, Kombination mit Ezetimib (additive ~20% LDL-Senkung).',
+            detail: 'Falls LDL-Zielwert nach 6–8 Wochen nicht erreicht: Kombination mit Ezetimib (additive ~20% LDL-Senkung → kumulativ ~60%).',
             letterPhrase: 'die Ergänzung von Ezetimib 10 mg bei unzureichendem LDL-Ansprechen'
+          });
+          steps.push({
+            type: 'escalate',
+            title: 'Ziel nicht erreicht: + Bempedoinsäure 180 mg',
+            detail: 'Bempedoinsäure 180 mg/Tag zusätzlich zu Statin + Ezetimib (~17–18% weitere LDL-Senkung, kumulativ ~68%). ESC/EAS 2025 Class IIa/C. Cave: unter Statin nur moderate Zusatzwirkung; Prodrug, nicht in Muskelzellen aktiv → kein Myopathierisiko.',
+            letterPhrase: 'die Ergänzung von Bempedoinsäure 180 mg bei weiterhin nicht erreichtem LDL-Zielwert'
           });
         }
         if (level === 'very-high') {
           steps.push({
             type: 'escalate',
             title: 'Bei persistierend erhöhtem LDL: + PCSK9-Inhibitor',
-            detail: 'Evolocumab 140 mg s.c. alle 2 Wochen oder 420 mg monatlich; Alirocumab 75–150 mg s.c. alle 2 Wochen. LDL-Senkung ~60%.',
-            letterPhrase: 'die Ergänzung eines PCSK9-Inhibitors (Evolocumab oder Alirocumab) bei persistierend erhöhtem LDL'
+            detail: 'Evolocumab 140 mg s.c. Q2W oder 420 mg/Monat; Alirocumab 75–150 mg s.c. Q2W (~60% LDL-Senkung). Alternative: Inclisiran 284 mg s.c. alle 6 Monate (~50%, halbjährliche Gabe). Kumulativ bis ~85% LDL-Senkung mit Maximaltherapie.',
+            letterPhrase: 'die Ergänzung eines PCSK9-Inhibitors (Evolocumab, Alirocumab oder Inclisiran) bei persistierend erhöhtem LDL'
           });
         }
       }
@@ -13126,11 +13140,19 @@ function generateRecommendation(s, riskResult, ldlTarget) {
         detail: 'Kombination mit Ezetimib senkt LDL um weitere ~20–25%. Gut verträglich, keine relevanten Interaktionen.',
         letterPhrase: 'die Ergänzung der bestehenden Statin-Therapie um Ezetimib 10 mg'
       });
+      if (level === 'very-high' || level === 'high') {
+        steps.push({
+          type: 'escalate',
+          title: '+ Bempedoinsäure 180 mg erwägen',
+          detail: 'Bempedoinsäure 180 mg/Tag als Add-on zu Statin + Ezetimib (~17–18% weitere LDL-Senkung). ESC/EAS 2025 Class IIa/C bei hohem/sehr hohem Risiko. Prodrug — kein Myopathierisiko.',
+          letterPhrase: 'die Ergänzung von Bempedoinsäure 180 mg bei unzureichendem LDL-Ansprechen'
+        });
+      }
       if (level === 'very-high') {
         steps.push({
           type: 'escalate',
           title: '+ PCSK9-Inhibitor bei unzureichendem LDL',
-          detail: 'Evolocumab oder Alirocumab. Voraussetzung in DE: Sehr hohes Risiko + LDL ≥ 70 mg/dl (oder ≥ 100 mg/dl ohne CVD bei FH).',
+          detail: 'Evolocumab oder Alirocumab (oder Inclisiran alle 6 Mon.). Voraussetzung in DE: Sehr hohes Risiko + LDL ≥ 70 mg/dl (oder ≥ 100 mg/dl ohne CVD bei FH).',
           letterPhrase: 'die Ergänzung eines PCSK9-Inhibitors bei unzureichendem LDL-Ansprechen'
         });
       }
@@ -13141,15 +13163,23 @@ function generateRecommendation(s, riskResult, ldlTarget) {
         steps.push({
           type: 'current',
           title: 'Statin auf hohe Intensität optimieren',
-          detail: 'Atorvastatin 40–80 mg oder Rosuvastatin 20–40 mg. In Kombination mit Ezetimib maximale orale Senkung.',
+          detail: 'Atorvastatin 40–80 mg oder Rosuvastatin 20–40 mg. In Kombination mit Ezetimib maximale orale Senkung (~60%).',
           letterPhrase: 'eine Optimierung der Statin-Therapie auf hohe Intensität (Atorvastatin 40–80 mg oder Rosuvastatin 20–40 mg)'
+        });
+      }
+      if (level === 'very-high' || level === 'high') {
+        steps.push({
+          type: 'escalate',
+          title: '+ Bempedoinsäure 180 mg',
+          detail: 'Bempedoinsäure 180 mg als Dreifach-Oraltherapie (Statin + Ezetimib + Bempedoinsäure → kumulativ ~68% LDL-Senkung). ESC/EAS 2025 Class IIa/C.',
+          letterPhrase: 'die Ergänzung von Bempedoinsäure 180 mg zur bestehenden Statin + Ezetimib Therapie'
         });
       }
       steps.push({
         type: 'escalate',
         title: 'PCSK9-Inhibitor hinzufügen',
-        detail: 'Trotz optimierter Statin + Ezetimib Therapie Ziel-LDL nicht erreicht → PCSK9-Inhibitor indiziert (bei sehr hohem/hohem Risiko leitlinienkonform).',
-        letterPhrase: 'die Ergänzung eines PCSK9-Inhibitors (Evolocumab oder Alirocumab) zur bestehenden Kombinationstherapie'
+        detail: 'Trotz optimierter oraler Therapie Ziel-LDL nicht erreicht → PCSK9-Inhibitor (Evolocumab, Alirocumab oder Inclisiran). Bei sehr hohem/hohem Risiko leitlinienkonform.',
+        letterPhrase: 'die Ergänzung eines PCSK9-Inhibitors (Evolocumab, Alirocumab oder Inclisiran) zur bestehenden Kombinationstherapie'
       });
       break;
 
@@ -13162,12 +13192,20 @@ function generateRecommendation(s, riskResult, ldlTarget) {
           letterPhrase: 'eine erneute Evaluation der Statin-Verträglichkeit und ggf. Wiederaufnahme einer niedrig dosierten Statin-Therapie'
         });
       }
+      if (level === 'very-high' || level === 'high') {
+        steps.push({
+          type: 'escalate',
+          title: '+ Bempedoinsäure 180 mg',
+          detail: 'Bempedoinsäure ist besonders geeignet bei Statin-Unverträglichkeit: Prodrug, nicht in Muskelzellen aktiv → kein Myopathierisiko. Als Fixkombination mit Ezetimib (Nustendi®) verfügbar (~38% LDL-Senkung). ESC/EAS 2025 Class I/B.',
+          letterPhrase: 'die Ergänzung von Bempedoinsäure 180 mg (ggf. als Fixkombination Nustendi®) bei bestätigter Statin-Unverträglichkeit'
+        });
+      }
       if (level === 'very-high') {
         steps.push({
           type: 'escalate',
-          title: 'PCSK9-Inhibitor bei Statin-Unverträglichkeit',
-          detail: 'Bei bestätigter Statin-Unverträglichkeit und sehr hohem Risiko: PCSK9-Inhibitor + Ezetimib als Kombinationstherapie.',
-          letterPhrase: 'die Ergänzung eines PCSK9-Inhibitors (Evolocumab oder Alirocumab) bei bestätigter Statin-Unverträglichkeit'
+          title: '+ PCSK9-Inhibitor bei Statin-Unverträglichkeit',
+          detail: 'Bei bestätigter Statin-Unverträglichkeit und sehr hohem Risiko: PCSK9-Inhibitor (Evolocumab, Alirocumab oder Inclisiran) + Ezetimib ± Bempedoinsäure.',
+          letterPhrase: 'die Ergänzung eines PCSK9-Inhibitors (Evolocumab, Alirocumab oder Inclisiran) bei bestätigter Statin-Unverträglichkeit'
         });
       }
       break;
@@ -13192,8 +13230,14 @@ function generateRecommendation(s, riskResult, ldlTarget) {
     case 'triple':
       steps.push({
         type: 'escalate',
+        title: '+ Bempedoinsäure 180 mg als 4. Substanz',
+        detail: 'Bempedoinsäure 180 mg zusätzlich zur Triple-Therapie (Statin + Ezetimib + PCSK9i) kann weitere ~17% LDL-Senkung erreichen. Kumulativ bis ~86% möglich.',
+        letterPhrase: 'die Ergänzung von Bempedoinsäure 180 mg zur bestehenden Triple-Therapie'
+      });
+      steps.push({
+        type: 'escalate',
         title: 'Spezialzentrum / Lipoprotein-Apherese erwägen',
-        detail: 'Trotz maximaler medikamentöser Therapie (Triple) LDL nicht im Ziel. Überweisung an Lipidambulanz. Bei FH Lipoproteinapherese-Indikation prüfen.',
+        detail: 'Trotz maximaler medikamentöser Therapie LDL nicht im Ziel. Überweisung an Lipidambulanz. Bei FH Lipoproteinapherese-Indikation prüfen.',
         letterPhrase: 'eine Vorstellung in einem Lipid-Spezialzentrum sowie die Prüfung der Lipoproteinapherese-Indikation'
       });
       break;
@@ -13224,7 +13268,7 @@ function generateRecommendation(s, riskResult, ldlTarget) {
 /**
  * generateLetter()
  * Creates a formal German doctor's letter sentence
- * Based on 2026 ACC/AHA Guideline on the Management of Dyslipidemia
+ * Based on 2026 ACC/AHA Guideline + ESC/EAS Focused Update 2025
  */
 function generateLetter(s, riskResult, ldlTarget, mainRec, ckdStage) {
   // Genitiv-Form für "Aufgrund eines ..."
@@ -13288,7 +13332,7 @@ function generateLetter(s, riskResult, ldlTarget, mainRec, ckdStage) {
     : `Bei ${riskMapDativ[riskResult.level]}${ckdStr} und einem aktuellen ${ldlStr}${lpaStr}${targetStr}: `;
 
   return intro + action +
-    ` Die Therapieempfehlung orientiert sich an der 2026 ACC/AHA Guideline on the Management of Dyslipidemia.`;
+    ` Die Therapieempfehlung orientiert sich an der 2026 ACC/AHA Guideline on the Management of Dyslipidemia und dem ESC/EAS Focused Update 2025.`;
 }
 
 // ================================================================
