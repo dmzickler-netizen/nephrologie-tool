@@ -41,6 +41,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 #tool-tox{display:none;}
 #tool-crrt{display:none;}
 #tool-wean{display:none;}
+#tool-ca{display:none;}
 
 /* ============================================================
    LAE — CSS (vollständig aus lae.html, in Datei isoliert)
@@ -182,6 +183,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <button class="nav-tab-btn" data-tool="sepsis" onclick="switchTool('sepsis')">🦠 Sepsis</button>
   <button class="nav-tab-btn" data-tool="wean" onclick="switchTool('wean')">🔓 Weaning</button>
   <button class="nav-tab-btn" data-tool="ards" onclick="switchTool('ards')">💨 ARDS</button>
+  <button class="nav-tab-btn" data-tool="ca" onclick="switchTool('ca')">🫀 Cardiac Arrest</button>
 </div>
 
 <!-- ══════════════════════════════════════════════════════════
@@ -3067,6 +3069,7 @@ window.switchTool = function(name) {
   document.getElementById('tool-crrt').style.display   = name === 'crrt'   ? 'block' : 'none';
   document.getElementById('tool-wean').style.display   = name === 'wean'   ? 'block' : 'none';
   document.getElementById('tool-tox').style.display    = name === 'tox'    ? 'block' : 'none';
+  document.getElementById('tool-ca').style.display     = name === 'ca'     ? 'block' : 'none';
   if (name === 'tox' && window.toxLoadSabValues) { window.toxLoadSabValues(); }
 };
 
@@ -10469,6 +10472,648 @@ window.toxCalcGaps = function() {
 })();
 </script>
 </div><!-- end tool-tox -->
+
+<!-- ══════════════════════════════════════════════════════════
+     TOOL: CARDIAC ARREST — Post-Reanimations-Management
+     ══════════════════════════════════════════════════════════ -->
+<div id="tool-ca">
+<style>
+/* ============================================================
+   CARDIAC ARREST — Scoped CSS (ca- Präfix)
+   ============================================================ */
+.ca-wrap{max-width:820px;margin:0 auto;padding:16px;}
+
+.ca-tab-nav{display:flex;gap:4px;margin-bottom:18px;border-bottom:2px solid #e0e0e0;padding-bottom:0;}
+.ca-tab-btn{padding:10px 18px;border:none;background:transparent;color:#78909c;font-size:.9rem;font-weight:600;cursor:pointer;font-family:inherit;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .2s;}
+.ca-tab-btn:hover{color:#c62828;}
+.ca-tab-btn.active{color:#b71c1c;border-bottom-color:#b71c1c;}
+
+.ca-tab{display:none;}
+.ca-tab.active{display:block;}
+
+.ca-card{background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.07);margin-bottom:16px;overflow:hidden;}
+.ca-card-head{background:linear-gradient(135deg,#b71c1c,#c62828);color:#fff;padding:12px 18px;font-weight:700;font-size:.95rem;display:flex;align-items:center;gap:10px;}
+.ca-card-icon{font-size:1.2rem;}
+.ca-card-title{flex:1;}
+.ca-card-body{padding:16px 18px;}
+
+.ca-form-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap;}
+.ca-form-label{font-weight:600;font-size:.85rem;color:#37474f;min-width:140px;}
+.ca-form-input{flex:1;min-width:120px;}
+.ca-form-input input,.ca-form-input select{width:100%;padding:8px 12px;border:1.5px solid #cfd8dc;border-radius:8px;font-size:.9rem;font-family:inherit;background:#fafafa;}
+.ca-form-input input:focus,.ca-form-input select:focus{border-color:#b71c1c;outline:none;box-shadow:0 0 0 3px rgba(183,28,28,.12);}
+.ca-form-unit{font-size:.8rem;color:#78909c;min-width:40px;}
+
+.ca-toggle{display:flex;gap:0;border-radius:8px;overflow:hidden;border:1.5px solid #cfd8dc;}
+.ca-toggle input[type=radio]{display:none;}
+.ca-toggle label{padding:8px 16px;font-size:.85rem;font-weight:600;cursor:pointer;background:#fafafa;color:#546e7a;transition:all .2s;text-align:center;}
+.ca-toggle input[type=radio]:checked+label{background:#b71c1c;color:#fff;}
+
+.ca-result{padding:14px 18px;border-radius:10px;margin-top:12px;font-size:.88rem;line-height:1.6;}
+.ca-r-low{background:#e8f5e9;border-left:4px solid #4caf50;color:#1b5e20;}
+.ca-r-mid{background:#fff8e1;border-left:4px solid #ffc107;color:#7c5700;}
+.ca-r-high{background:#ffebee;border-left:4px solid #f44336;color:#b71c1c;}
+.ca-r-info{background:#e3f2fd;border-left:4px solid #1565c0;color:#0d47a1;}
+
+.ca-result-title{font-weight:700;font-size:.95rem;margin-bottom:6px;}
+.ca-result-text{font-size:.85rem;line-height:1.65;}
+.ca-result-text ul{margin:6px 0 6px 18px;}
+.ca-result-text li{margin-bottom:4px;}
+
+.ca-info{font-size:.82rem;color:#546e7a;padding:8px 12px;background:#f5f5f5;border-radius:8px;margin-top:8px;}
+.ca-badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:700;}
+.ca-badge-low{background:#e8f5e9;color:#2e7d32;}
+.ca-badge-mid{background:#fff8e1;color:#f57f17;}
+.ca-badge-high{background:#ffebee;color:#c62828;}
+
+.ca-check{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:.85rem;line-height:1.5;}
+.ca-check input[type=checkbox]{margin-top:3px;accent-color:#b71c1c;width:16px;height:16px;}
+
+.ca-section{margin-bottom:14px;}
+.ca-section-title{font-weight:700;font-size:.88rem;color:#b71c1c;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid #ffcdd2;}
+
+.ca-table{width:100%;border-collapse:collapse;font-size:.82rem;margin-top:8px;}
+.ca-table th{background:#ffebee;color:#b71c1c;padding:8px 10px;text-align:left;font-weight:700;border-bottom:2px solid #ef9a9a;}
+.ca-table td{padding:8px 10px;border-bottom:1px solid #f5f5f5;}
+.ca-table tr:hover{background:#fff8e1;}
+
+.ca-algo-box{background:#fafafa;border:1.5px solid #e0e0e0;border-radius:10px;padding:14px 16px;margin-bottom:12px;}
+.ca-algo-title{font-weight:700;font-size:.88rem;color:#37474f;margin-bottom:8px;}
+.ca-algo-arrow{text-align:center;font-size:1.3rem;color:#b71c1c;margin:8px 0;}
+
+.ca-score-box{background:#fff;border:2px solid #b71c1c;border-radius:12px;padding:16px;margin-top:14px;text-align:center;}
+.ca-score-val{font-size:2.2rem;font-weight:800;color:#b71c1c;}
+.ca-score-label{font-size:.8rem;color:#78909c;margin-top:2px;}
+
+@media(max-width:500px){
+  .ca-tab-nav{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .ca-tab-btn{padding:8px 12px;font-size:.8rem;white-space:nowrap;}
+  .ca-form-row{flex-direction:column;align-items:stretch;}
+  .ca-form-label{min-width:unset;}
+}
+</style>
+
+<div class="ca-wrap">
+
+  <!-- Sub-Tab-Navigation -->
+  <div class="ca-tab-nav">
+    <button class="ca-tab-btn active" onclick="caShowTab('workup',this)">🔍 Workup</button>
+    <button class="ca-tab-btn" onclick="caShowTab('therapie',this)">💊 Therapie</button>
+    <button class="ca-tab-btn" onclick="caShowTab('prognose',this)">📊 Prognose</button>
+  </div>
+
+  <!-- ══ WORKUP ══ -->
+  <div id="ca-workup" class="ca-tab active">
+
+    <!-- Initialer Rhythmus -->
+    <div class="ca-card">
+      <div class="ca-card-head"><span class="ca-card-icon">⚡</span><span class="ca-card-title">Initialer Rhythmus & Koronarangiografie-Indikation</span></div>
+      <div class="ca-card-body">
+        <div class="ca-form-row">
+          <span class="ca-form-label">Initialer Rhythmus</span>
+          <div class="ca-toggle">
+            <input type="radio" name="ca-rhythm" id="ca-rhythm-shock" value="shockable" checked onchange="caEvalWorkup()">
+            <label for="ca-rhythm-shock">VF / pVT</label>
+            <input type="radio" name="ca-rhythm" id="ca-rhythm-nonshock" value="nonshockable" onchange="caEvalWorkup()">
+            <label for="ca-rhythm-nonshock">Asystolie / PEA</label>
+          </div>
+        </div>
+        <div class="ca-form-row">
+          <span class="ca-form-label">ST-Hebung im EKG</span>
+          <div class="ca-toggle">
+            <input type="radio" name="ca-stemi" id="ca-stemi-yes" value="yes" onchange="caEvalWorkup()">
+            <label for="ca-stemi-yes">STEMI</label>
+            <input type="radio" name="ca-stemi" id="ca-stemi-no" value="no" checked onchange="caEvalWorkup()">
+            <label for="ca-stemi-no">Kein STEMI</label>
+          </div>
+        </div>
+        <div class="ca-form-row">
+          <span class="ca-form-label">Offensichtliche nicht-kardiale Ursache</span>
+          <div class="ca-toggle">
+            <input type="radio" name="ca-noncardiac" id="ca-nc-yes" value="yes" onchange="caEvalWorkup()">
+            <label for="ca-nc-yes">Ja</label>
+            <input type="radio" name="ca-nc-no" value="no" checked onchange="caEvalWorkup()">
+            <label for="ca-nc-no">Nein</label>
+          </div>
+        </div>
+
+        <div id="ca-koro-result"></div>
+      </div>
+    </div>
+
+    <!-- CT-Indikation -->
+    <div class="ca-card">
+      <div class="ca-card-head"><span class="ca-card-icon">🖥️</span><span class="ca-card-title">CT-Diagnostik</span></div>
+      <div class="ca-card-body">
+        <p style="font-size:.85rem;line-height:1.6;color:#37474f;margin-bottom:12px;">
+          CT-Kopf und/oder CT-Thorax nach ROSC — Indikation je nach klinischem Kontext:
+        </p>
+        <div class="ca-section">
+          <div class="ca-section-title">CT-Kopf (cCT)</div>
+          <ul style="font-size:.85rem;line-height:1.6;margin-left:18px;">
+            <li>Unklare Ursache des Kreislaufstillstands</li>
+            <li>Non-shockable Rhythmus (Asystolie/PEA) ohne STEMI</li>
+            <li>V.a. intrakranielle Blutung / Stroke (Anamnese, Klinik)</li>
+            <li>Kein Trauma-CT vorab bei Sturzanamnese</li>
+          </ul>
+        </div>
+        <div class="ca-section">
+          <div class="ca-section-title">CT-Thorax/Angio (CTA)</div>
+          <ul style="font-size:.85rem;line-height:1.6;margin-left:18px;">
+            <li>V.a. Lungenarterienembolie (PEA, RV-Dilatation im Echo)</li>
+            <li>V.a. Aortendissektion (Blutdruck-Seitendifferenz, Perikarderguss)</li>
+            <li>Kein STEMI + keine Koronar-Indikation → CT-Koro als Alternative erwägen</li>
+          </ul>
+        </div>
+        <div class="ca-info">💡 Bei STEMI → sofort Koro, CT verzögert nur. CT vor Koro nur bei klinischem V.a. nicht-kardiale Ursache (SAB, LAE, Dissektion).</div>
+      </div>
+    </div>
+
+    <!-- 5H / 5T -->
+    <div class="ca-card">
+      <div class="ca-card-head"><span class="ca-card-icon">🔎</span><span class="ca-card-title">Reversible Ursachen — 5H & 5T</span></div>
+      <div class="ca-card-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div>
+            <div class="ca-section-title">5 H</div>
+            <div class="ca-check"><input type="checkbox" id="ca-h1"><label for="ca-h1"><b>H</b>ypoxie</label></div>
+            <div class="ca-check"><input type="checkbox" id="ca-h2"><label for="ca-h2"><b>H</b>ypovolämie</label></div>
+            <div class="ca-check"><input type="checkbox" id="ca-h3"><label for="ca-h3"><b>H</b>ypo-/Hyperkaliämie (Elektrolyte)</label></div>
+            <div class="ca-check"><input type="checkbox" id="ca-h4"><label for="ca-h4"><b>H</b>ypothermie</label></div>
+            <div class="ca-check"><input type="checkbox" id="ca-h5"><label for="ca-h5"><b>H</b>ydrogen-Ionen (Azidose)</label></div>
+          </div>
+          <div>
+            <div class="ca-section-title">5 T</div>
+            <div class="ca-check"><input type="checkbox" id="ca-t1"><label for="ca-t1"><b>T</b>hrombose — koronar (ACS)</label></div>
+            <div class="ca-check"><input type="checkbox" id="ca-t2"><label for="ca-t2"><b>T</b>hrombose — pulmonal (LAE)</label></div>
+            <div class="ca-check"><input type="checkbox" id="ca-t3"><label for="ca-t3"><b>T</b>amponade (Herzbeutel)</label></div>
+            <div class="ca-check"><input type="checkbox" id="ca-t4"><label for="ca-t4"><b>T</b>ensionspneumothorax</label></div>
+            <div class="ca-check"><input type="checkbox" id="ca-t5"><label for="ca-t5"><b>T</b>oxine / Intoxikation</label></div>
+          </div>
+        </div>
+        <div class="ca-info" style="margin-top:12px;">💡 Systematisch abarbeiten — häufigste Ursachen: ACS (ca. 60–70 %), LAE, primäre Arrhythmie, Hypoxie.</div>
+      </div>
+    </div>
+
+    <!-- Basis-Diagnostik Checkliste -->
+    <div class="ca-card">
+      <div class="ca-card-head"><span class="ca-card-icon">📋</span><span class="ca-card-title">Basis-Diagnostik nach ROSC — Checkliste</span></div>
+      <div class="ca-card-body">
+        <div class="ca-check"><input type="checkbox"><label>12-Kanal-EKG (STEMI? Arrhythmie?)</label></div>
+        <div class="ca-check"><input type="checkbox"><label>Echokardiografie / POCUS (Wandbewegungsstörung, RV-Belastung, Perikarderguss)</label></div>
+        <div class="ca-check"><input type="checkbox"><label>Labor: Troponin, Laktat, BGA (pH, pCO₂, Laktat), BB, Elektrolyte, Krea, Gerinnung, BZ, NSE baseline</label></div>
+        <div class="ca-check"><input type="checkbox"><label>Rö-Thorax (Tubuslage, Pneumothorax, Stauung)</label></div>
+        <div class="ca-check"><input type="checkbox"><label>Anamnese: Zeugenaussagen, Vorerkrankungen, Medikamente</label></div>
+        <div class="ca-check"><input type="checkbox"><label>Reanimations-Details: No-Flow / Low-Flow-Zeit, initialer Rhythmus, Adrenalin-Gesamtdosis</label></div>
+      </div>
+    </div>
+
+  </div><!-- end ca-workup -->
+
+  <!-- ══ THERAPIE ══ -->
+  <div id="ca-therapie" class="ca-tab">
+
+    <!-- TTM -->
+    <div class="ca-card">
+      <div class="ca-card-head"><span class="ca-card-icon">🌡️</span><span class="ca-card-title">Temperaturmanagement (TTM)</span></div>
+      <div class="ca-card-body">
+        <div class="ca-algo-box">
+          <div class="ca-algo-title">Zieltemperatur nach ERC/ESICM 2021 + TTM2-Trial</div>
+          <div class="ca-result ca-r-info">
+            <div class="ca-result-title">Ziel: Normothermie ≤ 37,5 °C für mindestens 72 h</div>
+            <div class="ca-result-text">
+              <ul>
+                <li><b>Fieber aktiv vermeiden</b> (&gt;37,7 °C) — Fieber ist assoziiert mit schlechterem neurologischem Outcome</li>
+                <li>Zielbereich: <b>32–36 °C</b> (TTM1) oder strikt <b>≤37,5 °C</b> (TTM2) — kein eindeutiger Vorteil für tiefe Hypothermie</li>
+                <li>Kühlung erwägen bei persistierendem Koma nach ROSC</li>
+                <li>Beginn so früh wie möglich, Dauer mindestens <b>24 h</b> (bei 32–36 °C) bis <b>72 h</b> Fiebervermeidung</li>
+                <li>Aufwärmrate max. <b>0,25–0,5 °C/h</b> (langsam!)</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="ca-section">
+          <div class="ca-section-title">Methoden</div>
+          <table class="ca-table">
+            <tr><th>Methode</th><th>Details</th></tr>
+            <tr><td>Intravaskulärer Katheter</td><td>Präziseste Steuerung (z.B. Arctic Sun, Thermogard)</td></tr>
+            <tr><td>Externe Kühlpads/-decken</td><td>Einfach, kostengünstig; weniger präzise</td></tr>
+            <tr><td>Kalte Infusion</td><td>30 ml/kg 4 °C NaCl — <b>NICHT prähospital</b> (RINSE-Trial: kein Benefit, mehr VF)</td></tr>
+          </table>
+        </div>
+        <div class="ca-info">⚠️ Shivering-Prophylaxe: Sedierung, ggf. Muskelrelaxation. Elektrolyte engmaschig kontrollieren (K⁺ fällt bei Kühlung).</div>
+      </div>
+    </div>
+
+    <!-- Hämodynamik -->
+    <div class="ca-card">
+      <div class="ca-card-head"><span class="ca-card-icon">❤️</span><span class="ca-card-title">Hämodynamik & Kreislaufmanagement</span></div>
+      <div class="ca-card-body">
+        <div class="ca-section">
+          <div class="ca-section-title">Zielwerte (ERC/ESICM 2021 + AHA 2020)</div>
+          <table class="ca-table">
+            <tr><th>Parameter</th><th>Ziel</th></tr>
+            <tr><td>MAP</td><td><b>≥ 65 mmHg</b> (individuell höher bei chron. Hypertonie)</td></tr>
+            <tr><td>RR systolisch</td><td>Vermeidung von Hypotension (&lt;90 mmHg)</td></tr>
+            <tr><td>Laktat</td><td>Fallender Trend (Clearance &gt;10 %/2 h)</td></tr>
+            <tr><td>ZVD</td><td>Kein striktes Ziel — Volumenreagibilität beachten</td></tr>
+            <tr><td>ScvO₂</td><td>≥ 65–70 %</td></tr>
+          </table>
+        </div>
+        <div class="ca-section">
+          <div class="ca-section-title">Vasopressoren / Inotropika</div>
+          <ul style="font-size:.85rem;line-height:1.65;margin-left:18px;">
+            <li><b>Noradrenalin</b> — Vasopressor der 1. Wahl (Start 0,05–0,1 µg/kg/min)</li>
+            <li><b>Dobutamin</b> — bei kardiogenem Schock / LV-Dysfunktion zusätzlich (2,5–10 µg/kg/min)</li>
+            <li><b>Adrenalin</b> — Alternative bei kombiniertem Schock</li>
+            <li>Echokardiografie zur Steuerung (LV-Funktion, Volumenreagibilität)</li>
+            <li>Erweiterte Diagnostik: PiCCO, PA-Katheter bei refraktärem Schock</li>
+          </ul>
+        </div>
+        <div class="ca-info">💡 Post-Cardiac-Arrest-Syndrom: myokardiale Dysfunktion (Stunning) oft innerhalb 24–72 h reversibel. Frühes Echo essenziell.</div>
+      </div>
+    </div>
+
+    <!-- Beatmung -->
+    <div class="ca-card">
+      <div class="ca-card-head"><span class="ca-card-icon">🫁</span><span class="ca-card-title">Beatmung & Oxygenierung</span></div>
+      <div class="ca-card-body">
+        <table class="ca-table">
+          <tr><th>Parameter</th><th>Ziel</th><th>Bemerkung</th></tr>
+          <tr><td>SpO₂</td><td><b>94–98 %</b></td><td>Hyperoxie vermeiden (schädlich!)</td></tr>
+          <tr><td>PaO₂</td><td>75–100 mmHg</td><td>FiO₂ so schnell wie möglich reduzieren</td></tr>
+          <tr><td>PaCO₂</td><td><b>35–45 mmHg</b> (Normokapnie)</td><td>Hypokapnie vermeiden (zerebrale Vasokonstriktion)</td></tr>
+          <tr><td>Tidalvolumen</td><td>6–8 ml/kg IBW</td><td>Lungenprotektiv beatmen</td></tr>
+          <tr><td>PEEP</td><td>Individuell, ≥5 cmH₂O</td><td>Oxygenierung vs. Hämodynamik abwägen</td></tr>
+        </table>
+        <div class="ca-info" style="margin-top:10px;">⚠️ Tubuslage verifizieren (Kapnografie!). Aspiration häufig — frühzeitige Bronchoskopie bei Verdacht.</div>
+      </div>
+    </div>
+
+    <!-- Weitere Maßnahmen -->
+    <div class="ca-card">
+      <div class="ca-card-head"><span class="ca-card-icon">💉</span><span class="ca-card-title">Weitere Post-ROSC-Maßnahmen</span></div>
+      <div class="ca-card-body">
+        <div class="ca-section">
+          <div class="ca-section-title">Blutzucker</div>
+          <ul style="font-size:.85rem;line-height:1.65;margin-left:18px;">
+            <li>Ziel: <b>140–180 mg/dl</b> (7,8–10 mmol/l)</li>
+            <li>Hypoglykämie strikt vermeiden (&lt;70 mg/dl)</li>
+            <li>Insulin-Perfusor bei BZ &gt;180 mg/dl</li>
+          </ul>
+        </div>
+        <div class="ca-section">
+          <div class="ca-section-title">Krampfanfälle / Myoklonien</div>
+          <ul style="font-size:.85rem;line-height:1.65;margin-left:18px;">
+            <li>EEG-Monitoring bei persistierendem Koma (kontinuierlich wenn verfügbar)</li>
+            <li>Klinische Krampfanfälle sofort behandeln: <b>Levetiracetam</b> 30–60 mg/kg i.v. oder <b>Valproat</b> 30 mg/kg i.v.</li>
+            <li>Status epilepticus: Midazolam / Propofol + Antikonvulsiva</li>
+            <li>Lance-Adams-Syndrom (postanoxische Myoklonien) ≠ epileptischer Anfall — differenzieren!</li>
+          </ul>
+        </div>
+        <div class="ca-section">
+          <div class="ca-section-title">Sedierung</div>
+          <ul style="font-size:.85rem;line-height:1.65;margin-left:18px;">
+            <li>Propofol ± Remifentanil oder Midazolam + Sufentanil</li>
+            <li>Kurzwirksame Substanzen bevorzugen → neurologische Beurteilbarkeit</li>
+            <li>Sedierungspause für Prognostik erst nach ≥72 h + Normothermie</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end ca-therapie -->
+
+  <!-- ══ PROGNOSE ══ -->
+  <div id="ca-prognose" class="ca-tab">
+
+    <!-- Multimodale Prognostik -->
+    <div class="ca-card">
+      <div class="ca-card-head"><span class="ca-card-icon">🧠</span><span class="ca-card-title">Multimodale Prognostik — Algorithmus (ERC/ESICM 2021)</span></div>
+      <div class="ca-card-body">
+        <div class="ca-result ca-r-mid" style="margin-top:0;">
+          <div class="ca-result-title">⏱️ Frühestens 72 h nach ROSC — Voraussetzungen beachten!</div>
+          <div class="ca-result-text">
+            <ul>
+              <li>Patient muss <b>normotherm</b> sein (kein TTM mehr aktiv)</li>
+              <li><b>Keine Sedierung</b> / Muskelrelaxation (ausreichende Wash-out-Phase)</li>
+              <li>Keine relevanten Konfounder (metabolisch, toxisch, Medikamente)</li>
+              <li><b>Kein einzelner Test</b> reicht zur Prognosestellung → <b>multimodal!</b></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="ca-section" style="margin-top:16px;">
+          <div class="ca-section-title">Klinische Untersuchung (≥72 h)</div>
+          <table class="ca-table">
+            <tr><th>Befund</th><th>Bedeutung</th></tr>
+            <tr><td>Bilateraler Pupillenreflex fehlend</td><td>Starker Prädiktor für schlechtes Outcome (FPR &lt;5 %)</td></tr>
+            <tr><td>Kornealreflex beidseits fehlend</td><td>Hohe Spezifität für schlechtes Outcome</td></tr>
+            <tr><td>GCS Motor ≤2 (keine / Strecksynergismen)</td><td>Notwendige, aber nicht hinreichende Bedingung</td></tr>
+            <tr><td>Status myoclonus (&lt;72 h)</td><td>Ungünstig, aber NICHT allein prognostisch → EEG!</td></tr>
+          </table>
+        </div>
+
+        <div class="ca-section">
+          <div class="ca-section-title">Apparative Diagnostik</div>
+          <table class="ca-table">
+            <tr><th>Test</th><th>Zeitpunkt</th><th>Pathologisch</th></tr>
+            <tr><td><b>EEG</b></td><td>24–72 h</td><td>Burst-Suppression, Status epilepticus, fehlende Reaktivität</td></tr>
+            <tr><td><b>SSEP</b> (N20)</td><td>≥24 h</td><td>Bilateral fehlende N20 → FPR &lt;1 % (stärkster Einzelprädiktor)</td></tr>
+            <tr><td><b>NSE</b></td><td>24 h + 48–72 h</td><td>&gt;60 µg/l bei 48–72 h hoch spezifisch (Hämolyse ausschließen!)</td></tr>
+            <tr><td><b>CT-Kopf</b></td><td>24–72 h</td><td>Generalisiertes Ödem, aufgehobene Mark-Rinden-Differenzierung</td></tr>
+            <tr><td><b>MRT-Kopf</b></td><td>2–5 Tage</td><td>Diffuse kortikale DWI-Restriktion → schlechtes Outcome</td></tr>
+          </table>
+        </div>
+
+        <div class="ca-result ca-r-info" style="margin-top:14px;">
+          <div class="ca-result-title">Entscheidung zum Therapieziel</div>
+          <div class="ca-result-text">
+            ≥2 Prädiktoren aus verschiedenen Modalitäten → <b>Schlechte Prognose wahrscheinlich</b><br>
+            0–1 Prädiktor → <b>Weiter beobachten</b>, Prognostik nach 5–7 Tagen wiederholen<br>
+            <b>Wichtig:</b> Entscheidung immer im <b>interdisziplinären Team</b> (Intensivmedizin, Neurologie, ggf. Ethikberatung)
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CAHP-Score -->
+    <div class="ca-card">
+      <div class="ca-card-head"><span class="ca-card-icon">🧮</span><span class="ca-card-title">CAHP-Score — Cardiac Arrest Hospital Prognosis</span></div>
+      <div class="ca-card-body">
+        <p style="font-size:.82rem;color:#546e7a;margin-bottom:12px;">Prognostiziert neurologisches Outcome nach Kreislaufstillstand (Maupain et al., Intensive Care Med 2016).</p>
+
+        <div class="ca-form-row">
+          <span class="ca-form-label">Alter (Jahre)</span>
+          <div class="ca-form-input"><input type="number" id="ca-cahp-age" min="0" max="120" placeholder="z.B. 65" oninput="caCalcCAHP()"></div>
+        </div>
+        <div class="ca-form-row">
+          <span class="ca-form-label">Initialer Rhythmus</span>
+          <div class="ca-toggle">
+            <input type="radio" name="ca-cahp-rhythm" id="ca-cahp-shock" value="shockable" checked onchange="caCalcCAHP()">
+            <label for="ca-cahp-shock">Schockbar</label>
+            <input type="radio" name="ca-cahp-rhythm" id="ca-cahp-nonshock" value="nonshockable" onchange="caCalcCAHP()">
+            <label for="ca-cahp-nonshock">Nicht-schockbar</label>
+          </div>
+        </div>
+        <div class="ca-form-row">
+          <span class="ca-form-label">No-Flow-Zeit (min)</span>
+          <div class="ca-form-input"><input type="number" id="ca-cahp-noflow" min="0" max="60" placeholder="z.B. 5" oninput="caCalcCAHP()"></div>
+        </div>
+        <div class="ca-form-row">
+          <span class="ca-form-label">Low-Flow-Zeit (min)</span>
+          <div class="ca-form-input"><input type="number" id="ca-cahp-lowflow" min="0" max="180" placeholder="z.B. 20" oninput="caCalcCAHP()"></div>
+        </div>
+        <div class="ca-form-row">
+          <span class="ca-form-label">pH bei Aufnahme</span>
+          <div class="ca-form-input"><input type="number" id="ca-cahp-ph" min="6.5" max="7.8" step="0.01" placeholder="z.B. 7.15" oninput="caCalcCAHP()"></div>
+        </div>
+        <div class="ca-form-row">
+          <span class="ca-form-label">Adrenalin gesamt (mg)</span>
+          <div class="ca-form-input"><input type="number" id="ca-cahp-epi" min="0" max="30" step="1" placeholder="z.B. 5" oninput="caCalcCAHP()"></div>
+        </div>
+        <div class="ca-form-row">
+          <span class="ca-form-label">Ort des Stillstands</span>
+          <div class="ca-toggle">
+            <input type="radio" name="ca-cahp-setting" id="ca-cahp-ohca" value="ohca" checked onchange="caCalcCAHP()">
+            <label for="ca-cahp-ohca">OHCA</label>
+            <input type="radio" name="ca-cahp-setting" id="ca-cahp-ihca" value="ihca" onchange="caCalcCAHP()">
+            <label for="ca-cahp-ihca">IHCA</label>
+          </div>
+        </div>
+
+        <div id="ca-cahp-result"></div>
+      </div>
+    </div>
+
+    <!-- NULL-PLEASE Score -->
+    <div class="ca-card">
+      <div class="ca-card-head"><span class="ca-card-icon">📊</span><span class="ca-card-title">NULL-PLEASE Score — Prognose neurologisches Outcome</span></div>
+      <div class="ca-card-body">
+        <p style="font-size:.82rem;color:#546e7a;margin-bottom:12px;">Einfacher bedside-Score für schlechtes neurologisches Outcome nach OHCA (Martinell et al., Resuscitation 2020).</p>
+
+        <div class="ca-check"><input type="checkbox" id="ca-null-n" onchange="caCalcNULL()"><label for="ca-null-n"><b>N</b>on-shockable initial rhythm (+1)</label></div>
+        <div class="ca-check"><input type="checkbox" id="ca-null-u" onchange="caCalcNULL()"><label for="ca-null-u"><b>U</b>nwitnessed arrest (+1)</label></div>
+        <div class="ca-check"><input type="checkbox" id="ca-null-l1" onchange="caCalcNULL()"><label for="ca-null-l1"><b>L</b>ong resuscitation &gt;20 min (+1)</label></div>
+        <div class="ca-check"><input type="checkbox" id="ca-null-l2" onchange="caCalcNULL()"><label for="ca-null-l2"><b>L</b>actate &gt;7 mmol/l (+1)</label></div>
+        <div style="height:8px;"></div>
+        <div class="ca-check"><input type="checkbox" id="ca-null-p" onchange="caCalcNULL()"><label for="ca-null-p"><b>P</b>H &lt;7,2 (+1)</label></div>
+        <div class="ca-check"><input type="checkbox" id="ca-null-l3" onchange="caCalcNULL()"><label for="ca-null-l3">End-stage rena<b>L</b> disease / Dialyse (+1)</label></div>
+        <div class="ca-check"><input type="checkbox" id="ca-null-e" onchange="caCalcNULL()"><label for="ca-null-e"><b>E</b>ighty-five — Alter ≥85 (+1)</label></div>
+        <div class="ca-check"><input type="checkbox" id="ca-null-a" onchange="caCalcNULL()"><label for="ca-null-a"><b>A</b>drenalin &gt;3 mg (+1)</label></div>
+        <div class="ca-check"><input type="checkbox" id="ca-null-s" onchange="caCalcNULL()"><label for="ca-null-s"><b>S</b>till CPR at hospital arrival (+1)</label></div>
+        <div class="ca-check"><input type="checkbox" id="ca-null-e2" onchange="caCalcNULL()"><label for="ca-null-e2"><b>E</b>xtracardiac cause (+1)</label></div>
+
+        <div id="ca-null-result"></div>
+      </div>
+    </div>
+
+    <!-- Quellen -->
+    <div class="ca-card">
+      <div class="ca-card-head"><span class="ca-card-icon">📚</span><span class="ca-card-title">Quellen & Leitlinien</span></div>
+      <div class="ca-card-body">
+        <ul style="font-size:.82rem;line-height:1.8;margin-left:18px;color:#37474f;">
+          <li><b>ERC/ESICM 2021</b> — Post-Resuscitation Care Guidelines (Nolan et al., Resuscitation 2021)</li>
+          <li><b>AHA 2020</b> — Guidelines for CPR and ECC, Part 9: Post–Cardiac Arrest Care</li>
+          <li><b>TTM2 Trial</b> — Dankiewicz et al., NEJM 2021: Hypothermia vs. Normothermia after OHCA</li>
+          <li><b>COACT Trial</b> — Lemkes et al., NEJM 2019: Immediate vs. Delayed Angiography after CA without STEMI</li>
+          <li><b>TOMAHAWK Trial</b> — Desch et al., NEJM 2021: Immediate vs. Later Angiography in Survivors without STEMI</li>
+          <li><b>CAHP-Score</b> — Maupain et al., Intensive Care Med 2016</li>
+          <li><b>NULL-PLEASE</b> — Martinell et al., Resuscitation 2020</li>
+          <li><b>Sandroni et al.</b> — Prognostication after cardiac arrest, Intensive Care Med 2022</li>
+        </ul>
+      </div>
+    </div>
+
+  </div><!-- end ca-prognose -->
+
+</div><!-- end ca-wrap -->
+
+<script>
+(function(){
+'use strict';
+
+// ── Sub-Tab-Switcher ──────────────────────────────────────
+window.caShowTab = function(id, btn) {
+  document.querySelectorAll('.ca-tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.ca-tab-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.getElementById('ca-' + id).classList.add('active');
+  btn.classList.add('active');
+};
+
+// ── Workup: Koronarangiografie-Empfehlung ─────────────────
+window.caEvalWorkup = function() {
+  var rhythm = document.querySelector('input[name="ca-rhythm"]:checked').value;
+  var stemi  = document.querySelector('input[name="ca-stemi"]:checked').value;
+  var nc     = document.querySelector('input[name="ca-noncardiac"]:checked').value;
+  var out    = document.getElementById('ca-koro-result');
+  var html   = '';
+
+  if (stemi === 'yes') {
+    html = '<div class="ca-result ca-r-high">' +
+      '<div class="ca-result-title">🚨 STEMI → Sofortige Koronarangiografie + PCI</div>' +
+      '<div class="ca-result-text">' +
+      '<ul>' +
+      '<li>Sofortige Verlegung ins Katheterlabor — <b>kein Zeitverzug</b></li>' +
+      '<li>UFH-Bolus (70–100 IE/kg), ASS 250 mg i.v., P2Y12-Inhibitor nach Koro</li>' +
+      '<li>TTM parallel oder nach Intervention starten</li>' +
+      '</ul>' +
+      '<div style="margin-top:6px"><b>Evidenz:</b> ERC/ESICM 2021 — starke Empfehlung bei ST-Hebung</div>' +
+      '</div></div>';
+  } else if (nc === 'yes') {
+    html = '<div class="ca-result ca-r-info">' +
+      '<div class="ca-result-title">ℹ️ Offensichtliche nicht-kardiale Ursache identifiziert</div>' +
+      '<div class="ca-result-text">' +
+      '<ul>' +
+      '<li>Ursachenspezifische Therapie priorisieren (z.B. CT bei V.a. SAB/LAE, Antidot bei Intoxikation)</li>' +
+      '<li>Koro <b>nicht routinemäßig</b>, nur bei sekundärem V.a. ACS</li>' +
+      '</ul>' +
+      '</div></div>';
+  } else if (rhythm === 'shockable') {
+    html = '<div class="ca-result ca-r-mid">' +
+      '<div class="ca-result-title">⚠️ Schockbarer Rhythmus ohne STEMI → Koronarangiografie erwägen</div>' +
+      '<div class="ca-result-text">' +
+      '<ul>' +
+      '<li>Koro <b>zeitnah (≤24 h)</b>, aber <b>nicht sofort erzwungen</b></li>' +
+      '<li>COACT + TOMAHAWK: kein Vorteil der sofortigen vs. verzögerten Koro bei fehlendem STEMI</li>' +
+      '<li>Erst ITS-Stabilisierung (Hämodynamik, TTM starten), dann Koro planen</li>' +
+      '<li>Bei hämodynamischer Instabilität / V.a. ACS → individuelle Entscheidung für frühe Koro</li>' +
+      '</ul>' +
+      '<div style="margin-top:6px"><b>Evidenz:</b> COACT (NEJM 2019), TOMAHAWK (NEJM 2021)</div>' +
+      '</div></div>';
+  } else {
+    html = '<div class="ca-result ca-r-info">' +
+      '<div class="ca-result-title">ℹ️ Non-shockable Rhythmus ohne STEMI</div>' +
+      '<div class="ca-result-text">' +
+      '<ul>' +
+      '<li>Koronarangiografie <b>nicht routinemäßig sofort</b></li>' +
+      '<li>Zunächst CT (Kopf ± Thorax) zur Ursachenklärung erwägen</li>' +
+      '<li>Koro selektiv: bei V.a. kardiale Ursache nach Ausschluss anderer Ätiologien</li>' +
+      '<li>Echokardiografie kann ACS-Hinweise liefern (Wandbewegungsstörung)</li>' +
+      '</ul>' +
+      '</div></div>';
+  }
+
+  out.innerHTML = html;
+};
+
+// ── CAHP-Score ────────────────────────────────────────────
+window.caCalcCAHP = function() {
+  var age     = parseFloat(document.getElementById('ca-cahp-age').value);
+  var rhythm  = document.querySelector('input[name="ca-cahp-rhythm"]:checked').value;
+  var noflow  = parseFloat(document.getElementById('ca-cahp-noflow').value);
+  var lowflow = parseFloat(document.getElementById('ca-cahp-lowflow').value);
+  var ph      = parseFloat(document.getElementById('ca-cahp-ph').value);
+  var epi     = parseFloat(document.getElementById('ca-cahp-epi').value);
+  var setting = document.querySelector('input[name="ca-cahp-setting"]:checked').value;
+  var out     = document.getElementById('ca-cahp-result');
+
+  if (isNaN(age) || isNaN(noflow) || isNaN(lowflow) || isNaN(ph) || isNaN(epi)) {
+    out.innerHTML = '';
+    return;
+  }
+
+  // CAHP continuous scoring (Maupain et al. 2016):
+  // Score = Age_component + Rhythm + No-flow + Low-flow + pH + Epinephrine + Setting
+  // Simplified point-based approximation for bedside use:
+  var score = 0;
+
+  // Age (per 10 years over 30)
+  if (age >= 80) score += 60;
+  else if (age >= 70) score += 50;
+  else if (age >= 60) score += 40;
+  else if (age >= 50) score += 30;
+  else if (age >= 40) score += 20;
+  else if (age >= 30) score += 10;
+
+  // Non-shockable rhythm
+  if (rhythm === 'nonshockable') score += 39;
+
+  // No-flow time
+  score += Math.round(noflow * 2.8);
+
+  // Low-flow time
+  score += Math.round(lowflow * 1.5);
+
+  // pH (inverted: lower pH → higher score)
+  if (ph < 7.0)       score += 51;
+  else if (ph < 7.1)  score += 40;
+  else if (ph < 7.2)  score += 30;
+  else if (ph < 7.3)  score += 20;
+  else if (ph < 7.4)  score += 10;
+
+  // Epinephrine (per mg)
+  score += Math.round(epi * 5);
+
+  // OHCA vs IHCA (OHCA associated with worse outcome in original data)
+  if (setting === 'ohca') score += 10;
+
+  var cat, cls, txt;
+  if (score <= 100) {
+    cat = 'Niedriges Risiko';
+    cls = 'ca-r-low';
+    txt = 'Gute Prognose wahrscheinlich — Fortführung der maximalen Therapie empfohlen.';
+  } else if (score <= 170) {
+    cat = 'Mittleres Risiko';
+    cls = 'ca-r-mid';
+    txt = 'Intermediäre Prognose — multimodale Prognostik nach 72 h essenziell.';
+  } else {
+    cat = 'Hohes Risiko';
+    cls = 'ca-r-high';
+    txt = 'Schlechtes neurologisches Outcome wahrscheinlich — frühzeitig multimodale Prognostik und Angehörigengespräch planen.';
+  }
+
+  out.innerHTML =
+    '<div class="ca-score-box">' +
+    '<div class="ca-score-val">' + score + '</div>' +
+    '<div class="ca-score-label">CAHP-Score</div>' +
+    '</div>' +
+    '<div class="ca-result ' + cls + '" style="margin-top:10px;">' +
+    '<div class="ca-result-title"><span class="ca-badge ca-badge-' + (score <= 100 ? 'low' : score <= 170 ? 'mid' : 'high') + '">' + cat + '</span></div>' +
+    '<div class="ca-result-text">' + txt + '</div></div>';
+};
+
+// ── NULL-PLEASE Score ─────────────────────────────────────
+window.caCalcNULL = function() {
+  var ids = ['ca-null-n','ca-null-u','ca-null-l1','ca-null-l2','ca-null-p','ca-null-l3','ca-null-e','ca-null-a','ca-null-s','ca-null-e2'];
+  var score = 0;
+  for (var i = 0; i < ids.length; i++) {
+    if (document.getElementById(ids[i]).checked) score++;
+  }
+
+  var out = document.getElementById('ca-null-result');
+  var cat, cls, txt;
+
+  if (score <= 2) {
+    cat = 'Niedriges Risiko';
+    cls = 'ca-r-low';
+    txt = 'Gutes neurologisches Outcome möglich — maximale Therapie + TTM fortführen.';
+  } else if (score <= 4) {
+    cat = 'Mittleres Risiko';
+    cls = 'ca-r-mid';
+    txt = 'Intermediäre Prognose — multimodale Prognostik ab 72 h empfohlen.';
+  } else {
+    cat = 'Hohes Risiko';
+    cls = 'ca-r-high';
+    txt = 'Hohes Risiko für schlechtes neurologisches Outcome (CPC 3–5). Frühzeitig Angehörigengespräch + Ethikberatung.';
+  }
+
+  out.innerHTML =
+    '<div class="ca-score-box">' +
+    '<div class="ca-score-val">' + score + ' / 10</div>' +
+    '<div class="ca-score-label">NULL-PLEASE Score</div>' +
+    '</div>' +
+    '<div class="ca-result ' + cls + '" style="margin-top:10px;">' +
+    '<div class="ca-result-title"><span class="ca-badge ca-badge-' + (score <= 2 ? 'low' : score <= 4 ? 'mid' : 'high') + '">' + cat + '</span></div>' +
+    '<div class="ca-result-text">' + txt + '</div></div>';
+};
+
+// Initial render
+caEvalWorkup();
+
+})();
+</script>
+</div><!-- end tool-ca -->
 
 </body>
 </html>
