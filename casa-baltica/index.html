@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Casa Baltica — Ferienwohnung am Schönberger Strand</title>
+<meta name="description" content="Gemütliche Ferienwohnung 'Casa Baltica' direkt am Schönberger Strand. 2 Schlafzimmer, Terrasse mit Garten, nur 100m zum Ostseestrand. Jetzt buchen!">
+<style>
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --sand: #f5f0e8;
+  --sand-dark: #e8dfd2;
+  --ocean: #2b6a8e;
+  --ocean-light: #3d8bb5;
+  --ocean-dark: #1a4d6b;
+  --deep: #0f2f42;
+  --white: #ffffff;
+  --warm-gray: #6b6560;
+  --text: #2c2c2c;
+  --accent: #c4956a;
+  --accent-light: #dbb896;
+  --sky: #e8f1f5;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  color: var(--text);
+  background: var(--sand);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* ===== NAVIGATION ===== */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+  background: rgba(15, 47, 66, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 0 2rem;
+  transition: box-shadow 0.3s;
+}
+nav.scrolled { box-shadow: 0 2px 20px rgba(0,0,0,0.3); }
+
+.nav-inner {
+  max-width: 1200px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 60px;
+}
+
+.nav-logo {
+  font-size: 1.3rem; font-weight: 700; color: var(--white);
+  text-decoration: none; letter-spacing: 0.5px;
+}
+.nav-logo span { color: var(--accent-light); }
+
+.nav-links { display: flex; gap: 0.5rem; list-style: none; }
+.nav-links a {
+  color: rgba(255,255,255,0.8); text-decoration: none;
+  padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.9rem;
+  transition: all 0.2s;
+}
+.nav-links a:hover { color: var(--white); background: rgba(255,255,255,0.1); }
+
+.nav-burger {
+  display: none; background: none; border: none; cursor: pointer;
+  width: 28px; height: 20px; position: relative;
+}
+.nav-burger span {
+  display: block; width: 100%; height: 2px; background: var(--white);
+  position: absolute; left: 0; transition: all 0.3s;
+}
+.nav-burger span:nth-child(1) { top: 0; }
+.nav-burger span:nth-child(2) { top: 9px; }
+.nav-burger span:nth-child(3) { top: 18px; }
+
+/* ===== LANGUAGE SWITCHER ===== */
+.lang-switcher {
+  display: flex; gap: 4px; margin-left: 1rem;
+}
+.lang-btn {
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.25);
+  color: rgba(255,255,255,0.7); padding: 0.25rem 0.6rem; border-radius: 4px;
+  font-size: 0.78rem; font-weight: 600; cursor: pointer;
+  transition: all 0.2s; letter-spacing: 0.5px;
+}
+.lang-btn:hover { background: rgba(255,255,255,0.2); color: var(--white); }
+.lang-btn.active {
+  background: var(--accent); border-color: var(--accent);
+  color: var(--white);
+}
+
+/* ===== HERO ===== */
+.hero {
+  position: relative; height: 100vh; min-height: 600px;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+
+.hero-bg {
+  position: absolute; inset: 0;
+  background: url('img/strand-abendstimmung.jpg') center/cover no-repeat;
+}
+.hero-bg::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(15,47,66,0.4) 0%,
+    rgba(15,47,66,0.2) 40%,
+    rgba(15,47,66,0.5) 100%
+  );
+}
+
+.hero-content {
+  position: relative; z-index: 1; text-align: center;
+  color: var(--white); padding: 2rem;
+  max-width: 700px;
+}
+
+.hero-content h1 {
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  font-weight: 300; letter-spacing: 2px;
+  text-shadow: 0 2px 20px rgba(0,0,0,0.3);
+  margin-bottom: 0.5rem;
+}
+.hero-content h1 strong { font-weight: 700; }
+
+.hero-subtitle {
+  font-size: clamp(1rem, 2.5vw, 1.3rem);
+  opacity: 0.9; margin-bottom: 2rem;
+  text-shadow: 0 1px 8px rgba(0,0,0,0.3);
+}
+
+.hero-badges {
+  display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;
+  margin-bottom: 2.5rem;
+}
+.hero-badge {
+  background: rgba(255,255,255,0.15); backdrop-filter: blur(8px);
+  padding: 0.5rem 1.2rem; border-radius: 50px;
+  font-size: 0.9rem; border: 1px solid rgba(255,255,255,0.25);
+}
+
+.btn {
+  display: inline-block; padding: 0.9rem 2.5rem;
+  background: var(--ocean); color: var(--white);
+  text-decoration: none; border-radius: 50px;
+  font-size: 1.05rem; font-weight: 600;
+  transition: all 0.3s; border: 2px solid transparent;
+}
+.btn:hover { background: var(--ocean-light); transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.2); }
+.btn-outline {
+  background: transparent; border: 2px solid var(--white);
+  margin-left: 1rem;
+}
+.btn-outline:hover { background: var(--white); color: var(--deep); }
+
+.scroll-hint {
+  position: absolute; bottom: 2rem; left: 50%;
+  transform: translateX(-50%); z-index: 1;
+  color: var(--white); opacity: 0.7; font-size: 0.85rem;
+  text-align: center; animation: bounce 2s infinite;
+}
+.scroll-hint::after {
+  content: ''; display: block; width: 1px; height: 30px;
+  background: var(--white); margin: 0.5rem auto 0;
+}
+@keyframes bounce { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(8px)} }
+
+/* ===== SECTIONS ===== */
+section { padding: 5rem 2rem; }
+
+.section-header {
+  text-align: center; max-width: 700px; margin: 0 auto 3rem;
+}
+.section-header h2 {
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  color: var(--ocean-dark); margin-bottom: 0.5rem;
+  font-weight: 300;
+}
+.section-header h2 strong { font-weight: 700; }
+.section-header p { color: var(--warm-gray); font-size: 1.05rem; }
+
+.container { max-width: 1200px; margin: 0 auto; }
+
+/* ===== HIGHLIGHTS STRIP ===== */
+.highlights {
+  background: var(--ocean-dark); color: var(--white);
+  padding: 3rem 2rem;
+}
+.highlights-grid {
+  max-width: 1000px; margin: 0 auto;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem;
+  text-align: center;
+}
+.highlight-item .hi-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+.highlight-item .hi-value { font-size: 1.5rem; font-weight: 700; }
+.highlight-item .hi-label { font-size: 0.85rem; opacity: 0.8; }
+
+/* ===== GALLERY ===== */
+#galerie { background: var(--white); }
+
+.gallery-tabs {
+  display: flex; justify-content: center; gap: 0.5rem; margin-bottom: 2rem; flex-wrap: wrap;
+}
+.gallery-tab {
+  padding: 0.5rem 1.5rem; border: 2px solid var(--ocean);
+  background: transparent; color: var(--ocean); border-radius: 50px;
+  cursor: pointer; font-size: 0.9rem; transition: all 0.2s;
+}
+.gallery-tab.active, .gallery-tab:hover {
+  background: var(--ocean); color: var(--white);
+}
+
+.gallery-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem; max-width: 1200px; margin: 0 auto;
+}
+.gallery-item {
+  border-radius: 12px; overflow: hidden; cursor: pointer;
+  aspect-ratio: 4/3; position: relative;
+  transition: transform 0.3s;
+}
+.gallery-item:hover { transform: scale(1.02); }
+.gallery-item img {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform 0.5s;
+}
+.gallery-item:hover img { transform: scale(1.08); }
+.gallery-item .gi-label {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 2rem 1rem 0.8rem;
+  background: linear-gradient(transparent, rgba(0,0,0,0.6));
+  color: var(--white); font-size: 0.85rem; font-weight: 500;
+}
+.gallery-item[hidden] { display: none; }
+
+/* ===== LIGHTBOX ===== */
+.lightbox {
+  display: none; position: fixed; inset: 0; z-index: 2000;
+  background: rgba(0,0,0,0.92); align-items: center; justify-content: center;
+}
+.lightbox.open { display: flex; }
+.lightbox img {
+  max-width: 90vw; max-height: 85vh; border-radius: 8px;
+  object-fit: contain;
+}
+.lb-close {
+  position: absolute; top: 1.5rem; right: 1.5rem;
+  background: none; border: none; color: var(--white);
+  font-size: 2rem; cursor: pointer; width: 48px; height: 48px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; transition: background 0.2s;
+}
+.lb-close:hover { background: rgba(255,255,255,0.1); }
+.lb-nav {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  background: rgba(255,255,255,0.1); border: none; color: var(--white);
+  font-size: 2rem; cursor: pointer; width: 56px; height: 56px;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s;
+}
+.lb-nav:hover { background: rgba(255,255,255,0.2); }
+.lb-prev { left: 1.5rem; }
+.lb-next { right: 1.5rem; }
+.lb-caption {
+  position: absolute; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
+  color: var(--white); font-size: 0.95rem; opacity: 0.8;
+  background: rgba(0,0,0,0.4); padding: 0.4rem 1.2rem; border-radius: 20px;
+}
+
+/* ===== AUSSTATTUNG ===== */
+#ausstattung { background: var(--sand); }
+
+.features-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem; max-width: 1100px; margin: 0 auto;
+}
+.feature-card {
+  background: var(--white); border-radius: 16px;
+  padding: 2rem; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.feature-card:hover { transform: translateY(-4px); box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
+.feature-card .fc-icon { font-size: 2rem; margin-bottom: 0.8rem; }
+.feature-card h3 { color: var(--ocean-dark); font-size: 1.1rem; margin-bottom: 0.8rem; }
+.feature-card ul { list-style: none; }
+.feature-card li {
+  padding: 0.3rem 0; font-size: 0.92rem; color: var(--warm-gray);
+  padding-left: 1.5rem; position: relative;
+}
+.feature-card li::before {
+  content: ''; position: absolute; left: 0; top: 0.65rem;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent);
+}
+
+/* ===== LAGE ===== */
+#lage { background: var(--white); }
+
+.lage-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 3rem;
+  max-width: 1100px; margin: 0 auto; align-items: start;
+}
+.lage-map {
+  border-radius: 16px; overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  aspect-ratio: 4/3;
+}
+.lage-map iframe { width: 100%; height: 100%; border: 0; }
+
+.lage-info h3 {
+  color: var(--ocean-dark); font-size: 1.2rem;
+  margin-bottom: 1rem; margin-top: 1.5rem;
+}
+.lage-info h3:first-child { margin-top: 0; }
+
+.dist-list { list-style: none; }
+.dist-list li {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0.6rem 0; border-bottom: 1px solid var(--sand);
+  font-size: 0.95rem;
+}
+.dist-list .dist-icon { margin-right: 0.5rem; }
+.dist-list .dist-val { color: var(--ocean); font-weight: 600; white-space: nowrap; }
+
+/* ===== GRUNDRISS ===== */
+.grundriss-section {
+  max-width: 500px; margin: 3rem auto 0; text-align: center;
+}
+.grundriss-section img {
+  width: 100%; max-width: 400px; border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+.grundriss-section p {
+  margin-top: 0.8rem; color: var(--warm-gray); font-size: 0.9rem;
+}
+
+/* ===== PREISE ===== */
+#preise { background: var(--sky); }
+
+.preise-card {
+  max-width: 700px; margin: 0 auto;
+  background: var(--white); border-radius: 20px;
+  padding: 3rem; box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  text-align: center;
+}
+.preise-card .price-big {
+  font-size: 3rem; font-weight: 700; color: var(--ocean-dark);
+}
+.preise-card .price-big span { font-size: 1.2rem; font-weight: 400; color: var(--warm-gray); }
+.preise-card .price-note {
+  color: var(--warm-gray); margin: 0.5rem 0 2rem; font-size: 0.95rem;
+}
+
+.preise-table {
+  width: 100%; border-collapse: collapse; text-align: left;
+  margin-bottom: 2rem;
+}
+.preise-table th {
+  padding: 0.8rem 1rem; background: var(--sand);
+  color: var(--ocean-dark); font-weight: 600; font-size: 0.9rem;
+}
+.preise-table td {
+  padding: 0.8rem 1rem; border-bottom: 1px solid var(--sand);
+  font-size: 0.95rem;
+}
+.preise-table tr:last-child td { border-bottom: none; }
+
+.preise-extras {
+  background: var(--sand); border-radius: 12px;
+  padding: 1.5rem; text-align: left; margin-top: 1.5rem;
+}
+.preise-extras h4 { color: var(--ocean-dark); margin-bottom: 0.5rem; font-size: 0.95rem; }
+.preise-extras ul { list-style: none; }
+.preise-extras li { font-size: 0.9rem; color: var(--warm-gray); padding: 0.2rem 0; }
+.preise-extras li::before { content: "~ "; color: var(--accent); }
+
+/* ===== BUCHUNG / CTA ===== */
+#buchen {
+  background: linear-gradient(135deg, var(--ocean-dark), var(--ocean));
+  color: var(--white); text-align: center;
+}
+#buchen .section-header h2 { color: var(--white); }
+#buchen .section-header p { color: rgba(255,255,255,0.8); }
+
+.cta-buttons { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+.btn-cta {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 1rem 2.5rem; border-radius: 50px;
+  font-size: 1.05rem; font-weight: 600; text-decoration: none;
+  transition: all 0.3s;
+}
+.btn-cta-primary {
+  background: var(--white); color: var(--ocean-dark);
+}
+.btn-cta-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.2); }
+.btn-cta-secondary {
+  background: rgba(255,255,255,0.15); color: var(--white);
+  border: 2px solid rgba(255,255,255,0.4);
+}
+.btn-cta-secondary:hover { background: rgba(255,255,255,0.25); }
+
+.cta-info {
+  margin-top: 2rem; font-size: 0.9rem; opacity: 0.7;
+}
+
+/* ===== FOOTER ===== */
+footer {
+  background: var(--deep); color: rgba(255,255,255,0.6);
+  padding: 3rem 2rem; text-align: center; font-size: 0.85rem;
+}
+footer a { color: rgba(255,255,255,0.8); text-decoration: none; }
+footer a:hover { color: var(--white); }
+.footer-links {
+  display: flex; gap: 2rem; justify-content: center;
+  margin-bottom: 1rem; flex-wrap: wrap;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 900px) {
+  .lage-grid { grid-template-columns: 1fr; }
+  .highlights-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 700px) {
+  nav { padding: 0 1rem; }
+  .nav-links {
+    display: none; position: absolute; top: 60px; left: 0; right: 0;
+    background: var(--deep); flex-direction: column;
+    padding: 1rem; gap: 0;
+  }
+  .nav-links.open { display: flex; }
+  .nav-links a { padding: 0.8rem 1rem; }
+  .nav-burger { display: block; }
+  .lang-switcher { margin-left: 0; margin-right: 0.5rem; }
+
+  .hero { min-height: 500px; }
+  .hero-content h1 { font-size: 2rem; }
+  section { padding: 3.5rem 1.2rem; }
+  .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+  .preise-card { padding: 2rem 1.5rem; }
+  .highlights-grid { grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+}
+
+/* ===== ABOUT / USP SECTION ===== */
+.about-section {
+  background: var(--white);
+  padding: 5rem 2rem;
+}
+.about-grid {
+  max-width: 1100px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 3rem;
+  align-items: center;
+}
+.about-img {
+  border-radius: 16px; overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+}
+.about-img img {
+  width: 100%; height: 100%; object-fit: cover;
+  display: block; aspect-ratio: 4/3;
+}
+.about-text h2 {
+  font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+  color: var(--ocean-dark); font-weight: 300;
+  margin-bottom: 1.2rem; line-height: 1.3;
+}
+.about-text h2 strong { font-weight: 700; }
+.about-text p {
+  color: var(--warm-gray); font-size: 1.05rem;
+  margin-bottom: 1rem; line-height: 1.7;
+}
+.about-text .about-highlight {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  background: var(--sand); padding: 0.6rem 1.2rem;
+  border-radius: 10px; font-size: 0.95rem;
+  color: var(--ocean-dark); font-weight: 500;
+  margin-top: 0.5rem; margin-right: 0.5rem;
+}
+
+@media (max-width: 700px) {
+  .about-grid { grid-template-columns: 1fr; gap: 2rem; }
+}
+
+/* ===== ANIMATIONS ===== */
+.fade-in {
+  opacity: 0; transform: translateY(30px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.fade-in.visible { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- ===== NAVIGATION ===== -->
+<nav id="navbar">
+  <div class="nav-inner">
+    <a href="#" class="nav-logo">Casa <span>Baltica</span></a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#galerie" data-i18n="nav.galerie">Galerie</a></li>
+      <li><a href="#ausstattung" data-i18n="nav.ausstattung">Ausstattung</a></li>
+      <li><a href="#lage" data-i18n="nav.lage">Lage</a></li>
+      <li><a href="#preise" data-i18n="nav.preise">Preise</a></li>
+      <li><a href="#buchen" data-i18n="nav.buchen">Buchen</a></li>
+    </ul>
+    <div style="display:flex;align-items:center;gap:0.5rem;">
+      <div class="lang-switcher">
+        <button class="lang-btn active" onclick="switchLang('de')">DE</button>
+        <button class="lang-btn" onclick="switchLang('en')">EN</button>
+        <button class="lang-btn" onclick="switchLang('es')">ES</button>
+      </div>
+      <button class="nav-burger" id="navBurger" aria-label="Menü öffnen">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <h1><strong>Casa Baltica</strong></h1>
+    <p class="hero-subtitle" data-i18n="hero.subtitle">Ferienwohnung am Schönberger Strand &mdash; nur 100 m zur Ostsee</p>
+    <div class="hero-badges">
+      <span class="hero-badge" data-i18n="hero.badge1">4 Personen</span>
+      <span class="hero-badge" data-i18n="hero.badge2">2 Schlafzimmer</span>
+      <span class="hero-badge" data-i18n="hero.badge3">Terrasse & Garten</span>
+      <span class="hero-badge">Glasfaser-WLAN</span>
+    </div>
+    <a href="#buchen" class="btn" data-i18n="hero.cta">Jetzt anfragen</a>
+    <a href="#galerie" class="btn btn-outline" data-i18n="hero.gallery">Galerie ansehen</a>
+  </div>
+  <div class="scroll-hint" data-i18n="hero.scroll">Entdecken</div>
+</section>
+
+<!-- ===== HIGHLIGHTS ===== -->
+<div class="highlights">
+  <div class="highlights-grid">
+    <div class="highlight-item">
+      <div class="hi-icon">🏖️</div>
+      <div class="hi-value">100 m</div>
+      <div class="hi-label" data-i18n="hi.strand">zum Strand</div>
+    </div>
+    <div class="highlight-item">
+      <div class="hi-icon">📐</div>
+      <div class="hi-value">~50 m²</div>
+      <div class="hi-label" data-i18n="hi.flaeche">Wohnfläche</div>
+    </div>
+    <div class="highlight-item">
+      <div class="hi-icon">🛏️</div>
+      <div class="hi-value">2</div>
+      <div class="hi-label" data-i18n="hi.schlafzimmer">Schlafzimmer</div>
+    </div>
+    <div class="highlight-item">
+      <div class="hi-icon">🌿</div>
+      <div class="hi-value" data-i18n="hi.eg">EG</div>
+      <div class="hi-label" data-i18n="hi.terrasse">mit Terrasse & Garten</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ABOUT / USP ===== -->
+<section class="about-section">
+  <div class="about-grid fade-in">
+    <div class="about-img">
+      <img src="img/garten-sonnig.jpg" alt="Ruhiger Garten der Casa Baltica" loading="lazy">
+    </div>
+    <div class="about-text">
+      <h2 data-i18n="about.title">Direkt am Strand — <strong>abseits vom Trubel</strong></h2>
+      <p data-i18n="about.p1">
+        Die Casa Baltica liegt in einer ruhigen, begrünten Wohnanlage in zweiter Reihe — nur 100 Meter bis zum Wasser, aber fernab vom Deichtrubel und den überfüllten Promenaden. Hier hören Sie morgens die Vögel statt die Strandbar.
+      </p>
+      <p data-i18n="about.p2">
+        Unser geschützter Garten mit eigener Terrasse ist Ihr privater Rückzugsort: Frühstück im Grünen, ein Buch im Strandkorb-Feeling, oder einfach die Ruhe genießen. Und wenn es Sie doch zum Meer zieht — in zwei Minuten stehen Sie mit den Füßen im Sand.
+      </p>
+      <div>
+        <span class="about-highlight" data-i18n="about.h1">🌿 Ruhige 2. Reihe</span>
+        <span class="about-highlight" data-i18n="about.h2">🏖️ 100 m zum Strand</span>
+        <span class="about-highlight" data-i18n="about.h3">🌳 Eigener Garten</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== GALERIE ===== -->
+<section id="galerie">
+  <div class="section-header fade-in">
+    <h2 data-i18n="gal.title">Die Wohnung <strong>entdecken</strong></h2>
+    <p data-i18n="gal.sub">Gemütlich eingerichtet, mit Blick ins Grüne und nur wenige Schritte zum Meer</p>
+  </div>
+
+  <div class="gallery-tabs fade-in">
+    <button class="gallery-tab active" onclick="filterGallery('all')" data-i18n="gal.all">Alle</button>
+    <button class="gallery-tab" onclick="filterGallery('wohnen')" data-i18n="gal.wohnen">Wohnen</button>
+    <button class="gallery-tab" onclick="filterGallery('schlafen')" data-i18n="gal.schlafen">Schlafen</button>
+    <button class="gallery-tab" onclick="filterGallery('kueche')" data-i18n="gal.kueche">Küche & Bad</button>
+    <button class="gallery-tab" onclick="filterGallery('aussen')" data-i18n="gal.aussen">Terrasse & Garten</button>
+    <button class="gallery-tab" onclick="filterGallery('strand')" data-i18n="gal.strand">Strand & Meer</button>
+  </div>
+
+  <div class="gallery-grid fade-in" id="galleryGrid">
+    <!-- Wohnen -->
+    <div class="gallery-item" data-cat="wohnen" onclick="openLightbox(0)">
+      <img src="img/wohnzimmer-tv.jpg" alt="Wohnzimmer mit großem Fernseher" loading="lazy">
+      <div class="gi-label" data-i18n="img.tv">Wohnzimmer mit 65" TV</div>
+    </div>
+    <div class="gallery-item" data-cat="wohnen" onclick="openLightbox(1)">
+      <img src="img/wohnzimmer-sofa.jpg" alt="Gemütliches Sofa und Essbereich" loading="lazy">
+      <div class="gi-label" data-i18n="img.sofa">Sofa & Essbereich</div>
+    </div>
+    <div class="gallery-item" data-cat="wohnen" onclick="openLightbox(2)">
+      <img src="img/wohnkueche-ueberblick.jpg" alt="Offene Wohnküche" loading="lazy">
+      <div class="gi-label" data-i18n="img.kueche_offen">Offene Wohnküche</div>
+    </div>
+
+    <!-- Schlafen -->
+    <div class="gallery-item" data-cat="schlafen" onclick="openLightbox(3)">
+      <img src="img/schlafzimmer-doppelbett.jpg" alt="Schlafzimmer mit Boxspring-Doppelbett" loading="lazy">
+      <div class="gi-label" data-i18n="img.doppelbett">Boxspring-Doppelbett 180x200</div>
+    </div>
+    <div class="gallery-item" data-cat="schlafen" onclick="openLightbox(4)">
+      <img src="img/schlafzimmer-schrank.jpg" alt="Schlafzimmer mit Kleiderschrank" loading="lazy">
+      <div class="gi-label" data-i18n="img.schrank">Schlafzimmer mit Kleiderschrank</div>
+    </div>
+    <div class="gallery-item" data-cat="schlafen" onclick="openLightbox(5)">
+      <img src="img/schlafzimmer-einzelbetten.jpg" alt="Zweites Schlafzimmer mit Einzelbetten" loading="lazy">
+      <div class="gi-label" data-i18n="img.einzelbetten">2. Schlafzimmer — Einzelbetten</div>
+    </div>
+
+    <!-- Küche & Bad -->
+    <div class="gallery-item" data-cat="kueche" onclick="openLightbox(6)">
+      <img src="img/kueche-detail.jpg" alt="Küche mit Cerankochfeld und Backofen" loading="lazy">
+      <div class="gi-label" data-i18n="img.kueche">Komplett ausgestattete Küche</div>
+    </div>
+    <div class="gallery-item" data-cat="kueche" onclick="openLightbox(7)">
+      <img src="img/bad-waschbecken.jpg" alt="Badezimmer" loading="lazy">
+      <div class="gi-label" data-i18n="img.bad">Badezimmer</div>
+    </div>
+    <div class="gallery-item" data-cat="kueche" onclick="openLightbox(8)">
+      <img src="img/bad-dusche.jpg" alt="Dusche" loading="lazy">
+      <div class="gi-label" data-i18n="img.dusche">Dusche</div>
+    </div>
+    <div class="gallery-item" data-cat="kueche" onclick="openLightbox(9)">
+      <img src="img/flur-garderobe.jpg" alt="Flur und Garderobe" loading="lazy">
+      <div class="gi-label" data-i18n="img.flur">Eingangsbereich</div>
+    </div>
+
+    <!-- Terrasse & Garten -->
+    <div class="gallery-item" data-cat="aussen" onclick="openLightbox(10)">
+      <img src="img/terrasse-sitzgruppe.jpg" alt="Terrasse mit Sitzgruppe" loading="lazy">
+      <div class="gi-label" data-i18n="img.terrasse">Terrasse mit Sitzgruppe</div>
+    </div>
+    <div class="gallery-item" data-cat="aussen" onclick="openLightbox(11)">
+      <img src="img/terrasse-moebel.jpg" alt="Überdachte Terrasse" loading="lazy">
+      <div class="gi-label" data-i18n="img.terrasse2">Überdachte Terrasse</div>
+    </div>
+    <div class="gallery-item" data-cat="aussen" onclick="openLightbox(12)">
+      <img src="img/terrasse-laptop.jpg" alt="Homeoffice auf der Terrasse" loading="lazy">
+      <div class="gi-label" data-i18n="img.homeoffice">Homeoffice mit Meerluft</div>
+    </div>
+    <div class="gallery-item" data-cat="aussen" onclick="openLightbox(13)">
+      <img src="img/garten-sonnig.jpg" alt="Sonniger Garten" loading="lazy">
+      <div class="gi-label" data-i18n="img.garten">Garten bei Sonnenschein</div>
+    </div>
+    <div class="gallery-item" data-cat="aussen" onclick="openLightbox(14)">
+      <img src="img/haus-aussen-liegen.jpg" alt="Außenansicht mit Sonnenliegen" loading="lazy">
+      <div class="gi-label" data-i18n="img.liegen">Sonnenliegen im Garten</div>
+    </div>
+
+    <!-- Strand & Meer -->
+    <div class="gallery-item" data-cat="strand" onclick="openLightbox(15)">
+      <img src="img/strandwiese-meerblick.jpg" alt="Strandwiese mit Meerblick" loading="lazy">
+      <div class="gi-label" data-i18n="img.meer">Nur wenige Schritte zum Meer</div>
+    </div>
+    <div class="gallery-item" data-cat="strand" onclick="openLightbox(16)">
+      <img src="img/strand-panorama.jpg" alt="Ostsee-Panorama" loading="lazy">
+      <div class="gi-label" data-i18n="img.panorama">Ostsee-Panorama</div>
+    </div>
+    <div class="gallery-item" data-cat="strand" onclick="openLightbox(17)">
+      <img src="img/strand-sonnenuntergang.jpg" alt="Sonnenuntergang am Strand" loading="lazy">
+      <div class="gi-label" data-i18n="img.sunset">Sonnenuntergang</div>
+    </div>
+    <div class="gallery-item" data-cat="strand" onclick="openLightbox(18)">
+      <img src="img/strand-abendstimmung.jpg" alt="Abendstimmung am Strand" loading="lazy">
+      <div class="gi-label" data-i18n="img.abend">Abendstimmung</div>
+    </div>
+    <div class="gallery-item" data-cat="strand" onclick="openLightbox(19)">
+      <img src="img/strand-winter-panorama.jpg" alt="Winterstrand" loading="lazy">
+      <div class="gi-label" data-i18n="img.winter">Winterzauber an der Ostsee</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== LIGHTBOX ===== -->
+<div class="lightbox" id="lightbox">
+  <button class="lb-close" onclick="closeLightbox()">&times;</button>
+  <button class="lb-nav lb-prev" onclick="navLightbox(-1)">&#8249;</button>
+  <img id="lbImg" src="" alt="">
+  <button class="lb-nav lb-next" onclick="navLightbox(1)">&#8250;</button>
+  <div class="lb-caption" id="lbCaption"></div>
+</div>
+
+<!-- ===== AUSSTATTUNG ===== -->
+<section id="ausstattung">
+  <div class="section-header fade-in">
+    <h2 data-i18n="feat.title">Alles da, was man <strong>braucht</strong></h2>
+    <p data-i18n="feat.sub">Liebevoll eingerichtet für einen entspannten Urlaub an der Ostsee</p>
+  </div>
+
+  <div class="features-grid fade-in">
+    <div class="feature-card">
+      <div class="fc-icon">🛋️</div>
+      <h3 data-i18n="feat.wohn">Wohnbereich</h3>
+      <ul>
+        <li data-i18n="feat.w1">Gemütliches Sofa</li>
+        <li data-i18n="feat.w2">65-Zoll-Flachbild-TV</li>
+        <li data-i18n="feat.w3">Esstisch für 4 Personen</li>
+        <li data-i18n="feat.w4">Bluetooth-Lautsprecher</li>
+        <li data-i18n="feat.w5">Kostenfreies Glasfaser-WLAN</li>
+      </ul>
+    </div>
+
+    <div class="feature-card">
+      <div class="fc-icon">🍳</div>
+      <h3 data-i18n="feat.kueche">Küche</h3>
+      <ul>
+        <li data-i18n="feat.k1">Cerankochfeld & Backofen</li>
+        <li data-i18n="feat.k2">Kühl-/Gefrierkombination</li>
+        <li data-i18n="feat.k3">Geschirrspüler</li>
+        <li data-i18n="feat.k4">Mikrowelle & Air Fryer</li>
+        <li data-i18n="feat.k5">Kaffeemaschine & Wasserkocher</li>
+      </ul>
+    </div>
+
+    <div class="feature-card">
+      <div class="fc-icon">🛏️</div>
+      <h3 data-i18n="feat.schlaf">Schlafzimmer</h3>
+      <ul>
+        <li data-i18n="feat.s1">Boxspring-Doppelbett 180×200 cm</li>
+        <li data-i18n="feat.s2">2 Einzelbetten je 90×200 cm</li>
+        <li data-i18n="feat.s3">Großer Kiefernholz-Kleiderschrank</li>
+        <li data-i18n="feat.s4">Verdunkelungsvorhänge</li>
+        <li data-i18n="feat.s5">Allergikerfreundlicher Designboden</li>
+      </ul>
+    </div>
+
+    <div class="feature-card">
+      <div class="fc-icon">🚿</div>
+      <h3 data-i18n="feat.bad">Badezimmer</h3>
+      <ul>
+        <li data-i18n="feat.b1">Dusche mit Glaskabine</li>
+        <li data-i18n="feat.b2">Waschbecken mit Spiegelschrank</li>
+        <li>WC</li>
+        <li data-i18n="feat.b4">Handtücher inklusive</li>
+        <li data-i18n="feat.b5">Fön</li>
+      </ul>
+    </div>
+
+    <div class="feature-card">
+      <div class="fc-icon">🌳</div>
+      <h3 data-i18n="feat.aussen">Außenbereich</h3>
+      <ul>
+        <li data-i18n="feat.a1">Überdachte Terrasse</li>
+        <li data-i18n="feat.a2">Gartenmöbel & Sonnenliegen</li>
+        <li data-i18n="feat.a3">Eigener Gartenbereich</li>
+        <li data-i18n="feat.a4">PKW-Stellplatz</li>
+        <li data-i18n="feat.a5">Fahrradabstellplatz</li>
+      </ul>
+    </div>
+
+    <div class="feature-card">
+      <div class="fc-icon">ℹ️</div>
+      <h3 data-i18n="feat.info">Gut zu wissen</h3>
+      <ul>
+        <li data-i18n="feat.i1">Erdgeschoss — barrierefrei erreichbar</li>
+        <li data-i18n="feat.i2">Nichtraucherwohnung</li>
+        <li data-i18n="feat.i3">Keine Haustiere</li>
+        <li data-i18n="feat.i4">Ruhige 2. Reihe, gesicherte Anlage</li>
+        <li data-i18n="feat.i5">Check-in ab 15 Uhr / Check-out bis 10 Uhr</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ===== LAGE ===== -->
+<section id="lage">
+  <div class="section-header fade-in">
+    <h2 data-i18n="loc.title">Mitten in der <strong>Probstei</strong></h2>
+    <p>Kiefernweg 18, App. 4 &mdash; 24217 Schönberger Strand</p>
+  </div>
+
+  <div class="lage-grid fade-in">
+    <div class="lage-map">
+      <iframe
+        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2352.8!2d10.383!3d54.415!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47b2582c38d8e8d1%3A0x4218e79e3c44e0!2sKiefernweg%2018%2C%2024217%20Sch%C3%B6nberg!5e0!3m2!1sde!2sde!4v1700000000000"
+        allowfullscreen="" loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade"
+        title="Standort Casa Baltica">
+      </iframe>
+    </div>
+
+    <div class="lage-info">
+      <h3 data-i18n="loc.beach">🏖️ Strand & Natur</h3>
+      <ul class="dist-list">
+        <li><span><span class="dist-icon">🌊</span> <span data-i18n="loc.d1">Ostseestrand</span></span> <span class="dist-val">100 m</span></li>
+        <li><span><span class="dist-icon">🌿</span> <span data-i18n="loc.d2">Strandpromenade</span></span> <span class="dist-val">150 m</span></li>
+        <li><span><span class="dist-icon">🚴</span> <span data-i18n="loc.d3">Ostseeküsten-Radweg</span></span> <span class="dist-val">200 m</span></li>
+      </ul>
+
+      <h3 data-i18n="loc.supply">🛒 Versorgung</h3>
+      <ul class="dist-list">
+        <li><span><span class="dist-icon">🏪</span> <span data-i18n="loc.d4">Bäcker & Brötchenservice</span></span> <span class="dist-val">5 min</span></li>
+        <li><span><span class="dist-icon">🛒</span> <span data-i18n="loc.d5">Supermarkt (Schönberg)</span></span> <span class="dist-val">3 km</span></li>
+        <li><span><span class="dist-icon">🍽️</span> <span data-i18n="loc.d6">Restaurants & Cafés</span></span> <span class="dist-val">5 min</span></li>
+      </ul>
+
+      <h3 data-i18n="loc.access">🚗 Erreichbarkeit</h3>
+      <ul class="dist-list">
+        <li><span><span class="dist-icon">🏙️</span> <span data-i18n="loc.d7">Kiel Zentrum</span></span> <span class="dist-val">25 km</span></li>
+        <li><span><span class="dist-icon">🚂</span> <span data-i18n="loc.d8">Bahnhof Schönberg</span></span> <span class="dist-val">4 km</span></li>
+        <li><span><span class="dist-icon">✈️</span> <span data-i18n="loc.d9">Flughafen Hamburg</span></span> <span class="dist-val">120 km</span></li>
+        <li><span><span class="dist-icon">🅿️</span> <span data-i18n="loc.d10">Kostenloser PKW-Stellplatz</span></span> <span class="dist-val" data-i18n="loc.d10v">am Haus</span></li>
+      </ul>
+
+      <div class="grundriss-section">
+        <h3>📐 Grundriss</h3>
+        <img src="img/grundriss.jpg" alt="Grundriss der Wohnung" loading="lazy" onclick="openLightboxSingle('img/grundriss.jpg', 'Grundriss — ca. 50 m²')">
+        <p>ca. 50 m² — 2 Schlafzimmer, Wohnküche, Bad, Flur</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PREISE ===== -->
+<section id="preise">
+  <div class="section-header fade-in">
+    <h2 data-i18n="price.title">Preise & <strong>Konditionen</strong></h2>
+    <p data-i18n="price.sub">Faire Preise, transparent und ohne versteckte Kosten</p>
+  </div>
+
+  <div class="preise-card fade-in">
+    <div class="price-big" data-i18n="price.big">ab 90 € <span>/ Nacht</span></div>
+    <p class="price-note" data-i18n="price.note">Preis abhängig von Saison und Aufenthaltsdauer</p>
+
+    <table class="preise-table">
+      <thead>
+        <tr><th data-i18n="price.th1">Saison</th><th data-i18n="price.th2">Zeitraum</th><th data-i18n="price.th3">Preis / Nacht</th></tr>
+      </thead>
+      <tbody>
+        <tr><td data-i18n="price.low">Nebensaison</td><td>Nov – März</td><td><strong>ab 90 €</strong></td></tr>
+        <tr><td data-i18n="price.mid">Zwischensaison</td><td>Apr – Mai, Okt</td><td><strong>ab 100 €</strong></td></tr>
+        <tr><td data-i18n="price.high">Hauptsaison</td><td>Jun – Sep</td><td><strong>ab 110 €</strong></td></tr>
+        <tr><td data-i18n="price.hol">Feiertage</td><td data-i18n="price.holtime">Weihnachten, Silvester, Ostern</td><td><strong data-i18n="price.holprice">auf Anfrage</strong></td></tr>
+      </tbody>
+    </table>
+
+    <div class="preise-extras">
+      <h4 data-i18n="price.incl">Im Preis enthalten</h4>
+      <ul>
+        <li data-i18n="price.i1">Bettwäsche & Handtücher</li>
+        <li data-i18n="price.i2">Endreinigung</li>
+        <li>Glasfaser-WLAN</li>
+        <li data-i18n="price.i4">PKW-Stellplatz</li>
+        <li data-i18n="price.i5">Strom, Wasser, Heizung</li>
+      </ul>
+    </div>
+
+    <p style="margin-top:1.5rem; font-size:0.85rem; color:var(--warm-gray);" data-i18n="price.foot">
+      Kurtaxe wird vor Ort entrichtet. Mindestaufenthalt: 3 Nächte (Hauptsaison 7 Nächte).<br>
+      Verbindliche Preise und Verfügbarkeit über die Tourist-Info Schönberger Strand.
+    </p>
+  </div>
+</section>
+
+<!-- ===== BUCHEN ===== -->
+<section id="buchen">
+  <div class="section-header fade-in">
+    <h2 data-i18n="book.title">Ihren Urlaub <strong>buchen</strong></h2>
+    <p data-i18n="book.sub">Die Buchung und Abwicklung läuft über die Tourist-Info Schönberger Strand</p>
+  </div>
+
+  <div class="cta-buttons fade-in">
+    <a href="https://www.ostsee-ferienwohnungen.de/schoenberg-hohenfelde-hohwachter-bucht/schoenberger-strand/quot-casa-baltica-quot-kiefernweg-18-app-4-o26118" target="_blank" rel="noopener" class="btn-cta btn-cta-primary" data-i18n="book.cta1">
+      🌊 Verfügbarkeit prüfen & buchen
+    </a>
+    <a href="tel:+4943449141" class="btn-cta btn-cta-secondary" data-i18n="book.cta2">
+      📞 Tourist-Info anrufen
+    </a>
+  </div>
+  <p class="cta-info fade-in" data-i18n="book.info">
+    Tourist-Information Schönberger Strand &middot; Tel: 04344 / 91 41<br>
+    Objekt-Nr. 26118 &middot; "Casa Baltica" — Kiefernweg 18, App. 4
+  </p>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <div class="footer-links">
+    <a href="#galerie" data-i18n="nav.galerie">Galerie</a>
+    <a href="#ausstattung" data-i18n="nav.ausstattung">Ausstattung</a>
+    <a href="#lage" data-i18n="foot.lage">Lage & Anfahrt</a>
+    <a href="#preise" data-i18n="nav.preise">Preise</a>
+    <a href="https://www.ostsee-ferienwohnungen.de/schoenberg-hohenfelde-hohwachter-bucht/schoenberger-strand/quot-casa-baltica-quot-kiefernweg-18-app-4-o26118" target="_blank" rel="noopener" data-i18n="foot.portal">Buchungsportal</a>
+  </div>
+  <p data-i18n="foot.copy">&copy; 2025 Casa Baltica — Ferienwohnung am Schönberger Strand</p>
+  <p style="margin-top:0.5rem; font-size:0.8rem; opacity:0.5;">Kiefernweg 18, App. 4 &middot; 24217 Schönberger Strand &middot; Schleswig-Holstein</p>
+</footer>
+
+<!-- ===== JAVASCRIPT ===== -->
+<script>
+(function(){
+  'use strict';
+
+  // ============================================================
+  // === I18N TRANSLATIONS ===
+  // ============================================================
+  var T = {
+    de: {
+      'nav.galerie':'Galerie','nav.ausstattung':'Ausstattung','nav.lage':'Lage','nav.preise':'Preise','nav.buchen':'Buchen',
+      'hero.subtitle':'Ferienwohnung am Schönberger Strand — nur 100 m zur Ostsee',
+      'hero.badge1':'4 Personen','hero.badge2':'2 Schlafzimmer','hero.badge3':'Terrasse & Garten',
+      'hero.cta':'Jetzt anfragen','hero.gallery':'Galerie ansehen','hero.scroll':'Entdecken',
+      'hi.strand':'zum Strand','hi.flaeche':'Wohnfläche','hi.schlafzimmer':'Schlafzimmer','hi.eg':'EG','hi.terrasse':'mit Terrasse & Garten',
+      'about.title':'Direkt am Strand — <strong>abseits vom Trubel</strong>',
+      'about.p1':'Die Casa Baltica liegt in einer ruhigen, begrünten Wohnanlage in zweiter Reihe — nur 100 Meter bis zum Wasser, aber fernab vom Deichtrubel und den überfüllten Promenaden. Hier hören Sie morgens die Vögel statt die Strandbar.',
+      'about.p2':'Unser geschützter Garten mit eigener Terrasse ist Ihr privater Rückzugsort: Frühstück im Grünen, ein Buch im Strandkorb-Feeling, oder einfach die Ruhe genießen. Und wenn es Sie doch zum Meer zieht — in zwei Minuten stehen Sie mit den Füßen im Sand.',
+      'about.h1':'🌿 Ruhige 2. Reihe','about.h2':'🏖️ 100 m zum Strand','about.h3':'🌳 Eigener Garten',
+      'gal.title':'Die Wohnung <strong>entdecken</strong>','gal.sub':'Gemütlich eingerichtet, mit Blick ins Grüne und nur wenige Schritte zum Meer',
+      'gal.all':'Alle','gal.wohnen':'Wohnen','gal.schlafen':'Schlafen','gal.kueche':'Küche & Bad','gal.aussen':'Terrasse & Garten','gal.strand':'Strand & Meer',
+      'img.tv':'Wohnzimmer mit 65" TV','img.sofa':'Sofa & Essbereich','img.kueche_offen':'Offene Wohnküche',
+      'img.doppelbett':'Boxspring-Doppelbett 180x200','img.schrank':'Schlafzimmer mit Kleiderschrank','img.einzelbetten':'2. Schlafzimmer — Einzelbetten',
+      'img.kueche':'Komplett ausgestattete Küche','img.bad':'Badezimmer','img.dusche':'Dusche','img.flur':'Eingangsbereich',
+      'img.terrasse':'Terrasse mit Sitzgruppe','img.terrasse2':'Überdachte Terrasse','img.homeoffice':'Homeoffice mit Meerluft',
+      'img.garten':'Garten bei Sonnenschein','img.liegen':'Sonnenliegen im Garten',
+      'img.meer':'Nur wenige Schritte zum Meer','img.panorama':'Ostsee-Panorama','img.sunset':'Sonnenuntergang','img.abend':'Abendstimmung','img.winter':'Winterzauber an der Ostsee',
+      'feat.title':'Alles da, was man <strong>braucht</strong>','feat.sub':'Liebevoll eingerichtet für einen entspannten Urlaub an der Ostsee',
+      'feat.wohn':'Wohnbereich','feat.w1':'Gemütliches Sofa','feat.w2':'65-Zoll-Flachbild-TV','feat.w3':'Esstisch für 4 Personen','feat.w4':'Bluetooth-Lautsprecher','feat.w5':'Kostenfreies Glasfaser-WLAN',
+      'feat.kueche':'Küche','feat.k1':'Cerankochfeld & Backofen','feat.k2':'Kühl-/Gefrierkombination','feat.k3':'Geschirrspüler','feat.k4':'Mikrowelle & Air Fryer','feat.k5':'Kaffeemaschine & Wasserkocher',
+      'feat.schlaf':'Schlafzimmer','feat.s1':'Boxspring-Doppelbett 180×200 cm','feat.s2':'2 Einzelbetten je 90×200 cm','feat.s3':'Großer Kiefernholz-Kleiderschrank','feat.s4':'Verdunkelungsvorhänge','feat.s5':'Allergikerfreundlicher Designboden',
+      'feat.bad':'Badezimmer','feat.b1':'Dusche mit Glaskabine','feat.b2':'Waschbecken mit Spiegelschrank','feat.b4':'Handtücher inklusive','feat.b5':'Fön',
+      'feat.aussen':'Außenbereich','feat.a1':'Überdachte Terrasse','feat.a2':'Gartenmöbel & Sonnenliegen','feat.a3':'Eigener Gartenbereich','feat.a4':'PKW-Stellplatz','feat.a5':'Fahrradabstellplatz',
+      'feat.info':'Gut zu wissen','feat.i1':'Erdgeschoss — barrierefrei erreichbar','feat.i2':'Nichtraucherwohnung','feat.i3':'Keine Haustiere','feat.i4':'Ruhige 2. Reihe, gesicherte Anlage','feat.i5':'Check-in ab 15 Uhr / Check-out bis 10 Uhr',
+      'loc.title':'Mitten in der <strong>Probstei</strong>',
+      'loc.beach':'🏖️ Strand & Natur','loc.supply':'🛒 Versorgung','loc.access':'🚗 Erreichbarkeit',
+      'loc.d1':'Ostseestrand','loc.d2':'Strandpromenade','loc.d3':'Ostseeküsten-Radweg',
+      'loc.d4':'Bäcker & Brötchenservice','loc.d5':'Supermarkt (Schönberg)','loc.d6':'Restaurants & Cafés',
+      'loc.d7':'Kiel Zentrum','loc.d8':'Bahnhof Schönberg','loc.d9':'Flughafen Hamburg','loc.d10':'Kostenloser PKW-Stellplatz','loc.d10v':'am Haus',
+      'price.title':'Preise & <strong>Konditionen</strong>','price.sub':'Faire Preise, transparent und ohne versteckte Kosten',
+      'price.big':'ab 90 € <span>/ Nacht</span>','price.note':'Preis abhängig von Saison und Aufenthaltsdauer',
+      'price.th1':'Saison','price.th2':'Zeitraum','price.th3':'Preis / Nacht',
+      'price.low':'Nebensaison','price.mid':'Zwischensaison','price.high':'Hauptsaison','price.hol':'Feiertage',
+      'price.holtime':'Weihnachten, Silvester, Ostern','price.holprice':'auf Anfrage',
+      'price.incl':'Im Preis enthalten','price.i1':'Bettwäsche & Handtücher','price.i2':'Endreinigung','price.i4':'PKW-Stellplatz','price.i5':'Strom, Wasser, Heizung',
+      'price.foot':'Kurtaxe wird vor Ort entrichtet. Mindestaufenthalt: 3 Nächte (Hauptsaison 7 Nächte).<br>Verbindliche Preise und Verfügbarkeit über die Tourist-Info Schönberger Strand.',
+      'book.title':'Ihren Urlaub <strong>buchen</strong>','book.sub':'Die Buchung und Abwicklung läuft über die Tourist-Info Schönberger Strand',
+      'book.cta1':'🌊 Verfügbarkeit prüfen & buchen','book.cta2':'📞 Tourist-Info anrufen',
+      'book.info':'Tourist-Information Schönberger Strand · Tel: 04344 / 91 41<br>Objekt-Nr. 26118 · "Casa Baltica" — Kiefernweg 18, App. 4',
+      'foot.lage':'Lage & Anfahrt','foot.portal':'Buchungsportal','foot.copy':'© 2025 Casa Baltica — Ferienwohnung am Schönberger Strand'
+    },
+    en: {
+      'nav.galerie':'Gallery','nav.ausstattung':'Amenities','nav.lage':'Location','nav.preise':'Prices','nav.buchen':'Book',
+      'hero.subtitle':'Holiday apartment at Schönberger Strand — just 100 m to the Baltic Sea',
+      'hero.badge1':'4 Guests','hero.badge2':'2 Bedrooms','hero.badge3':'Terrace & Garden',
+      'hero.cta':'Inquire now','hero.gallery':'View gallery','hero.scroll':'Discover',
+      'hi.strand':'to the beach','hi.flaeche':'Living space','hi.schlafzimmer':'Bedrooms','hi.eg':'Ground floor','hi.terrasse':'with terrace & garden',
+      'about.title':'Right at the beach — <strong>away from the crowds</strong>',
+      'about.p1':'Casa Baltica is tucked away in a quiet, leafy residential complex in the second row — just 100 metres to the water, yet far from the busy promenades and crowded beach bars. Here you wake up to birdsong, not loudspeakers.',
+      'about.p2':'Our sheltered garden with private terrace is your personal retreat: breakfast in the green, a book in the sunshine, or simply enjoying the peace and quiet. And when the sea calls — it\'s a two-minute walk to feel the sand between your toes.',
+      'about.h1':'🌿 Quiet 2nd row','about.h2':'🏖️ 100 m to the beach','about.h3':'🌳 Private garden',
+      'gal.title':'Discover the <strong>apartment</strong>','gal.sub':'Lovingly furnished, with garden views and just a few steps to the sea',
+      'gal.all':'All','gal.wohnen':'Living','gal.schlafen':'Sleeping','gal.kueche':'Kitchen & Bath','gal.aussen':'Terrace & Garden','gal.strand':'Beach & Sea',
+      'img.tv':'Living room with 65" TV','img.sofa':'Sofa & dining area','img.kueche_offen':'Open-plan kitchen',
+      'img.doppelbett':'Box-spring double bed 180x200','img.schrank':'Bedroom with wardrobe','img.einzelbetten':'2nd bedroom — twin beds',
+      'img.kueche':'Fully equipped kitchen','img.bad':'Bathroom','img.dusche':'Shower','img.flur':'Entrance hall',
+      'img.terrasse':'Terrace with seating','img.terrasse2':'Covered terrace','img.homeoffice':'Home office with sea air',
+      'img.garten':'Garden in sunshine','img.liegen':'Sun loungers in the garden',
+      'img.meer':'Just a few steps to the sea','img.panorama':'Baltic Sea panorama','img.sunset':'Sunset','img.abend':'Evening mood','img.winter':'Winter magic at the Baltic Sea',
+      'feat.title':'Everything you <strong>need</strong>','feat.sub':'Lovingly furnished for a relaxing holiday by the Baltic Sea',
+      'feat.wohn':'Living area','feat.w1':'Comfortable sofa','feat.w2':'65-inch flat-screen TV','feat.w3':'Dining table for 4','feat.w4':'Bluetooth speaker','feat.w5':'Free fibre-optic Wi-Fi',
+      'feat.kueche':'Kitchen','feat.k1':'Ceramic hob & oven','feat.k2':'Fridge-freezer','feat.k3':'Dishwasher','feat.k4':'Microwave & air fryer','feat.k5':'Coffee machine & kettle',
+      'feat.schlaf':'Bedrooms','feat.s1':'Box-spring double bed 180×200 cm','feat.s2':'2 single beds 90×200 cm each','feat.s3':'Large pine wardrobe','feat.s4':'Blackout curtains','feat.s5':'Allergy-friendly design flooring',
+      'feat.bad':'Bathroom','feat.b1':'Glass-enclosed shower','feat.b2':'Washbasin with mirror cabinet','feat.b4':'Towels included','feat.b5':'Hair dryer',
+      'feat.aussen':'Outdoor area','feat.a1':'Covered terrace','feat.a2':'Garden furniture & sun loungers','feat.a3':'Private garden area','feat.a4':'Parking space','feat.a5':'Bicycle parking',
+      'feat.info':'Good to know','feat.i1':'Ground floor — barrier-free access','feat.i2':'Non-smoking apartment','feat.i3':'No pets','feat.i4':'Quiet 2nd row, gated complex','feat.i5':'Check-in from 3 PM / Check-out by 10 AM',
+      'loc.title':'In the heart of <strong>Probstei</strong>',
+      'loc.beach':'🏖️ Beach & Nature','loc.supply':'🛒 Amenities','loc.access':'🚗 Getting here',
+      'loc.d1':'Baltic Sea beach','loc.d2':'Beach promenade','loc.d3':'Baltic Coast cycle path',
+      'loc.d4':'Bakery & bread delivery','loc.d5':'Supermarket (Schönberg)','loc.d6':'Restaurants & cafés',
+      'loc.d7':'Kiel city centre','loc.d8':'Schönberg train station','loc.d9':'Hamburg Airport','loc.d10':'Free parking','loc.d10v':'on-site',
+      'price.title':'Prices & <strong>Conditions</strong>','price.sub':'Fair prices, transparent and with no hidden costs',
+      'price.big':'from 90 € <span>/ night</span>','price.note':'Price varies by season and length of stay',
+      'price.th1':'Season','price.th2':'Period','price.th3':'Price / night',
+      'price.low':'Low season','price.mid':'Mid season','price.high':'High season','price.hol':'Holidays',
+      'price.holtime':'Christmas, New Year, Easter','price.holprice':'on request',
+      'price.incl':'Included in the price','price.i1':'Bed linen & towels','price.i2':'Final cleaning','price.i4':'Parking space','price.i5':'Electricity, water, heating',
+      'price.foot':'Tourist tax payable locally. Minimum stay: 3 nights (high season 7 nights).<br>Binding prices and availability via Tourist Info Schönberger Strand.',
+      'book.title':'Book your <strong>holiday</strong>','book.sub':'Booking and handling via Tourist Info Schönberger Strand',
+      'book.cta1':'🌊 Check availability & book','book.cta2':'📞 Call Tourist Info',
+      'book.info':'Tourist Information Schönberger Strand · Tel: +49 4344 / 91 41<br>Property No. 26118 · "Casa Baltica" — Kiefernweg 18, Apt. 4',
+      'foot.lage':'Location & Directions','foot.portal':'Booking portal','foot.copy':'© 2025 Casa Baltica — Holiday apartment at Schönberger Strand'
+    },
+    es: {
+      'nav.galerie':'Galería','nav.ausstattung':'Equipamiento','nav.lage':'Ubicación','nav.preise':'Precios','nav.buchen':'Reservar',
+      'hero.subtitle':'Apartamento vacacional en Schönberger Strand — a solo 100 m del mar Báltico',
+      'hero.badge1':'4 Huéspedes','hero.badge2':'2 Dormitorios','hero.badge3':'Terraza y jardín',
+      'hero.cta':'Consultar ahora','hero.gallery':'Ver galería','hero.scroll':'Descubrir',
+      'hi.strand':'a la playa','hi.flaeche':'Superficie','hi.schlafzimmer':'Dormitorios','hi.eg':'Planta baja','hi.terrasse':'con terraza y jardín',
+      'about.title':'Junto a la playa — <strong>lejos del bullicio</strong>',
+      'about.p1':'Casa Baltica se encuentra en un tranquilo complejo residencial rodeado de vegetación, en segunda línea — a solo 100 metros del agua, pero lejos del ajetreo del paseo marítimo y las playas masificadas. Aquí te despiertas con el canto de los pájaros.',
+      'about.p2':'Nuestro jardín protegido con terraza privada es tu refugio personal: desayuno al aire libre, un libro al sol o simplemente disfrutar de la tranquilidad. Y cuando el mar te llame — en dos minutos tendrás los pies en la arena.',
+      'about.h1':'🌿 Tranquila 2.ª línea','about.h2':'🏖️ 100 m a la playa','about.h3':'🌳 Jardín privado',
+      'gal.title':'Descubre el <strong>apartamento</strong>','gal.sub':'Amueblado con cariño, con vistas al jardín y a pocos pasos del mar',
+      'gal.all':'Todo','gal.wohnen':'Salón','gal.schlafen':'Dormitorios','gal.kueche':'Cocina y baño','gal.aussen':'Terraza y jardín','gal.strand':'Playa y mar',
+      'img.tv':'Salón con TV de 65"','img.sofa':'Sofá y comedor','img.kueche_offen':'Cocina abierta',
+      'img.doppelbett':'Cama doble box-spring 180x200','img.schrank':'Dormitorio con armario','img.einzelbetten':'2.° dormitorio — camas individuales',
+      'img.kueche':'Cocina completamente equipada','img.bad':'Baño','img.dusche':'Ducha','img.flur':'Entrada',
+      'img.terrasse':'Terraza con muebles','img.terrasse2':'Terraza cubierta','img.homeoffice':'Teletrabajo con brisa marina',
+      'img.garten':'Jardín soleado','img.liegen':'Tumbonas en el jardín',
+      'img.meer':'A pocos pasos del mar','img.panorama':'Panorama del Báltico','img.sunset':'Puesta de sol','img.abend':'Atardecer','img.winter':'Magia invernal en el Báltico',
+      'feat.title':'Todo lo que <strong>necesitas</strong>','feat.sub':'Equipado con cariño para unas vacaciones relajantes junto al mar Báltico',
+      'feat.wohn':'Zona de estar','feat.w1':'Sofá cómodo','feat.w2':'TV de pantalla plana de 65"','feat.w3':'Mesa de comedor para 4','feat.w4':'Altavoz Bluetooth','feat.w5':'Wi-Fi gratuito',
+      'feat.kueche':'Cocina','feat.k1':'Vitrocerámica y horno','feat.k2':'Frigorífico con congelador','feat.k3':'Lavavajillas','feat.k4':'Microondas y freidora de aire','feat.k5':'Cafetera y hervidor',
+      'feat.schlaf':'Dormitorios','feat.s1':'Cama doble box-spring 180×200 cm','feat.s2':'2 camas individuales de 90×200 cm','feat.s3':'Gran armario de pino','feat.s4':'Cortinas opacas','feat.s5':'Suelo hipoalergénico de diseño',
+      'feat.bad':'Baño','feat.b1':'Ducha con cabina de cristal','feat.b2':'Lavabo con armario espejo','feat.b4':'Toallas incluidas','feat.b5':'Secador de pelo',
+      'feat.aussen':'Exterior','feat.a1':'Terraza cubierta','feat.a2':'Muebles de jardín y tumbonas','feat.a3':'Jardín privado','feat.a4':'Plaza de aparcamiento','feat.a5':'Aparcamiento para bicicletas',
+      'feat.info':'Bueno saber','feat.i1':'Planta baja — acceso sin barreras','feat.i2':'Apartamento para no fumadores','feat.i3':'No se admiten mascotas','feat.i4':'2.ª fila tranquila, complejo cerrado','feat.i5':'Check-in desde las 15 h / Check-out hasta las 10 h',
+      'loc.title':'En el corazón de <strong>Probstei</strong>',
+      'loc.beach':'🏖️ Playa y naturaleza','loc.supply':'🛒 Servicios','loc.access':'🚗 Cómo llegar',
+      'loc.d1':'Playa del Báltico','loc.d2':'Paseo marítimo','loc.d3':'Carril bici de la costa báltica',
+      'loc.d4':'Panadería y servicio de pan','loc.d5':'Supermercado (Schönberg)','loc.d6':'Restaurantes y cafeterías',
+      'loc.d7':'Centro de Kiel','loc.d8':'Estación de Schönberg','loc.d9':'Aeropuerto de Hamburgo','loc.d10':'Aparcamiento gratuito','loc.d10v':'en el lugar',
+      'price.title':'Precios y <strong>condiciones</strong>','price.sub':'Precios justos, transparentes y sin costes ocultos',
+      'price.big':'desde 90 € <span>/ noche</span>','price.note':'Precio según temporada y duración de la estancia',
+      'price.th1':'Temporada','price.th2':'Período','price.th3':'Precio / noche',
+      'price.low':'Temporada baja','price.mid':'Temporada media','price.high':'Temporada alta','price.hol':'Festivos',
+      'price.holtime':'Navidad, Fin de Año, Semana Santa','price.holprice':'a consultar',
+      'price.incl':'Incluido en el precio','price.i1':'Ropa de cama y toallas','price.i2':'Limpieza final','price.i4':'Plaza de aparcamiento','price.i5':'Electricidad, agua, calefacción',
+      'price.foot':'Tasa turística se paga en el lugar. Estancia mínima: 3 noches (temporada alta 7 noches).<br>Precios y disponibilidad a través de la oficina de turismo de Schönberger Strand.',
+      'book.title':'Reserve sus <strong>vacaciones</strong>','book.sub':'La reserva se gestiona a través de la oficina de turismo de Schönberger Strand',
+      'book.cta1':'🌊 Consultar disponibilidad y reservar','book.cta2':'📞 Llamar a la oficina de turismo',
+      'book.info':'Oficina de Turismo Schönberger Strand · Tel: +49 4344 / 91 41<br>N.° de objeto: 26118 · "Casa Baltica" — Kiefernweg 18, Apt. 4',
+      'foot.lage':'Ubicación y acceso','foot.portal':'Portal de reservas','foot.copy':'© 2025 Casa Baltica — Apartamento vacacional en Schönberger Strand'
+    }
+  };
+
+  var currentLang = 'de';
+
+  window.switchLang = function(lang) {
+    currentLang = lang;
+    document.documentElement.lang = lang;
+    // update buttons
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.classList.toggle('active', b.textContent.trim().toLowerCase() === lang);
+    });
+    // update all translatable elements
+    var dict = T[lang];
+    document.querySelectorAll('[data-i18n]').forEach(function(el){
+      var key = el.getAttribute('data-i18n');
+      if (dict[key] !== undefined) {
+        el.innerHTML = dict[key];
+      }
+    });
+    // update lightbox captions in memory
+    rebuildGalleryImages();
+  };
+
+  // ============================================================
+  // === NAV ===
+  // ============================================================
+  var navbar = document.getElementById('navbar');
+  var burger = document.getElementById('navBurger');
+  var navLinks = document.getElementById('navLinks');
+
+  window.addEventListener('scroll', function(){
+    navbar.classList.toggle('scrolled', window.scrollY > 50);
+  });
+
+  burger.addEventListener('click', function(){
+    navLinks.classList.toggle('open');
+  });
+
+  // close nav on link click (mobile)
+  navLinks.querySelectorAll('a').forEach(function(a){
+    a.addEventListener('click', function(){ navLinks.classList.remove('open'); });
+  });
+
+  // ============================================================
+  // === GALLERY FILTER ===
+  // ============================================================
+  window.filterGallery = function(cat) {
+    var items = document.querySelectorAll('.gallery-item');
+    var tabs = document.querySelectorAll('.gallery-tab');
+    tabs.forEach(function(t){ t.classList.remove('active'); });
+    event.target.classList.add('active');
+    items.forEach(function(item){
+      if (cat === 'all' || item.dataset.cat === cat) {
+        item.hidden = false;
+      } else {
+        item.hidden = true;
+      }
+    });
+  };
+
+  // ============================================================
+  // === LIGHTBOX ===
+  // ============================================================
+  var galleryImages = [];
+  var currentLbIndex = 0;
+  var lightbox = document.getElementById('lightbox');
+  var lbImg = document.getElementById('lbImg');
+  var lbCaption = document.getElementById('lbCaption');
+
+  function rebuildGalleryImages() {
+    galleryImages = [];
+    document.querySelectorAll('.gallery-item').forEach(function(item){
+      var img = item.querySelector('img');
+      var label = item.querySelector('.gi-label');
+      galleryImages.push({
+        src: img.src.replace(/\/thumbs\//, '/web/'),
+        alt: img.alt,
+        caption: label ? label.textContent : ''
+      });
+    });
+  }
+  rebuildGalleryImages();
+
+  window.openLightbox = function(idx) {
+    rebuildGalleryImages();
+    currentLbIndex = idx;
+    showLbImage();
+    lightbox.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  };
+
+  window.openLightboxSingle = function(src, caption) {
+    lbImg.src = src;
+    lbCaption.textContent = caption || '';
+    lightbox.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  };
+
+  window.closeLightbox = function() {
+    lightbox.classList.remove('open');
+    document.body.style.overflow = '';
+  };
+
+  window.navLightbox = function(dir) {
+    currentLbIndex = (currentLbIndex + dir + galleryImages.length) % galleryImages.length;
+    showLbImage();
+  };
+
+  function showLbImage() {
+    var data = galleryImages[currentLbIndex];
+    if (!data) return;
+    lbImg.src = data.src;
+    lbImg.alt = data.alt;
+    lbCaption.textContent = data.caption;
+  }
+
+  lightbox.addEventListener('click', function(e) {
+    if (e.target === lightbox) closeLightbox();
+  });
+
+  document.addEventListener('keydown', function(e){
+    if (!lightbox.classList.contains('open')) return;
+    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowLeft') navLightbox(-1);
+    if (e.key === 'ArrowRight') navLightbox(1);
+  });
+
+  // ============================================================
+  // === FADE IN ON SCROLL ===
+  // ============================================================
+  var fadeEls = document.querySelectorAll('.fade-in');
+  var observer = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.1 });
+
+  fadeEls.forEach(function(el){ observer.observe(el); });
+
+})();
+</script>
+</body>
+</html>
