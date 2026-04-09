@@ -2418,6 +2418,19 @@ label .lip-optional {
         <input type="number" id="lip-hdl" placeholder="z. B. 48" min="0" max="200">
       </div>
 
+      <!-- Triglyceride -->
+      <div class="lip-form-group">
+        <label for="lip-tg">Triglyceride <span class="lip-optional">(optional, mg/dl)</span></label>
+        <input type="number" id="lip-tg" placeholder="z. B. 180" min="0" max="5000" step="1"
+               oninput="updateTGDisplay()">
+        <div id="lip-tg-badge" style="display:none; margin-top:.4rem;"></div>
+        <div class="lip-text-sm lip-mt-1" style="color:var(--lip-gray-500); line-height:1.5;">
+          Normal: &lt;150 mg/dl &nbsp;·&nbsp;
+          <span style="color:var(--lip-orange)">Erhöht: 150–499 mg/dl (Risiko-Verstärker ≥175)</span> &nbsp;·&nbsp;
+          <span style="color:var(--lip-red)">Schwer erhöht: ≥500 mg/dl (Pankreatitisrisiko!)</span>
+        </div>
+      </div>
+
       <!-- Lp(a) -->
       <div class="lip-form-group">
         <label for="lip-lpa">Lipoprotein(a) – Lp(a) <span class="lip-optional">(optional)</span></label>
@@ -11860,17 +11873,24 @@ function switchToolTab(tabName) {
   });
   document.querySelector('.nav-tab-btn[data-tab="' + tabName + '"]').classList.add('active');
   if (tabName === 'lipid') {
-    // Pre-fill age + gender from CKD tab if not yet set
+    // Import age, gender, creatinine, uACR from CKD tab (always overwrite)
     const ckdAge = document.getElementById('age')?.value;
     const ckdSex = getSex('sex');
-    if (ckdAge && !document.getElementById('lip-age').value) {
+    if (ckdAge) {
       document.getElementById('lip-age').value = ckdAge;
     }
     if (ckdSex) {
-      const radio = document.getElementById(ckdSex === 'male' ? 'lip-g-male' : 'lip-g-female');
-      if (radio && !document.querySelector('#tab-lipid input[name="lip-gender"]:checked')) {
-        radio.checked = true;
-      }
+      document.getElementById(ckdSex === 'male' ? 'lip-g-male' : 'lip-g-female').checked = true;
+    }
+    const ckdCreat = document.getElementById('creatinine')?.value;
+    if (ckdCreat) {
+      document.getElementById('lip-creatinine').value = ckdCreat;
+      if (typeof updateCKDFromCreat === 'function') updateCKDFromCreat();
+    }
+    const ckdUacr = document.getElementById('uacr')?.value;
+    if (ckdUacr) {
+      document.getElementById('lip-uacr-input').value = ckdUacr;
+      if (typeof updateAlbuminClass === 'function') updateAlbuminClass();
     }
   }
   if (tabName === 'diabetes' && window.diabAutoImport) {
@@ -12605,6 +12625,9 @@ function collectStep(n) {
     const hdlv = parseFloat(document.getElementById('lip-hdl').value);
     state.hdl = isNaN(hdlv) ? null : hdlv;
 
+    const tgv = parseFloat(document.getElementById('lip-tg').value);
+    state.tg = isNaN(tgv) ? null : tgv;
+
     // Lp(a) → normalise to nmol/l (1 mg/dl ≈ 2.5 nmol/l)
     const lpav = parseFloat(document.getElementById('lip-lpa').value);
     if (!isNaN(lpav) && lpav >= 0) {
@@ -12818,6 +12841,32 @@ function updateLpaDisplay() {
 }
 
 /**
+ * updateTGDisplay() – show coloured badge for triglycerides
+ */
+function updateTGDisplay() {
+  const raw = parseFloat(document.getElementById('lip-tg').value);
+  const badge = document.getElementById('lip-tg-badge');
+  if (isNaN(raw) || raw <= 0) { badge.style.display = 'none'; return; }
+  let txt, bg, color;
+  if (raw >= 500) {
+    txt = `⚠️ Schwer erhöht (${Math.round(raw)} mg/dl) — Pankreatitisrisiko! Triglycerid-senkende Therapie priorisieren`;
+    bg = '#fdecea'; color = '#c0392b';
+  } else if (raw >= 175) {
+    txt = `Erhöht (${Math.round(raw)} mg/dl) — Risiko-Verstärker (ESC/EAS 2019/2025 + ACC/AHA 2026)`;
+    bg = '#fff3cd'; color = '#d68910';
+  } else if (raw >= 150) {
+    txt = `Grenzwertig erhöht (${Math.round(raw)} mg/dl)`;
+    bg = '#fef9e7'; color = '#b7950b';
+  } else {
+    txt = `Normal (${Math.round(raw)} mg/dl)`;
+    bg = '#eafaf1'; color = '#1e8449';
+  }
+  badge.innerHTML = `<span style="display:inline-block;padding:.25rem .7rem;border-radius:6px;font-size:.78rem;font-weight:600;background:${bg};color:${color};border:1.5px solid ${color};">${txt}</span>`;
+  badge.style.display = 'block';
+}
+window.updateTGDisplay = updateTGDisplay;
+
+/**
  * updateAlbuminClass() – called on uACR input
  */
 function updateAlbuminClass() {
@@ -12985,6 +13034,16 @@ function calculateRisk(s) {
   if (s.hypertension && !shortReasons.includes('Hypertonie')) {
     reasons.push('Arterielle Hypertonie');
     shortReasons.push('Hypertonie');
+  }
+
+  // ── Triglyceride als Risiko-Verstärker (ESC/EAS + ACC/AHA) ───
+  if (s.tg && s.tg >= 175) {
+    reasons.push(`Erhöhte Triglyceride: ${Math.round(s.tg)} mg/dl — Risiko-Verstärker (ESC/EAS 2019/2025; ACC/AHA 2026)`);
+    shortReasons.push('TG erhöht');
+  }
+  if (s.tg && s.tg >= 500) {
+    reasons.push(`⚠️ Schwere Hypertriglyceridämie (${Math.round(s.tg)} mg/dl) — akutes Pankreatitisrisiko! TG-Senkung priorisieren`);
+    shortReasons.push('TG ≥500 — Pankreatitis!');
   }
 
   // ── Lp(a) als Risiko-Enhancer (ACC/AHA 2026) ─────────────────
@@ -13250,6 +13309,23 @@ function generateRecommendation(s, riskResult, ldlTarget) {
       });
   }
 
+  // TG-specific recommendations
+  if (s.tg && s.tg >= 500) {
+    steps.push({
+      type: 'escalate',
+      title: '⚠️ Triglycerid-Senkung priorisieren (TG ≥ 500 mg/dl)',
+      detail: `Schwere Hypertriglyceridämie (${Math.round(s.tg)} mg/dl) — akutes Pankreatitisrisiko! Sofortige Maßnahmen: Alkoholkarenz, fettarme Diät, Fibrat (Fenofibrat bevorzugt, cave: Gemfibrozil NICHT mit Statin kombinieren). Bei TG ≥ 1.000 mg/dl ggf. stationäre Therapie.`,
+      letterPhrase: 'eine dringliche Triglycerid-senkende Therapie bei schwerer Hypertriglyceridämie mit Pankreatitisrisiko'
+    });
+  } else if (s.tg && s.tg >= 150 && s.diabetes && s.therapy !== 'none') {
+    steps.push({
+      type: 'escalate',
+      title: 'Icosapent-Ethyl (IPE) 2 × 2 g/Tag erwägen',
+      detail: `Diabetes + persistierend erhöhte Triglyceride (${Math.round(s.tg)} mg/dl) unter Statin: Icosapent-Ethyl (Vazkepa®) 2 × 2 g/Tag zu den Mahlzeiten. ACC/AHA 2026 COR 2b; REDUCE-IT: 25% relative Risikoreduktion für MACE. Nur EPA, NICHT EPA+DHA-Kombipräparate.`,
+      letterPhrase: 'die Ergänzung von Icosapent-Ethyl (Vazkepa®) 2 × 2 g/Tag bei Diabetes und persistierend erhöhten Triglyceriden unter Statin-Therapie'
+    });
+  }
+
   // CKD-specific notes (added to detail of first step)
   if (ckdStage >= 3) {
     const note = ckdStage === 3
@@ -13345,6 +13421,7 @@ function generateResult() {
   const risk      = calculateRisk(state);
   const ldlTarget = determineLDLTarget(risk.level, state);
   const rec       = generateRecommendation(state, risk, ldlTarget);
+  state._riskLevel = risk.level;
 
   renderRiskHeader(risk, ldlTarget);
   renderLDLStatus(ldlTarget, rec.targetReached);
@@ -13421,6 +13498,15 @@ function renderLDLStatus(ldlTarget, targetReached) {
   let noteText = '';
   if (ldlTarget.reductionPct && !reached) {
     noteText = `Zusätzlich wird eine ≥ ${ldlTarget.reductionPct}% LDL-Reduktion gegenüber dem unbehandelten Ausgangswert gefordert.`;
+  }
+  // Non-HDL-C display if TG available (Non-HDL = LDL + TG/5 Friedewald-Approximation)
+  if (state.tg && state.ldlMgdl) {
+    const nonHdl = Math.round(state.ldlMgdl + state.tg / 5);
+    const nonHdlTargets = { 'very-high': 85, 'high': 100, 'moderate': 130 };
+    const nonHdlTarget = nonHdlTargets[ldlTarget.noTarget ? 'moderate' : (state._riskLevel || 'moderate')] || 130;
+    const nonHdlReached = nonHdl <= nonHdlTarget;
+    if (noteText) noteText += ' ';
+    noteText += `Non-HDL-C: ${nonHdl} mg/dl (Ziel < ${nonHdlTarget} mg/dl) — ${nonHdlReached ? '✓ erreicht' : '✗ nicht erreicht'}.`;
   }
   document.getElementById('lip-ldl-goal-note').textContent = noteText;
 }
@@ -13541,6 +13627,8 @@ function resetApp() {
   document.getElementById('lip-creatinine').value  = '';
   document.getElementById('lip-uacr-input').value  = '';
   document.getElementById('lip-hdl').value         = '';
+  document.getElementById('lip-tg').value          = '';
+  document.getElementById('lip-tg-badge').style.display  = 'none';
   document.getElementById('lip-lpa').value         = '';
   document.getElementById('lip-lpa-badge').style.display = 'none';
   document.getElementById('lip-egfr-result').style.display    = 'none';
@@ -14243,13 +14331,32 @@ function htnAutoImport() {
   if (uacr)   { document.getElementById('htn-uacr').value = uacr;   imported.push('uACR ' + uacr + ' mg/g'); }
   if (kalium) { document.getElementById('htn-kalium').value = kalium; imported.push('K\u207A ' + kalium + ' mmol/l'); }
 
-  // eGFR from drug table display
-  const egfrDisp = document.getElementById('current-egfr-display')?.textContent;
-  if (egfrDisp && egfrDisp !== '\u2014 ml/min') {
-    const v = parseFloat(egfrDisp);
-    if (!isNaN(v)) {
-      document.getElementById('htn-egfr').value = v;
-      imported.push('eGFR ' + v + ' ml/min');
+  // eGFR: prefer global currentEGFR, fallback to DOM display, fallback to egfr-result-val
+  var egfrImported = false;
+  if (typeof currentEGFR !== 'undefined' && currentEGFR !== null && !isNaN(currentEGFR)) {
+    document.getElementById('htn-egfr').value = Math.round(currentEGFR);
+    imported.push('eGFR ' + Math.round(currentEGFR) + ' ml/min');
+    egfrImported = true;
+  }
+  if (!egfrImported) {
+    var egfrEl = document.getElementById('egfr-result-val');
+    if (egfrEl) {
+      var v = parseFloat(egfrEl.textContent);
+      if (!isNaN(v)) {
+        document.getElementById('htn-egfr').value = Math.round(v);
+        imported.push('eGFR ' + Math.round(v) + ' ml/min');
+        egfrImported = true;
+      }
+    }
+  }
+  if (!egfrImported) {
+    var egfrDisp = document.getElementById('current-egfr-display')?.textContent;
+    if (egfrDisp && egfrDisp !== '\u2014 ml/min') {
+      var v2 = parseFloat(egfrDisp);
+      if (!isNaN(v2)) {
+        document.getElementById('htn-egfr').value = v2;
+        imported.push('eGFR ' + v2 + ' ml/min');
+      }
     }
   }
 
