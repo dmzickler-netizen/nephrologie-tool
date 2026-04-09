@@ -14437,8 +14437,6 @@ function htnCalculate() {
     document.getElementById('htn-high-score').checked = true;
   }
 
-  if (!sys) { alert('Bitte systolischen Blutdruck eingeben.'); return; }
-
   const numMeds    = [onACEI || onARB, onCCB, onThi || onLoop, onBB, onSpiro, onAlpha].filter(Boolean).length;
   const hasRAAS    = onACEI || onARB;
   const isElderly  = age && age >= 80;
@@ -14446,14 +14444,16 @@ function htnCalculate() {
   const highCVrisk = hasASCVD || hasStroke || hasDM || hasCKD || hasHMOD || hasHighScore || score2High;
 
   // ── BP CLASSIFICATION (ESC 2024) — konventionelle Büromessung ──
-  let bpClass, bpClassColor;
-  if      (sys < 120 && (!dia || dia < 70)) { bpClass = 'Optimal';           bpClassColor = '#2e7d32'; }
-  else if (sys < 130 && (!dia || dia < 80)) { bpClass = 'Normal';            bpClassColor = '#4caf50'; }
-  else if (sys < 140 && (!dia || dia < 90)) { bpClass = 'Hochnormal';        bpClassColor = '#ff9800'; }
-  else if (sys < 160 && (!dia || dia < 100)){ bpClass = 'Hypertonie Grad 1'; bpClassColor = '#f44336'; }
-  else if (sys < 180 && (!dia || dia < 110)){ bpClass = 'Hypertonie Grad 2'; bpClassColor = '#b71c1c'; }
-  else                                       { bpClass = 'Hypertonie Grad 3'; bpClassColor = '#7b1fa2'; }
-  const bpGrade = sys < 140 ? 0 : sys < 160 ? 1 : sys < 180 ? 2 : 3;
+  let bpClass = null, bpClassColor = null, bpGrade = null;
+  if (sys) {
+    if      (sys < 120 && (!dia || dia < 70)) { bpClass = 'Optimal';           bpClassColor = '#2e7d32'; }
+    else if (sys < 130 && (!dia || dia < 80)) { bpClass = 'Normal';            bpClassColor = '#4caf50'; }
+    else if (sys < 140 && (!dia || dia < 90)) { bpClass = 'Hochnormal';        bpClassColor = '#ff9800'; }
+    else if (sys < 160 && (!dia || dia < 100)){ bpClass = 'Hypertonie Grad 1'; bpClassColor = '#f44336'; }
+    else if (sys < 180 && (!dia || dia < 110)){ bpClass = 'Hypertonie Grad 2'; bpClassColor = '#b71c1c'; }
+    else                                       { bpClass = 'Hypertonie Grad 3'; bpClassColor = '#7b1fa2'; }
+    bpGrade = sys < 140 ? 0 : sys < 160 ? 1 : sys < 180 ? 2 : 3;
+  }
 
   // ── BP TARGETS (ESC 2024) ──────────────────────────────────────
   // targetCheckSys = Wert für onTarget-Check (konventionelle Messung)
@@ -14510,9 +14510,9 @@ function htnCalculate() {
     targetNote = 'Erste Stufe: &lt; 140/90 mmHg. Dann Titration auf optimales Ziel 120–129/70–79 mmHg wenn toleriert.';
   }
 
-  const onTarget    = sys < targetCheckSys && (!targetDia || !dia || dia < targetDia);
+  const onTarget    = sys ? (sys < targetCheckSys && (!targetDia || !dia || dia < targetDia)) : null;
   const hasTriple   = numMeds >= 3 && (onThi || onLoop);
-  const isResistant = !onTarget && hasTriple;
+  const isResistant = onTarget === false && hasTriple;
 
   // ── WARNINGS ──────────────────────────────────────────────────
   const warnings = [];
@@ -14536,14 +14536,14 @@ function htnCalculate() {
   const recs = [];
   const strongRAAS = (uacr && uacr >= 300) || (hasDM && uacr && uacr >= 30);
   const anyRAAS    = (uacr && uacr >= 30) || hasDM || hasCKD;
-  const needsTx    = sys >= 140 || (dia && dia >= 90);
-  const highNormalHighRisk = sys >= 130 && sys < 140 && highCVrisk && !hasPreg;
+  const needsTx    = sys ? (sys >= 140 || (dia && dia >= 90)) : false;
+  const highNormalHighRisk = sys ? (sys >= 130 && sys < 140 && highCVrisk && !hasPreg) : false;
 
   // Therapiebeginn nach ESC 2024 Grad + Risiko
   if (numMeds === 0 && (needsTx || highNormalHighRisk)) {
-    if (bpGrade >= 2 || (bpGrade >= 1 && highCVrisk)) {
+    if (bpGrade !== null && (bpGrade >= 2 || (bpGrade >= 1 && highCVrisk))) {
       recs.push({ p: 'high', t: '💊 <strong>Sofortiger Therapiebeginn mit Zweifachkombination (SPC bevorzugt)</strong> (ESC 2024 Class I): RASi (ACEi <em>oder</em> ARB) + Kalziumkanalblocker <em>oder</em> RASi + Thiazid-artiges Diuretikum. Single-Pill-Combination (SPC) verbessert Adhärenz. Bei Grad 2–3: Dreifachkombination direkt erwägen.' });
-    } else if (bpGrade >= 1) {
+    } else if (bpGrade !== null && bpGrade >= 1) {
       recs.push({ p: 'medium', t: '💊 <strong>Grad 1 + niedriges Risiko:</strong> Zunächst Lebensstilmaßnahmen für 3 Monate (ESC 2024). Bei persistierender Hypertonie: Monotherapie oder Zweifach-SPC (RASi + CCB oder RASi + Thiazid).' });
     } else if (highNormalHighRisk) {
       recs.push({ p: 'medium', t: '💊 <strong>Hochnormaler RR + hohes CV-Risiko:</strong> Medikamentöse Therapie erwägen (ESC 2024 Class IIa). RASi bevorzugen bei CKD, DM oder ASCVD.' });
@@ -14595,7 +14595,7 @@ function htnCalculate() {
   }
 
   // Ziel erreicht
-  if (onTarget && recs.filter(r => r.p !== 'ok').length === 0) {
+  if (onTarget === true && recs.filter(r => r.p !== 'ok').length === 0) {
     recs.push({ p: 'ok', t: '\u2705 <strong>Blutdruckziel erreicht.</strong> Aktuelle Therapie fortführen. Kontrolle in 3–6 Monaten (ESC 2024: jährlich wenn stabil > 1 Jahr).' });
   }
 
@@ -14638,19 +14638,22 @@ function htnCalculate() {
 function renderHtnResults({ sys, dia, homeSys, homeDia, bpClass, bpClassColor, bpGrade, targetLabel, targetSource, targetNote, onTarget, isResistant, warnings, recs, raasMonitor, lifestyle, numMeds, kalium, egfr, highCVrisk, score2Result, age }) {
   const el = document.getElementById('htn-results');
 
-  const statusColor = onTarget ? '#2e7d32' : '#f44336';
-  const statusIcon  = onTarget ? '\u2705' : '\uD83D\uDD34';
-  const statusText  = onTarget ? 'Blutdruckziel erreicht' : 'Ziel nicht erreicht';
+  const statusColor = onTarget === null ? '#607d8b' : onTarget ? '#2e7d32' : '#f44336';
+  const statusIcon  = onTarget === null ? 'ℹ️' : onTarget ? '\u2705' : '\uD83D\uDD34';
+  const statusText  = onTarget === null ? 'Kein RR angegeben' : onTarget ? 'Blutdruckziel erreicht' : 'Ziel nicht erreicht';
 
   let html = '';
 
   // ── BP-Zusammenfassung ──
-  html += `<div class="diab-result-card" style="border-left:5px solid ${bpClassColor};">
+  html += `<div class="diab-result-card" style="border-left:5px solid ${bpClassColor || '#90a4ae'};">
     <div style="display:flex;align-items:flex-start;gap:24px;flex-wrap:wrap;">
       <div>
         <div style="font-size:.72rem;color:#607d8b;text-transform:uppercase;letter-spacing:.5px;">Konventioneller Praxis-RR</div>
-        <div style="font-size:2.2rem;font-weight:800;color:${bpClassColor};letter-spacing:1px;">${sys}${dia ? ' / ' + dia : ''} <span style="font-size:1rem;font-weight:400;">mmHg</span></div>
-        <div style="font-size:.88rem;font-weight:700;color:${bpClassColor};">${bpClass} (ESC 2024)</div>
+        ${sys
+          ? `<div style="font-size:2.2rem;font-weight:800;color:${bpClassColor};letter-spacing:1px;">${sys}${dia ? ' / ' + dia : ''} <span style="font-size:1rem;font-weight:400;">mmHg</span></div>
+             <div style="font-size:.88rem;font-weight:700;color:${bpClassColor};">${bpClass} (ESC 2024)</div>`
+          : `<div style="font-size:1.3rem;font-weight:600;color:#90a4ae;">Nicht angegeben</div>
+             <div style="font-size:.78rem;color:#90a4ae;">Empfehlungen basieren auf Komorbiditäten + Medikation</div>`}
         ${homeSys ? `<div style="font-size:.78rem;color:#607d8b;margin-top:4px;">Heim-RR (HBPM): ${homeSys}${homeDia ? ' / ' + homeDia : ''} mmHg</div>` : ''}
       </div>
       <div>
