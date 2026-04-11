@@ -4355,7 +4355,7 @@ window.akCalcHIT();
         <b>ACR 2020</b> — FitzGerald et al., Arthritis &amp; Rheumatology 72(6):879–895<br>
         <b>KDIGO 2024</b> — Kidney International 105(Suppl 4S):S117–S314<br>
         <b>Sättigungsgrenze:</b> 6,8 mg/dl (404 µmol/l) — oberhalb kristallisiert Mononatriumurat<br>
-        <b>Therapieziel ULT:</b> &lt;6,0 mg/dl; bei Tophi &lt;5,0 mg/dl
+        <b>Therapieziel ULT</b> (Urate-Lowering Therapy = harns&auml;uresenkende Therapie)<b>:</b> &lt;6,0 mg/dl; bei Tophi &lt;5,0 mg/dl
       </div>
       <div>
         <b>Colchicin:</b> CYP3A4- und P-gp-Substrat — WW mit Clarithromycin, Cyclosporin, starken CYP3A4-Hemmern<br>
@@ -4458,12 +4458,12 @@ function gichtCalc() {
     } else {
       ultInd = 'konditional-nein';
       ultGrund = '1.\u202FAnfall ohne zus\u00e4tzliche Risikofaktoren';
-      ultDetails = 'ACR\u202F2020: konditional gegen ULT \u2014 Shared Decision Making mit Patient';
+      ultDetails = 'ACR\u202F2020: bedingte Empfehlung gegen ULT \u2014 Nutzen unsicher bei nur 1\u202FAnfall ohne Risikofaktoren. Das Therapieziel &lt;6,0\u202Fmg/dl gilt erst, wenn ULT begonnen wird. Shared Decision Making mit Patient';
     }
   } else if (anfaelle === '0') {
     ultInd = 'konditional-nein';
     ultGrund = 'Asymptomatische Hyperurik\u00e4mie';
-    ultDetails = 'ACR\u202F2020: konditional gegen pharmakologische ULT bei asymptomatischer Hyperurik\u00e4mie';
+    ultDetails = 'ACR\u202F2020: bedingte Empfehlung gegen ULT \u2014 asymptomatische Hyperurik\u00e4mie allein ist keine Therapieindikation, auch nicht bei CKD (kein renoprotektiver Nutzen belegt: CKD-FIX, PERL, FEATHER). Das Ziel &lt;6,0\u202Fmg/dl gilt nur bei manifester Gicht mit ULT-Indikation';
   }
 
   // ===== AKUTTHERAPIE =====
@@ -4542,6 +4542,14 @@ function gichtCalc() {
         '<div class="gicht-med-row"><div class="gicht-med-label">1.\u202FWahl<br><b>Allopurinol</b></div><div>Start: <b>' + alloStart + '</b><br><span style="font-size:.77rem;color:#546e7a;">' + alloNote + '</span></div></div>' +
         '<div class="gicht-med-row"><div class="gicht-med-label">2.\u202FWahl<br><b>Febuxostat</b></div><div style="font-size:.82rem;">' + febuxTxt + '</div></div>' +
         '<div class="gicht-med-row"><div class="gicht-med-label">3.\u202FWahl<br><b>Probenecid</b></div><div style="font-size:.82rem;">' + probenecidTxt + '</div></div>' +
+        '<table style="width:100%;font-size:.73rem;border-collapse:collapse;margin-top:8px;background:#fff;border-radius:6px;overflow:hidden;">' +
+          '<tr style="background:#c5cae9;color:#1a237e;font-weight:700;"><td style="padding:4px 6px;">CKD-Stufe</td><td style="padding:4px 6px;">1.\u202FWahl</td><td style="padding:4px 6px;">2.\u202FWahl</td><td style="padding:4px 6px;">Cave</td></tr>' +
+          '<tr style="background:#f5f5f5;"><td style="padding:3px 6px;font-weight:600;">G1\u2013G2</td><td style="padding:3px 6px;">Allopurinol 100\u202Fmg \u2192 titrieren</td><td style="padding:3px 6px;">Febuxostat 40\u202Fmg</td><td style="padding:3px 6px;">Probenecid m\u00f6glich</td></tr>' +
+          '<tr><td style="padding:3px 6px;font-weight:600;">G3a\u2013G3b</td><td style="padding:3px 6px;">Allopurinol 50\u202Fmg \u2192 langsam titrieren</td><td style="padding:3px 6px;">Febuxostat 40\u202Fmg</td><td style="padding:3px 6px;color:#b71c1c;">Probenecid KI</td></tr>' +
+          '<tr style="background:#f5f5f5;"><td style="padding:3px 6px;font-weight:600;">G4</td><td style="padding:3px 6px;">Febuxostat 40\u202Fmg</td><td style="padding:3px 6px;">Allopurinol 50\u202Fmg/48\u202Fh</td><td style="padding:3px 6px;color:#b71c1c;">engmaschig Labor</td></tr>' +
+          '<tr><td style="padding:3px 6px;font-weight:600;">G5 / HD</td><td style="padding:3px 6px;">Febuxostat 40\u202Fmg</td><td style="padding:3px 6px;">Allopurinol 50\u202Fmg nach HD</td><td style="padding:3px 6px;color:#b71c1c;">Gabe post-Dialyse</td></tr>' +
+        '</table>' +
+        '<div style="font-size:.68rem;color:#78909c;margin-top:4px;">Therapieziel &lt;6,0\u202Fmg/dl gilt in allen CKD-Stufen \u00b7 Febuxostat: keine Dosisanpassung (hepatisch eliminiert) \u00b7 bei CVD: Allopurinol bevorzugen (CARES)</div>' +
       '</div>' +
       '<div class="gicht-section" style="background:#f3e5f5;border:1.5px solid #ce93d8;margin-bottom:10px;">' +
         '<div class="gicht-section-title" style="color:#6a1b9a;">\uD83D\uDEE1 Anfallsprophylaxe bei ULT-Start</div>' +
@@ -4573,7 +4581,7 @@ function gichtCalc() {
     } else if (ultInd === 'konditional-ja') {
       bc = '#e65100'; bt = '\u25d1 KONDITIONAL EMPFOHLEN'; bg = '#fff8e1';
     } else {
-      bc = '#b71c1c'; bt = '\u2b07 KONDITIONAL GEGEN ULT'; bg = '#ffebee';
+      bc = '#b71c1c'; bt = '\u2b07 ULT EHER NICHT EMPFOHLEN'; bg = '#ffebee';
     }
     ultBadgeHTML =
       '<div class="gicht-section" style="background:' + bg + ';border:2px solid ' + bc + '60;margin-bottom:10px;">' +
@@ -16735,7 +16743,9 @@ window.tahUpdateEgfr       = tahUpdateEgfr;
 })();
 </script>
 
-
+<!-- GoatCounter Analytics (DSGVO-konform, kein Cookie-Banner nötig) -->
+<script data-goatcounter="https://nephrologie-tool.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
 
 </body>
 </html>
