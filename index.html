@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nephro- &amp; Kardiologie-Assistent | CKD-Staging | Lipidtherapie | Diabetes</title>
+<title>Nephro-Tool | CKD · Lipide · Diabetes · Hypertonie · VHF · Antikoagulation · AKI</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231565c0'/><text y='72' x='50' text-anchor='middle' font-size='62'>🫘</text></svg>">
 <style>
 
@@ -1372,8 +1372,8 @@ label .lip-optional {
 <header class="shared-header">
   <div class="logo">🫘</div>
   <div>
-    <h1>Nephro- &amp; Kardiologie-Assistent</h1>
-    <p>CKD-Staging | Lipidtherapie | Diabetes | Hypertonie</p>
+    <h1>Nephro-Tool</h1>
+    <p>CKD · An&auml;mie/MBD · Lipide · Diabetes · Hypertonie · VHF · Antiaggregation · Antikoagulation · AKI · Gicht</p>
   </div>
 </header>
 
@@ -4613,15 +4613,24 @@ function gichtCalc() {
 window.gichtCalc = gichtCalc;
 
 window.gichtAutoImport = function() {
+  var imported = [];
   var egfrEl = document.getElementById('egfr-result-val');
   if (egfrEl) {
     var val = parseFloat(egfrEl.textContent);
     if (!isNaN(val) && val > 0) {
       document.getElementById('gicht-egfr').value = val;
-      var banner = document.getElementById('gicht-import-banner');
-      document.getElementById('gicht-import-text').textContent = 'eGFR ' + val + '\u202Fml/min/1,73\u202Fm\u00b2 aus CKD-Tab \u00fcbernommen';
-      banner.style.display = 'flex';
+      imported.push('eGFR\u202F' + val);
     }
+  }
+  var ckdSex = getSex('sex');
+  if (ckdSex) {
+    var r = document.getElementById(ckdSex === 'male' ? 'gicht-sex-m' : 'gicht-sex-f');
+    if (r) { r.checked = true; imported.push(ckdSex === 'male' ? 'Geschl.\u202F\u2642' : 'Geschl.\u202F\u2640'); }
+  }
+  if (imported.length) {
+    var banner = document.getElementById('gicht-import-banner');
+    document.getElementById('gicht-import-text').textContent = imported.join(' · ') + ' aus CKD-Tab \u00fcbernommen';
+    banner.style.display = 'flex';
   }
   gichtCalc();
 };
