@@ -10333,6 +10333,9 @@ var MC_RULES = [
   {id:'finerenon-k',group:'Finerenon',type:'dose-adjust',priority:'medium',
    condition:function(c){return c.meds.finerenon&&c.kalium>=5.0;},
    message:'Finerenon + K\u207A\u202F\u2265\u202F5,0 — Kalium engmaschig kontrollieren, ggf. pausieren',source:'FIDELIO/FIGARO'},
+  {id:'finerenon-k-high',group:'Finerenon',type:'dose-adjust',priority:'high',
+   condition:function(c){return c.hasDiabetes&&c.egfr>=25&&c.uacr>=30&&(c.meds.acei||c.meds.arb)&&c.kalium>=5.0&&c.kalium<=5.5&&!c.meds.finerenon;},
+   message:'Finerenon wäre bei Diabetes + CKD + Albuminurie indiziert — aktuell K\u207A\u202F\u2265\u202F5,0: erst Kalium senken, dann Finerenon-Start erwägen',source:'FIDELIO/FIGARO'},
   // Statin
   {id:'statin-ckd',group:'Statin',type:'missing',priority:'high',
    condition:function(c){return c.egfr&&c.egfr<60&&c.age>=50&&!c.meds.statin&&!c.isDialysis;},
@@ -10364,6 +10367,9 @@ var MC_RULES = [
   {id:'glp1ra-dm-ascvd',group:'GLP-1-RA',type:'missing',priority:'high',
    condition:function(c){return c.hasDiabetes&&c.hasASCVD&&!c.meds.glp1ra;},
    message:'GLP-1-RA bei Diabetes + ASCVD leitlinienbasiert zu erwägen (kardiovaskulärer Nutzen)',source:'ADA 2024'},
+  {id:'glp1ra-dm-ckd',group:'GLP-1-RA',type:'missing',priority:'high',
+   condition:function(c){return c.hasDiabetes&&c.egfr&&c.egfr>=15&&c.egfr<60&&!c.meds.glp1ra&&!c.hasASCVD;},
+   message:'GLP-1-RA (Semaglutid) bei Diabetes + CKD leitlinienbasiert zu erwägen — renale Progessionshemmung (FLOW-Studie)',source:'FLOW 2024 / KDIGO'},
   // DOAC
   {id:'doac-ki',group:'Antikoagulation',type:'contraindicated',priority:'high',
    condition:function(c){return c.meds.doac&&c.egfr&&c.egfr<15;},
