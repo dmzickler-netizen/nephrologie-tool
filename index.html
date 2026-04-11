@@ -10770,7 +10770,7 @@ function generateTexts(age, sex, scr, cys, uacr, bpSys, bpDia, extraInfo,
   }
 
   // General always
-  recList.push('Nephrotoxika meiden: NSAR, Kontrastmittel (Hydrierung), Aminoglykoside; Dosisanpassung aller renal eliminierten Medikamente');
+  recList.push('Nephrotoxika meiden: NSAR, Aminoglykoside; Kontrastmittel bei Indikation mit Hydrierung (NaCl 0,9%) und Krea-Kontrolle nach 48\u202Fh; Dosisanpassung aller renal eliminierten Medikamente');
   recList.push('Lebensstiländerung: Gewichtsreduktion, Rauchen stoppen, körperliche Aktivität 150 min/Woche');
   recList.push('Statintherapie: bei CKD + kardiovaskulärem Risiko empfohlen (SHARP-Studie)');
   recList.push(`Nephrologische Kontrollintervalle: ${primaryEGFR >= 60 ? 'jährlich' : primaryEGFR >= 30 ? 'alle 3–6 Monate' : 'alle 1–3 Monate'}`);
@@ -10960,7 +10960,7 @@ function buildTherapyPanel(gfrStage, albStage, egfr, uacr, diseases, riskInfo) {
     <h3>🚫 Nephrotoxika vermeiden</h3>
     <ul>
       <li><span class="drug-tag danger">NSAR</span> — kontraindiziert ab CKD G3+; bei akutem Gebrauch: Kreatinin-Kontrolle</li>
-      <li><span class="drug-tag danger">Kontrastmittel</span> — Hydrierung (NaCl 0,9%); Kreatinin nach 48 h kontrollieren</li>
+      <li><span class="drug-tag danger">Kontrastmittel</span> — bei Indikation applizierbar; Hydrierung mit NaCl 0,9% vor/nach Gabe, Kreatinin nach 48 h kontrollieren</li>
       <li>Aminoglykoside: nur bei zwingender Indikation mit TDM und Spiegelkontrolle</li>
       <li>Dosisanpassung: Metformin ↓ ab G3a, stop ab G3b–G4; alle renal eliminierten Medikamente prüfen</li>
     </ul></div>`;
