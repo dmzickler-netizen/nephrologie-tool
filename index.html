@@ -71,6 +71,7 @@
 #tab-elektrolyte { display: none; }
 #tab-abx { display: none; }
 #tab-hwi { display: none; }
+#tab-medcheck { display: none; }
 .gicht-section { padding:10px 12px; border-radius:10px; margin-bottom:0; }
 .gicht-section-title { font-size:.75rem; font-weight:800; text-transform:uppercase; letter-spacing:.5px; color:#455a64; margin-bottom:8px; }
 .gicht-akut { background:#fff3e0; border:1.5px solid #ffb74d; }
@@ -1397,6 +1398,7 @@ label .lip-optional {
   <button class="nav-tab-btn" data-tab="elektrolyte" onclick="switchToolTab('elektrolyte')">⚗️ Elektrolyte</button>
   <button class="nav-tab-btn" data-tab="abx" onclick="switchToolTab('abx')">🦠 ABx-Dosierung</button>
   <button class="nav-tab-btn" data-tab="hwi" onclick="switchToolTab('hwi')">🔬 HWI</button>
+  <button class="nav-tab-btn" data-tab="medcheck" onclick="switchToolTab('medcheck')">💊 Medikationscheck</button>
 </div>
 
 <!-- ============================================================
@@ -10078,6 +10080,653 @@ window.hwiUpdate = function() {
 </script>
 </div><!-- end tab-hwi -->
 
+<!-- ============================================================
+     MEDIKATIONSCHECK
+     ============================================================ -->
+<div id="tab-medcheck">
+<style>
+#tab-medcheck .mc-container { max-width:960px; margin:0 auto; padding:16px; }
+#tab-medcheck .mc-title-bar { background:linear-gradient(135deg,#1b5e20,#2e7d32); color:#fff; border-radius:12px; padding:18px 22px; margin-bottom:16px; }
+#tab-medcheck .mc-title-bar h2 { margin:0 0 4px; font-size:1.35rem; font-weight:800; }
+#tab-medcheck .mc-title-bar p { margin:0; font-size:.85rem; opacity:.88; }
+#tab-medcheck .mc-card { background:#fff; border-radius:12px; padding:18px 20px; box-shadow:0 2px 8px rgba(0,0,0,.09); margin-bottom:14px; }
+#tab-medcheck .mc-card-title { font-size:.78rem; font-weight:800; text-transform:uppercase; letter-spacing:.5px; color:#455a64; margin-bottom:12px; border-bottom:2px solid #f0f4f8; padding-bottom:6px; }
+#tab-medcheck .mc-ctx-grid { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px; }
+#tab-medcheck .mc-ctx-pill { display:inline-block; padding:4px 10px; border-radius:16px; font-size:.8rem; font-weight:600; background:#e8eaf6; color:#283593; }
+#tab-medcheck .mc-ctx-pill.warn { background:#fff8e1; color:#e65100; }
+#tab-medcheck .mc-ctx-pill.danger { background:#fce4ec; color:#c62828; }
+#tab-medcheck .mc-ctx-pill.ok { background:#e8f5e9; color:#2e7d32; }
+#tab-medcheck .mc-med-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px; }
+@media(max-width:768px){ #tab-medcheck .mc-med-grid { grid-template-columns:repeat(2,1fr); } }
+@media(max-width:480px){ #tab-medcheck .mc-med-grid { grid-template-columns:1fr; } }
+#tab-medcheck .mc-med-group { border:1px solid #e8eaf6; border-radius:8px; padding:10px 12px; }
+#tab-medcheck .mc-med-group-title { font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.5px; color:#1a237e; margin-bottom:6px; }
+#tab-medcheck .mc-check { display:flex; align-items:center; gap:6px; cursor:pointer; font-size:.83rem; padding:2px 0; }
+#tab-medcheck .mc-check input { accent-color:#1b5e20; }
+#tab-medcheck .mc-freetext { width:100%; min-height:60px; border:1.5px solid #c5cae9; border-radius:8px; padding:10px; font-size:.88rem; font-family:inherit; resize:vertical; }
+#tab-medcheck .mc-freetext:focus { border-color:#1b5e20; outline:none; box-shadow:0 0 0 3px rgba(27,94,32,.15); }
+#tab-medcheck .mc-match-pills { display:flex; flex-wrap:wrap; gap:4px; margin-top:6px; }
+#tab-medcheck .mc-match-pill { display:inline-block; background:#e3f2fd; color:#1565c0; padding:2px 8px; border-radius:10px; font-size:.72rem; font-weight:600; }
+#tab-medcheck .mc-summary-bar { display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
+#tab-medcheck .mc-badge { padding:6px 14px; border-radius:20px; font-size:.85rem; font-weight:700; }
+#tab-medcheck .mc-badge-red { background:#fce4ec; color:#c62828; }
+#tab-medcheck .mc-badge-yellow { background:#fff8e1; color:#e65100; }
+#tab-medcheck .mc-badge-green { background:#e8f5e9; color:#2e7d32; }
+#tab-medcheck .mc-result-item { border-left:4px solid; padding:10px 14px; margin-bottom:8px; border-radius:8px; }
+#tab-medcheck .mc-result-red { border-left-color:#e53935; background:#fce4ec; }
+#tab-medcheck .mc-result-yellow { border-left-color:#ff9800; background:#fff8e1; }
+#tab-medcheck .mc-result-green { border-left-color:#43a047; background:#e8f5e9; }
+#tab-medcheck .mc-result-title { font-weight:700; font-size:.88rem; }
+#tab-medcheck .mc-result-detail { font-size:.82rem; color:#37474f; line-height:1.5; margin-top:3px; }
+#tab-medcheck .mc-result-source { font-size:.72rem; color:#90a4ae; font-style:italic; margin-top:2px; }
+#tab-medcheck .mc-group-header { font-size:.82rem; font-weight:700; color:#455a64; margin:14px 0 6px; text-transform:uppercase; letter-spacing:.5px; }
+#tab-medcheck .mc-hint { font-size:.8rem; color:#78909c; margin-bottom:10px; }
+#tab-medcheck .mc-import-banner { display:none; background:#e8f5e9; border:1.5px solid #a5d6a7; border-radius:8px; padding:8px 14px; margin-bottom:12px; font-size:.82rem; color:#2e7d32; align-items:center; gap:8px; }
+#tab-medcheck .mc-no-data { text-align:center; padding:30px; color:#90a4ae; font-size:.95rem; }
+</style>
+
+<div class="mc-container">
+  <div class="mc-title-bar">
+    <h2>💊 Medikationscheck</h2>
+    <p>Regelbasierter Abgleich der aktuellen Medikation gegen leitlinienbasierte Empfehlungen · Denkanstoß, keine Anordnung</p>
+  </div>
+
+  <div id="mc-import-banner" class="mc-import-banner">
+    ✅ <span id="mc-import-text"></span>
+  </div>
+
+  <!-- Karte 1: Patientenkontext -->
+  <div class="mc-card">
+    <div class="mc-card-title">📋 Patientenkontext (auto-importiert)</div>
+    <div id="mc-context-summary" class="mc-ctx-grid">
+      <span class="mc-ctx-pill" style="color:#90a4ae;background:#f5f5f5;">Bitte zuerst Daten im CKD-Tab eingeben</span>
+    </div>
+  </div>
+
+  <!-- Karte 2: Aktuelle Medikation -->
+  <div class="mc-card">
+    <div class="mc-card-title">💊 Aktuelle Medikation</div>
+    <div class="mc-hint">Aktuell eingenommene Medikamente ankreuzen oder im Freitextfeld eingeben. Daten aus anderen Tabs werden automatisch übernommen.</div>
+
+    <div class="mc-med-grid">
+      <div class="mc-med-group">
+        <div class="mc-med-group-title">RAAS-Blockade</div>
+        <label class="mc-check"><input type="checkbox" id="mc-med-acei" onchange="mcRunCheck()"> ACE-Hemmer</label>
+        <label class="mc-check"><input type="checkbox" id="mc-med-arb" onchange="mcRunCheck()"> ARB (Sartan)</label>
+        <label class="mc-check"><input type="checkbox" id="mc-med-arni" onchange="mcRunCheck()"> ARNI (Entresto)</label>
+      </div>
+      <div class="mc-med-group">
+        <div class="mc-med-group-title">Progressionshemmung</div>
+        <label class="mc-check"><input type="checkbox" id="mc-med-sglt2i" onchange="mcRunCheck()"> SGLT2-Inhibitor</label>
+        <label class="mc-check"><input type="checkbox" id="mc-med-finerenon" onchange="mcRunCheck()"> Finerenon</label>
+        <label class="mc-check"><input type="checkbox" id="mc-med-glp1ra" onchange="mcRunCheck()"> GLP-1-RA</label>
+      </div>
+      <div class="mc-med-group">
+        <div class="mc-med-group-title">Lipidtherapie</div>
+        <label class="mc-check"><input type="checkbox" id="mc-med-statin" onchange="mcRunCheck()"> Statin</label>
+        <label class="mc-check"><input type="checkbox" id="mc-med-ezetimib" onchange="mcRunCheck()"> Ezetimib</label>
+        <label class="mc-check"><input type="checkbox" id="mc-med-pcsk9" onchange="mcRunCheck()"> PCSK9-Hemmer</label>
+      </div>
+      <div class="mc-med-group">
+        <div class="mc-med-group-title">Antidiabetika</div>
+        <label class="mc-check"><input type="checkbox" id="mc-med-metformin" onchange="mcRunCheck()"> Metformin</label>
+        <label class="mc-check"><input type="checkbox" id="mc-med-dpp4i" onchange="mcRunCheck()"> DPP-4-Hemmer</label>
+        <label class="mc-check"><input type="checkbox" id="mc-med-insulin" onchange="mcRunCheck()"> Insulin</label>
+        <label class="mc-check"><input type="checkbox" id="mc-med-su" onchange="mcRunCheck()"> Sulfonylharnstoff</label>
+      </div>
+      <div class="mc-med-group">
+        <div class="mc-med-group-title">Antikoagulation</div>
+        <label class="mc-check"><input type="checkbox" id="mc-med-doac" onchange="mcRunCheck()"> DOAK</label>
+        <label class="mc-check"><input type="checkbox" id="mc-med-vka" onchange="mcRunCheck()"> VKA (Marcumar)</label>
+        <label class="mc-check"><input type="checkbox" id="mc-med-ass" onchange="mcRunCheck()"> ASS</label>
+        <label class="mc-check"><input type="checkbox" id="mc-med-clopidogrel" onchange="mcRunCheck()"> Clopidogrel</label>
+      </div>
+      <div class="mc-med-group">
+        <div class="mc-med-group-title">Antihypertensiva</div>
+        <label class="mc-check"><input type="checkbox" id="mc-med-ccb" onchange="mcRunCheck()"> Ca-Antagonist</label>
+        <label class="mc-check"><input type="checkbox" id="mc-med-thiazid" onchange="mcRunCheck()"> Thiazid</label>
+        <label class="mc-check"><input type="checkbox" id="mc-med-bb" onchange="mcRunCheck()"> Betablocker</label>
+        <label class="mc-check"><input type="checkbox" id="mc-med-loop" onchange="mcRunCheck()"> Schleifendiuretikum</label>
+        <label class="mc-check"><input type="checkbox" id="mc-med-spiro" onchange="mcRunCheck()"> MRA (Spironolacton)</label>
+        <label class="mc-check"><input type="checkbox" id="mc-med-alpha" onchange="mcRunCheck()"> Alpha-Blocker</label>
+      </div>
+      <div class="mc-med-group">
+        <div class="mc-med-group-title">Gicht / ULT</div>
+        <label class="mc-check"><input type="checkbox" id="mc-med-allopurinol" onchange="mcRunCheck()"> Allopurinol</label>
+        <label class="mc-check"><input type="checkbox" id="mc-med-febuxostat" onchange="mcRunCheck()"> Febuxostat</label>
+      </div>
+      <div class="mc-med-group">
+        <div class="mc-med-group-title">CKD-Supportiv</div>
+        <label class="mc-check"><input type="checkbox" id="mc-med-eisen" onchange="mcRunCheck()"> Eisen (oral/i.v.)</label>
+        <label class="mc-check"><input type="checkbox" id="mc-med-esa" onchange="mcRunCheck()"> ESA (Erythropoietin)</label>
+        <label class="mc-check"><input type="checkbox" id="mc-med-phosphatbinder" onchange="mcRunCheck()"> Phosphatbinder</label>
+        <label class="mc-check"><input type="checkbox" id="mc-med-vitd" onchange="mcRunCheck()"> Vitamin D</label>
+        <label class="mc-check"><input type="checkbox" id="mc-med-bicarbonat" onchange="mcRunCheck()"> Bicarbonat (NaHCO₃)</label>
+      </div>
+      <div class="mc-med-group">
+        <div class="mc-med-group-title">PTH-Management</div>
+        <label class="mc-check"><input type="checkbox" id="mc-med-aktivvitd" onchange="mcRunCheck()"> Aktives Vitamin D (Calcitriol/Alfacalcidol)</label>
+        <label class="mc-check"><input type="checkbox" id="mc-med-calcimimetikum" onchange="mcRunCheck()"> Calcimimetikum (Cinacalcet)</label>
+      </div>
+    </div>
+
+    <div style="margin-top:12px;">
+      <div class="mc-card-title">✏️ Freitext-Eingabe (optional)</div>
+      <div class="mc-hint">Medikamentenliste einfügen — Wirkstoffe und Handelsnamen werden automatisch erkannt.</div>
+      <textarea class="mc-freetext" id="mc-freetext" placeholder="z.B. Ramipril 5mg, Forxiga 10mg, Atorvastatin 40mg, Nephrotrans 1-0-1 …" oninput="mcParseFreeText(); mcRunCheck()"></textarea>
+      <div id="mc-freetext-matches" class="mc-match-pills"></div>
+    </div>
+  </div>
+
+  <!-- Karte 3: Ergebnis -->
+  <div class="mc-card">
+    <div class="mc-card-title">📊 Ergebnis</div>
+    <div id="mc-results">
+      <div class="mc-no-data">Bitte Patientendaten im CKD-Tab eingeben und Medikamente oben ankreuzen.</div>
+    </div>
+  </div>
+
+</div><!-- end mc-container -->
+
+<script>
+(function(){
+'use strict';
+
+// ── DRUG NAME MAP ─────────────────────────────────────────────
+var MC_DRUG_MAP = {
+  // RAAS
+  'ramipril':'acei','delix':'acei','enalapril':'acei','xanef':'acei','lisinopril':'acei','acerbon':'acei',
+  'perindopril':'acei','coversum':'acei','captopril':'acei','fosinopril':'acei','benazepril':'acei',
+  'candesartan':'arb','atacand':'arb','blopress':'arb','valsartan':'arb','diovan':'arb',
+  'losartan':'arb','lorzaar':'arb','irbesartan':'arb','aprovel':'arb','olmesartan':'arb',
+  'votum':'arb','telmisartan':'arb','micardis':'arb',
+  'sacubitril':'arni','entresto':'arni',
+  // SGLT2i
+  'empagliflozin':'sglt2i','jardiance':'sglt2i','dapagliflozin':'sglt2i','forxiga':'sglt2i',
+  'canagliflozin':'sglt2i','invokana':'sglt2i','ertugliflozin':'sglt2i',
+  // Finerenon
+  'finerenon':'finerenon','kerendia':'finerenon',
+  // Statin
+  'atorvastatin':'statin','sortis':'statin','rosuvastatin':'statin','crestor':'statin',
+  'simvastatin':'statin','zocor':'statin','pravastatin':'statin','fluvastatin':'statin',
+  'pitavastatin':'statin',
+  // Ezetimib
+  'ezetimib':'ezetimib','ezetrol':'ezetimib','inegy':'ezetimib',
+  // PCSK9
+  'evolocumab':'pcsk9','repatha':'pcsk9','alirocumab':'pcsk9','praluent':'pcsk9',
+  'inclisiran':'pcsk9','leqvio':'pcsk9',
+  // Antidiabetika
+  'metformin':'metformin','glucophage':'metformin','siofor':'metformin',
+  'semaglutid':'glp1ra','ozempic':'glp1ra','rybelsus':'glp1ra','wegovy':'glp1ra',
+  'liraglutid':'glp1ra','victoza':'glp1ra','dulaglutid':'glp1ra','trulicity':'glp1ra',
+  'exenatid':'glp1ra','byetta':'glp1ra','bydureon':'glp1ra',
+  'tirzepatid':'glp1ra','mounjaro':'glp1ra',
+  'sitagliptin':'dpp4i','januvia':'dpp4i','xelevia':'dpp4i','linagliptin':'dpp4i',
+  'trajenta':'dpp4i','saxagliptin':'dpp4i','onglyza':'dpp4i','vildagliptin':'dpp4i','galvus':'dpp4i',
+  'glimepirid':'su','amaryl':'su','glibenclamid':'su','glipizid':'su',
+  'insulin':'insulin','lantus':'insulin','levemir':'insulin','tresiba':'insulin',
+  'novorapid':'insulin','humalog':'insulin','apidra':'insulin','toujeo':'insulin',
+  // Antikoagulation
+  'apixaban':'doac','eliquis':'doac','rivaroxaban':'doac','xarelto':'doac',
+  'edoxaban':'doac','lixiana':'doac','dabigatran':'doac','pradaxa':'doac',
+  'phenprocoumon':'vka','marcumar':'vka','falithrom':'vka','warfarin':'vka',
+  // Antiaggregation
+  'aspirin':'ass','acetylsalicyl':'ass','clopidogrel':'clopidogrel','plavix':'clopidogrel','iscover':'clopidogrel',
+  'prasugrel':'clopidogrel','efient':'clopidogrel','ticagrelor':'clopidogrel','brilique':'clopidogrel',
+  // Antihypertensiva
+  'amlodipin':'ccb','norvasc':'ccb','lercanidipin':'ccb','carmen':'ccb','nifedipin':'ccb',
+  'felodipin':'ccb','nitrendipin':'ccb','verapamil':'ccb','diltiazem':'ccb',
+  'hydrochlorothiazid':'thiazid','hct':'thiazid','indapamid':'thiazid','xipamid':'thiazid','chlortalidon':'thiazid',
+  'bisoprolol':'bb','concor':'bb','metoprolol':'bb','beloc':'bb','nebivolol':'bb',
+  'carvedilol':'bb','atenolol':'bb',
+  'furosemid':'loop','lasix':'loop','torasemid':'loop','unat':'loop',
+  'spironolacton':'spiro','aldactone':'spiro','eplerenon':'spiro','inspra':'spiro',
+  'doxazosin':'alpha','cardular':'alpha','urapidil':'alpha',
+  // Gicht
+  'allopurinol':'allopurinol','zyloric':'allopurinol',
+  'febuxostat':'febuxostat','adenuric':'febuxostat',
+  // CKD-Supportiv
+  'ferinjekt':'eisen','ferinject':'eisen','monofer':'eisen','venofer':'eisen',
+  'eisentabletten':'eisen','ferrosanol':'eisen','tardyferon':'eisen',
+  'darbepoetin':'esa','aranesp':'esa','epoetin':'esa','neorecormon':'esa','mircera':'esa',
+  'sevelamer':'phosphatbinder','renvela':'phosphatbinder','renagel':'phosphatbinder',
+  'lanthancarbonat':'phosphatbinder','fosrenol':'phosphatbinder',
+  'calciumacetat':'phosphatbinder','phosphonorm':'phosphatbinder',
+  'colecalciferol':'vitd','dekristol':'vitd','vigantol':'vitd','cholecalciferol':'vitd',
+  'nephrotrans':'bicarbonat','natriumbicarbonat':'bicarbonat','bicanorm':'bicarbonat',
+  'kaisernatron':'bicarbonat',
+  // PTH
+  'calcitriol':'aktivvitd','rocaltrol':'aktivvitd','alfacalcidol':'aktivvitd',
+  'einsalpha':'aktivvitd','bondiol':'aktivvitd','paricalcitol':'aktivvitd','zemplar':'aktivvitd',
+  'cinacalcet':'calcimimetikum','mimpara':'calcimimetikum','etelcalcetid':'calcimimetikum','parsabiv':'calcimimetikum'
+};
+
+// ── RULES ENGINE ──────────────────────────────────────────────
+var MC_RULES = [
+  // RAAS
+  {id:'raas-ckd-alb',group:'RAAS-Blockade',type:'missing',priority:'high',
+   condition:function(c){return c.egfr&&c.uacr>=30&&!c.meds.acei&&!c.meds.arb&&!c.meds.arni&&!c.isDialysis;},
+   message:'ACEi/ARB bei CKD mit Albuminurie (uACR\u202F\u2265\u202F30) leitlinienbasiert zu erwägen',source:'KDIGO 2024'},
+  {id:'raas-dm-alb',group:'RAAS-Blockade',type:'missing',priority:'high',
+   condition:function(c){return c.hasDiabetes&&c.uacr>=30&&!c.meds.acei&&!c.meds.arb&&!c.meds.arni;},
+   message:'ACEi/ARB bei Diabetes mit Albuminurie ggf. prüfen',source:'KDIGO 2024'},
+  {id:'raas-hyperk',group:'RAAS-Blockade',type:'dose-adjust',priority:'medium',
+   condition:function(c){return (c.meds.acei||c.meds.arb||c.meds.arni)&&c.kalium>5.5;},
+   message:'Hyperkaliämie (K\u207A\u202F>\u202F5,5) unter RAAS-Blockade — Kalium kontrollieren, ggf. Dosisreduktion erwägen',source:'KDIGO 2024'},
+  // SGLT2i
+  {id:'sglt2i-ckd',group:'SGLT2-Inhibitor',type:'missing',priority:'high',
+   condition:function(c){return c.egfr>=20&&c.egfr<90&&c.uacr>=200&&!c.meds.sglt2i&&!c.isDialysis;},
+   message:'SGLT2i bei CKD mit signifikanter Albuminurie (uACR\u202F\u2265\u202F200) leitlinienbasiert zu erwägen',source:'KDIGO 2024'},
+  {id:'sglt2i-ckd-broad',group:'SGLT2-Inhibitor',type:'missing',priority:'medium',
+   condition:function(c){return c.egfr>=20&&c.egfr<60&&c.uacr>=30&&c.uacr<200&&!c.meds.sglt2i&&!c.isDialysis;},
+   message:'SGLT2i bei CKD G3+ mit Albuminurie ggf. prüfen',source:'KDIGO 2024'},
+  {id:'sglt2i-dm',group:'SGLT2-Inhibitor',type:'missing',priority:'high',
+   condition:function(c){return c.hasDiabetes&&c.egfr>=20&&!c.meds.sglt2i&&!c.isDialysis;},
+   message:'SGLT2i bei Diabetes + CKD leitlinienbasiert zu erwägen (kardiorenale Protektion)',source:'ADA/KDIGO 2022'},
+  {id:'sglt2i-low-egfr',group:'SGLT2-Inhibitor',type:'dose-adjust',priority:'high',
+   condition:function(c){return c.meds.sglt2i&&c.egfr&&c.egfr<20;},
+   message:'SGLT2i bei eGFR\u202F<\u202F20: Neuansetzen nicht empfohlen — Fortführung individuell abwägen',source:'KDIGO 2024'},
+  // Finerenon
+  {id:'finerenon-ind',group:'Finerenon',type:'missing',priority:'high',
+   condition:function(c){return c.hasDiabetes&&c.egfr>=25&&c.uacr>=30&&(c.meds.acei||c.meds.arb)&&c.kalium<5.0&&!c.meds.finerenon;},
+   message:'Finerenon bei Diabetes + CKD + Albuminurie trotz RAAS-Blockade leitlinienbasiert zu erwägen (K\u207A\u202F<\u202F5,0 vorausgesetzt)',source:'FIDELIO/FIGARO'},
+  {id:'finerenon-k',group:'Finerenon',type:'dose-adjust',priority:'medium',
+   condition:function(c){return c.meds.finerenon&&c.kalium>=5.0;},
+   message:'Finerenon + K\u207A\u202F\u2265\u202F5,0 — Kalium engmaschig kontrollieren, ggf. pausieren',source:'FIDELIO/FIGARO'},
+  // Statin
+  {id:'statin-ckd',group:'Statin',type:'missing',priority:'high',
+   condition:function(c){return c.egfr&&c.egfr<60&&c.age>=50&&!c.meds.statin&&!c.isDialysis;},
+   message:'Statin bei CKD G3+ und Alter\u202F\u2265\u202F50 leitlinienbasiert zu erwägen',source:'KDIGO 2024'},
+  {id:'statin-dm',group:'Statin',type:'missing',priority:'high',
+   condition:function(c){return c.hasDiabetes&&c.age>=40&&!c.meds.statin;},
+   message:'Statin bei Diabetes und Alter\u202F\u2265\u202F40 ggf. prüfen',source:'ESC 2024'},
+  {id:'statin-ascvd',group:'Statin',type:'missing',priority:'high',
+   condition:function(c){return c.hasASCVD&&!c.meds.statin;},
+   message:'High-intensity Statin bei ASCVD leitlinienbasiert zu erwägen',source:'ESC 2024'},
+  // Ezetimib
+  {id:'ezetimib-ldl',group:'Ezetimib',type:'missing',priority:'medium',
+   condition:function(c){return c.meds.statin&&c.ldl&&((c.hasASCVD&&c.ldl>55)||(!c.hasASCVD&&c.egfr<60&&c.ldl>70))&&!c.meds.ezetimib;},
+   message:'LDL-Ziel nicht erreicht trotz Statin — Ezetimib-Ergänzung ggf. prüfen',source:'ESC 2024'},
+  // Metformin
+  {id:'metformin-ki',group:'Metformin',type:'contraindicated',priority:'high',
+   condition:function(c){return c.meds.metformin&&c.egfr&&c.egfr<15;},
+   message:'Metformin bei eGFR\u202F<\u202F15 kontraindiziert — Absetzen erwägen',source:'KDIGO 2022'},
+  {id:'metformin-dialysis',group:'Metformin',type:'contraindicated',priority:'high',
+   condition:function(c){return c.meds.metformin&&c.isDialysis;},
+   message:'Metformin unter Dialyse kontraindiziert',source:'KDIGO 2022'},
+  {id:'metformin-dose30',group:'Metformin',type:'dose-adjust',priority:'high',
+   condition:function(c){return c.meds.metformin&&c.egfr>=15&&c.egfr<30;},
+   message:'Metformin bei eGFR 15\u2013\u202F30: max. 500\u202Fmg/d, engmaschige Kontrolle',source:'KDIGO 2022'},
+  {id:'metformin-dose45',group:'Metformin',type:'dose-adjust',priority:'medium',
+   condition:function(c){return c.meds.metformin&&c.egfr>=30&&c.egfr<45;},
+   message:'Metformin bei eGFR 30\u2013\u202F45: max. 1000\u202Fmg/d erwägen',source:'KDIGO 2022'},
+  // GLP-1 RA
+  {id:'glp1ra-dm-ascvd',group:'GLP-1-RA',type:'missing',priority:'high',
+   condition:function(c){return c.hasDiabetes&&c.hasASCVD&&!c.meds.glp1ra;},
+   message:'GLP-1-RA bei Diabetes + ASCVD leitlinienbasiert zu erwägen (kardiovaskulärer Nutzen)',source:'ADA 2024'},
+  // DOAC
+  {id:'doac-ki',group:'Antikoagulation',type:'contraindicated',priority:'high',
+   condition:function(c){return c.meds.doac&&c.egfr&&c.egfr<15;},
+   message:'DOAK bei eGFR\u202F<\u202F15 kontraindiziert — Umstellung auf VKA erwägen',source:'ESC 2024'},
+  {id:'doac-dose',group:'Antikoagulation',type:'dose-adjust',priority:'high',
+   condition:function(c){return c.meds.doac&&c.egfr>=15&&c.egfr<30;},
+   message:'DOAK bei eGFR 15\u2013\u202F30: Dosisanpassung prüfen (substanzspezifisch)',source:'ESC 2024'},
+  {id:'vka-doac',group:'Antikoagulation',type:'dose-adjust',priority:'medium',
+   condition:function(c){return c.meds.vka&&c.egfr&&c.egfr>=15&&!c.meds.doac;},
+   message:'Bei VHF + eGFR\u202F\u2265\u202F15: DOAK gegenüber VKA leitlinienbasiert bevorzugt',source:'ESC 2024'},
+  // Allopurinol
+  {id:'allo-dose',group:'Allopurinol',type:'dose-adjust',priority:'high',
+   condition:function(c){return c.meds.allopurinol&&c.egfr&&c.egfr<30;},
+   message:'Allopurinol bei eGFR\u202F<\u202F30: Startdosis \u2264\u202F50\u202Fmg, langsam titrieren',source:'ACR 2020'},
+  // DPP-4i
+  {id:'dpp4i-dose',group:'DPP-4-Hemmer',type:'dose-adjust',priority:'medium',
+   condition:function(c){return c.meds.dpp4i&&c.egfr&&c.egfr<30;},
+   message:'DPP-4-Hemmer bei eGFR\u202F<\u202F30: Dosisanpassung prüfen (außer Linagliptin)',source:'KDIGO 2022'},
+  // SU
+  {id:'su-ckd',group:'Sulfonylharnstoff',type:'dose-adjust',priority:'high',
+   condition:function(c){return c.meds.su&&c.egfr&&c.egfr<30;},
+   message:'Sulfonylharnstoff bei eGFR\u202F<\u202F30: erhöhtes Hypoglykämierisiko — Absetzen erwägen',source:'KDIGO 2022'},
+  // Eisen / ESA
+  {id:'eisen-ckd',group:'Eisentherapie',type:'missing',priority:'medium',
+   condition:function(c){return c.egfr&&c.egfr<60&&c.hb&&c.hb<10&&c.ferritin&&c.ferritin<200&&c.tsat&&c.tsat<20&&!c.meds.eisen;},
+   message:'Eisensubstitution bei CKD-Anämie mit Eisenmangel (Ferritin\u202F<\u202F200, TSAT\u202F<\u202F20%) ggf. prüfen',source:'KDIGO 2026 Anemia'},
+  {id:'esa-ckd',group:'ESA',type:'missing',priority:'medium',
+   condition:function(c){return c.egfr&&c.egfr<60&&c.hb&&c.hb<10&&c.ferritin&&c.ferritin>=200&&c.tsat&&c.tsat>=20&&!c.meds.esa;},
+   message:'ESA bei CKD-Anämie nach Eisenausgleich ggf. evaluieren (Ziel-Hb 10\u2013\u202F11,5)',source:'KDIGO 2026 Anemia'},
+  // Phosphatbinder
+  {id:'phosphat-ckd',group:'Phosphatbinder',type:'missing',priority:'medium',
+   condition:function(c){return c.egfr&&c.egfr<30&&c.phosphat&&c.phosphat>4.5&&!c.meds.phosphatbinder;},
+   message:'Phosphatbinder bei CKD G4\u2013\u202F5 mit Hyperphosphatämie ggf. prüfen',source:'KDIGO CKD-MBD'},
+  // Bicarbonat
+  {id:'bicarb-ckd',group:'Bicarbonat',type:'missing',priority:'medium',
+   condition:function(c){return c.egfr&&c.egfr<60&&c.bicarb&&c.bicarb<22&&!c.meds.bicarbonat;},
+   message:'Orales Bicarbonat bei metabolischer Azidose (HCO₃\u202F<\u202F22) und CKD ggf. erwägen',source:'KDIGO 2024'},
+  // Vitamin D
+  {id:'vitd-ckd',group:'Vitamin D',type:'missing',priority:'low',
+   condition:function(c){return c.egfr&&c.egfr<60&&!c.meds.vitd&&!c.meds.aktivvitd;},
+   message:'Vitamin-D-Spiegel bei CKD G3\u2013\u202F5 kontrollieren — ggf. Substitution erwägen',source:'KDIGO 2024'},
+  // PTH
+  {id:'aktivvitd-shpt',group:'PTH-Management',type:'missing',priority:'medium',
+   condition:function(c){return c.egfr&&c.egfr<30&&c.pth&&c.pth>130&&!c.meds.aktivvitd&&!c.meds.calcimimetikum;},
+   message:'Aktives Vitamin D (Calcitriol/Alfacalcidol) bei sekundärem HPT (PTH\u202F>\u202F130) und CKD G4\u2013\u202F5 ggf. prüfen',source:'KDIGO CKD-MBD'},
+  {id:'calcimimet-dialysis',group:'PTH-Management',type:'missing',priority:'medium',
+   condition:function(c){return c.isDialysis&&c.pth&&c.pth>600&&!c.meds.calcimimetikum;},
+   message:'Calcimimetikum bei Dialyse + deutlich erhöhtem PTH (>\u202F600) leitlinienbasiert zu erwägen',source:'KDIGO CKD-MBD'},
+  {id:'pth-calcium-high',group:'PTH-Management',type:'dose-adjust',priority:'medium',
+   condition:function(c){return (c.meds.aktivvitd)&&c.calcium&&c.calcium>10.5;},
+   message:'Hyperkalzämie (Ca\u202F>\u202F10,5) unter aktivem Vitamin D — Dosis reduzieren / pausieren',source:'KDIGO CKD-MBD'},
+  // ASS
+  {id:'ass-ascvd',group:'ASS',type:'missing',priority:'medium',
+   condition:function(c){return c.hasASCVD&&!c.meds.ass&&!c.meds.doac&&!c.meds.vka&&!c.meds.clopidogrel;},
+   message:'Thrombozytenaggregationshemmer bei ASCVD-Sekundärprävention ggf. prüfen',source:'ESC 2024'},
+  // HTN
+  {id:'htn-target',group:'Blutdruck',type:'missing',priority:'medium',
+   condition:function(c){return c.bpSys&&c.bpSys>130&&c.egfr&&c.egfr<90;},
+   message:'RR-Ziel \u2264\u202F130/80 bei CKD — antihypertensive Therapie ggf. intensivieren',source:'KDIGO 2021 BP'},
+  // Vitamin D niedrig
+  {id:'vitd-low',group:'Vitamin D',type:'dose-adjust',priority:'medium',
+   condition:function(c){return c.vitd&&c.vitd<20&&!c.meds.vitd;},
+   message:'Vitamin-D-Spiegel erniedrigt (\u202F<\u202F20 ng/ml) — Substitution ggf. erwägen',source:'KDIGO 2024'}
+];
+
+// ── CROSS-TAB DATA GAPS ───────────────────────────────────────
+function mcBuildDataGaps(c) {
+  var gaps = [];
+  if (c.hasDiabetes && !c.hba1c)
+    gaps.push({tab:'Diabetes',field:'HbA1c',hint:'Für differenzierte Antidiabetika-Empfehlung den \uD83E\uDE7A Diabetes-Tab ausfüllen'});
+  if (c.egfr && c.egfr < 60 && !c.ldl)
+    gaps.push({tab:'Lipidtherapie',field:'LDL',hint:'Für Statin/Ezetimib-Bewertung den \uD83D\uDC8A Lipidtherapie-Tab ausfüllen'});
+  if (!c.bpSys && c.egfr && c.egfr < 90)
+    gaps.push({tab:'Hypertonie',field:'Blutdruck',hint:'Für RR-Zielbewertung Blutdruck im \uD83E\uDE7C CKD-Tab oder \u2764\uFE0F\u200D\uD83E\uDE79 Hypertonie-Tab eingeben'});
+  if (c.egfr && c.egfr < 60 && !c.hb)
+    gaps.push({tab:'Anämie/Ca-P',field:'Hb',hint:'Für Anämie-Bewertung Hb im \uD83E\uDE78 Anämie/Ca-P-Tab eingeben'});
+  if (c.egfr && c.egfr < 30 && !c.pth)
+    gaps.push({tab:'Anämie/Ca-P',field:'PTH',hint:'Für PTH-Management PTH im \uD83E\uDE78 Anämie/Ca-P-Tab eingeben'});
+  if (c.egfr && c.egfr < 30 && c.phosphat == null)
+    gaps.push({tab:'Anämie/Ca-P',field:'Phosphat',hint:'Für Phosphatbinder-Bewertung Phosphat im \uD83E\uDE78 Anämie/Ca-P-Tab eingeben'});
+  if (c.egfr && c.egfr < 60 && c.bicarb == null)
+    gaps.push({tab:'CKD',field:'Bicarbonat',hint:'Für Azidose-Bewertung Bicarbonat im \uD83E\uDEC0 CKD-Tab eingeben'});
+  return gaps;
+}
+
+// ── CONTEXT BUILDER ───────────────────────────────────────────
+function mcBuildContext() {
+  var c = {};
+  c.age = pf('age');
+  c.sex = (typeof getSex === 'function') ? getSex('sex') : '';
+  c.egfr = (typeof currentEGFR !== 'undefined' && currentEGFR) ? currentEGFR : null;
+  c.uacr = pf('uacr');
+  c.kalium = pf('kalium');
+  c.bicarb = pf('bicarb');
+  c.bpSys = pf('bp_sys');
+  c.bpDia = pf('bp_dia');
+  c.isDialysis = (function(){var s=document.getElementById('dialysis_status');return s&&(s.value==='haemodialysis'||s.value==='peritoneal');})();
+
+  // Diagnosen
+  var diags = [];
+  document.querySelectorAll('#disease-checkboxes input[type="checkbox"]:checked').forEach(function(cb){diags.push(cb.value);});
+  c.hasDiabetes = diags.indexOf('diabetisch')>=0;
+  c.hasASCVD = ck('diab-ascvd') || ck('htn-ascvd');
+  c.hasHF = ck('diab-hf') || ck('htn-hf');
+  c.diagnoses = diags;
+
+  // Lab aus anderen Tabs
+  c.hba1c = pf('diab-hba1c');
+  c.ldl = pf('lip-ldl-input');
+  c.hdl = pf('lip-hdl');
+  c.hb = pf('mbd2-hb') || pf('hb');
+  c.ferritin = pf('mbd2-ferritin');
+  c.tsat = pf('mbd2-tsat');
+  c.phosphat = pf('mbd2-phosphat');
+  c.pth = pf('mbd2-pth');
+  c.calcium = pf('mbd2-calcium');
+  c.vitd = pf('mbd2-vitd');
+  c.uricAcid = pf('gicht-hs');
+
+  // Medikamente (merge mc-checkboxen + andere Tabs)
+  c.meds = {
+    acei:    ck('mc-med-acei')    || ck('htn-med-acei') || ck('diab-med-ace'),
+    arb:     ck('mc-med-arb')     || ck('htn-med-arb')  || ck('diab-med-ace'),
+    arni:    ck('mc-med-arni'),
+    sglt2i:  ck('mc-med-sglt2i')  || ck('diab-med-sglt2i'),
+    finerenon:ck('mc-med-finerenon')|| ck('diab-med-finerenon'),
+    statin:  ck('mc-med-statin')  || ck('diab-med-statin'),
+    ezetimib:ck('mc-med-ezetimib'),
+    pcsk9:   ck('mc-med-pcsk9'),
+    metformin:ck('mc-med-metformin')|| ck('diab-med-metformin'),
+    glp1ra:  ck('mc-med-glp1ra')  || ck('diab-med-glp1'),
+    dpp4i:   ck('mc-med-dpp4i')   || ck('diab-med-dpp4i'),
+    insulin: ck('mc-med-insulin') || ck('diab-med-insulin'),
+    su:      ck('mc-med-su')      || ck('diab-med-su'),
+    doac:    ck('mc-med-doac'),
+    vka:     ck('mc-med-vka'),
+    ass:     ck('mc-med-ass'),
+    clopidogrel:ck('mc-med-clopidogrel'),
+    ccb:     ck('mc-med-ccb')     || ck('htn-med-ccb'),
+    thiazid: ck('mc-med-thiazid') || ck('htn-med-thiazid'),
+    bb:      ck('mc-med-bb')      || ck('htn-med-bb'),
+    loop:    ck('mc-med-loop')    || ck('htn-med-loop'),
+    spiro:   ck('mc-med-spiro')   || ck('htn-med-spiro'),
+    alpha:   ck('mc-med-alpha')   || ck('htn-med-alpha'),
+    allopurinol:ck('mc-med-allopurinol'),
+    febuxostat:ck('mc-med-febuxostat'),
+    eisen:   ck('mc-med-eisen'),
+    esa:     ck('mc-med-esa'),
+    phosphatbinder:ck('mc-med-phosphatbinder'),
+    vitd:    ck('mc-med-vitd'),
+    bicarbonat:ck('mc-med-bicarbonat'),
+    aktivvitd:ck('mc-med-aktivvitd'),
+    calcimimetikum:ck('mc-med-calcimimetikum')
+  };
+  return c;
+}
+
+function pf(id){var el=document.getElementById(id);return el?parseFloat(el.value)||null:null;}
+function ck(id){var el=document.getElementById(id);return el?el.checked:false;}
+
+// ── CKD STAGE HELPER ──────────────────────────────────────────
+function ckdStage(egfr){
+  if(!egfr)return '';
+  if(egfr>=90)return 'G1';if(egfr>=60)return 'G2';if(egfr>=45)return 'G3a';
+  if(egfr>=30)return 'G3b';if(egfr>=15)return 'G4';return 'G5';
+}
+function albStage(uacr){
+  if(uacr==null)return '';
+  if(uacr<30)return 'A1';if(uacr<300)return 'A2';return 'A3';
+}
+
+// ── CONTEXT RENDERER ──────────────────────────────────────────
+function mcRenderContext(c){
+  var el=document.getElementById('mc-context-summary');
+  if(!c.egfr){
+    el.innerHTML='<span class="mc-ctx-pill" style="color:#90a4ae;background:#f5f5f5;">Bitte zuerst Daten im CKD-Tab eingeben</span>';
+    return;
+  }
+  var pills=[];
+  function p(txt,cls){pills.push('<span class="mc-ctx-pill'+(cls?' '+cls:'')+'">'+txt+'</span>');}
+  p('eGFR\u202F'+Math.round(c.egfr)+' (CKD\u202F'+ckdStage(c.egfr)+')',c.egfr<30?'danger':c.egfr<60?'warn':'ok');
+  if(c.uacr!=null)p('uACR\u202F'+c.uacr+' ('+albStage(c.uacr)+')',c.uacr>=300?'danger':c.uacr>=30?'warn':'ok');
+  if(c.age)p('Alter\u202F'+c.age);
+  if(c.sex)p(c.sex==='male'?'\u2642 männl.':'\u2640 weibl.');
+  if(c.hasDiabetes)p('Diabetes','warn');
+  if(c.hasASCVD)p('ASCVD','danger');
+  if(c.hasHF)p('Herzinsuffizienz','warn');
+  if(c.isDialysis)p('Dialyse','danger');
+  if(c.hba1c)p('HbA1c\u202F'+c.hba1c+'%',c.hba1c>7?'warn':'ok');
+  if(c.ldl)p('LDL\u202F'+c.ldl,c.ldl>70?'warn':'ok');
+  if(c.bpSys)p('RR\u202F'+c.bpSys+(c.bpDia?'/'+c.bpDia:'')+'\u202FmmHg',c.bpSys>130?'warn':'ok');
+  if(c.hb)p('Hb\u202F'+c.hb,c.hb<10?'danger':c.hb<12?'warn':'ok');
+  if(c.kalium)p('K\u207A\u202F'+c.kalium,c.kalium>5.5?'danger':c.kalium>5.0?'warn':'ok');
+  if(c.pth)p('PTH\u202F'+c.pth,c.pth>130?'warn':'ok');
+  if(c.phosphat)p('Phosphat\u202F'+c.phosphat,c.phosphat>4.5?'warn':'ok');
+  if(c.bicarb)p('HCO\u2083\u202F'+c.bicarb,c.bicarb<22?'warn':'ok');
+  el.innerHTML=pills.join('');
+}
+
+// ── EVALUATE RULES ────────────────────────────────────────────
+function mcEvaluateRules(c){
+  var findings=[];
+  MC_RULES.forEach(function(r){
+    try{if(r.condition(c)){findings.push(r);}}catch(e){}
+  });
+  var prio={high:0,medium:1,low:2};
+  var typeOrd={contraindicated:0,missing:1,'dose-adjust':2};
+  findings.sort(function(a,b){return (prio[a.priority]||2)-(prio[b.priority]||2)||(typeOrd[a.type]||3)-(typeOrd[b.type]||3);});
+  return findings;
+}
+
+// ── RENDER RESULTS ────────────────────────────────────────────
+function mcRenderResults(findings,c){
+  var el=document.getElementById('mc-results');
+  if(!c.egfr){
+    el.innerHTML='<div class="mc-no-data">Bitte Patientendaten im CKD-Tab eingeben und Medikamente oben ankreuzen.</div>';
+    return;
+  }
+  if(findings.length===0){
+    el.innerHTML='<div style="text-align:center;padding:20px;"><div style="font-size:2rem;">✅</div><div style="font-size:1rem;font-weight:700;color:#2e7d32;margin-top:8px;">Keine Auffälligkeiten gefunden</div><div style="font-size:.82rem;color:#78909c;margin-top:4px;">Alle dokumentierten Medikamente erscheinen leitlinienkonform. Dies ersetzt nicht die individuelle ärztliche Bewertung.</div></div>';
+    return;
+  }
+  var red=0,yellow=0;
+  findings.forEach(function(f){if(f.type==='missing'||f.type==='contraindicated')red++;else yellow++;});
+  var html='<div class="mc-summary-bar">';
+  if(red)html+='<span class="mc-badge mc-badge-red">\uD83D\uDD34 '+red+' Hinweis'+(red>1?'e':'')+'</span>';
+  if(yellow)html+='<span class="mc-badge mc-badge-yellow">\uD83D\uDFE1 '+yellow+' Dosisanpassung'+(yellow>1?'en':'')+'</span>';
+  html+='</div>';
+
+  var groups={};
+  findings.forEach(function(f){if(!groups[f.group])groups[f.group]=[];groups[f.group].push(f);});
+
+  var typeIcon={missing:'\uD83D\uDD34',contraindicated:'\u26D4','dose-adjust':'\uD83D\uDFE1'};
+  var typeCls={missing:'mc-result-red',contraindicated:'mc-result-red','dose-adjust':'mc-result-yellow'};
+  var typeLabel={missing:'Ggf. prüfen',contraindicated:'Cave','dose-adjust':'Dosisanpassung'};
+
+  Object.keys(groups).forEach(function(g){
+    html+='<div class="mc-group-header">'+g+'</div>';
+    groups[g].forEach(function(f){
+      html+='<div class="mc-result-item '+typeCls[f.type]+'">';
+      html+='<div class="mc-result-title">'+(typeIcon[f.type]||'')+' '+typeLabel[f.type]+'</div>';
+      html+='<div class="mc-result-detail">'+f.message+'</div>';
+      html+='<div class="mc-result-source">'+f.source+'</div>';
+      html+='</div>';
+    });
+  });
+
+  // Data gaps — fehlende Daten aus anderen Tabs
+  var gaps = mcBuildDataGaps(c);
+  if (gaps.length) {
+    html += '<div class="mc-group-header">📋 Fehlende Daten für vollständige Bewertung</div>';
+    gaps.forEach(function(g) {
+      html += '<div class="mc-result-item" style="border-left-color:#5c6bc0;background:#e8eaf6;">';
+      html += '<div class="mc-result-title" style="color:#283593;">ℹ️ ' + g.field + ' nicht dokumentiert</div>';
+      html += '<div class="mc-result-detail">' + g.hint + '</div>';
+      html += '</div>';
+    });
+  }
+
+  html+='<div style="font-size:.72rem;color:#90a4ae;margin-top:16px;padding:10px;background:#fafafa;border-radius:8px;border-left:3px solid #90a4ae;">⚕️ Dieser Check dient als Denkanstoß und ersetzt nicht die individuelle ärztliche Bewertung. Alle Empfehlungen sind leitlinienbasiert, aber die klinische Entscheidung obliegt dem behandelnden Arzt.</div>';
+  el.innerHTML=html;
+}
+
+// ── FREETEXT PARSER ───────────────────────────────────────────
+function mcParseFreeTextInner(){
+  var txt=(document.getElementById('mc-freetext').value||'').toLowerCase();
+  txt=txt.replace(/\d+\s*(mg|µg|ug|ml|ie|i\.e\.|einheiten)/gi,'').replace(/[,;\/\n\r]+/g,' ');
+  var words=txt.split(/\s+/).filter(function(w){return w.length>2;});
+  var matched={};
+  words.forEach(function(w){
+    if(MC_DRUG_MAP[w])matched[w]=MC_DRUG_MAP[w];
+  });
+  // 2-word combos
+  for(var i=0;i<words.length-1;i++){
+    var combo=words[i]+words[i+1];
+    if(MC_DRUG_MAP[combo])matched[combo]=MC_DRUG_MAP[combo];
+  }
+  // Set checkboxes
+  var groups={};
+  Object.keys(matched).forEach(function(k){
+    var grp=matched[k];
+    groups[grp]=true;
+    var cb=document.getElementById('mc-med-'+grp);
+    if(cb&&!cb.checked)cb.checked=true;
+  });
+  // Show pills
+  var pillEl=document.getElementById('mc-freetext-matches');
+  var groupNames={acei:'ACE-Hemmer',arb:'ARB',arni:'ARNI',sglt2i:'SGLT2i',finerenon:'Finerenon',
+    statin:'Statin',ezetimib:'Ezetimib',pcsk9:'PCSK9',metformin:'Metformin',glp1ra:'GLP-1-RA',
+    dpp4i:'DPP-4i',insulin:'Insulin',su:'Sulfonylharnstoff',doac:'DOAK',vka:'VKA',ass:'ASS',
+    clopidogrel:'P2Y12',ccb:'Ca-Antagonist',thiazid:'Thiazid',bb:'Betablocker',loop:'Schleifendiuretikum',
+    spiro:'MRA',alpha:'Alpha-Blocker',allopurinol:'Allopurinol',febuxostat:'Febuxostat',
+    eisen:'Eisen',esa:'ESA',phosphatbinder:'Phosphatbinder',vitd:'Vitamin D',bicarbonat:'Bicarbonat',
+    aktivvitd:'Akt. Vitamin D',calcimimetikum:'Calcimimetikum'};
+  var pillsHtml='';
+  Object.keys(groups).forEach(function(g){
+    pillsHtml+='<span class="mc-match-pill">\u2714 '+(groupNames[g]||g)+'</span>';
+  });
+  pillEl.innerHTML=pillsHtml;
+}
+
+// ── MAIN CALC ─────────────────────────────────────────────────
+function mcRunCheckInner(){
+  var c=mcBuildContext();
+  mcRenderContext(c);
+  var findings=mcEvaluateRules(c);
+  mcRenderResults(findings,c);
+}
+
+// ── AUTO-IMPORT ───────────────────────────────────────────────
+function mcAutoImportInner(){
+  var imported=[];
+  // Sync meds from other tabs
+  var syncMap=[
+    ['htn-med-acei','mc-med-acei'],['htn-med-arb','mc-med-arb'],
+    ['htn-med-ccb','mc-med-ccb'],['htn-med-thiazid','mc-med-thiazid'],
+    ['htn-med-bb','mc-med-bb'],['htn-med-spiro','mc-med-spiro'],
+    ['htn-med-loop','mc-med-loop'],['htn-med-alpha','mc-med-alpha'],
+    ['diab-med-metformin','mc-med-metformin'],['diab-med-sglt2i','mc-med-sglt2i'],
+    ['diab-med-glp1','mc-med-glp1ra'],['diab-med-dpp4i','mc-med-dpp4i'],
+    ['diab-med-insulin','mc-med-insulin'],['diab-med-su','mc-med-su'],
+    ['diab-med-finerenon','mc-med-finerenon'],['diab-med-statin','mc-med-statin'],
+    ['diab-med-ace','mc-med-acei']
+  ];
+  syncMap.forEach(function(pair){
+    var src=document.getElementById(pair[0]);
+    var tgt=document.getElementById(pair[1]);
+    if(src&&src.checked&&tgt&&!tgt.checked&&!tgt.dataset.userUnchecked){
+      tgt.checked=true;
+    }
+  });
+
+  var c=mcBuildContext();
+  if(c.egfr)imported.push('eGFR\u202F'+Math.round(c.egfr));
+  if(c.uacr!=null)imported.push('uACR\u202F'+c.uacr);
+  if(c.hba1c)imported.push('HbA1c\u202F'+c.hba1c+'%');
+  if(c.ldl)imported.push('LDL\u202F'+c.ldl);
+  if(c.bpSys)imported.push('RR\u202F'+c.bpSys+'/'+(c.bpDia||''));
+
+  if(imported.length){
+    document.getElementById('mc-import-text').textContent=imported.join(' · ')+' aus anderen Tabs übernommen';
+    document.getElementById('mc-import-banner').style.display='flex';
+  }
+  mcRunCheckInner();
+}
+
+// ── EXPOSE ────────────────────────────────────────────────────
+window.mcRunCheck = mcRunCheckInner;
+window.mcParseFreeText = mcParseFreeTextInner;
+window.medcheckAutoImport = mcAutoImportInner;
+
+// Track user unchecks
+document.querySelectorAll('#tab-medcheck input[type="checkbox"]').forEach(function(cb){
+  cb.addEventListener('change',function(){
+    if(!this.checked) this.dataset.userUnchecked='true';
+    else delete this.dataset.userUnchecked;
+  });
+});
+
+})();
+</script>
+</div><!-- end tab-medcheck -->
+
 <div class="shared-footer">
   ⚕️ Nur zur ärztlichen Unterstützung — kein Ersatz für klinisches Urteil &bull;
   CKD: KDIGO 2024 &bull; CKD-EPI 2021 &bull;
@@ -11960,6 +12609,9 @@ function switchToolTab(tabName) {
   if (tabName === 'abx' && window.abxAutoImport) { window.abxAutoImport(); }
   document.getElementById('tab-hwi').style.display = tabName === 'hwi' ? 'block' : 'none';
   if (tabName === 'hwi' && window.hwiAutoImport) { window.hwiAutoImport(); }
+
+  document.getElementById('tab-medcheck').style.display = tabName === 'medcheck' ? 'block' : 'none';
+  if (tabName === 'medcheck' && window.medcheckAutoImport) { window.medcheckAutoImport(); }
 }
 
 // ============================================================
