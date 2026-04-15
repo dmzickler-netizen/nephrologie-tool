@@ -10123,6 +10123,22 @@ window.hwiUpdate = function() {
 #tab-medcheck .mc-hint { font-size:.8rem; color:#78909c; margin-bottom:10px; }
 #tab-medcheck .mc-import-banner { display:none; background:#e8f5e9; border:1.5px solid #a5d6a7; border-radius:8px; padding:8px 14px; margin-bottom:12px; font-size:.82rem; color:#2e7d32; align-items:center; gap:8px; }
 #tab-medcheck .mc-no-data { text-align:center; padding:30px; color:#90a4ae; font-size:.95rem; }
+#tab-medcheck .mc-dose-group { margin-bottom:14px; }
+#tab-medcheck .mc-dose-group-title { font-size:.75rem; font-weight:800; text-transform:uppercase; letter-spacing:.5px; color:#1a237e; padding:6px 12px; background:#e8eaf6; border-radius:8px 8px 0 0; margin:0; }
+#tab-medcheck .mc-dose-table { width:100%; border-collapse:collapse; font-size:.82rem; }
+#tab-medcheck .mc-dose-table th { background:#f5f7fa; padding:6px 10px; text-align:left; font-size:.72rem; font-weight:700; color:#455a64; text-transform:uppercase; letter-spacing:.3px; border-bottom:2px solid #e0e0e0; }
+#tab-medcheck .mc-dose-table td { padding:7px 10px; border-bottom:1px solid #f0f0f0; vertical-align:top; line-height:1.45; }
+#tab-medcheck .mc-dose-table tr:last-child td { border-bottom:none; }
+#tab-medcheck .mc-dose-table tr:hover { background:#f8fafe; }
+#tab-medcheck .mc-dose-ok { color:#2e7d32; font-weight:600; }
+#tab-medcheck .mc-dose-warn { color:#e65100; font-weight:600; }
+#tab-medcheck .mc-dose-danger { color:#c62828; font-weight:700; }
+#tab-medcheck .mc-dose-hint { font-size:.75rem; color:#78909c; font-style:italic; }
+#tab-medcheck .mc-egfr-band { display:inline-block; padding:2px 8px; border-radius:10px; font-size:.72rem; font-weight:700; }
+#tab-medcheck .mc-egfr-band-ok { background:#e8f5e9; color:#2e7d32; }
+#tab-medcheck .mc-egfr-band-warn { background:#fff8e1; color:#e65100; }
+#tab-medcheck .mc-egfr-band-danger { background:#fce4ec; color:#c62828; }
+@media(max-width:600px){ #tab-medcheck .mc-dose-table { font-size:.75rem; } #tab-medcheck .mc-dose-table th, #tab-medcheck .mc-dose-table td { padding:5px 6px; } }
 </style>
 
 <div class="mc-container">
@@ -10131,15 +10147,52 @@ window.hwiUpdate = function() {
     <p>Regelbasierter Abgleich der aktuellen Medikation gegen leitlinienbasierte Empfehlungen · Denkanstoß, keine Anordnung</p>
   </div>
 
-  <div id="mc-import-banner" class="mc-import-banner">
-    ✅ <span id="mc-import-text"></span>
-  </div>
-
-  <!-- Karte 1: Patientenkontext -->
+  <!-- Karte 1: Patientendaten -->
   <div class="mc-card">
-    <div class="mc-card-title">📋 Patientenkontext (auto-importiert)</div>
-    <div id="mc-context-summary" class="mc-ctx-grid">
-      <span class="mc-ctx-pill" style="color:#90a4ae;background:#f5f5f5;">Bitte zuerst Daten im CKD-Tab eingeben</span>
+    <div class="mc-card-title">📋 Patientendaten</div>
+    <div class="mc-hint">Werte werden automatisch aus dem CKD-Tab übernommen — können hier manuell angepasst werden.</div>
+    <div id="mc-import-banner2" class="mc-import-banner">✅ <span id="mc-import-text2"></span></div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px;">
+      <div>
+        <label style="font-size:.72rem;font-weight:700;color:#455a64;text-transform:uppercase;letter-spacing:.5px;">eGFR (ml/min)</label>
+        <input type="number" id="mc-egfr" min="0" max="150" step="1" placeholder="z.B. 35" oninput="mcRunCheck()" style="width:100%;padding:8px 10px;border:1.5px solid #c5cae9;border-radius:8px;font-size:.95rem;margin-top:4px;">
+      </div>
+      <div>
+        <label style="font-size:.72rem;font-weight:700;color:#455a64;text-transform:uppercase;letter-spacing:.5px;">Gewicht (kg)</label>
+        <input type="number" id="mc-weight" min="20" max="300" step="0.1" placeholder="z.B. 75" oninput="mcRunCheck()" style="width:100%;padding:8px 10px;border:1.5px solid #c5cae9;border-radius:8px;font-size:.95rem;margin-top:4px;">
+      </div>
+      <div>
+        <label style="font-size:.72rem;font-weight:700;color:#455a64;text-transform:uppercase;letter-spacing:.5px;">Alter (Jahre)</label>
+        <input type="number" id="mc-age" min="0" max="120" step="1" placeholder="z.B. 72" oninput="mcRunCheck()" style="width:100%;padding:8px 10px;border:1.5px solid #c5cae9;border-radius:8px;font-size:.95rem;margin-top:4px;">
+      </div>
+      <div>
+        <label style="font-size:.72rem;font-weight:700;color:#455a64;text-transform:uppercase;letter-spacing:.5px;">Geschlecht</label>
+        <select id="mc-sex" onchange="mcRunCheck()" style="width:100%;padding:8px 10px;border:1.5px solid #c5cae9;border-radius:8px;font-size:.95rem;margin-top:4px;background:#fff;">
+          <option value="">—</option>
+          <option value="male">♂ männlich</option>
+          <option value="female">♀ weiblich</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+      <div>
+        <label style="font-size:.72rem;font-weight:700;color:#455a64;text-transform:uppercase;letter-spacing:.5px;">Dialyse</label>
+        <select id="mc-dialysis" onchange="mcRunCheck()" style="width:100%;padding:8px 10px;border:1.5px solid #c5cae9;border-radius:8px;font-size:.95rem;margin-top:4px;background:#fff;">
+          <option value="no">Nein</option>
+          <option value="hd">Hämodialyse</option>
+          <option value="pd">Peritonealdialyse</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:.72rem;font-weight:700;color:#455a64;text-transform:uppercase;letter-spacing:.5px;">Kreatinin (mg/dl)</label>
+        <input type="number" id="mc-krea" min="0" max="30" step="0.01" placeholder="optional" oninput="mcRunCheck()" style="width:100%;padding:8px 10px;border:1.5px solid #c5cae9;border-radius:8px;font-size:.95rem;margin-top:4px;">
+      </div>
+      <div style="display:flex;align-items:flex-end;">
+        <div id="mc-egfr-badge" style="padding:6px 14px;border-radius:20px;font-size:.85rem;font-weight:700;white-space:nowrap;"></div>
+      </div>
+      <div style="display:flex;align-items:flex-end;">
+        <div id="mc-context-summary" class="mc-ctx-grid" style="flex-wrap:wrap;"></div>
+      </div>
     </div>
   </div>
 
@@ -10208,6 +10261,18 @@ window.hwiUpdate = function() {
         <label class="mc-check"><input type="checkbox" id="mc-med-aktivvitd" onchange="mcRunCheck()"> Aktives Vitamin D (Calcitriol/Alfacalcidol)</label>
         <label class="mc-check"><input type="checkbox" id="mc-med-calcimimetikum" onchange="mcRunCheck()"> Calcimimetikum (Cinacalcet)</label>
       </div>
+      <div class="mc-med-group">
+        <div class="mc-med-group-title">Analgetika / NSAR</div>
+        <label class="mc-check"><input type="checkbox" id="mc-med-ibuprofen" onchange="mcRunCheck()"> Ibuprofen</label>
+        <label class="mc-check"><input type="checkbox" id="mc-med-diclofenac" onchange="mcRunCheck()"> Diclofenac</label>
+        <label class="mc-check"><input type="checkbox" id="mc-med-metamizol" onchange="mcRunCheck()"> Metamizol</label>
+        <label class="mc-check"><input type="checkbox" id="mc-med-paracetamol" onchange="mcRunCheck()"> Paracetamol</label>
+        <label class="mc-check"><input type="checkbox" id="mc-med-morphin" onchange="mcRunCheck()"> Morphin</label>
+        <label class="mc-check"><input type="checkbox" id="mc-med-hydromorphon" onchange="mcRunCheck()"> Hydromorphon</label>
+        <label class="mc-check"><input type="checkbox" id="mc-med-oxycodon" onchange="mcRunCheck()"> Oxycodon</label>
+        <label class="mc-check"><input type="checkbox" id="mc-med-tilidin" onchange="mcRunCheck()"> Tilidin</label>
+        <label class="mc-check"><input type="checkbox" id="mc-med-tramadol" onchange="mcRunCheck()"> Tramadol</label>
+      </div>
     </div>
 
     <div style="margin-top:12px;">
@@ -10218,9 +10283,17 @@ window.hwiUpdate = function() {
     </div>
   </div>
 
-  <!-- Karte 3: Ergebnis -->
+  <!-- Karte 3: Dosierungsübersicht -->
   <div class="mc-card">
-    <div class="mc-card-title">📊 Ergebnis</div>
+    <div class="mc-card-title">💊 Dosierungsübersicht nach Nierenfunktion</div>
+    <div id="mc-dosing-results">
+      <div class="mc-no-data">Medikamente oben ankreuzen — Dosierungen erscheinen hier automatisch.</div>
+    </div>
+  </div>
+
+  <!-- Karte 4: Regel-Ergebnis -->
+  <div class="mc-card">
+    <div class="mc-card-title">📊 Leitlinien-Check</div>
     <div id="mc-results">
       <div class="mc-no-data">Bitte Patientendaten im CKD-Tab eingeben und Medikamente oben ankreuzen.</div>
     </div>
@@ -10231,6 +10304,567 @@ window.hwiUpdate = function() {
 <script>
 (function(){
 'use strict';
+
+// ══════════════════════════════════════════════════════════════
+// MC_DOSING — eGFR-adjustierte Dosierungsdatenbank
+// Quellen: Fachinformation, KDIGO 2024, ESC 2024, ADA 2024
+// eGFR-Stufen: '>50', '30-50', '15-30', '<15', 'HD', 'PD'
+// ══════════════════════════════════════════════════════════════
+var MC_DOSING = [
+  // ── 1. RAAS-BLOCKADE ──────────────────────────────────────
+  {name:'Ramipril',brand:'Delix®',gruppe:'RAAS-Blockade',medId:'acei',
+   dosierung:{'>50':{dosis:'2,5–10 mg 1×/d',hinweis:''},
+   '30-50':{dosis:'2,5–5 mg 1×/d',hinweis:'Startdosis 1,25 mg'},
+   '15-30':{dosis:'1,25–2,5 mg 1×/d',hinweis:'Kalium + Krea nach 1 Woche'},
+   '<15':{dosis:'1,25 mg 1×/d',hinweis:'nur unter engmaschiger Kontrolle'},
+   'HD':{dosis:'1,25 mg 1×/d',hinweis:'nach HD supplementieren; Cave Hypotonie'},
+   'PD':{dosis:'1,25 mg 1×/d',hinweis:'wie <15 dosieren'}}},
+  {name:'Enalapril',brand:'Xanef®',gruppe:'RAAS-Blockade',medId:'acei',
+   dosierung:{'>50':{dosis:'5–40 mg/d in 1–2 Gaben',hinweis:''},
+   '30-50':{dosis:'2,5–20 mg/d',hinweis:'Startdosis 2,5 mg'},
+   '15-30':{dosis:'2,5–10 mg/d',hinweis:''},
+   '<15':{dosis:'2,5 mg/d',hinweis:'engmaschig Kalium + Krea'},
+   'HD':{dosis:'2,5 mg an Dialysetagen nach HD',hinweis:'dialysierbar'},
+   'PD':{dosis:'2,5 mg/d',hinweis:''}}},
+  {name:'Lisinopril',brand:'Acerbon®',gruppe:'RAAS-Blockade',medId:'acei',
+   dosierung:{'>50':{dosis:'5–40 mg 1×/d',hinweis:''},
+   '30-50':{dosis:'5–20 mg 1×/d',hinweis:'Startdosis 2,5–5 mg'},
+   '15-30':{dosis:'2,5–10 mg 1×/d',hinweis:''},
+   '<15':{dosis:'2,5–5 mg 1×/d',hinweis:''},
+   'HD':{dosis:'2,5 mg 1×/d',hinweis:'nach HD supplementieren'},
+   'PD':{dosis:'2,5 mg 1×/d',hinweis:''}}},
+  {name:'Perindopril',brand:'Coversum®',gruppe:'RAAS-Blockade',medId:'acei',
+   dosierung:{'>50':{dosis:'4–8 mg 1×/d',hinweis:''},
+   '30-50':{dosis:'2–4 mg 1×/d',hinweis:''},
+   '15-30':{dosis:'2 mg 1×/d oder jeden 2. Tag',hinweis:''},
+   '<15':{dosis:'2 mg jeden 2. Tag',hinweis:''},
+   'HD':{dosis:'2 mg nach HD',hinweis:'dialysierbar'},
+   'PD':{dosis:'2 mg jeden 2. Tag',hinweis:''}}},
+  {name:'Candesartan',brand:'Atacand®/Blopress®',gruppe:'RAAS-Blockade',medId:'arb',
+   dosierung:{'>50':{dosis:'8–32 mg 1×/d',hinweis:''},
+   '30-50':{dosis:'4–16 mg 1×/d',hinweis:'Startdosis 4 mg'},
+   '15-30':{dosis:'4–8 mg 1×/d',hinweis:''},
+   '<15':{dosis:'4 mg 1×/d',hinweis:'begrenzte Daten'},
+   'HD':{dosis:'4 mg 1×/d',hinweis:'nicht dialysierbar'},
+   'PD':{dosis:'4 mg 1×/d',hinweis:''}}},
+  {name:'Valsartan',brand:'Diovan®',gruppe:'RAAS-Blockade',medId:'arb',
+   dosierung:{'>50':{dosis:'80–320 mg 1×/d',hinweis:''},
+   '30-50':{dosis:'40–160 mg 1×/d',hinweis:''},
+   '15-30':{dosis:'40–80 mg 1×/d',hinweis:''},
+   '<15':{dosis:'40 mg 1×/d',hinweis:'begrenzte Daten'},
+   'HD':{dosis:'40 mg 1×/d',hinweis:'nicht dialysierbar'},
+   'PD':{dosis:'40 mg 1×/d',hinweis:''}}},
+  {name:'Losartan',brand:'Lorzaar®',gruppe:'RAAS-Blockade',medId:'arb',
+   dosierung:{'>50':{dosis:'50–100 mg 1×/d',hinweis:''},
+   '30-50':{dosis:'25–50 mg 1×/d',hinweis:''},
+   '15-30':{dosis:'25 mg 1×/d',hinweis:''},
+   '<15':{dosis:'25 mg 1×/d',hinweis:'Cave: aktiver Metabolit akkumuliert'},
+   'HD':{dosis:'25 mg 1×/d',hinweis:'nicht dialysierbar'},
+   'PD':{dosis:'25 mg 1×/d',hinweis:''}}},
+  {name:'Irbesartan',brand:'Aprovel®',gruppe:'RAAS-Blockade',medId:'arb',
+   dosierung:{'>50':{dosis:'150–300 mg 1×/d',hinweis:''},
+   '30-50':{dosis:'150 mg 1×/d',hinweis:''},
+   '15-30':{dosis:'75–150 mg 1×/d',hinweis:''},
+   '<15':{dosis:'75 mg 1×/d',hinweis:'begrenzte Daten'},
+   'HD':{dosis:'75 mg 1×/d',hinweis:'nicht dialysierbar'},
+   'PD':{dosis:'75 mg 1×/d',hinweis:''}}},
+  {name:'Olmesartan',brand:'Votum®',gruppe:'RAAS-Blockade',medId:'arb',
+   dosierung:{'>50':{dosis:'10–40 mg 1×/d',hinweis:''},
+   '30-50':{dosis:'10–20 mg 1×/d',hinweis:''},
+   '15-30':{dosis:'10 mg 1×/d',hinweis:'max. 20 mg'},
+   '<15':{dosis:'10 mg 1×/d',hinweis:'nicht empfohlen bei eGFR <5'},
+   'HD':{dosis:'10 mg 1×/d',hinweis:'nicht dialysierbar'},
+   'PD':{dosis:'10 mg 1×/d',hinweis:''}}},
+  {name:'Telmisartan',brand:'Micardis®',gruppe:'RAAS-Blockade',medId:'arb',
+   dosierung:{'>50':{dosis:'40–80 mg 1×/d',hinweis:''},
+   '30-50':{dosis:'40 mg 1×/d',hinweis:''},
+   '15-30':{dosis:'20–40 mg 1×/d',hinweis:''},
+   '<15':{dosis:'20 mg 1×/d',hinweis:'keine Dosisanpassung nötig (hepatisch)'},
+   'HD':{dosis:'20–40 mg 1×/d',hinweis:'nicht dialysierbar; keine Supplementierung'},
+   'PD':{dosis:'20–40 mg 1×/d',hinweis:''}}},
+  {name:'Sacubitril/Valsartan',brand:'Entresto®',gruppe:'RAAS-Blockade',medId:'arni',
+   dosierung:{'>50':{dosis:'49/51–97/103 mg 2×/d',hinweis:'Zieldosis: 97/103 mg 2×/d'},
+   '30-50':{dosis:'24/26–97/103 mg 2×/d',hinweis:'vorsichtig titrieren'},
+   '15-30':{dosis:'24/26 mg 2×/d',hinweis:'begrenzte Daten; engmaschig Kalium'},
+   '<15':{dosis:'nicht empfohlen',hinweis:'keine Daten'},
+   'HD':{dosis:'nicht empfohlen',hinweis:'keine Daten'},
+   'PD':{dosis:'nicht empfohlen',hinweis:''}}},
+
+  // ── 2. NEPHROPROTEKTIVE THERAPIE ──────────────────────────
+  {name:'Empagliflozin',brand:'Jardiance®',gruppe:'Nephroprotektiv',medId:'sglt2i',
+   dosierung:{'>50':{dosis:'10 mg 1×/d',hinweis:'CKD: 10 mg (nicht 25 mg)'},
+   '30-50':{dosis:'10 mg 1×/d',hinweis:'Fortführung bis eGFR 20 möglich'},
+   '15-30':{dosis:'10 mg 1×/d',hinweis:'Fortführung; Neustart ab eGFR ≥20 (EMPA-KIDNEY)'},
+   '<15':{dosis:'Neustart nicht empfohlen',hinweis:'Fortführung individuell abwägen'},
+   'HD':{dosis:'kontraindiziert',hinweis:'kein Effekt ohne Restdiurese'},
+   'PD':{dosis:'nicht empfohlen',hinweis:''}}},
+  {name:'Dapagliflozin',brand:'Forxiga®',gruppe:'Nephroprotektiv',medId:'sglt2i',
+   dosierung:{'>50':{dosis:'10 mg 1×/d',hinweis:''},
+   '30-50':{dosis:'10 mg 1×/d',hinweis:''},
+   '15-30':{dosis:'10 mg 1×/d',hinweis:'Fortführung; Neustart ab eGFR ≥25 (DAPA-CKD)'},
+   '<15':{dosis:'Neustart nicht empfohlen',hinweis:'Fortführung individuell'},
+   'HD':{dosis:'kontraindiziert',hinweis:''},
+   'PD':{dosis:'nicht empfohlen',hinweis:''}}},
+  {name:'Finerenon',brand:'Kerendia®',gruppe:'Nephroprotektiv',medId:'finerenon',
+   dosierung:{'>50':{dosis:'20 mg 1×/d',hinweis:'Start 10 mg wenn K⁺ ≤4,8; nach 4 Wo auf 20 mg'},
+   '30-50':{dosis:'20 mg 1×/d',hinweis:'Start 10 mg; Zieldosis 20 mg; K⁺-Kontrolle'},
+   '15-30':{dosis:'10 mg 1×/d',hinweis:'Start 10 mg; Steigerung auf 20 mg wenn K⁺ ≤4,8'},
+   '<15':{dosis:'nicht empfohlen',hinweis:'keine Daten unter eGFR 25 bei Zulassung'},
+   'HD':{dosis:'kontraindiziert',hinweis:''},
+   'PD':{dosis:'kontraindiziert',hinweis:''}}},
+  {name:'Semaglutid',brand:'Ozempic®/Rybelsus®',gruppe:'Nephroprotektiv',medId:'glp1ra',
+   dosierung:{'>50':{dosis:'s.c. 0,25→0,5→1 mg 1×/Wo | p.o. 3→7→14 mg 1×/d',hinweis:''},
+   '30-50':{dosis:'keine Dosisanpassung',hinweis:''},
+   '15-30':{dosis:'keine Dosisanpassung',hinweis:'FLOW-Studie: renaler Benefit bis eGFR 25'},
+   '<15':{dosis:'begrenzte Daten',hinweis:'Anwendung möglich, aber wenig Evidenz'},
+   'HD':{dosis:'begrenzte Daten',hinweis:'Anwendung individuell abwägen'},
+   'PD':{dosis:'begrenzte Daten',hinweis:''}}},
+  {name:'Liraglutid',brand:'Victoza®',gruppe:'Nephroprotektiv',medId:'glp1ra',
+   dosierung:{'>50':{dosis:'0,6→1,2→1,8 mg 1×/d s.c.',hinweis:''},
+   '30-50':{dosis:'keine Dosisanpassung',hinweis:''},
+   '15-30':{dosis:'keine Dosisanpassung',hinweis:'begrenzte Erfahrung'},
+   '<15':{dosis:'nicht empfohlen',hinweis:''},
+   'HD':{dosis:'nicht empfohlen',hinweis:''},
+   'PD':{dosis:'nicht empfohlen',hinweis:''}}},
+  {name:'Dulaglutid',brand:'Trulicity®',gruppe:'Nephroprotektiv',medId:'glp1ra',
+   dosierung:{'>50':{dosis:'0,75→1,5 mg 1×/Wo s.c.',hinweis:''},
+   '30-50':{dosis:'keine Dosisanpassung',hinweis:''},
+   '15-30':{dosis:'keine Dosisanpassung',hinweis:'begrenzte Erfahrung'},
+   '<15':{dosis:'nicht empfohlen',hinweis:''},
+   'HD':{dosis:'nicht empfohlen',hinweis:''},
+   'PD':{dosis:'nicht empfohlen',hinweis:''}}},
+
+  // ── 3. ANTIDIABETIKA ──────────────────────────────────────
+  {name:'Metformin',brand:'Glucophage®',gruppe:'Antidiabetika',medId:'metformin',
+   dosierung:{'>50':{dosis:'500–2000 mg/d in 2–3 Gaben',hinweis:''},
+   '30-50':{dosis:'max. 1000 mg/d in 2 Gaben',hinweis:'eGFR-Kontrolle alle 3 Monate'},
+   '15-30':{dosis:'max. 500 mg/d',hinweis:'KDIGO 2022: engmaschig; Neustart nicht empfohlen'},
+   '<15':{dosis:'kontraindiziert',hinweis:'Laktatazidose-Risiko'},
+   'HD':{dosis:'kontraindiziert',hinweis:''},
+   'PD':{dosis:'kontraindiziert',hinweis:''}}},
+  {name:'Sitagliptin',brand:'Januvia®/Xelevia®',gruppe:'Antidiabetika',medId:'dpp4i',
+   dosierung:{'>50':{dosis:'100 mg 1×/d',hinweis:''},
+   '30-50':{dosis:'50 mg 1×/d',hinweis:''},
+   '15-30':{dosis:'25 mg 1×/d',hinweis:''},
+   '<15':{dosis:'25 mg 1×/d',hinweis:''},
+   'HD':{dosis:'25 mg 1×/d',hinweis:'unabhängig vom HD-Zeitpunkt'},
+   'PD':{dosis:'25 mg 1×/d',hinweis:''}}},
+  {name:'Saxagliptin',brand:'Onglyza®',gruppe:'Antidiabetika',medId:'dpp4i',
+   dosierung:{'>50':{dosis:'5 mg 1×/d',hinweis:''},
+   '30-50':{dosis:'2,5 mg 1×/d',hinweis:''},
+   '15-30':{dosis:'2,5 mg 1×/d',hinweis:''},
+   '<15':{dosis:'2,5 mg 1×/d',hinweis:''},
+   'HD':{dosis:'2,5 mg 1×/d',hinweis:'nach HD einnehmen'},
+   'PD':{dosis:'2,5 mg 1×/d',hinweis:'begrenzte Daten'}}},
+  {name:'Linagliptin',brand:'Trajenta®',gruppe:'Antidiabetika',medId:'dpp4i',
+   dosierung:{'>50':{dosis:'5 mg 1×/d',hinweis:''},
+   '30-50':{dosis:'5 mg 1×/d',hinweis:'keine Dosisanpassung nötig'},
+   '15-30':{dosis:'5 mg 1×/d',hinweis:'keine Dosisanpassung (hepatische Elimination)'},
+   '<15':{dosis:'5 mg 1×/d',hinweis:'keine Dosisanpassung'},
+   'HD':{dosis:'5 mg 1×/d',hinweis:'keine Supplementierung nötig'},
+   'PD':{dosis:'5 mg 1×/d',hinweis:''}}},
+  {name:'Vildagliptin',brand:'Galvus®',gruppe:'Antidiabetika',medId:'dpp4i',
+   dosierung:{'>50':{dosis:'50 mg 2×/d',hinweis:''},
+   '30-50':{dosis:'50 mg 1×/d',hinweis:''},
+   '15-30':{dosis:'50 mg 1×/d',hinweis:''},
+   '<15':{dosis:'50 mg 1×/d',hinweis:''},
+   'HD':{dosis:'50 mg 1×/d',hinweis:''},
+   'PD':{dosis:'50 mg 1×/d',hinweis:''}}},
+  {name:'Glimepirid',brand:'Amaryl®',gruppe:'Antidiabetika',medId:'su',
+   dosierung:{'>50':{dosis:'1–6 mg 1×/d',hinweis:''},
+   '30-50':{dosis:'1–3 mg 1×/d',hinweis:'erhöhtes Hypoglykämierisiko'},
+   '15-30':{dosis:'1 mg 1×/d',hinweis:'hohes Hypoglykämierisiko; Absetzen erwägen'},
+   '<15':{dosis:'kontraindiziert',hinweis:'aktive Metabolite akkumulieren'},
+   'HD':{dosis:'kontraindiziert',hinweis:''},
+   'PD':{dosis:'kontraindiziert',hinweis:''}}},
+
+  // ── 4. ANTIKOAGULATION ────────────────────────────────────
+  {name:'Apixaban',brand:'Eliquis®',gruppe:'Antikoagulation',medId:'doac',
+   dosierung:{'>50':{dosis:'VHF: 2×5 mg | VTE: 2×10 mg (7d) → 2×5 mg',hinweis:'Reduktion auf 2×2,5 mg wenn ≥2 Kriterien: Alter ≥80, Gewicht ≤60 kg, Krea ≥1,5 mg/dl'},
+   '30-50':{dosis:'VHF: 2×5 mg (oder 2×2,5 mg*) | VTE: Standard',hinweis:'*Dosisreduktion prüfen (Alter/Gewicht/Krea)'},
+   '15-30':{dosis:'VHF: 2×2,5 mg | VTE: 2×5 mg (eingeschränkte Daten)',hinweis:'einziger DOAK mit Zulassung bis eGFR 15'},
+   '<15':{dosis:'nicht empfohlen',hinweis:'Off-Label-Anwendung in Einzelfällen publiziert'},
+   'HD':{dosis:'nicht empfohlen',hinweis:'2×2,5 mg off-label möglich (Beobachtungsstudien)'},
+   'PD':{dosis:'nicht empfohlen',hinweis:''}}},
+  {name:'Rivaroxaban',brand:'Xarelto®',gruppe:'Antikoagulation',medId:'doac',
+   dosierung:{'>50':{dosis:'VHF: 1×20 mg | VTE: 2×15 mg (21d) → 1×20 mg',hinweis:'mit Mahlzeit einnehmen'},
+   '30-50':{dosis:'VHF: 1×15 mg | VTE: Standard bis 1×15 mg',hinweis:'Dosisreduktion bei VHF'},
+   '15-30':{dosis:'VHF: 1×15 mg | VTE: 1×15 mg',hinweis:'mit Vorsicht; begrenzte Daten'},
+   '<15':{dosis:'kontraindiziert',hinweis:''},
+   'HD':{dosis:'kontraindiziert',hinweis:''},
+   'PD':{dosis:'kontraindiziert',hinweis:''}}},
+  {name:'Edoxaban',brand:'Lixiana®',gruppe:'Antikoagulation',medId:'doac',
+   dosierung:{'>50':{dosis:'VHF: 1×60 mg | VTE: 1×60 mg',hinweis:'Cave: bei CrCl >95 ml/min VHF-Zulassung limitiert'},
+   '30-50':{dosis:'VHF: 1×30 mg | VTE: 1×30 mg',hinweis:'Dosisreduktion obligat'},
+   '15-30':{dosis:'VHF: 1×30 mg | VTE: 1×30 mg',hinweis:'mit Vorsicht'},
+   '<15':{dosis:'kontraindiziert',hinweis:''},
+   'HD':{dosis:'kontraindiziert',hinweis:''},
+   'PD':{dosis:'kontraindiziert',hinweis:''}}},
+  {name:'Dabigatran',brand:'Pradaxa®',gruppe:'Antikoagulation',medId:'doac',
+   dosierung:{'>50':{dosis:'VHF: 2×150 mg (Alter <80, kein Verapamil) | sonst 2×110 mg',hinweis:''},
+   '30-50':{dosis:'VHF: 2×150 mg oder 2×110 mg | VTE: 2×150 mg',hinweis:'individuelle Nutzen-Risiko-Bewertung'},
+   '15-30':{dosis:'kontraindiziert (EU-Zulassung)',hinweis:'in USA: 2×75 mg bei CrCl 15–30'},
+   '<15':{dosis:'kontraindiziert',hinweis:'80% renal eliminiert'},
+   'HD':{dosis:'kontraindiziert',hinweis:'teilweise dialysierbar'},
+   'PD':{dosis:'kontraindiziert',hinweis:''}}},
+  {name:'Phenprocoumon',brand:'Marcumar®/Falithrom®',gruppe:'Antikoagulation',medId:'vka',
+   dosierung:{'>50':{dosis:'nach INR (Ziel meist 2,0–3,0)',hinweis:''},
+   '30-50':{dosis:'nach INR',hinweis:'keine Dosisanpassung; häufigere INR-Kontrollen'},
+   '15-30':{dosis:'nach INR',hinweis:'häufigere INR-Kontrollen; Blutungsrisiko ↑'},
+   '<15':{dosis:'nach INR',hinweis:'VKA bevorzugt gegenüber DOAK bei eGFR <15'},
+   'HD':{dosis:'nach INR',hinweis:'nicht dialysierbar; VKA ist Antikoagulans der Wahl bei HD'},
+   'PD':{dosis:'nach INR',hinweis:''}}},
+
+  // ── 5. ANTIAGGREGATION ────────────────────────────────────
+  {name:'ASS',brand:'Aspirin®',gruppe:'Antiaggregation',medId:'ass',
+   dosierung:{'>50':{dosis:'100 mg 1×/d',hinweis:''},
+   '30-50':{dosis:'100 mg 1×/d',hinweis:'keine Dosisanpassung'},
+   '15-30':{dosis:'100 mg 1×/d',hinweis:'Blutungsrisiko ↑ bei CKD'},
+   '<15':{dosis:'100 mg 1×/d',hinweis:'Nutzen-Risiko individuell'},
+   'HD':{dosis:'100 mg 1×/d',hinweis:'nicht dialysierbar'},
+   'PD':{dosis:'100 mg 1×/d',hinweis:''}}},
+  {name:'Clopidogrel',brand:'Plavix®/Iscover®',gruppe:'Antiaggregation',medId:'clopidogrel',
+   dosierung:{'>50':{dosis:'75 mg 1×/d',hinweis:''},
+   '30-50':{dosis:'75 mg 1×/d',hinweis:'keine Dosisanpassung'},
+   '15-30':{dosis:'75 mg 1×/d',hinweis:'begrenzte Daten'},
+   '<15':{dosis:'75 mg 1×/d',hinweis:'begrenzte Daten; Blutungsrisiko ↑'},
+   'HD':{dosis:'75 mg 1×/d',hinweis:''},
+   'PD':{dosis:'75 mg 1×/d',hinweis:''}}},
+  {name:'Prasugrel',brand:'Efient®',gruppe:'Antiaggregation',medId:'clopidogrel',
+   dosierung:{'>50':{dosis:'10 mg 1×/d (nach Loading 60 mg)',hinweis:'KI bei Alter ≥75 oder Gewicht <60 kg → 5 mg'},
+   '30-50':{dosis:'10 mg 1×/d',hinweis:'keine Dosisanpassung'},
+   '15-30':{dosis:'begrenzte Daten',hinweis:'Anwendung mit Vorsicht'},
+   '<15':{dosis:'begrenzte Daten',hinweis:'nicht empfohlen'},
+   'HD':{dosis:'nicht empfohlen',hinweis:''},
+   'PD':{dosis:'nicht empfohlen',hinweis:''}}},
+  {name:'Ticagrelor',brand:'Brilique®',gruppe:'Antiaggregation',medId:'clopidogrel',
+   dosierung:{'>50':{dosis:'90 mg 2×/d (nach Loading 180 mg) | 60 mg 2×/d (Langzeit)',hinweis:''},
+   '30-50':{dosis:'90 mg 2×/d oder 60 mg 2×/d',hinweis:'keine Dosisanpassung'},
+   '15-30':{dosis:'90 mg 2×/d oder 60 mg 2×/d',hinweis:'keine Dosisanpassung; begrenzte Erfahrung'},
+   '<15':{dosis:'begrenzte Daten',hinweis:''},
+   'HD':{dosis:'nicht dialysierbar',hinweis:'Anwendung individuell'},
+   'PD':{dosis:'begrenzte Daten',hinweis:''}}},
+
+  // ── 6. LIPIDTHERAPIE ──────────────────────────────────────
+  {name:'Atorvastatin',brand:'Sortis®',gruppe:'Lipidtherapie',medId:'statin',
+   dosierung:{'>50':{dosis:'10–80 mg 1×/d',hinweis:'High-intensity: 40–80 mg'},
+   '30-50':{dosis:'10–80 mg 1×/d',hinweis:'keine Dosisanpassung'},
+   '15-30':{dosis:'10–80 mg 1×/d',hinweis:'keine Dosisanpassung'},
+   '<15':{dosis:'10–80 mg 1×/d',hinweis:'keine Dosisanpassung; bei Dialyse: kein Mortalitätsvorteil (AURORA/4D)'},
+   'HD':{dosis:'10–80 mg 1×/d',hinweis:'Neustart bei HD-Beginn nicht empfohlen (KDIGO); Fortführung ok'},
+   'PD':{dosis:'10–80 mg 1×/d',hinweis:''}}},
+  {name:'Rosuvastatin',brand:'Crestor®',gruppe:'Lipidtherapie',medId:'statin',
+   dosierung:{'>50':{dosis:'5–40 mg 1×/d',hinweis:'High-intensity: 20–40 mg'},
+   '30-50':{dosis:'5–20 mg 1×/d',hinweis:'max. 20 mg (asiatische Patienten: max. 10 mg)'},
+   '15-30':{dosis:'5–10 mg 1×/d',hinweis:'Startdosis 5 mg; max. 10 mg'},
+   '<15':{dosis:'5 mg 1×/d',hinweis:'max. 10 mg; wie Dialyse'},
+   'HD':{dosis:'5–10 mg 1×/d',hinweis:'Fortführung ok; Neustart nicht empfohlen (KDIGO)'},
+   'PD':{dosis:'5–10 mg 1×/d',hinweis:''}}},
+  {name:'Simvastatin',brand:'Zocor®',gruppe:'Lipidtherapie',medId:'statin',
+   dosierung:{'>50':{dosis:'10–40 mg 1×/d abends',hinweis:'max. 80 mg nicht empfohlen (Myopathie)'},
+   '30-50':{dosis:'10–40 mg 1×/d',hinweis:'keine Dosisanpassung'},
+   '15-30':{dosis:'10–20 mg 1×/d',hinweis:'vorsichtig dosieren'},
+   '<15':{dosis:'10 mg 1×/d',hinweis:'Startdosis 5–10 mg'},
+   'HD':{dosis:'10–20 mg/d',hinweis:'SHARP: Simvastatin + Ezetimib effektiv bei CKD/HD'},
+   'PD':{dosis:'10–20 mg/d',hinweis:''}}},
+  {name:'Ezetimib',brand:'Ezetrol®',gruppe:'Lipidtherapie',medId:'ezetimib',
+   dosierung:{'>50':{dosis:'10 mg 1×/d',hinweis:''},
+   '30-50':{dosis:'10 mg 1×/d',hinweis:'keine Dosisanpassung'},
+   '15-30':{dosis:'10 mg 1×/d',hinweis:'keine Dosisanpassung'},
+   '<15':{dosis:'10 mg 1×/d',hinweis:'keine Dosisanpassung'},
+   'HD':{dosis:'10 mg 1×/d',hinweis:''},
+   'PD':{dosis:'10 mg 1×/d',hinweis:''}}},
+  {name:'Evolocumab',brand:'Repatha®',gruppe:'Lipidtherapie',medId:'pcsk9',
+   dosierung:{'>50':{dosis:'140 mg s.c. alle 2 Wo oder 420 mg 1×/Mo',hinweis:''},
+   '30-50':{dosis:'keine Dosisanpassung',hinweis:''},
+   '15-30':{dosis:'keine Dosisanpassung',hinweis:'begrenzte Daten'},
+   '<15':{dosis:'keine Dosisanpassung',hinweis:'begrenzte Daten'},
+   'HD':{dosis:'keine Dosisanpassung',hinweis:''},
+   'PD':{dosis:'keine Dosisanpassung',hinweis:''}}},
+  {name:'Alirocumab',brand:'Praluent®',gruppe:'Lipidtherapie',medId:'pcsk9',
+   dosierung:{'>50':{dosis:'75–150 mg s.c. alle 2 Wo',hinweis:''},
+   '30-50':{dosis:'keine Dosisanpassung',hinweis:''},
+   '15-30':{dosis:'keine Dosisanpassung',hinweis:'begrenzte Daten'},
+   '<15':{dosis:'keine Dosisanpassung',hinweis:''},
+   'HD':{dosis:'keine Dosisanpassung',hinweis:''},
+   'PD':{dosis:'keine Dosisanpassung',hinweis:''}}},
+  {name:'Inclisiran',brand:'Leqvio®',gruppe:'Lipidtherapie',medId:'pcsk9',
+   dosierung:{'>50':{dosis:'284 mg s.c. initial, nach 3 Mo, dann alle 6 Mo',hinweis:''},
+   '30-50':{dosis:'keine Dosisanpassung',hinweis:''},
+   '15-30':{dosis:'keine Dosisanpassung',hinweis:'begrenzte Daten'},
+   '<15':{dosis:'begrenzte Daten',hinweis:''},
+   'HD':{dosis:'begrenzte Daten',hinweis:''},
+   'PD':{dosis:'begrenzte Daten',hinweis:''}}},
+
+  // ── 7. ANTIHYPERTENSIVA ───────────────────────────────────
+  {name:'Amlodipin',brand:'Norvasc®',gruppe:'Antihypertensiva',medId:'ccb',
+   dosierung:{'>50':{dosis:'5–10 mg 1×/d',hinweis:''},
+   '30-50':{dosis:'5–10 mg 1×/d',hinweis:'keine Dosisanpassung'},
+   '15-30':{dosis:'5–10 mg 1×/d',hinweis:'keine Dosisanpassung'},
+   '<15':{dosis:'5–10 mg 1×/d',hinweis:'keine Dosisanpassung'},
+   'HD':{dosis:'5–10 mg 1×/d',hinweis:'nicht dialysierbar'},
+   'PD':{dosis:'5–10 mg 1×/d',hinweis:''}}},
+  {name:'Lercanidipin',brand:'Carmen®',gruppe:'Antihypertensiva',medId:'ccb',
+   dosierung:{'>50':{dosis:'10–20 mg 1×/d',hinweis:'15 min vor Mahlzeit'},
+   '30-50':{dosis:'10 mg 1×/d',hinweis:'Vorsicht'},
+   '15-30':{dosis:'nicht empfohlen',hinweis:'keine ausreichenden Daten'},
+   '<15':{dosis:'kontraindiziert',hinweis:''},
+   'HD':{dosis:'kontraindiziert',hinweis:''},
+   'PD':{dosis:'kontraindiziert',hinweis:''}}},
+  {name:'HCT',brand:'',gruppe:'Antihypertensiva',medId:'thiazid',
+   dosierung:{'>50':{dosis:'12,5–25 mg 1×/d',hinweis:''},
+   '30-50':{dosis:'12,5–25 mg 1×/d',hinweis:'nachlassende Wirksamkeit'},
+   '15-30':{dosis:'nicht wirksam als Monotherapie',hinweis:'Kombination mit Schleifendiuretikum möglich (sequentielle Nephronblockade)'},
+   '<15':{dosis:'nicht wirksam',hinweis:''},
+   'HD':{dosis:'nicht indiziert',hinweis:''},
+   'PD':{dosis:'nicht indiziert',hinweis:''}}},
+  {name:'Indapamid',brand:'',gruppe:'Antihypertensiva',medId:'thiazid',
+   dosierung:{'>50':{dosis:'1,5 mg 1×/d (retard) oder 2,5 mg',hinweis:''},
+   '30-50':{dosis:'1,5 mg 1×/d',hinweis:'wirksamer als HCT bei CKD'},
+   '15-30':{dosis:'1,5–2,5 mg 1×/d',hinweis:'behält Wirksamkeit bis eGFR ~15'},
+   '<15':{dosis:'begrenzte Daten',hinweis:''},
+   'HD':{dosis:'nicht indiziert',hinweis:''},
+   'PD':{dosis:'nicht indiziert',hinweis:''}}},
+  {name:'Chlortalidon',brand:'',gruppe:'Antihypertensiva',medId:'thiazid',
+   dosierung:{'>50':{dosis:'12,5–25 mg 1×/d',hinweis:''},
+   '30-50':{dosis:'12,5–25 mg 1×/d',hinweis:'wirksamer als HCT bei CKD (CLICK-Studie)'},
+   '15-30':{dosis:'12,5–25 mg 1×/d',hinweis:'CLICK: effektiv bis eGFR 15'},
+   '<15':{dosis:'begrenzte Daten',hinweis:''},
+   'HD':{dosis:'nicht indiziert',hinweis:''},
+   'PD':{dosis:'nicht indiziert',hinweis:''}}},
+  {name:'Xipamid',brand:'Aquaphor®',gruppe:'Antihypertensiva',medId:'thiazid',
+   dosierung:{'>50':{dosis:'10–40 mg 1×/d',hinweis:''},
+   '30-50':{dosis:'10–40 mg 1×/d',hinweis:''},
+   '15-30':{dosis:'10–40 mg 1×/d',hinweis:'behält Wirksamkeit bei niedriger eGFR'},
+   '<15':{dosis:'20–40 mg 1×/d',hinweis:'als Kombinationspartner mit Schleifendiuretikum'},
+   'HD':{dosis:'nicht indiziert',hinweis:''},
+   'PD':{dosis:'nicht indiziert',hinweis:''}}},
+  {name:'Bisoprolol',brand:'Concor®',gruppe:'Antihypertensiva',medId:'bb',
+   dosierung:{'>50':{dosis:'2,5–10 mg 1×/d',hinweis:''},
+   '30-50':{dosis:'2,5–10 mg 1×/d',hinweis:'keine Dosisanpassung'},
+   '15-30':{dosis:'2,5–10 mg 1×/d',hinweis:'keine Dosisanpassung; 50% renal'},
+   '<15':{dosis:'2,5–5 mg 1×/d',hinweis:'begrenzte Daten bei eGFR <15'},
+   'HD':{dosis:'2,5–5 mg 1×/d',hinweis:'nicht relevant dialysierbar'},
+   'PD':{dosis:'2,5–5 mg 1×/d',hinweis:''}}},
+  {name:'Metoprolol',brand:'Beloc®',gruppe:'Antihypertensiva',medId:'bb',
+   dosierung:{'>50':{dosis:'47,5–190 mg 1×/d (retard)',hinweis:''},
+   '30-50':{dosis:'keine Dosisanpassung',hinweis:''},
+   '15-30':{dosis:'keine Dosisanpassung',hinweis:'hepatische Elimination'},
+   '<15':{dosis:'keine Dosisanpassung',hinweis:''},
+   'HD':{dosis:'keine Dosisanpassung',hinweis:'nicht relevant dialysierbar'},
+   'PD':{dosis:'keine Dosisanpassung',hinweis:''}}},
+  {name:'Nebivolol',brand:'Nebilet®',gruppe:'Antihypertensiva',medId:'bb',
+   dosierung:{'>50':{dosis:'5 mg 1×/d',hinweis:''},
+   '30-50':{dosis:'2,5–5 mg 1×/d',hinweis:''},
+   '15-30':{dosis:'2,5 mg 1×/d',hinweis:'begrenzte Daten'},
+   '<15':{dosis:'nicht empfohlen',hinweis:''},
+   'HD':{dosis:'nicht empfohlen',hinweis:''},
+   'PD':{dosis:'nicht empfohlen',hinweis:''}}},
+  {name:'Carvedilol',brand:'Dilatrend®',gruppe:'Antihypertensiva',medId:'bb',
+   dosierung:{'>50':{dosis:'6,25–25 mg 2×/d',hinweis:''},
+   '30-50':{dosis:'keine Dosisanpassung',hinweis:''},
+   '15-30':{dosis:'keine Dosisanpassung',hinweis:'hepatische Elimination'},
+   '<15':{dosis:'keine Dosisanpassung',hinweis:''},
+   'HD':{dosis:'keine Dosisanpassung',hinweis:'nicht dialysierbar'},
+   'PD':{dosis:'keine Dosisanpassung',hinweis:''}}},
+  {name:'Furosemid',brand:'Lasix®',gruppe:'Antihypertensiva',medId:'loop',
+   dosierung:{'>50':{dosis:'20–80 mg/d in 1–2 Gaben',hinweis:''},
+   '30-50':{dosis:'40–120 mg/d',hinweis:'höhere Dosen nötig bei CKD'},
+   '15-30':{dosis:'80–250 mg/d',hinweis:'Dosiseskalation nach Effekt'},
+   '<15':{dosis:'120–500 mg/d',hinweis:'max. Einzeldosis i.v. 250 mg; Bolusgabe oder Perfusor'},
+   'HD':{dosis:'120–500 mg/d',hinweis:'Restdiurese erhalten; bei Anurie nicht sinnvoll'},
+   'PD':{dosis:'120–250 mg/d',hinweis:'bei Restdiurese'}}},
+  {name:'Torasemid',brand:'Unat®',gruppe:'Antihypertensiva',medId:'loop',
+   dosierung:{'>50':{dosis:'5–20 mg 1×/d',hinweis:''},
+   '30-50':{dosis:'10–50 mg 1×/d',hinweis:''},
+   '15-30':{dosis:'20–100 mg 1×/d',hinweis:'höhere Dosen nötig'},
+   '<15':{dosis:'50–200 mg/d',hinweis:'hepatische Elimination (70%)'},
+   'HD':{dosis:'50–200 mg/d',hinweis:'bei Restdiurese'},
+   'PD':{dosis:'50–200 mg/d',hinweis:''}}},
+  {name:'Spironolacton',brand:'Aldactone®',gruppe:'Antihypertensiva',medId:'spiro',
+   dosierung:{'>50':{dosis:'25–50 mg 1×/d',hinweis:''},
+   '30-50':{dosis:'12,5–25 mg 1×/d',hinweis:'K⁺-Kontrolle nach 3–7 Tagen'},
+   '15-30':{dosis:'12,5 mg 1×/d oder jeden 2. Tag',hinweis:'hohes Hyperkaliämie-Risiko; K⁺ engmaschig'},
+   '<15':{dosis:'kontraindiziert',hinweis:'Hyperkaliämie-Risiko'},
+   'HD':{dosis:'12,5–25 mg 1×/d',hinweis:'bei Restdiurese möglich; K⁺ vor HD kontrollieren'},
+   'PD':{dosis:'kontraindiziert',hinweis:''}}},
+  {name:'Eplerenon',brand:'Inspra®',gruppe:'Antihypertensiva',medId:'spiro',
+   dosierung:{'>50':{dosis:'25–50 mg 1×/d',hinweis:''},
+   '30-50':{dosis:'25 mg 1×/d',hinweis:'K⁺-Kontrolle'},
+   '15-30':{dosis:'nicht empfohlen',hinweis:'Hyperkaliämie-Risiko'},
+   '<15':{dosis:'kontraindiziert',hinweis:''},
+   'HD':{dosis:'kontraindiziert',hinweis:''},
+   'PD':{dosis:'kontraindiziert',hinweis:''}}},
+  {name:'Doxazosin',brand:'Cardular®',gruppe:'Antihypertensiva',medId:'alpha',
+   dosierung:{'>50':{dosis:'1–8 mg 1×/d abends',hinweis:''},
+   '30-50':{dosis:'keine Dosisanpassung',hinweis:''},
+   '15-30':{dosis:'keine Dosisanpassung',hinweis:'hepatische Elimination'},
+   '<15':{dosis:'keine Dosisanpassung',hinweis:''},
+   'HD':{dosis:'keine Dosisanpassung',hinweis:'nicht dialysierbar'},
+   'PD':{dosis:'keine Dosisanpassung',hinweis:''}}},
+
+  // ── 8. GICHT / HARNSÄURE ──────────────────────────────────
+  {name:'Allopurinol',brand:'Zyloric®',gruppe:'Gicht / Harnsäure',medId:'allopurinol',
+   dosierung:{'>50':{dosis:'100→300–600 mg/d',hinweis:'Start 100 mg; alle 2–4 Wo um 100 mg steigern'},
+   '30-50':{dosis:'Start 50–100 mg; Ziel bis 300 mg',hinweis:'langsam titrieren; Ziel-Harnsäure <6 mg/dl'},
+   '15-30':{dosis:'Start 50 mg; max. 200 mg/d',hinweis:'Dosis nach Harnsäure titrieren'},
+   '<15':{dosis:'Start 50 mg jeden 2. Tag; max. 100 mg/d',hinweis:'Cave: Allopurinol-Hypersensitivitätssyndrom'},
+   'HD':{dosis:'50–100 mg nach HD',hinweis:'dialysierbar; Supplementierung nach HD'},
+   'PD':{dosis:'50 mg/d',hinweis:''}}},
+  {name:'Febuxostat',brand:'Adenuric®',gruppe:'Gicht / Harnsäure',medId:'febuxostat',
+   dosierung:{'>50':{dosis:'80 mg 1×/d (Start 40 mg)',hinweis:''},
+   '30-50':{dosis:'80 mg 1×/d',hinweis:'keine Dosisanpassung (hepatisch)'},
+   '15-30':{dosis:'40–80 mg 1×/d',hinweis:'begrenzte Daten unter eGFR 30'},
+   '<15':{dosis:'40 mg 1×/d',hinweis:'begrenzte Daten'},
+   'HD':{dosis:'40 mg 1×/d',hinweis:'nicht dialysierbar'},
+   'PD':{dosis:'40 mg 1×/d',hinweis:''}}},
+
+  // ── 9. CKD-SUPPORTIV ─────────────────────────────────────
+  {name:'Eisen i.v. (Ferrinject®)',brand:'Ferrinject®/Ferinject®',gruppe:'CKD-Supportiv',medId:'eisen',
+   dosierung:{'>50':{dosis:'500–1000 mg als Einzelgabe (max. 20 mg/kg)',hinweis:'Ziel: Ferritin 100–500, TSAT 20–30%'},
+   '30-50':{dosis:'500–1000 mg i.v.',hinweis:''},
+   '15-30':{dosis:'500–1000 mg i.v.',hinweis:''},
+   '<15':{dosis:'200–500 mg i.v.',hinweis:'bei HD kleinere Einzeldosen (100–200 mg)'},
+   'HD':{dosis:'100–200 mg i.v. nach HD (1–3×/Wo)',hinweis:'Ziel: Ferritin 200–500, TSAT 20–40% (KDIGO 2026)'},
+   'PD':{dosis:'500 mg i.v. als Einzelgabe',hinweis:''}}},
+  {name:'Darbepoetin alfa',brand:'Aranesp®',gruppe:'CKD-Supportiv',medId:'esa',
+   dosierung:{'>50':{dosis:'selten indiziert',hinweis:''},
+   '30-50':{dosis:'0,45 µg/kg 1×/Wo oder 0,75 µg/kg alle 2 Wo',hinweis:'Ziel-Hb 10–11,5 g/dl; Eisenstatus zuerst optimieren'},
+   '15-30':{dosis:'0,45 µg/kg 1×/Wo s.c.',hinweis:'Ziel-Hb 10–11,5; nicht >13'},
+   '<15':{dosis:'0,45 µg/kg 1×/Wo s.c.',hinweis:''},
+   'HD':{dosis:'0,45 µg/kg 1×/Wo i.v.',hinweis:'i.v. bevorzugt bei HD'},
+   'PD':{dosis:'0,45 µg/kg 1×/Wo s.c.',hinweis:''}}},
+  {name:'Sevelamer',brand:'Renvela®/Renagel®',gruppe:'CKD-Supportiv',medId:'phosphatbinder',
+   dosierung:{'>50':{dosis:'selten indiziert',hinweis:''},
+   '30-50':{dosis:'800 mg 3×/d zu Mahlzeiten',hinweis:'bei Phosphat >4,5 mg/dl'},
+   '15-30':{dosis:'800–1600 mg 3×/d',hinweis:'Dosis nach Phosphatspiegel'},
+   '<15':{dosis:'800–1600 mg 3×/d',hinweis:''},
+   'HD':{dosis:'800–1600 mg 3×/d',hinweis:'mit Mahlzeiten; Ca-frei → bevorzugt bei Hyperkalzämie'},
+   'PD':{dosis:'800–1600 mg 3×/d',hinweis:''}}},
+  {name:'Calciumacetat',brand:'Phosphonorm®',gruppe:'CKD-Supportiv',medId:'phosphatbinder',
+   dosierung:{'>50':{dosis:'selten indiziert',hinweis:''},
+   '30-50':{dosis:'500–1000 mg 3×/d zu Mahlzeiten',hinweis:'Cave: Hyperkalzämie'},
+   '15-30':{dosis:'500–1000 mg 3×/d',hinweis:'Ca-Kontrolle'},
+   '<15':{dosis:'500–1500 mg 3×/d',hinweis:''},
+   'HD':{dosis:'500–1500 mg 3×/d',hinweis:'Ca-Kontrolle; nicht bei Ca >10,5 oder aktivem Vitamin D'},
+   'PD':{dosis:'500–1500 mg 3×/d',hinweis:''}}},
+  {name:'Natriumbicarbonat',brand:'Nephrotrans®',gruppe:'CKD-Supportiv',medId:'bicarbonat',
+   dosierung:{'>50':{dosis:'selten indiziert',hinweis:''},
+   '30-50':{dosis:'1–3 g/d (≈ 12–36 mmol) in 2–3 Gaben',hinweis:'Ziel: Serum-Bicarbonat ≥22 mmol/l'},
+   '15-30':{dosis:'1,5–4,5 g/d in 2–3 Gaben',hinweis:'Nephrotrans® 500 mg Kps = 6 mmol'},
+   '<15':{dosis:'3–6 g/d',hinweis:'Na-Belastung beachten; RR-Kontrolle'},
+   'HD':{dosis:'nach Dialysat-Bicarbonat',hinweis:'Puffer über Dialysat; oral nur bei persistierender Azidose'},
+   'PD':{dosis:'1,5–4,5 g/d',hinweis:''}}},
+  {name:'Colecalciferol',brand:'Dekristol®/Vigantol®',gruppe:'CKD-Supportiv',medId:'vitd',
+   dosierung:{'>50':{dosis:'1000–4000 IE/d oder 20.000 IE/Wo',hinweis:'Ziel: 25-OH-Vitamin D >30 ng/ml'},
+   '30-50':{dosis:'1000–4000 IE/d',hinweis:''},
+   '15-30':{dosis:'1000–4000 IE/d',hinweis:'ab CKD G4: ggf. aktives Vitamin D prüfen'},
+   '<15':{dosis:'1000–2000 IE/d',hinweis:'aktives Vitamin D bevorzugen (1α-Hydroxylase ↓)'},
+   'HD':{dosis:'1000–2000 IE/d',hinweis:'zusätzlich zu aktivem Vitamin D'},
+   'PD':{dosis:'1000–2000 IE/d',hinweis:''}}},
+
+  // ── 10. PTH-MANAGEMENT ────────────────────────────────────
+  {name:'Calcitriol',brand:'Rocaltrol®',gruppe:'PTH-Management',medId:'aktivvitd',
+   dosierung:{'>50':{dosis:'selten indiziert',hinweis:''},
+   '30-50':{dosis:'0,25 µg 1×/d',hinweis:'bei PTH >130; Ca + Phosphat kontrollieren'},
+   '15-30':{dosis:'0,25–0,5 µg 1×/d',hinweis:'Ca-Kontrolle wöchentlich initial'},
+   '<15':{dosis:'0,25–1,0 µg 1×/d',hinweis:'nach PTH titrieren'},
+   'HD':{dosis:'0,25–2,0 µg 3×/Wo nach HD',hinweis:'oder Puls-Therapie 0,5–2 µg 3×/Wo'},
+   'PD':{dosis:'0,25–0,5 µg 1×/d',hinweis:''}}},
+  {name:'Alfacalcidol',brand:'EinsAlpha®',gruppe:'PTH-Management',medId:'aktivvitd',
+   dosierung:{'>50':{dosis:'selten indiziert',hinweis:''},
+   '30-50':{dosis:'0,25–0,5 µg 1×/d',hinweis:''},
+   '15-30':{dosis:'0,25–1,0 µg 1×/d',hinweis:''},
+   '<15':{dosis:'0,5–1,0 µg 1×/d',hinweis:''},
+   'HD':{dosis:'0,5–2,0 µg 3×/Wo nach HD',hinweis:''},
+   'PD':{dosis:'0,5–1,0 µg 1×/d',hinweis:''}}},
+  {name:'Paricalcitol',brand:'Zemplar®',gruppe:'PTH-Management',medId:'aktivvitd',
+   dosierung:{'>50':{dosis:'selten indiziert',hinweis:''},
+   '30-50':{dosis:'1–2 µg 1×/d p.o.',hinweis:'weniger Hyperkalzämie als Calcitriol'},
+   '15-30':{dosis:'1–2 µg 1×/d p.o.',hinweis:''},
+   '<15':{dosis:'2–4 µg 1×/d',hinweis:''},
+   'HD':{dosis:'i.v.: PTH/120 = Startdosis (µg) 3×/Wo',hinweis:'max. 0,24 µg/kg; Titration alle 2–4 Wo'},
+   'PD':{dosis:'1–2 µg 1×/d p.o.',hinweis:''}}},
+  {name:'Cinacalcet',brand:'Mimpara®',gruppe:'PTH-Management',medId:'calcimimetikum',
+   dosierung:{'>50':{dosis:'selten indiziert (Primärer HPT)',hinweis:''},
+   '30-50':{dosis:'selten indiziert',hinweis:''},
+   '15-30':{dosis:'selten indiziert',hinweis:'erst ab Dialyse indiziert (sHPT)'},
+   '<15':{dosis:'30 mg 1×/d',hinweis:'bei sHPT mit Ca >8,4 mg/dl'},
+   'HD':{dosis:'30–180 mg 1×/d',hinweis:'Start 30 mg; alle 2–4 Wo um 30 mg steigern; Ziel: PTH-Senkung ≥30%'},
+   'PD':{dosis:'30–180 mg 1×/d',hinweis:'wie HD'}}},
+  {name:'Etelcalcetid',brand:'Parsabiv®',gruppe:'PTH-Management',medId:'calcimimetikum',
+   dosierung:{'>50':{dosis:'nicht indiziert',hinweis:'nur für HD-Patienten zugelassen'},
+   '30-50':{dosis:'nicht indiziert',hinweis:'nur für HD-Patienten zugelassen'},
+   '15-30':{dosis:'nicht indiziert',hinweis:'nur für HD-Patienten zugelassen'},
+   '<15':{dosis:'nicht indiziert',hinweis:'nur für HD-Patienten zugelassen'},
+   'HD':{dosis:'5 mg i.v. 3×/Wo nach HD',hinweis:'Titration alle 4 Wo um 2,5–5 mg; max. 15 mg'},
+   'PD':{dosis:'nicht zugelassen',hinweis:''}}},
+
+  // ── 11. ANALGETIKA / NSAR ─────────────────────────────────
+  {name:'Ibuprofen',brand:'',gruppe:'Analgetika / NSAR',medId:'ibuprofen',
+   dosierung:{'>50':{dosis:'400–600 mg alle 6–8h (max. 2400 mg/d)',hinweis:'bei CKD generell vermeiden wenn möglich'},
+   '30-50':{dosis:'möglichst vermeiden',hinweis:'akute Nierenschädigung, Progression ↑, Hyperkaliämie'},
+   '15-30':{dosis:'kontraindiziert',hinweis:'AKI-Risiko sehr hoch'},
+   '<15':{dosis:'kontraindiziert',hinweis:''},
+   'HD':{dosis:'Einzeldosen möglich (200–400 mg)',hinweis:'nur kurzfristig; kein Effekt auf Restdiurese bei Anurie'},
+   'PD':{dosis:'kontraindiziert',hinweis:'Peritonitis-Risiko'}}},
+  {name:'Diclofenac',brand:'Voltaren®',gruppe:'Analgetika / NSAR',medId:'diclofenac',
+   dosierung:{'>50':{dosis:'50 mg 2–3×/d (max. 150 mg/d)',hinweis:'bei CKD generell vermeiden wenn möglich'},
+   '30-50':{dosis:'möglichst vermeiden',hinweis:'AKI-Risiko, GI-Blutung ↑'},
+   '15-30':{dosis:'kontraindiziert',hinweis:''},
+   '<15':{dosis:'kontraindiziert',hinweis:''},
+   'HD':{dosis:'Einzeldosen mit Vorsicht',hinweis:'nur kurzfristig'},
+   'PD':{dosis:'kontraindiziert',hinweis:''}}},
+  {name:'Metamizol',brand:'Novalgin®',gruppe:'Analgetika / NSAR',medId:'metamizol',
+   dosierung:{'>50':{dosis:'500–1000 mg alle 6–8h (max. 4000 mg/d)',hinweis:'Cave: Agranulozytose'},
+   '30-50':{dosis:'500 mg alle 8h',hinweis:'Metabolite renal eliminiert'},
+   '15-30':{dosis:'500 mg alle 8–12h',hinweis:'Dosisreduktion empfohlen'},
+   '<15':{dosis:'500 mg alle 12h',hinweis:'maximale Dosisreduktion; engmaschig BB'},
+   'HD':{dosis:'500 mg alle 12h',hinweis:'Metabolite werden dialysiert'},
+   'PD':{dosis:'500 mg alle 12h',hinweis:''}}},
+  {name:'Paracetamol',brand:'ben-u-ron®',gruppe:'Analgetika / NSAR',medId:'paracetamol',
+   dosierung:{'>50':{dosis:'500–1000 mg alle 6h (max. 4000 mg/d)',hinweis:'Analgetikum der Wahl bei CKD'},
+   '30-50':{dosis:'500–1000 mg alle 6h',hinweis:'keine Dosisanpassung; bevorzugtes Analgetikum bei CKD'},
+   '15-30':{dosis:'500–1000 mg alle 6–8h',hinweis:'max. 3000 mg/d erwägen'},
+   '<15':{dosis:'500 mg alle 8h (max. 2000 mg/d)',hinweis:'Intervallverlängerung empfohlen'},
+   'HD':{dosis:'500–1000 mg alle 8h',hinweis:'teilweise dialysierbar'},
+   'PD':{dosis:'500 mg alle 8h',hinweis:''}}},
+  {name:'Morphin',brand:'MST®',gruppe:'Analgetika / NSAR',medId:'morphin',
+   dosierung:{'>50':{dosis:'10–30 mg alle 4h (oral) oder retard 2×/d',hinweis:''},
+   '30-50':{dosis:'50–75% der Normaldosis',hinweis:'aktiver Metabolit M6G akkumuliert'},
+   '15-30':{dosis:'25–50% der Normaldosis',hinweis:'M6G-Akkumulation → Atemdepression'},
+   '<15':{dosis:'vermeiden',hinweis:'Hydromorphon oder Fentanyl bevorzugen'},
+   'HD':{dosis:'vermeiden',hinweis:'M6G nicht ausreichend dialysierbar'},
+   'PD':{dosis:'vermeiden',hinweis:''}}},
+  {name:'Hydromorphon',brand:'Palladon®/Jurnista®',gruppe:'Analgetika / NSAR',medId:'hydromorphon',
+   dosierung:{'>50':{dosis:'2–4 mg alle 4–6h (oral) oder retard',hinweis:''},
+   '30-50':{dosis:'50–75% der Normaldosis',hinweis:'geringere M6G-Akkumulation als Morphin'},
+   '15-30':{dosis:'50% der Normaldosis',hinweis:'bevorzugt gegenüber Morphin bei CKD'},
+   '<15':{dosis:'25–50% der Normaldosis',hinweis:'vorsichtig titrieren'},
+   'HD':{dosis:'25–50% der Normaldosis',hinweis:'teilweise dialysierbar'},
+   'PD':{dosis:'25–50% der Normaldosis',hinweis:''}}},
+  {name:'Oxycodon',brand:'Oxygesic®/Targin®',gruppe:'Analgetika / NSAR',medId:'oxycodon',
+   dosierung:{'>50':{dosis:'5–10 mg alle 4–6h oder retard 2×/d',hinweis:''},
+   '30-50':{dosis:'50–75% der Normaldosis',hinweis:''},
+   '15-30':{dosis:'50% der Normaldosis',hinweis:'Metabolite akkumulieren'},
+   '<15':{dosis:'25–50% der Normaldosis',hinweis:'vorsichtig titrieren'},
+   'HD':{dosis:'25–50%; nach HD supplementieren',hinweis:'dialysierbar'},
+   'PD':{dosis:'25–50% der Normaldosis',hinweis:''}}},
+  {name:'Tilidin',brand:'Valoron®',gruppe:'Analgetika / NSAR',medId:'tilidin',
+   dosierung:{'>50':{dosis:'50–100 mg alle 6–8h (retard) oder Tropfen',hinweis:'Kombination mit Naloxon (Valoron N®)'},
+   '30-50':{dosis:'keine Dosisanpassung',hinweis:'hepatisch metabolisiert'},
+   '15-30':{dosis:'keine Dosisanpassung',hinweis:''},
+   '<15':{dosis:'keine Dosisanpassung',hinweis:'bevorzugtes Opioid bei CKD'},
+   'HD':{dosis:'keine Dosisanpassung',hinweis:''},
+   'PD':{dosis:'keine Dosisanpassung',hinweis:''}}},
+  {name:'Tramadol',brand:'Tramal®',gruppe:'Analgetika / NSAR',medId:'tramadol',
+   dosierung:{'>50':{dosis:'50–100 mg alle 6h (max. 400 mg/d)',hinweis:''},
+   '30-50':{dosis:'50 mg alle 8h; max. 200 mg/d',hinweis:'aktiver Metabolit O-Desmethyltramadol akkumuliert'},
+   '15-30':{dosis:'50 mg alle 12h; max. 100 mg/d',hinweis:'Krampfschwelle senkt; Serotoninsyndrom-Risiko'},
+   '<15':{dosis:'vermeiden',hinweis:'Akkumulation; Krampfrisiko'},
+   'HD':{dosis:'50 mg nach HD',hinweis:'teilweise dialysierbar; max. 100 mg/d'},
+   'PD':{dosis:'vermeiden',hinweis:''}}}
+];
 
 // ── DRUG NAME MAP ─────────────────────────────────────────────
 var MC_DRUG_MAP = {
@@ -10298,7 +10932,17 @@ var MC_DRUG_MAP = {
   // PTH
   'calcitriol':'aktivvitd','rocaltrol':'aktivvitd','alfacalcidol':'aktivvitd',
   'einsalpha':'aktivvitd','bondiol':'aktivvitd','paricalcitol':'aktivvitd','zemplar':'aktivvitd',
-  'cinacalcet':'calcimimetikum','mimpara':'calcimimetikum','etelcalcetid':'calcimimetikum','parsabiv':'calcimimetikum'
+  'cinacalcet':'calcimimetikum','mimpara':'calcimimetikum','etelcalcetid':'calcimimetikum','parsabiv':'calcimimetikum',
+  // Analgetika / NSAR
+  'ibuprofen':'ibuprofen','ibu':'ibuprofen','nurofen':'ibuprofen','brufen':'ibuprofen',
+  'diclofenac':'diclofenac','voltaren':'diclofenac','diclo':'diclofenac',
+  'metamizol':'metamizol','novalgin':'metamizol','novaminsulfon':'metamizol',
+  'paracetamol':'paracetamol','ben-u-ron':'paracetamol','benuron':'paracetamol','perfalgan':'paracetamol',
+  'morphin':'morphin','mst':'morphin','sevredol':'morphin','oramorph':'morphin',
+  'hydromorphon':'hydromorphon','palladon':'hydromorphon','jurnista':'hydromorphon',
+  'oxycodon':'oxycodon','oxygesic':'oxycodon','targin':'oxycodon',
+  'tilidin':'tilidin','valoron':'tilidin',
+  'tramadol':'tramadol','tramal':'tramadol'
 };
 
 // ── RULES ENGINE ──────────────────────────────────────────────
@@ -10432,7 +11076,20 @@ var MC_RULES = [
   // Vitamin D niedrig
   {id:'vitd-low',group:'Vitamin D',type:'dose-adjust',priority:'medium',
    condition:function(c){return c.vitd&&c.vitd<20&&!c.meds.vitd;},
-   message:'Vitamin-D-Spiegel erniedrigt (\u202F<\u202F20 ng/ml) — Substitution ggf. erwägen',source:'KDIGO 2024'}
+   message:'Vitamin-D-Spiegel erniedrigt (\u202F<\u202F20 ng/ml) — Substitution ggf. erwägen',source:'KDIGO 2024'},
+  // NSAR
+  {id:'nsar-ckd',group:'Analgetika / NSAR',type:'contraindicated',priority:'high',
+   condition:function(c){return (c.meds.ibuprofen||c.meds.diclofenac)&&c.egfr&&c.egfr<30;},
+   message:'NSAR (Ibuprofen/Diclofenac) bei eGFR\u202F<\u202F30 kontraindiziert — AKI-Risiko, Progression ↑',source:'KDIGO 2024'},
+  {id:'nsar-ckd-warn',group:'Analgetika / NSAR',type:'dose-adjust',priority:'high',
+   condition:function(c){return (c.meds.ibuprofen||c.meds.diclofenac)&&c.egfr&&c.egfr>=30&&c.egfr<60;},
+   message:'NSAR bei CKD G3 möglichst vermeiden — Paracetamol, Metamizol oder Tilidin bevorzugen',source:'KDIGO 2024'},
+  {id:'morphin-ckd',group:'Analgetika / NSAR',type:'dose-adjust',priority:'high',
+   condition:function(c){return c.meds.morphin&&c.egfr&&c.egfr<30;},
+   message:'Morphin bei eGFR\u202F<\u202F30 vermeiden — M6G akkumuliert → Atemdepression. Hydromorphon oder Fentanyl bevorzugen',source:'Fachinformation'},
+  {id:'tramadol-ckd',group:'Analgetika / NSAR',type:'dose-adjust',priority:'medium',
+   condition:function(c){return c.meds.tramadol&&c.egfr&&c.egfr<30;},
+   message:'Tramadol bei eGFR\u202F<\u202F30: Dosisreduktion oder Absetzen — Krampfrisiko, Akkumulation',source:'Fachinformation'}
 ];
 
 // ── CROSS-TAB DATA GAPS ───────────────────────────────────────
@@ -10458,15 +11115,19 @@ function mcBuildDataGaps(c) {
 // ── CONTEXT BUILDER ───────────────────────────────────────────
 function mcBuildContext() {
   var c = {};
-  c.age = pf('age');
-  c.sex = (typeof getSex === 'function') ? getSex('sex') : '';
-  c.egfr = (typeof currentEGFR !== 'undefined' && currentEGFR) ? currentEGFR : null;
+  // Priorität: lokale Medcheck-Felder, dann CKD-Tab als Fallback
+  c.age = pf('mc-age') || pf('age');
+  c.weight = pf('mc-weight') || pf('weight');
+  c.sex = (function(){var s=document.getElementById('mc-sex');if(s&&s.value)return s.value;return (typeof getSex === 'function') ? getSex('sex') : '';})();
+  c.egfr = pf('mc-egfr') || ((typeof currentEGFR !== 'undefined' && currentEGFR) ? currentEGFR : null);
+  c.krea = pf('mc-krea');
+  c.dialysisMode = (function(){var s=document.getElementById('mc-dialysis');return s?s.value:'no';})();
   c.uacr = pf('uacr');
   c.kalium = pf('kalium');
   c.bicarb = pf('bicarb');
   c.bpSys = pf('bp_sys');
   c.bpDia = pf('bp_dia');
-  c.isDialysis = (function(){var s=document.getElementById('dialysis_status');return s&&(s.value==='haemodialysis'||s.value==='peritoneal');})();
+  c.isDialysis = c.dialysisMode==='hd'||c.dialysisMode==='pd'||(function(){var s=document.getElementById('dialysis_status');return s&&(s.value==='haemodialysis'||s.value==='peritoneal');})();
 
   // Diagnosen
   var diags = [];
@@ -10522,9 +11183,122 @@ function mcBuildContext() {
     vitd:    ck('mc-med-vitd'),
     bicarbonat:ck('mc-med-bicarbonat'),
     aktivvitd:ck('mc-med-aktivvitd'),
-    calcimimetikum:ck('mc-med-calcimimetikum')
+    calcimimetikum:ck('mc-med-calcimimetikum'),
+    ibuprofen:ck('mc-med-ibuprofen'),
+    diclofenac:ck('mc-med-diclofenac'),
+    metamizol:ck('mc-med-metamizol'),
+    paracetamol:ck('mc-med-paracetamol'),
+    morphin:ck('mc-med-morphin'),
+    hydromorphon:ck('mc-med-hydromorphon'),
+    oxycodon:ck('mc-med-oxycodon'),
+    tilidin:ck('mc-med-tilidin'),
+    tramadol:ck('mc-med-tramadol')
   };
   return c;
+}
+
+// ── eGFR BAND HELPER ─────────────────────────────────────────
+function mcGetEgfrBand(egfr, dialysis) {
+  if (dialysis === 'hd') return 'HD';
+  if (dialysis === 'pd') return 'PD';
+  if (!egfr && egfr !== 0) return null;
+  if (egfr > 50) return '>50';
+  if (egfr >= 30) return '30-50';
+  if (egfr >= 15) return '15-30';
+  return '<15';
+}
+
+function mcGetEgfrBandLabel(band) {
+  var labels = {'>50':'eGFR >50','30-50':'eGFR 30–50','15-30':'eGFR 15–30','<15':'eGFR <15','HD':'Hämodialyse','PD':'Peritonealdialyse'};
+  return labels[band] || band;
+}
+
+function mcGetEgfrBandCls(band) {
+  if (band === '>50') return 'mc-egfr-band-ok';
+  if (band === '30-50') return 'mc-egfr-band-warn';
+  return 'mc-egfr-band-danger';
+}
+
+// ── DOSING RENDERER ──────────────────────────────────────────
+function mcRenderDosing(c) {
+  var el = document.getElementById('mc-dosing-results');
+  var band = mcGetEgfrBand(c.egfr, c.dialysisMode);
+
+  // Update eGFR badge
+  var badgeEl = document.getElementById('mc-egfr-badge');
+  if (badgeEl) {
+    if (band) {
+      badgeEl.className = 'mc-egfr-band ' + mcGetEgfrBandCls(band);
+      badgeEl.textContent = mcGetEgfrBandLabel(band);
+    } else {
+      badgeEl.textContent = '';
+      badgeEl.className = '';
+    }
+  }
+
+  // Find active meds that have dosing data
+  var activeDrugs = [];
+  MC_DOSING.forEach(function(drug) {
+    if (c.meds[drug.medId]) {
+      activeDrugs.push(drug);
+    }
+  });
+
+  if (activeDrugs.length === 0) {
+    el.innerHTML = '<div class="mc-no-data">Medikamente oben ankreuzen — Dosierungen erscheinen hier automatisch.</div>';
+    return;
+  }
+
+  if (!band) {
+    el.innerHTML = '<div class="mc-no-data">Bitte eGFR eingeben für Dosierungsempfehlungen.</div>';
+    return;
+  }
+
+  // Group by category
+  var groups = {};
+  activeDrugs.forEach(function(drug) {
+    if (!groups[drug.gruppe]) groups[drug.gruppe] = [];
+    groups[drug.gruppe].push(drug);
+  });
+
+  var html = '<div style="margin-bottom:10px;"><span class="mc-egfr-band ' + mcGetEgfrBandCls(band) + '" style="font-size:.85rem;padding:4px 12px;">' + mcGetEgfrBandLabel(band) + ' ml/min</span>';
+  if (c.weight) html += ' <span style="font-size:.82rem;color:#455a64;margin-left:8px;">Gewicht: ' + c.weight + ' kg</span>';
+  if (c.age) html += ' <span style="font-size:.82rem;color:#455a64;margin-left:8px;">Alter: ' + c.age + ' J</span>';
+  html += '</div>';
+
+  Object.keys(groups).forEach(function(grp) {
+    html += '<div class="mc-dose-group">';
+    html += '<div class="mc-dose-group-title">' + grp + '</div>';
+    html += '<table class="mc-dose-table"><thead><tr><th style="width:25%">Wirkstoff</th><th style="width:45%">Dosis</th><th style="width:30%">Hinweis</th></tr></thead><tbody>';
+
+    groups[grp].forEach(function(drug) {
+      var d = drug.dosierung[band];
+      if (!d && band === 'PD') d = drug.dosierung['<15']; // Fallback PD → <15
+      if (!d) d = { dosis: 'keine Daten', hinweis: '' };
+
+      var dosisLower = d.dosis.toLowerCase();
+      var cls = 'mc-dose-ok';
+      if (dosisLower.indexOf('kontraindiziert') >= 0 || dosisLower.indexOf('vermeiden') >= 0 || dosisLower === 'nicht empfohlen' || dosisLower.indexOf('nicht indiziert') >= 0 || dosisLower.indexOf('nicht zugelassen') >= 0) {
+        cls = 'mc-dose-danger';
+      } else if (dosisLower.indexOf('nicht empfohlen') >= 0 || dosisLower.indexOf('vorsicht') >= 0 || dosisLower.indexOf('begrenzte daten') >= 0 || dosisLower.indexOf('möglichst vermeiden') >= 0) {
+        cls = 'mc-dose-warn';
+      } else if (dosisLower.indexOf('50%') >= 0 || dosisLower.indexOf('25%') >= 0 || dosisLower.indexOf('max.') >= 0 || dosisLower.indexOf('dosisreduktion') >= 0 || dosisLower.indexOf('reduz') >= 0) {
+        cls = 'mc-dose-warn';
+      }
+
+      html += '<tr>';
+      html += '<td><strong>' + drug.name + '</strong>';
+      if (drug.brand) html += '<br><span style="font-size:.72rem;color:#90a4ae;">' + drug.brand + '</span>';
+      html += '</td>';
+      html += '<td class="' + cls + '">' + d.dosis + '</td>';
+      html += '<td class="mc-dose-hint">' + (d.hinweis || '—') + '</td>';
+      html += '</tr>';
+    });
+
+    html += '</tbody></table></div>';
+  });
+
+  el.innerHTML = html;
 }
 
 function pf(id){var el=document.getElementById(id);return el?parseFloat(el.value)||null:null;}
@@ -10663,7 +11437,9 @@ function mcParseFreeTextInner(){
     clopidogrel:'P2Y12',ccb:'Ca-Antagonist',thiazid:'Thiazid',bb:'Betablocker',loop:'Schleifendiuretikum',
     spiro:'MRA',alpha:'Alpha-Blocker',allopurinol:'Allopurinol',febuxostat:'Febuxostat',
     eisen:'Eisen',esa:'ESA',phosphatbinder:'Phosphatbinder',vitd:'Vitamin D',bicarbonat:'Bicarbonat',
-    aktivvitd:'Akt. Vitamin D',calcimimetikum:'Calcimimetikum'};
+    aktivvitd:'Akt. Vitamin D',calcimimetikum:'Calcimimetikum',
+    ibuprofen:'Ibuprofen',diclofenac:'Diclofenac',metamizol:'Metamizol',paracetamol:'Paracetamol',
+    morphin:'Morphin',hydromorphon:'Hydromorphon',oxycodon:'Oxycodon',tilidin:'Tilidin',tramadol:'Tramadol'};
   var pillsHtml='';
   Object.keys(groups).forEach(function(g){
     pillsHtml+='<span class="mc-match-pill">\u2714 '+(groupNames[g]||g)+'</span>';
@@ -10675,6 +11451,7 @@ function mcParseFreeTextInner(){
 function mcRunCheckInner(){
   var c=mcBuildContext();
   mcRenderContext(c);
+  mcRenderDosing(c);
   var findings=mcEvaluateRules(c);
   mcRenderResults(findings,c);
 }
@@ -10682,6 +11459,47 @@ function mcRunCheckInner(){
 // ── AUTO-IMPORT ───────────────────────────────────────────────
 function mcAutoImportInner(){
   var imported=[];
+
+  // Auto-fill Patientendaten from CKD tab
+  function fillIfEmpty(targetId, sourceId) {
+    var tgt = document.getElementById(targetId);
+    var src = document.getElementById(sourceId);
+    if (tgt && src && src.value && !tgt.value) {
+      tgt.value = src.value;
+      return true;
+    }
+    return false;
+  }
+  if (fillIfEmpty('mc-egfr','egfr-result-val')) imported.push('eGFR');
+  if (typeof currentEGFR !== 'undefined' && currentEGFR && !document.getElementById('mc-egfr').value) {
+    document.getElementById('mc-egfr').value = Math.round(currentEGFR);
+    imported.push('eGFR');
+  }
+  if (fillIfEmpty('mc-weight','weight')) imported.push('Gewicht');
+  if (fillIfEmpty('mc-age','age')) imported.push('Alter');
+  if (fillIfEmpty('mc-krea','creatinine')) imported.push('Kreatinin');
+  // Sex
+  var mcSex = document.getElementById('mc-sex');
+  if (mcSex && !mcSex.value) {
+    var sexVal = (typeof getSex === 'function') ? getSex('sex') : '';
+    if (sexVal) { mcSex.value = sexVal; imported.push('Geschlecht'); }
+  }
+  // Dialysis
+  var mcDial = document.getElementById('mc-dialysis');
+  var ckdDial = document.getElementById('dialysis_status');
+  if (mcDial && mcDial.value === 'no' && ckdDial) {
+    if (ckdDial.value === 'haemodialysis') { mcDial.value = 'hd'; imported.push('HD'); }
+    else if (ckdDial.value === 'peritoneal') { mcDial.value = 'pd'; imported.push('PD'); }
+  }
+
+  // Show import banner
+  if (imported.length) {
+    var ib2 = document.getElementById('mc-import-text2');
+    var ib2b = document.getElementById('mc-import-banner2');
+    if (ib2) ib2.textContent = imported.join(', ') + ' aus CKD-Tab übernommen';
+    if (ib2b) ib2b.style.display = 'flex';
+  }
+
   // Sync meds from other tabs
   var syncMap=[
     ['htn-med-acei','mc-med-acei'],['htn-med-arb','mc-med-arb'],
@@ -10709,10 +11527,6 @@ function mcAutoImportInner(){
   if(c.ldl)imported.push('LDL\u202F'+c.ldl);
   if(c.bpSys)imported.push('RR\u202F'+c.bpSys+'/'+(c.bpDia||''));
 
-  if(imported.length){
-    document.getElementById('mc-import-text').textContent=imported.join(' · ')+' aus anderen Tabs übernommen';
-    document.getElementById('mc-import-banner').style.display='flex';
-  }
   mcRunCheckInner();
 }
 
