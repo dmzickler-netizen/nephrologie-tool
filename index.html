@@ -2195,12 +2195,12 @@ function fillFields(values) {
     });
     filled.push({ label: FIELD_LABELS[key]||key, value: values[key] });
   });
-  // Trigger Berechnungen in allen Tabs (sichtbar oder nicht)
+  // Trigger Berechnungen in allen Tabs (silent — keine Alerts bei OCR-Auto-Fill)
   if (typeof calculate === 'function')         { try { calculate(); } catch(e){} }
-  if (typeof window.mbdCalculate === 'function')   { try { window.mbdCalculate(); } catch(e){} }
-  if (typeof window.diabCalculate === 'function')  { try { window.diabCalculate(); } catch(e){} }
-  if (typeof window.lipCalculate === 'function')   { try { window.lipCalculate(); } catch(e){} }
-  if (typeof window.gichtCalc === 'function')      { try { window.gichtCalc(); } catch(e){} }
+  if (typeof window.mbdCalculate === 'function')   { try { window.mbdCalculate({silent:true}); } catch(e){} }
+  if (typeof window.diabCalculate === 'function')  { try { window.diabCalculate({silent:true}); } catch(e){} }
+  if (typeof window.lipCalculate === 'function')   { try { window.lipCalculate({silent:true}); } catch(e){} }
+  if (typeof window.gichtCalc === 'function')      { try { window.gichtCalc({silent:true}); } catch(e){} }
   if (typeof window.mcRunCheck === 'function')     { try { window.mcRunCheck(); } catch(e){} }
   return filled;
 }
@@ -16274,10 +16274,13 @@ function getHba1cTarget() {
 }
 
 // ── MAIN CALCULATE ─────────────────────────────────────────────
-function diabCalculate() {
+function diabCalculate(opts) {
+  opts = opts || {};
   diabReadInputs();
   if (!DS.hba1c) {
-    alert('Bitte HbA1c (%) eingeben.');
+    // Bei manuellem Aufruf (Button-Klick): warnen
+    // Bei programmatischem Aufruf (OCR Auto-Fill, Tab-Wechsel): still zurückkehren
+    if (!opts.silent) alert('Bitte HbA1c (%) eingeben.');
     return;
   }
 
