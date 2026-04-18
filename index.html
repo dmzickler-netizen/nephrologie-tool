@@ -1417,9 +1417,12 @@ label .lip-optional {
   .step-banner .step-title { font-size:.92rem; font-weight:700; color:#1a237e; line-height:1.2; }
   .step-banner .step-sub { font-size:.74rem; color:#546e7a; margin-top:1px; }
   /* OCR Drop-Zone */
-  #lab-ocr-zone { border:2px dashed #90caf9; border-radius:12px; padding:14px 18px; background:#f5fafd; margin-bottom:8px; transition:all .2s; cursor:pointer; }
+  #lab-ocr-zone { border:2px dashed #90caf9; border-radius:12px; padding:14px 18px; background:#f5fafd; margin-bottom:8px; transition:all .2s; cursor:pointer; position:relative; }
   #lab-ocr-zone:hover, #lab-ocr-zone.dragover { background:#e3f2fd; border-color:#1565c0; }
   #lab-ocr-zone.dragover { transform:scale(1.01); box-shadow:0 4px 12px rgba(21,101,192,.15); }
+  #lab-ocr-zone.ocr-paste-active { border-style:solid; border-color:#1565c0; background:#e3f2fd; box-shadow:0 0 0 3px rgba(21,101,192,.18); }
+  .ocr-paste-badge { display:none; position:absolute; top:6px; right:8px; padding:2px 8px; background:#1565c0; color:#fff; font-size:.7rem; font-weight:700; border-radius:10px; letter-spacing:.3px; }
+  #lab-ocr-zone.ocr-paste-active .ocr-paste-badge { display:inline-block; }
   #lab-ocr-zone .lab-ocr-row { display:flex; align-items:center; gap:14px; }
   #lab-ocr-zone .lab-ocr-icon { font-size:1.8rem; }
   #lab-ocr-zone .lab-ocr-text { flex:1; }
@@ -1502,12 +1505,13 @@ label .lip-optional {
         </div>
       </div>
 
-      <div id="lab-ocr-zone" onclick="document.getElementById('lab-ocr-file').click();">
+      <div id="lab-ocr-zone" onclick="window.activateOcrZone&&window.activateOcrZone('lab'); document.getElementById('lab-ocr-file').click();">
+        <span class="ocr-paste-badge">📋 Strg+V hier</span>
         <div class="lab-ocr-row">
           <div class="lab-ocr-icon">📷</div>
           <div class="lab-ocr-text">
             <div class="lab-ocr-title">Laborbefund per Bild einlesen (OCR)</div>
-            <div class="lab-ocr-sub">Screenshot oder Foto hierher ziehen — oder klicken, um Datei auszuwählen. Erkennt Krea, eGFR, uACR, Hb, Ferritin, K⁺, HCO₃, PTH, Phosphat, Ca, HbA1c, LDL, Harnsäure u.a.</div>
+            <div class="lab-ocr-sub"><strong>Drag-and-Drop</strong> · <strong>Klick</strong> für Datei-Auswahl · <strong>Strg+V</strong> einfügen (Zone vorher anklicken). Erkennt Krea, eGFR, uACR, Hb, Ferritin, K⁺, HCO₃, PTH, Phosphat, Ca, HbA1c, LDL, Harnsäure u.a.</div>
             <div class="lab-ocr-privacy">🔒 100 % lokal — Bild verlässt diesen Browser nicht. Personenbezogene Daten trotzdem vorher überdecken.</div>
           </div>
         </div>
@@ -1610,9 +1614,12 @@ label .lip-optional {
       </div>
 
       <style>
-      #ckd-med-ocr-zone { border:2px dashed #a5d6a7; border-radius:12px; padding:14px 18px; background:#f1f8e9; margin-bottom:8px; transition:all .2s; cursor:pointer; }
+      #ckd-med-ocr-zone { border:2px dashed #a5d6a7; border-radius:12px; padding:14px 18px; background:#f1f8e9; margin-bottom:8px; transition:all .2s; cursor:pointer; position:relative; }
       #ckd-med-ocr-zone:hover, #ckd-med-ocr-zone.dragover { background:#e8f5e9; border-color:#2e7d32; }
       #ckd-med-ocr-zone.dragover { transform:scale(1.01); box-shadow:0 4px 12px rgba(46,125,50,.15); }
+      #ckd-med-ocr-zone.ocr-paste-active { border-style:solid; border-color:#2e7d32; background:#e8f5e9; box-shadow:0 0 0 3px rgba(46,125,50,.18); }
+      #ckd-med-ocr-zone .ocr-paste-badge { background:#2e7d32; }
+      #ckd-med-ocr-zone.ocr-paste-active .ocr-paste-badge { display:inline-block; }
       #ckd-med-ocr-zone .ckd-med-ocr-row { display:flex; align-items:center; gap:14px; }
       #ckd-med-ocr-zone .ckd-med-ocr-icon { font-size:1.8rem; }
       #ckd-med-ocr-zone .ckd-med-ocr-text { flex:1; }
@@ -1624,12 +1631,13 @@ label .lip-optional {
       #ckd-med-ocr-status.success { display:block; background:#e8f5e9; color:#2e7d32; border-left:3px solid #43a047; }
       #ckd-med-ocr-status.error { display:block; background:#ffebee; color:#c62828; border-left:3px solid #e53935; }
       </style>
-      <div id="ckd-med-ocr-zone" onclick="document.getElementById('ckd-med-ocr-file').click();">
+      <div id="ckd-med-ocr-zone" onclick="window.activateOcrZone&&window.activateOcrZone('med'); document.getElementById('ckd-med-ocr-file').click();">
+        <span class="ocr-paste-badge">📋 Strg+V hier</span>
         <div class="ckd-med-ocr-row">
           <div class="ckd-med-ocr-icon">💊</div>
           <div class="ckd-med-ocr-text">
             <div class="ckd-med-ocr-title">Medikamentenliste per Bild einlesen (OCR)</div>
-            <div class="ckd-med-ocr-sub">Screenshot der Medikation hierher ziehen, klicken oder <strong>Strg+V</strong> einfügen. Erkennt Wirkstoffe + Handelsnamen, kreuzt sie automatisch im Medikationscheck-Tab an.</div>
+            <div class="ckd-med-ocr-sub"><strong>Drag-and-Drop</strong> · <strong>Klick</strong> für Datei-Auswahl · <strong>Strg+V</strong> einfügen (Zone vorher anklicken). Erkennt Wirkstoffe + Handelsnamen, kreuzt sie automatisch im Medikationscheck-Tab an.</div>
             <div class="ckd-med-ocr-privacy">🔒 100 % lokal — Bild verlässt diesen Browser nicht.</div>
           </div>
         </div>
@@ -2277,7 +2285,7 @@ function initDropZone() {
     }
   }, false);
 
-  // Auch globaler Paste-Listener (Strg+V mit Bild aus Zwischenablage)
+  // Globaler Paste-Listener (Strg+V mit Bild aus Zwischenablage) — routet an aktive Zone
   document.addEventListener('paste', function(e){
     // nur wenn CKD-Tab aktiv
     var ckdTab = document.getElementById('tab-ckd');
@@ -2289,13 +2297,29 @@ function initDropZone() {
         var file = item.getAsFile();
         if (file) {
           e.preventDefault();
-          window.ckdLabOcrHandle(file);
+          // Route an aktive Zone — Default: Labor (rückwärtskompatibel)
+          if (window.activeOcrZone === 'med' && typeof window.ckdMedOcrFromCkd === 'function') {
+            window.ckdMedOcrFromCkd(file);
+          } else {
+            window.ckdLabOcrHandle(file);
+          }
           return;
         }
       }
     }
   }, false);
 }
+
+// ── AKTIVE PASTE-ZIEL-ZONE im CKD-Tab ─────────────────────────
+window.activateOcrZone = function(name) {
+  window.activeOcrZone = name;
+  var lab = document.getElementById('lab-ocr-zone');
+  var med = document.getElementById('ckd-med-ocr-zone');
+  if (lab) lab.classList.toggle('ocr-paste-active', name === 'lab');
+  if (med) med.classList.toggle('ocr-paste-active', name === 'med');
+};
+// Standard nach Tab-Wechsel: keine Zone aktiv (Default = Labor bei Paste, falls nichts geklickt)
+window.activeOcrZone = null;
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initDropZone);
