@@ -2006,20 +2006,21 @@ function parseLabText(text) {
 
 // ── FIELD MAPPER ──────────────────────────────────────────────
 // Mappt geparste Werte auf DOM-IDs in allen Tabs
+// Mappt geparste Werte auf DOM-IDs — Hidden-Bridge-Felder + sichtbare Felder
 var FIELD_MAP = {
   creatinine: ['creatinine'],
   cystatinc:  ['cystatinc'],
   uacr:       ['uacr'],
   kalium:     ['kalium'],
-  bicarb:     ['bicarb'],
-  ph:         ['ph'],
-  hb:         ['mbd2-hb'],
-  ferritin:   ['mbd2-ferritin'],
-  tsat:       ['mbd2-tsat'],
-  pth:        ['mbd2-pth'],
-  phosphat:   ['mbd2-phosphat'],
-  calcium:    ['mbd2-calcium'],
-  vitd:       ['mbd2-vitd'],
+  bicarb:     ['bicarb','mbd2-bicarb'],
+  ph:         ['ph','mbd2-ph'],
+  hb:         ['hb','mbd2-hb'],
+  ferritin:   ['ferritin','mbd2-ferritin'],
+  tsat:       ['tsat','mbd2-tsat'],
+  pth:        ['pth','mbd2-pth'],
+  phosphat:   ['phosphat','mbd2-phosphat'],
+  calcium:    ['calcium','mbd2-calcium'],
+  vitd:       ['vitd','mbd2-vitd'],
   hba1c:      ['diab-hba1c'],
   ldl:        ['lip-ldl-input'],
   hdl:        ['lip-hdl'],
@@ -2055,8 +2056,13 @@ function fillFields(values) {
     });
     filled.push({ label: FIELD_LABELS[key]||key, value: values[key] });
   });
-  // Trigger main calculation
-  if (typeof calculate === 'function') { try { calculate(); } catch(e){} }
+  // Trigger Berechnungen in allen Tabs (sichtbar oder nicht)
+  if (typeof calculate === 'function')         { try { calculate(); } catch(e){} }
+  if (typeof window.mbdCalculate === 'function')   { try { window.mbdCalculate(); } catch(e){} }
+  if (typeof window.diabCalculate === 'function')  { try { window.diabCalculate(); } catch(e){} }
+  if (typeof window.lipCalculate === 'function')   { try { window.lipCalculate(); } catch(e){} }
+  if (typeof window.gichtCalc === 'function')      { try { window.gichtCalc(); } catch(e){} }
+  if (typeof window.mcRunCheck === 'function')     { try { window.mcRunCheck(); } catch(e){} }
   return filled;
 }
 
