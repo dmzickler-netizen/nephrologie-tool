@@ -14253,6 +14253,8 @@ function switchToolTab(tabName) {
       document.getElementById('lip-uacr-input').value = ckdUacr;
       if (typeof updateAlbuminClass === 'function') updateAlbuminClass();
     }
+    // Auto-Therapie nach aktueller Lipid-Medikation aus Medikationscheck/Diabetes
+    if (typeof lipAutoSelectTherapy === 'function') lipAutoSelectTherapy();
   }
   if (tabName === 'diabetes' && window.diabAutoImport) {
     window.diabAutoImport();
@@ -15050,6 +15052,36 @@ function selectTherapy(val, card) {
   document.getElementById('lip-statin-intensity-box').classList.toggle('lip-visible', needsIntensity);
   showErr('lip-err-therapy', false);
 }
+
+// Auto-Auswahl der aktuellen Lipidtherapie anhand der Medikamenten-Checkboxen
+// (aus Medikationscheck und Diabetes-Tab — egal ob manuell angekreuzt oder per OCR erkannt)
+function lipAutoSelectTherapy() {
+  function ck(id) { const el = document.getElementById(id); return el && el.checked; }
+  const hasStatin = ck('mc-med-statin') || ck('diab-med-statin');
+  const hasEzet   = ck('mc-med-ezetimib');
+  const hasPcsk9  = ck('mc-med-pcsk9');
+
+  let target = null;
+  if (hasStatin && hasEzet && hasPcsk9)         target = 'triple';
+  else if (hasStatin && hasPcsk9)               target = 'statin_pcsk9';
+  else if (hasStatin && hasEzet)                target = 'statin_ezetimib';
+  else if (hasStatin)                           target = 'statin';
+  else if (hasEzet && !hasPcsk9)                target = 'ezetimib_only';
+  else if (hasPcsk9 && !hasStatin && !hasEzet)  target = 'statin_pcsk9';
+  // Wenn nichts erkannt wurde: KEINE Auswahl überschreiben (User entscheidet manuell)
+
+  if (target) {
+    const radio = document.querySelector('.lip-therapy-card input[type="radio"][value="' + target + '"]');
+    if (radio) {
+      const card = radio.closest('.lip-therapy-card');
+      if (card) {
+        radio.checked = true;
+        selectTherapy(target, card);
+      }
+    }
+  }
+}
+window.lipAutoSelectTherapy = lipAutoSelectTherapy;
 
 // ================================================================
 // UNIT TOGGLE
