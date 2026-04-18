@@ -1859,7 +1859,7 @@ function setStatus(cls, msg) {
   el.innerHTML = msg;
 }
 
-function loadTesseract() {
+function loadTesseract(progressCb) {
   return new Promise(function(resolve, reject){
     if (TESSERACT_LOADED) return resolve();
     if (TESSERACT_LOADING) {
@@ -1869,7 +1869,8 @@ function loadTesseract() {
       return;
     }
     TESSERACT_LOADING = true;
-    setStatus('loading', '⏳ OCR-Engine wird geladen (~2 MB, einmalig)…');
+    if (progressCb) progressCb('⏳ OCR-Engine wird geladen (~2 MB, einmalig)…');
+    else setStatus('loading', '⏳ OCR-Engine wird geladen (~2 MB, einmalig)…');
     var s = document.createElement('script');
     s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
     s.onload = function(){
@@ -1884,6 +1885,8 @@ function loadTesseract() {
     document.head.appendChild(s);
   });
 }
+// Global verfügbar für andere OCR-Nutzer (z.B. Medikationscheck)
+window.ocrLoadTesseract = loadTesseract;
 
 // ── PARSER ────────────────────────────────────────────────────
 // Whitelist-Ansatz: Nur bekannte Laborbegriffe → Zahl daneben
@@ -10679,7 +10682,36 @@ window.hwiUpdate = function() {
   <!-- Karte 2: Aktuelle Medikation -->
   <div class="mc-card">
     <div class="mc-card-title">💊 Aktuelle Medikation</div>
-    <div class="mc-hint">Aktuell eingenommene Medikamente ankreuzen oder im Freitextfeld eingeben. Daten aus anderen Tabs werden automatisch übernommen.</div>
+    <div class="mc-hint">Medikamentenliste per Bild einlesen, im Freitextfeld einfügen — oder unten manuell ankreuzen.</div>
+
+    <!-- OCR Drop-Zone für Medikamente -->
+    <style>
+    #mc-ocr-zone { border:2px dashed #a5d6a7; border-radius:12px; padding:14px 18px; background:#f1f8e9; margin-bottom:12px; transition:all .2s; cursor:pointer; }
+    #mc-ocr-zone:hover, #mc-ocr-zone.dragover { background:#e8f5e9; border-color:#2e7d32; }
+    #mc-ocr-zone.dragover { transform:scale(1.01); box-shadow:0 4px 12px rgba(46,125,50,.15); }
+    #mc-ocr-zone .mc-ocr-row { display:flex; align-items:center; gap:14px; }
+    #mc-ocr-zone .mc-ocr-icon { font-size:1.8rem; }
+    #mc-ocr-zone .mc-ocr-text { flex:1; }
+    #mc-ocr-zone .mc-ocr-title { font-size:.95rem; font-weight:700; color:#2e7d32; margin-bottom:2px; }
+    #mc-ocr-zone .mc-ocr-sub { font-size:.78rem; color:#546e7a; line-height:1.4; }
+    #mc-ocr-zone .mc-ocr-privacy { font-size:.7rem; color:#1b5e20; font-weight:600; margin-top:4px; }
+    #mc-ocr-status { display:none; margin-top:10px; padding:10px 14px; border-radius:8px; font-size:.85rem; }
+    #mc-ocr-status.loading { display:block; background:#fff8e1; color:#e65100; border-left:3px solid #f57c00; }
+    #mc-ocr-status.success { display:block; background:#e8f5e9; color:#2e7d32; border-left:3px solid #43a047; }
+    #mc-ocr-status.error { display:block; background:#ffebee; color:#c62828; border-left:3px solid #e53935; }
+    </style>
+    <div id="mc-ocr-zone" onclick="document.getElementById('mc-ocr-file').click();">
+      <div class="mc-ocr-row">
+        <div class="mc-ocr-icon">💊</div>
+        <div class="mc-ocr-text">
+          <div class="mc-ocr-title">Medikamentenliste per Bild einlesen (OCR)</div>
+          <div class="mc-ocr-sub">Screenshot der Medikation hierher ziehen, klicken oder <strong>Strg+V</strong> einfügen. Erkennt Wirkstoffe + Handelsnamen, kreuzt automatisch passende Medikamente an.</div>
+          <div class="mc-ocr-privacy">🔒 100 % lokal — Bild verlässt diesen Browser nicht. Personenbezogene Daten vorher überdecken.</div>
+        </div>
+      </div>
+      <input type="file" id="mc-ocr-file" accept="image/*" style="display:none;" onchange="window.mcMedOcrHandle&&window.mcMedOcrHandle(this.files[0]);">
+      <div id="mc-ocr-status"></div>
+    </div>
 
     <div class="mc-med-grid">
       <div class="mc-med-group">
@@ -12008,6 +12040,129 @@ function mcAutoImportInner(){
   if(c.bpSys)imported.push('RR\u202F'+c.bpSys+'/'+(c.bpDia||''));
 
   mcRunCheckInner();
+}
+
+// ── MEDIKAMENTEN-OCR ─────────────────────────────────────────
+// Bild → OCR-Text → Freitext-Feld → mcParseFreeText (matcht gegen MC_DRUG_MAP)
+function mcSetOcrStatus(cls, msg) {
+  var el = document.getElementById('mc-ocr-status');
+  if (!el) return;
+  el.className = cls;
+  el.innerHTML = msg;
+}
+
+window.mcMedOcrHandle = function(file) {
+  if (!file) return;
+  if (!file.type || file.type.indexOf('image') !== 0) {
+    mcSetOcrStatus('error', '❌ Bitte ein Bild (PNG, JPG, etc.) hochladen.');
+    return;
+  }
+  if (typeof window.ocrLoadTesseract !== 'function') {
+    mcSetOcrStatus('error', '❌ OCR-Engine nicht verfügbar. Seite neu laden.');
+    return;
+  }
+
+  window.ocrLoadTesseract(function(msg){ mcSetOcrStatus('loading', msg); }).then(function(){
+    mcSetOcrStatus('loading', '⏳ Bild wird gelesen — kann 5–15 Sekunden dauern…');
+    return Tesseract.recognize(file, 'deu', {
+      logger: function(m){
+        if (m.status === 'recognizing text') {
+          var pct = Math.round((m.progress||0) * 100);
+          mcSetOcrStatus('loading', '⏳ OCR läuft… ' + pct + '%');
+        }
+      }
+    });
+  }).then(function(result){
+    var text = (result && result.data && result.data.text) || '';
+    if (!text.trim()) {
+      mcSetOcrStatus('error', '⚠️ Kein Text im Bild erkannt. Bildqualität prüfen.');
+      return;
+    }
+
+    // Freitext-Feld bestücken (additiv: bestehender Text bleibt)
+    var ftEl = document.getElementById('mc-freetext');
+    if (!ftEl) { mcSetOcrStatus('error', 'Freitext-Feld nicht gefunden.'); return; }
+    var existing = ftEl.value || '';
+    var separator = existing.trim() ? '\n--- aus Bild ---\n' : '';
+    ftEl.value = existing + separator + text;
+
+    // Vorher angehakte Medikamente erfassen, damit wir Diff zeigen können
+    var beforeChecked = {};
+    document.querySelectorAll('#tab-medcheck input[type="checkbox"]:checked').forEach(function(cb){
+      beforeChecked[cb.id] = true;
+    });
+
+    // Drug-Matching auslösen
+    if (typeof window.mcParseFreeText === 'function') window.mcParseFreeText();
+    if (typeof window.mcRunCheck === 'function')      window.mcRunCheck();
+
+    // Diff: was wurde neu angehakt?
+    var newlyChecked = [];
+    document.querySelectorAll('#tab-medcheck input[type="checkbox"]:checked').forEach(function(cb){
+      if (!beforeChecked[cb.id]) {
+        var label = cb.parentNode ? cb.parentNode.textContent.trim() : cb.id;
+        newlyChecked.push(label);
+      }
+    });
+
+    if (newlyChecked.length === 0) {
+      mcSetOcrStatus('success', '✅ Bild gelesen — keine neuen Medikamente erkannt (waren bereits angehakt oder Wirkstoffe nicht in der Datenbank).');
+    } else {
+      var html = '✅ <strong>' + newlyChecked.length + ' Medikament' + (newlyChecked.length>1?'e':'') + ' aus Bild erkannt und angehakt:</strong><br>';
+      newlyChecked.forEach(function(n){ html += '<span style="display:inline-block;background:#fff;border:1px solid #a5d6a7;color:#1b5e20;padding:3px 10px;border-radius:14px;font-size:.78rem;font-weight:600;margin:3px 4px 0 0;">✔ ' + n + '</span>'; });
+      mcSetOcrStatus('success', html);
+    }
+
+    // File-Input zurücksetzen
+    var fi = document.getElementById('mc-ocr-file');
+    if (fi) fi.value = '';
+  }).catch(function(err){
+    mcSetOcrStatus('error', '❌ Fehler: ' + (err && err.message ? err.message : 'OCR fehlgeschlagen.'));
+    console.error('Med-OCR Error:', err);
+  });
+};
+
+// Drag-and-Drop + Paste für Medikamenten-Drop-Zone
+function mcInitOcrDropZone() {
+  var zone = document.getElementById('mc-ocr-zone');
+  if (!zone) return;
+  ['dragenter','dragover','dragleave','drop'].forEach(function(ev){
+    zone.addEventListener(ev, function(e){ e.preventDefault(); e.stopPropagation(); }, false);
+  });
+  ['dragenter','dragover'].forEach(function(ev){
+    zone.addEventListener(ev, function(){ zone.classList.add('dragover'); }, false);
+  });
+  ['dragleave','drop'].forEach(function(ev){
+    zone.addEventListener(ev, function(){ zone.classList.remove('dragover'); }, false);
+  });
+  zone.addEventListener('drop', function(e){
+    var dt = e.dataTransfer;
+    if (dt && dt.files && dt.files[0]) {
+      window.mcMedOcrHandle(dt.files[0]);
+    }
+  }, false);
+  // Paste-Listener nur wenn Medcheck-Tab aktiv
+  document.addEventListener('paste', function(e){
+    var mcTab = document.getElementById('tab-medcheck');
+    if (!mcTab || mcTab.style.display === 'none') return;
+    if (!e.clipboardData || !e.clipboardData.items) return;
+    for (var i = 0; i < e.clipboardData.items.length; i++) {
+      var item = e.clipboardData.items[i];
+      if (item.type && item.type.indexOf('image') === 0) {
+        var file = item.getAsFile();
+        if (file) {
+          e.preventDefault();
+          window.mcMedOcrHandle(file);
+          return;
+        }
+      }
+    }
+  }, false);
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', mcInitOcrDropZone);
+} else {
+  mcInitOcrDropZone();
 }
 
 // ── EXPOSE ────────────────────────────────────────────────────
