@@ -14178,7 +14178,7 @@ function clearCKD() {
 
 // Werte in ALLEN Tabs leeren — für Patientenwechsel
 function clearAllTabs() {
-  if (!confirm('Werte in ALLEN Tabs (CKD, Anämie/Ca-P, Diabetes, Lipid, Hypertonie, Gicht, Medikationscheck, AKI, VHF, Antikoag) leeren?\n\nMedikamenten-Häkchen bleiben erhalten.')) return;
+  if (!confirm('Werte UND Medikamenten-Häkchen in ALLEN Tabs (CKD, Anämie/Ca-P, Diabetes, Lipid, Hypertonie, Gicht, Medikationscheck, AKI, VHF, Antikoag) leeren?\n\nKomplett-Reset für neuen Patienten.')) return;
 
   // 1. CKD
   clearCKD();
@@ -14215,14 +14215,33 @@ function clearAllTabs() {
     const el = document.getElementById(id); if (el) el.value = '';
   });
 
-  // 7. Medikationscheck — nur Patientendaten, keine Medikamenten-Häkchen
-  ['mc-egfr','mc-weight','mc-age','mc-krea'].forEach(id => {
+  // 7. Medikationscheck — Patientendaten + Medikamenten-Häkchen + Freitext + OCR-Status
+  ['mc-egfr','mc-weight','mc-age','mc-krea','mc-freetext'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   const mcSex = document.getElementById('mc-sex');
   if (mcSex) mcSex.selectedIndex = 0;
   const mcDial = document.getElementById('mc-dialysis');
   if (mcDial) mcDial.selectedIndex = 0;
+  // ALLE Medikamenten-Checkboxen im Medcheck-Tab abhaken
+  document.querySelectorAll('#tab-medcheck input[type="checkbox"]').forEach(function(cb){
+    cb.checked = false;
+    delete cb.dataset.userUnchecked;
+  });
+  // Freitext-Match-Pills + OCR-Status im Medcheck-Tab leeren
+  const mcMatches = document.getElementById('mc-freetext-matches');
+  if (mcMatches) mcMatches.innerHTML = '';
+  ['mc-ocr-status','mc-import-banner2'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.style.display = 'none'; el.innerHTML = ''; }
+  });
+  // OCR-Status im CKD-Tab (Medikamenten-OCR) leeren
+  const ckdMedStatus = document.getElementById('ckd-med-ocr-status');
+  if (ckdMedStatus) { ckdMedStatus.style.display = 'none'; ckdMedStatus.innerHTML = ''; }
+  // Auch HTN-/Diab-Tab Med-Checkboxes (sofern parallele Spiegelung)
+  document.querySelectorAll('#tab-htn input[type="checkbox"][id^="htn-med-"], #tab-diabetes input[type="checkbox"][id^="diab-med-"]').forEach(function(cb){
+    cb.checked = false;
+  });
 
   // 8. AKI
   ['aki-baseline-krea','aki-current-krea','aki-urine-output','aki-weight','aki-age'].forEach(id => {
@@ -14240,11 +14259,11 @@ function clearAllTabs() {
     const el = document.getElementById(id); if (el) el.value = '';
   });
 
-  // Re-Trigger aller Berechnungen
-  if (typeof window.mbdCalculate === 'function')  { try { window.mbdCalculate(); } catch(e){} }
-  if (typeof window.diabCalculate === 'function') { try { window.diabCalculate(); } catch(e){} }
-  if (typeof window.lipCalculate === 'function')  { try { window.lipCalculate(); } catch(e){} }
-  if (typeof window.gichtCalc === 'function')     { try { window.gichtCalc(); } catch(e){} }
+  // Re-Trigger aller Berechnungen (silent — keine Alerts beim Reset)
+  if (typeof window.mbdCalculate === 'function')  { try { window.mbdCalculate({silent:true}); } catch(e){} }
+  if (typeof window.diabCalculate === 'function') { try { window.diabCalculate({silent:true}); } catch(e){} }
+  if (typeof window.lipCalculate === 'function')  { try { window.lipCalculate({silent:true}); } catch(e){} }
+  if (typeof window.gichtCalc === 'function')     { try { window.gichtCalc({silent:true}); } catch(e){} }
   if (typeof window.mcRunCheck === 'function')    { try { window.mcRunCheck(); } catch(e){} }
 }
 window.clearAllTabs = clearAllTabs;
