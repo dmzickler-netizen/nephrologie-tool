@@ -1641,8 +1641,8 @@ label .lip-optional {
         <div class="ckd-med-ocr-row">
           <div class="ckd-med-ocr-icon">💊</div>
           <div class="ckd-med-ocr-text">
-            <div class="ckd-med-ocr-title">Medikamentenliste per Bild einlesen (OCR)</div>
-            <div class="ckd-med-ocr-sub"><strong>Drag-and-Drop</strong> · <strong>Klick</strong> für Datei-Auswahl · <strong>Strg+V</strong> einfügen (Zone vorher anklicken). Erkennt Wirkstoffe + Handelsnamen, kreuzt sie automatisch im Medikationscheck-Tab an.</div>
+            <div class="ckd-med-ocr-title">Medikamentenliste per Bild oder Text einlesen</div>
+            <div class="ckd-med-ocr-sub"><strong>Bild:</strong> Drag-and-Drop oder Klick zur Auswahl (OCR) · <strong>Strg+V:</strong> Bild ODER Text aus Zwischenablage (Zone vorher anklicken). Erkennt Wirkstoffe + Handelsnamen, kreuzt sie im Medikationscheck-Tab an.</div>
             <div class="ckd-med-ocr-privacy">🔒 100 % lokal — Bild verlässt diesen Browser nicht.</div>
           </div>
         </div>
@@ -2290,25 +2290,50 @@ function initDropZone() {
     }
   }, false);
 
-  // Globaler Paste-Listener (Strg+V mit Bild aus Zwischenablage) — routet an aktive Zone
+  // Globaler Paste-Listener (Strg+V) — routet an aktive Zone, Bild ODER Text
   document.addEventListener('paste', function(e){
     // nur wenn CKD-Tab aktiv
     var ckdTab = document.getElementById('tab-ckd');
     if (!ckdTab || ckdTab.style.display === 'none') return;
     if (!e.clipboardData || !e.clipboardData.items) return;
+
+    // Bild-Handling
     for (var i = 0; i < e.clipboardData.items.length; i++) {
       var item = e.clipboardData.items[i];
       if (item.type && item.type.indexOf('image') === 0) {
         var file = item.getAsFile();
         if (file) {
           e.preventDefault();
-          // Route an aktive Zone — Default: Labor (rückwärtskompatibel)
           if (window.activeOcrZone === 'med' && typeof window.ckdMedOcrFromCkd === 'function') {
             window.ckdMedOcrFromCkd(file);
           } else {
             window.ckdLabOcrHandle(file);
           }
           return;
+        }
+      }
+    }
+    // Text-Handling — nur wenn Med-Zone aktiv (Lab hat keinen Text-Pfad)
+    if (window.activeOcrZone === 'med') {
+      var txt = e.clipboardData.getData('text/plain');
+      if (txt && txt.trim()) {
+        e.preventDefault();
+        // Status im CKD-Tab zeigen
+        var ckdMedStatus = document.getElementById('ckd-med-ocr-status');
+        if (ckdMedStatus) {
+          ckdMedStatus.className = 'loading';
+          ckdMedStatus.innerHTML = '⏳ Text wird verarbeitet…';
+        }
+        if (typeof window.mcAppendTextAndParse === 'function') {
+          window.mcAppendTextAndParse(txt, 'Zwischenablage (CKD-Tab)');
+          // Spiegel mc-ocr-status auf ckd-med-ocr-status
+          setTimeout(function(){
+            var mcStatus = document.getElementById('mc-ocr-status');
+            if (mcStatus && ckdMedStatus) {
+              ckdMedStatus.className = mcStatus.className;
+              ckdMedStatus.innerHTML = mcStatus.innerHTML;
+            }
+          }, 50);
         }
       }
     }
@@ -10871,8 +10896,8 @@ window.hwiUpdate = function() {
       <div class="mc-ocr-row">
         <div class="mc-ocr-icon">💊</div>
         <div class="mc-ocr-text">
-          <div class="mc-ocr-title">Medikamentenliste per Bild einlesen (OCR)</div>
-          <div class="mc-ocr-sub">Screenshot der Medikation hierher ziehen, klicken oder <strong>Strg+V</strong> einfügen. Erkennt Wirkstoffe + Handelsnamen, kreuzt automatisch passende Medikamente an.</div>
+          <div class="mc-ocr-title">Medikamentenliste per Bild oder Text einlesen</div>
+          <div class="mc-ocr-sub"><strong>Bild:</strong> Drag-and-Drop oder Klick zur Auswahl (OCR) · <strong>Strg+V:</strong> Bild ODER Text aus Zwischenablage. Erkennt Wirkstoffe + Handelsnamen, kreuzt automatisch passende Medikamente an.</div>
           <div class="mc-ocr-privacy">🔒 100 % lokal — Bild verlässt diesen Browser nicht. Personenbezogene Daten vorher überdecken.</div>
         </div>
       </div>
@@ -12315,24 +12340,65 @@ function mcInitOcrDropZone() {
       window.mcMedOcrHandle(dt.files[0]);
     }
   }, false);
-  // Paste-Listener nur wenn Medcheck-Tab aktiv
+  // Paste-Listener nur wenn Medcheck-Tab aktiv — handelt sowohl Text als auch Bild
   document.addEventListener('paste', function(e){
     var mcTab = document.getElementById('tab-medcheck');
     if (!mcTab || mcTab.style.display === 'none') return;
     if (!e.clipboardData || !e.clipboardData.items) return;
+
+    // Wenn Fokus im Freitext-Feld → natives Paste zulassen (Browser pasted, oninput triggert Parser)
+    var ft = document.getElementById('mc-freetext');
+    if (document.activeElement === ft) return;
+
+    // Bild-Handling zuerst prüfen (OCR)
     for (var i = 0; i < e.clipboardData.items.length; i++) {
       var item = e.clipboardData.items[i];
       if (item.type && item.type.indexOf('image') === 0) {
         var file = item.getAsFile();
-        if (file) {
-          e.preventDefault();
-          window.mcMedOcrHandle(file);
-          return;
-        }
+        if (file) { e.preventDefault(); window.mcMedOcrHandle(file); return; }
       }
+    }
+    // Sonst Text einlesen
+    var txt = e.clipboardData.getData('text/plain');
+    if (txt && txt.trim()) {
+      e.preventDefault();
+      mcAppendTextAndParse(txt, 'Zwischenablage');
     }
   }, false);
 }
+
+// Helper: Text in Freitext-Feld anhängen, parsen, Feedback zeigen
+function mcAppendTextAndParse(text, source) {
+  var ft = document.getElementById('mc-freetext');
+  if (!ft) return;
+  var existing = ft.value || '';
+  var sep = existing.trim() ? '\n--- aus ' + (source || 'Eingabe') + ' ---\n' : '';
+  ft.value = existing + sep + text;
+
+  // Vorher angehakte erfassen für Diff
+  var before = {};
+  document.querySelectorAll('#tab-medcheck input[type="checkbox"]:checked').forEach(function(cb){ before[cb.id]=true; });
+
+  if (typeof window.mcParseFreeText === 'function') window.mcParseFreeText();
+  if (typeof window.mcRunCheck === 'function')      window.mcRunCheck();
+
+  var added = [];
+  document.querySelectorAll('#tab-medcheck input[type="checkbox"]:checked').forEach(function(cb){
+    if (!before[cb.id]) added.push(cb.parentNode ? cb.parentNode.textContent.trim() : cb.id);
+  });
+  var status = document.getElementById('mc-ocr-status');
+  if (!status) return;
+  if (added.length === 0) {
+    status.className = 'success';
+    status.innerHTML = '✅ Text aus ' + (source||'Eingabe') + ' übernommen — keine neuen Medikamente erkannt (waren bereits angehakt oder Wirkstoffe nicht in Datenbank).';
+  } else {
+    var html = '✅ <strong>' + added.length + ' Medikament' + (added.length>1?'e':'') + ' aus ' + (source||'Eingabe') + ' erkannt:</strong><br>';
+    added.forEach(function(n){ html += '<span style="display:inline-block;background:#fff;border:1px solid #a5d6a7;color:#1b5e20;padding:3px 10px;border-radius:14px;font-size:.78rem;font-weight:600;margin:3px 4px 0 0;">✔ ' + n + '</span>'; });
+    status.className = 'success';
+    status.innerHTML = html;
+  }
+}
+window.mcAppendTextAndParse = mcAppendTextAndParse;
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', mcInitOcrDropZone);
 } else {
