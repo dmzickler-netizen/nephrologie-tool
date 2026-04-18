@@ -1596,9 +1596,10 @@ label .lip-optional {
         <input type="text" id="extra_info" placeholder="z.B. Harnsäure 7.2, LDL 98 mg/dl …">
       </div>
 
-      <div style="display:flex; gap:10px; margin-top:16px;">
-        <button class="btn-calc" style="margin-top:0; flex:1;" onclick="calculate()">📄 Arztbrief &amp; Staging aktualisieren</button>
-        <button onclick="clearCKD()" title="Alle Eingaben leeren" style="flex:0 0 auto; padding:0 16px; height:50px; background:#78909c; color:#fff; border:none; border-radius:10px; font-size:.85rem; font-weight:600; cursor:pointer; white-space:nowrap; letter-spacing:.3px;">🗑️ Leeren</button>
+      <div style="display:flex; gap:8px; margin-top:16px; flex-wrap:wrap;">
+        <button class="btn-calc" style="margin-top:0; flex:1; min-width:240px;" onclick="calculate()">📄 Arztbrief &amp; Staging aktualisieren</button>
+        <button onclick="clearCKD()" title="Nur CKD-Tab leeren" style="flex:0 0 auto; padding:0 14px; height:50px; background:#78909c; color:#fff; border:none; border-radius:10px; font-size:.82rem; font-weight:600; cursor:pointer; white-space:nowrap;">🗑️ CKD-Tab</button>
+        <button onclick="clearAllTabs()" title="Werte in ALLEN Tabs leeren" style="flex:0 0 auto; padding:0 14px; height:50px; background:#c62828; color:#fff; border:none; border-radius:10px; font-size:.82rem; font-weight:600; cursor:pointer; white-space:nowrap;">🗑️ Alle Tabs</button>
       </div>
     </div>
 
@@ -13730,15 +13731,17 @@ buildDrugTable();
 
 // ===== CLEAR / RESET CKD FORM =====
 function clearCKD() {
-  // Text & number inputs
-  ['age','sex','creatinine','cystatinc','uacr','bp_sys','bp_dia','weight',
-   'hb','ferritin','tsat','pth','ph','bicarbonate','phosphate','calcium',
+  // Text & number inputs (Typos korrigiert: bicarb statt bicarbonate, phosphat statt phosphate)
+  ['age','creatinine','cystatinc','uacr','bp_sys','bp_dia','weight',
+   'hb','ferritin','tsat','pth','ph','bicarb','phosphat','calcium','vitd',
    'kalium','extra_info'].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
     if (el.tagName === 'SELECT') el.selectedIndex = 0;
     else el.value = '';
   });
+  // Sex Radios
+  document.querySelectorAll('input[name="sex"]').forEach(r => r.checked = false);
   // Dialysis select
   const ds = document.getElementById('dialysis_status');
   if (ds) ds.selectedIndex = 0;
@@ -13751,16 +13754,97 @@ function clearCKD() {
   });
 
   // Clear results
-  document.getElementById('results-panel').innerHTML = '<div class="placeholder-text">Wird nach Berechnung angezeigt.</div>';
-  document.getElementById('text-diagnose').value = '';
-  document.getElementById('text-befund').value   = '';
-  document.getElementById('text-empfehlung').value = '';
-  document.getElementById('therapy-panel').innerHTML = '<div class="placeholder-text">Wird nach Berechnung generiert.</div>';
+  const rp = document.getElementById('results-panel');
+  if (rp) rp.innerHTML = '<div class="placeholder-text">Wird nach Berechnung angezeigt.</div>';
+  ['text-diagnose','text-befund','text-empfehlung'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  const tp = document.getElementById('therapy-panel');
+  if (tp) tp.innerHTML = '<div class="placeholder-text">Wird nach Berechnung generiert.</div>';
 
   // Reset matrix & drug table
-  buildMatrix(-1, -1);
-  updateDrugEGFR(null);
+  if (typeof buildMatrix === 'function') buildMatrix(-1, -1);
+  if (typeof updateDrugEGFR === 'function') updateDrugEGFR(null);
+
+  // Reset OCR-Status & Ergebnisse
+  ['lab-ocr-status','lab-ocr-results'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.style.display = 'none'; el.innerHTML = ''; }
+  });
 }
+
+// Werte in ALLEN Tabs leeren — für Patientenwechsel
+function clearAllTabs() {
+  if (!confirm('Werte in ALLEN Tabs (CKD, Anämie/Ca-P, Diabetes, Lipid, Hypertonie, Gicht, Medikationscheck, AKI, VHF, Antikoag) leeren?\n\nMedikamenten-Häkchen bleiben erhalten.')) return;
+
+  // 1. CKD
+  clearCKD();
+
+  // 2. Anämie / MBD
+  ['mbd2-weight','mbd2-hb','mbd2-ferritin','mbd2-tsat','mbd2-pth',
+   'mbd2-phosphat','mbd2-calcium','mbd2-vitd','mbd2-bicarb','mbd2-ph'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  const mbdDial = document.getElementById('mbd2-dialysis');
+  if (mbdDial) mbdDial.selectedIndex = 0;
+  const mbdPanel = document.getElementById('mbd2-panel');
+  if (mbdPanel) mbdPanel.innerHTML = '<div class="mbd-placeholder">Bitte Labordaten eingeben und Berechnung starten.</div>';
+
+  // 3. Diabetes
+  ['diab-hba1c','diab-age','diab-weight','diab-egfr','diab-uacr','diab-bp-sys','diab-bp-dia'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+
+  // 4. Lipidtherapie
+  ['lip-ldl-input','lip-hdl','lip-tg','lip-age','lip-weight','lip-egfr','lip-uacr',
+   'lip-non-hdl','lip-apob','lip-lp-a','lip-bp-sys','lip-bp-dia'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+
+  // 5. Hypertonie
+  ['htn-age','htn-weight','htn-egfr','htn-uacr','htn-bp-sys','htn-bp-dia',
+   'htn-aobp-sys','htn-aobp-dia','htn-home-sys','htn-home-dia'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+
+  // 6. Gicht
+  ['gicht-hs','gicht-age','gicht-weight','gicht-egfr'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+
+  // 7. Medikationscheck — nur Patientendaten, keine Medikamenten-Häkchen
+  ['mc-egfr','mc-weight','mc-age','mc-krea'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  const mcSex = document.getElementById('mc-sex');
+  if (mcSex) mcSex.selectedIndex = 0;
+  const mcDial = document.getElementById('mc-dialysis');
+  if (mcDial) mcDial.selectedIndex = 0;
+
+  // 8. AKI
+  ['aki-baseline-krea','aki-current-krea','aki-urine-output','aki-weight','aki-age'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+
+  // 9. VHF
+  ['vhf-age','vhf-weight','vhf-egfr'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+
+  // 10. Antikoagulation Patientendaten
+  ['ak-p-weight','ak-p-egfr','ak-t-weight','ak-t-egfr','ak-t-age',
+   'ak-u-weight','ak-u-egfr','ak-u-conc','ak-h-weight','ak-h-egfr','ak-h-platelets'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+
+  // Re-Trigger aller Berechnungen
+  if (typeof window.mbdCalculate === 'function')  { try { window.mbdCalculate(); } catch(e){} }
+  if (typeof window.diabCalculate === 'function') { try { window.diabCalculate(); } catch(e){} }
+  if (typeof window.lipCalculate === 'function')  { try { window.lipCalculate(); } catch(e){} }
+  if (typeof window.gichtCalc === 'function')     { try { window.gichtCalc(); } catch(e){} }
+  if (typeof window.mcRunCheck === 'function')    { try { window.mcRunCheck(); } catch(e){} }
+}
+window.clearAllTabs = clearAllTabs;
 
 </script>
 
