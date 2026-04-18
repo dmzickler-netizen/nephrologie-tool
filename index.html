@@ -1510,15 +1510,18 @@ label .lip-optional {
         </div>
       </div>
 
-      <div id="lab-ocr-zone" onclick="window.activateOcrZone&&window.activateOcrZone('lab'); document.getElementById('lab-ocr-file').click();">
-        <span class="ocr-paste-badge">📋 Strg+V hier</span>
+      <div id="lab-ocr-zone" onclick="window.activateOcrZone&&window.activateOcrZone('lab');">
+        <span class="ocr-paste-badge">📋 Strg+V aktiv</span>
         <div class="lab-ocr-row">
           <div class="lab-ocr-icon">📷</div>
           <div class="lab-ocr-text">
-            <div class="lab-ocr-title">Laborbefund per Bild einlesen (OCR)</div>
-            <div class="lab-ocr-sub"><strong>Drag-and-Drop</strong> · <strong>Klick</strong> für Datei-Auswahl · <strong>Strg+V</strong> einfügen (Zone vorher anklicken). Erkennt Krea, eGFR, uACR, Hb, Ferritin, K⁺, HCO₃, PTH, Phosphat, Ca, HbA1c, LDL, Harnsäure u.a.</div>
+            <div class="lab-ocr-title">Laborbefund einlesen — Bild (OCR)</div>
+            <div class="lab-ocr-sub"><strong>1.</strong> Klick hier (aktiviert Strg+V) · <strong>2.</strong> Strg+V drücken — Bild aus Zwischenablage wird erkannt · <strong>oder:</strong> Drag-and-Drop / Datei-Knopf unten. Erkennt Krea, eGFR, uACR, Hb, Ferritin, K⁺, HCO₃, PTH, Phosphat, Ca, HbA1c, LDL, Harnsäure u.a.</div>
             <div class="lab-ocr-privacy">🔒 100 % lokal — Bild verlässt diesen Browser nicht. Personenbezogene Daten trotzdem vorher überdecken.</div>
           </div>
+        </div>
+        <div style="margin-top:10px;">
+          <button onclick="event.stopPropagation(); document.getElementById('lab-ocr-file').click();" style="padding:6px 14px; background:#1565c0; color:#fff; border:none; border-radius:8px; font-size:.78rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">📁 Datei wählen</button>
         </div>
         <input type="file" id="lab-ocr-file" accept="image/*" style="display:none;" onchange="window.ckdLabOcrHandle&&window.ckdLabOcrHandle(this.files[0]);">
         <div id="lab-ocr-status"></div>
@@ -1636,15 +1639,18 @@ label .lip-optional {
       #ckd-med-ocr-status.success { display:block; background:#e8f5e9; color:#2e7d32; border-left:3px solid #43a047; }
       #ckd-med-ocr-status.error { display:block; background:#ffebee; color:#c62828; border-left:3px solid #e53935; }
       </style>
-      <div id="ckd-med-ocr-zone" onclick="window.activateOcrZone&&window.activateOcrZone('med'); document.getElementById('ckd-med-ocr-file').click();">
-        <span class="ocr-paste-badge">📋 Strg+V hier</span>
+      <div id="ckd-med-ocr-zone" onclick="window.activateOcrZone&&window.activateOcrZone('med');">
+        <span class="ocr-paste-badge">📋 Strg+V aktiv</span>
         <div class="ckd-med-ocr-row">
           <div class="ckd-med-ocr-icon">💊</div>
           <div class="ckd-med-ocr-text">
-            <div class="ckd-med-ocr-title">Medikamentenliste per Bild oder Text einlesen</div>
-            <div class="ckd-med-ocr-sub"><strong>Bild:</strong> Drag-and-Drop oder Klick zur Auswahl (OCR) · <strong>Strg+V:</strong> Bild ODER Text aus Zwischenablage (Zone vorher anklicken). Erkennt Wirkstoffe + Handelsnamen, kreuzt sie im Medikationscheck-Tab an.</div>
+            <div class="ckd-med-ocr-title">Medikamentenliste einlesen — Bild oder Text</div>
+            <div class="ckd-med-ocr-sub"><strong>1.</strong> Klick hier (aktiviert Strg+V) · <strong>2.</strong> Strg+V drücken — Bild oder Text aus Zwischenablage wird erkannt · <strong>oder:</strong> Drag-and-Drop / Datei-Knopf unten</div>
             <div class="ckd-med-ocr-privacy">🔒 100 % lokal — Bild verlässt diesen Browser nicht.</div>
           </div>
+        </div>
+        <div style="margin-top:10px;">
+          <button onclick="event.stopPropagation(); document.getElementById('ckd-med-ocr-file').click();" style="padding:6px 14px; background:#2e7d32; color:#fff; border:none; border-radius:8px; font-size:.78rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">📁 Datei wählen</button>
         </div>
         <input type="file" id="ckd-med-ocr-file" accept="image/*" style="display:none;" onchange="window.ckdMedOcrFromCkd&&window.ckdMedOcrFromCkd(this.files[0]);">
         <div id="ckd-med-ocr-status"></div>
@@ -10892,14 +10898,17 @@ window.hwiUpdate = function() {
     #mc-ocr-status.success { display:block; background:#e8f5e9; color:#2e7d32; border-left:3px solid #43a047; }
     #mc-ocr-status.error { display:block; background:#ffebee; color:#c62828; border-left:3px solid #e53935; }
     </style>
-    <div id="mc-ocr-zone" onclick="document.getElementById('mc-ocr-file').click();">
+    <div id="mc-ocr-zone">
       <div class="mc-ocr-row">
         <div class="mc-ocr-icon">💊</div>
         <div class="mc-ocr-text">
-          <div class="mc-ocr-title">Medikamentenliste per Bild oder Text einlesen</div>
-          <div class="mc-ocr-sub"><strong>Bild:</strong> Drag-and-Drop oder Klick zur Auswahl (OCR) · <strong>Strg+V:</strong> Bild ODER Text aus Zwischenablage. Erkennt Wirkstoffe + Handelsnamen, kreuzt automatisch passende Medikamente an.</div>
+          <div class="mc-ocr-title">Medikamentenliste einlesen — Bild oder Text</div>
+          <div class="mc-ocr-sub"><strong>Strg+V</strong> — Bild oder Text aus Zwischenablage wird automatisch erkannt · <strong>Drag-and-Drop</strong> für Bild-Dateien · oder Datei-Knopf unten</div>
           <div class="mc-ocr-privacy">🔒 100 % lokal — Bild verlässt diesen Browser nicht. Personenbezogene Daten vorher überdecken.</div>
         </div>
+      </div>
+      <div style="margin-top:10px;">
+        <button onclick="document.getElementById('mc-ocr-file').click();" style="padding:6px 14px; background:#2e7d32; color:#fff; border:none; border-radius:8px; font-size:.78rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">📁 Datei wählen</button>
       </div>
       <input type="file" id="mc-ocr-file" accept="image/*" style="display:none;" onchange="window.mcMedOcrHandle&&window.mcMedOcrHandle(this.files[0]);">
       <div id="mc-ocr-status"></div>
