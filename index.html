@@ -1645,12 +1645,21 @@ label .lip-optional {
           <div class="ckd-med-ocr-icon">💊</div>
           <div class="ckd-med-ocr-text">
             <div class="ckd-med-ocr-title">Medikamentenliste einlesen — Bild oder Text</div>
-            <div class="ckd-med-ocr-sub"><strong>1.</strong> Klick hier (aktiviert Strg+V) · <strong>2.</strong> Strg+V drücken — Bild oder Text aus Zwischenablage wird erkannt · <strong>oder:</strong> Drag-and-Drop / Datei-Knopf unten</div>
+            <div class="ckd-med-ocr-sub"><strong>Tippen, Einfügen (Strg+V)</strong> oder Bild ziehen. Wirkstoffe + Handelsnamen werden automatisch erkannt und im Medikationscheck-Tab angekreuzt.</div>
             <div class="ckd-med-ocr-privacy">🔒 100 % lokal — Bild verlässt diesen Browser nicht.</div>
           </div>
         </div>
-        <div style="margin-top:10px;">
-          <button onclick="event.stopPropagation(); document.getElementById('ckd-med-ocr-file').click();" style="padding:6px 14px; background:#2e7d32; color:#fff; border:none; border-radius:8px; font-size:.78rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">📁 Datei wählen</button>
+
+        <!-- Direktes Textfeld zum Einfügen / Tippen -->
+        <textarea id="ckd-med-text" placeholder="Medikamentenliste hier einfügen oder tippen — z.B.&#10;Ramipril 5 mg 1-0-0&#10;Forxiga 10 mg&#10;Atorvastatin 40 mg" rows="4" oninput="window.ckdMedTextChange&&window.ckdMedTextChange(this.value)" onclick="event.stopPropagation();" style="width:100%; min-height:80px; padding:10px; border:1.5px solid #a5d6a7; border-radius:8px; font-size:.85rem; font-family:inherit; resize:vertical; margin-top:10px; box-sizing:border-box; background:#fff;"></textarea>
+
+        <!-- Ergebnisse: Pills + Status -->
+        <div id="ckd-med-results" style="display:none; margin-top:8px; padding:8px 12px; background:#fff; border:1px solid #c8e6c9; border-radius:8px;"></div>
+
+        <div style="margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <button onclick="event.stopPropagation(); document.getElementById('ckd-med-ocr-file').click();" style="padding:6px 14px; background:#2e7d32; color:#fff; border:none; border-radius:8px; font-size:.78rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">📁 Bild auswählen</button>
+          <button onclick="event.stopPropagation(); window.ckdMedTextClear&&window.ckdMedTextClear();" style="padding:6px 14px; background:#fff; color:#c62828; border:1.5px solid #ef9a9a; border-radius:8px; font-size:.78rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">🗑️ Text leeren</button>
+          <span style="font-size:.72rem; color:#558b6e;">oder Bild per Drag-and-Drop</span>
         </div>
         <input type="file" id="ckd-med-ocr-file" accept="image/*" style="display:none;" onchange="window.ckdMedOcrFromCkd&&window.ckdMedOcrFromCkd(this.files[0]);">
         <div id="ckd-med-ocr-status"></div>
@@ -1725,7 +1734,41 @@ label .lip-optional {
 
       <div class="form-group" style="margin-bottom:12px;">
         <label>Vordiagnosen <span style="font-weight:400;color:#90a4ae;">(eine pro Zeile — erscheinen nach nephrol. Diagnosen im Arztbrief)</span></label>
-        <textarea id="vordiagnosen" rows="4" style="width:100%;padding:9px 12px;border:1.5px solid #cfd8dc;border-radius:8px;font-size:0.88rem;font-family:inherit;resize:vertical;background:#fafafa;" placeholder="z.B.&#10;Arterielle Hypertonie&#10;Diabetes mellitus Typ 2&#10;KHK, Z.n. PCI 2021&#10;Adipositas Grad II"></textarea>
+
+        <style>
+          #vd-drop-zone { border:2px dashed #b39ddb; border-radius:12px; padding:10px 14px; background:#f5f0fa; margin:6px 0 8px; transition:all .2s; cursor:pointer; position:relative; }
+          #vd-drop-zone:hover, #vd-drop-zone.dragover { background:#ede7f6; border-color:#6a1b9a; }
+          #vd-drop-zone.dragover { transform:scale(1.01); box-shadow:0 4px 12px rgba(106,27,154,.15); }
+          #vd-drop-zone.ocr-paste-active { border-style:solid; border-color:#6a1b9a; background:#ede7f6; box-shadow:0 0 0 3px rgba(106,27,154,.18); }
+          #vd-drop-zone .ocr-paste-badge { display:none; position:absolute; top:6px; right:8px; padding:2px 8px; background:#6a1b9a; color:#fff; font-size:.7rem; font-weight:700; border-radius:10px; }
+          #vd-drop-zone.ocr-paste-active .ocr-paste-badge { display:inline-block; }
+          #vd-drop-zone .vd-row { display:flex; align-items:center; gap:10px; }
+          #vd-drop-zone .vd-icon { font-size:1.5rem; }
+          #vd-drop-zone .vd-title { font-size:.88rem; font-weight:700; color:#4a148c; margin-bottom:2px; }
+          #vd-drop-zone .vd-sub { font-size:.75rem; color:#6a1b9a; line-height:1.3; }
+          #vd-ocr-status { display:none; margin-top:6px; padding:8px 12px; border-radius:8px; font-size:.82rem; }
+          #vd-ocr-status.loading { display:block; background:#fff8e1; color:#e65100; border-left:3px solid #f57c00; }
+          #vd-ocr-status.success { display:block; background:#e8f5e9; color:#2e7d32; border-left:3px solid #43a047; }
+          #vd-ocr-status.error { display:block; background:#ffebee; color:#c62828; border-left:3px solid #e53935; }
+          #vd-results { display:none; margin-top:8px; padding:10px 12px; background:#f3e5f5; border:1px solid #ce93d8; border-radius:8px; font-size:.82rem; }
+        </style>
+
+        <div id="vd-drop-zone" onclick="window.activateOcrZone&&window.activateOcrZone('diag');">
+          <span class="ocr-paste-badge">📋 Strg+V aktiv</span>
+          <div class="vd-row">
+            <div class="vd-icon">📋</div>
+            <div style="flex:1;">
+              <div class="vd-title">Vordiagnosen einfügen — Text oder Bild</div>
+              <div class="vd-sub">Klick → Strg+V für Bild/Text · oder Drag-and-Drop / Button unten. Erkennt Grunderkrankungen (Diabet./Hypertens. Nephropathie, IgA, FSGS, MGN, ADPKD, Lupus, Vaskulitis, TX).</div>
+            </div>
+            <button onclick="event.stopPropagation(); document.getElementById('vd-ocr-file').click();" style="padding:6px 12px; background:#6a1b9a; color:#fff; border:none; border-radius:8px; font-size:.75rem; font-weight:600; cursor:pointer; white-space:nowrap;">📁 Bild</button>
+          </div>
+          <input type="file" id="vd-ocr-file" accept="image/*" style="display:none;" onchange="window.vdOcrHandle&&window.vdOcrHandle(this.files[0]);">
+        </div>
+
+        <textarea id="vordiagnosen" rows="4" oninput="window.vdTextChange&&window.vdTextChange(this.value)" style="width:100%;padding:9px 12px;border:1.5px solid #cfd8dc;border-radius:8px;font-size:0.88rem;font-family:inherit;resize:vertical;background:#fafafa;" placeholder="z.B.&#10;Arterielle Hypertonie&#10;Diabetes mellitus Typ 2&#10;KHK, Z.n. PCI 2021&#10;Adipositas Grad II"></textarea>
+        <div id="vd-ocr-status"></div>
+        <div id="vd-results"></div>
       </div>
 
       <div class="form-group" style="margin-bottom:12px;">
@@ -2312,6 +2355,8 @@ function initDropZone() {
           e.preventDefault();
           if (window.activeOcrZone === 'med' && typeof window.ckdMedOcrFromCkd === 'function') {
             window.ckdMedOcrFromCkd(file);
+          } else if (window.activeOcrZone === 'diag' && typeof window.vdOcrHandle === 'function') {
+            window.vdOcrHandle(file);
           } else {
             window.ckdLabOcrHandle(file);
           }
@@ -2319,40 +2364,164 @@ function initDropZone() {
         }
       }
     }
-    // Text-Handling — nur wenn Med-Zone aktiv (Lab hat keinen Text-Pfad)
+    // Text-Handling — je nach aktiver Zone
     if (window.activeOcrZone === 'med') {
+      // Wenn Fokus bereits in der textarea ist, natives Paste durchlassen
+      var ta = document.getElementById('ckd-med-text');
+      if (document.activeElement === ta) return;
+
       var txt = e.clipboardData.getData('text/plain');
       if (txt && txt.trim()) {
         e.preventDefault();
-        // Status im CKD-Tab zeigen
-        var ckdMedStatus = document.getElementById('ckd-med-ocr-status');
-        if (ckdMedStatus) {
-          ckdMedStatus.className = 'loading';
-          ckdMedStatus.innerHTML = '⏳ Text wird verarbeitet…';
+        if (ta) {
+          // In Textarea einfügen — Existing erhalten (User kann mehrere Pastes machen)
+          var existing = (ta.value || '').trim();
+          ta.value = existing ? (existing + '\n' + txt) : txt;
+          // Trigger Live-Parsing über ckdMedTextChange
+          if (typeof window.ckdMedTextChange === 'function') window.ckdMedTextChange(ta.value);
+          // Kurzer Hinweis: Bestätigung für Strg+V
+          var status = document.getElementById('ckd-med-ocr-status');
+          if (status) {
+            status.className = 'success';
+            status.innerHTML = '✅ Text aus Zwischenablage eingefügt — siehe Erkennung unten';
+            setTimeout(function(){ if (status.className.indexOf('success') >= 0) { status.style.display='none'; status.innerHTML=''; } }, 4000);
+          }
         }
-        if (typeof window.mcAppendTextAndParse === 'function') {
-          window.mcAppendTextAndParse(txt, 'Zwischenablage (CKD-Tab)');
-          // Spiegel mc-ocr-status auf ckd-med-ocr-status
-          setTimeout(function(){
-            var mcStatus = document.getElementById('mc-ocr-status');
-            if (mcStatus && ckdMedStatus) {
-              ckdMedStatus.className = mcStatus.className;
-              ckdMedStatus.innerHTML = mcStatus.innerHTML;
-            }
-          }, 50);
+      }
+    } else if (window.activeOcrZone === 'diag') {
+      var taVd = document.getElementById('vordiagnosen');
+      if (document.activeElement === taVd) return;
+      var txtVd = e.clipboardData.getData('text/plain');
+      if (txtVd && txtVd.trim()) {
+        e.preventDefault();
+        if (taVd) {
+          var ex = (taVd.value || '').trim();
+          taVd.value = ex ? (ex + '\n' + txtVd) : txtVd;
+          if (typeof window.vdTextChange === 'function') window.vdTextChange(taVd.value);
+          var st = document.getElementById('vd-ocr-status');
+          if (st) {
+            st.className = 'success';
+            st.innerHTML = '✅ Text aus Zwischenablage eingefügt — siehe Erkennung unten';
+            setTimeout(function(){ if (st.className.indexOf('success') >= 0) { st.style.display='none'; st.innerHTML=''; } }, 4000);
+          }
         }
       }
     }
   }, false);
 }
 
+// ── CKD-Tab: Medikamenten-Text live verarbeiten ──────────────
+// Direkter Eingabepfad — Text in textarea → Parsing → Pills + Status
+window.ckdMedTextChange = function(text) {
+  if (!text || !text.trim()) {
+    var resEl0 = document.getElementById('ckd-med-results');
+    if (resEl0) { resEl0.style.display = 'none'; resEl0.innerHTML = ''; }
+    return;
+  }
+  // Text additiv ans Medcheck-Freitext anhängen — aber nur "neu" (Diff über Marker)
+  // Einfacher: Medcheck-Freitext mit aktueller textarea + bisheriger Inhalt vor Marker setzen
+  var ft = document.getElementById('mc-freetext');
+  if (!ft) return;
+  // Marker-System: alles vor "--- aus CKD-Direkteingabe ---" beibehalten, danach den aktuellen Text
+  var marker = '\n--- aus CKD-Direkteingabe ---\n';
+  var existing = ft.value || '';
+  var idx = existing.indexOf(marker);
+  if (idx >= 0) existing = existing.substring(0, idx);
+  ft.value = existing + (existing.trim() ? marker : '') + text;
+
+  if (typeof window.mcParseFreeText === 'function') window.mcParseFreeText();
+  if (typeof window.mcRunCheck === 'function')      window.mcRunCheck();
+
+  var resEl = document.getElementById('ckd-med-results');
+  if (!resEl) return;
+
+  // eGFR aus CKD-Tab holen (global currentEGFR oder egfr-result-val)
+  var egfrVal = null;
+  if (typeof window.currentEGFR === 'number' && window.currentEGFR) egfrVal = window.currentEGFR;
+  if (!egfrVal) {
+    var eEl = document.getElementById('egfr-result-val');
+    if (eEl) { var v = parseFloat(eEl.textContent); if (!isNaN(v)) egfrVal = v; }
+  }
+  // Dialysestatus aus CKD-Tab
+  var dsMode = null;
+  var dsEl = document.getElementById('dialysis_status');
+  if (dsEl) {
+    if (dsEl.value === 'haemodialysis') dsMode = 'hd';
+    else if (dsEl.value === 'peritoneal') dsMode = 'pd';
+  }
+
+  // Dosing-Tabelle aus Medcheck-Modul rendern
+  var result = (typeof window.mcBuildDosingHtmlFromText === 'function')
+    ? window.mcBuildDosingHtmlFromText(text, egfrVal, dsMode)
+    : { count: 0, html: '' };
+
+  // Fallback: Gruppen aus mcParseFreeText (falls kein konkretes Präparat, aber Wirkstoffklasse erkannt)
+  var groupPills = '';
+  if (!result.count) {
+    var groupNames = {acei:'ACE-Hemmer',arb:'ARB',arni:'ARNI',sglt2i:'SGLT2i',finerenon:'Finerenon',
+      statin:'Statin',ezetimib:'Ezetimib',pcsk9:'PCSK9',metformin:'Metformin',glp1ra:'GLP-1-RA',
+      dpp4i:'DPP-4i',insulin:'Insulin',su:'Sulfonylharnstoff',doac:'DOAK',vka:'VKA',ass:'ASS',
+      clopidogrel:'P2Y12',ccb:'Ca-Antagonist',thiazid:'Thiazid',bb:'Betablocker',loop:'Schleifendiuretikum',
+      spiro:'MRA',alpha:'Alpha-Blocker'};
+    var checkedGroups = [];
+    document.querySelectorAll('#tab-medcheck input[type="checkbox"]:checked').forEach(function(cb){
+      if (cb.id && cb.id.indexOf('mc-med-') === 0) {
+        var g = cb.id.substring(7);
+        if (groupNames[g]) checkedGroups.push(groupNames[g]);
+      }
+    });
+    if (checkedGroups.length) {
+      groupPills = '<div style="font-size:.82rem;color:#1b5e20;font-weight:700;margin-bottom:6px;">✅ ' + checkedGroups.length + ' Wirkstoffklasse' + (checkedGroups.length!==1?'n':'') + ' erkannt</div>';
+      checkedGroups.forEach(function(label){
+        groupPills += '<span style="display:inline-block;background:#f1f8e9;border:1px solid #a5d6a7;color:#1b5e20;padding:3px 10px;border-radius:14px;font-size:.75rem;font-weight:600;margin:2px 4px 2px 0;">✔ ' + label + '</span>';
+      });
+      groupPills += '<div style="font-size:.7rem;color:#78909c;margin-top:8px;">Für Wirkstoff-spezifische Dosis: konkretes Präparat eingeben (z.B. <em>Ramipril</em> statt „ACE-Hemmer").</div>';
+    }
+  }
+
+  if (!result.count && !groupPills) {
+    resEl.style.display = 'block';
+    resEl.style.background = '#fff8e1';
+    resEl.style.borderColor = '#ffe082';
+    resEl.innerHTML = '<div style="color:#e65100;font-size:.82rem;font-weight:600;">⚠️ Noch keine Wirkstoffe erkannt. Beispiel: <em>Ramipril 5 mg, Forxiga, Atorvastatin</em></div>';
+    return;
+  }
+
+  var html = result.html || groupPills;
+  html += '<div style="font-size:.7rem; color:#78909c; margin-top:8px;">📋 Vollständiger Check inkl. Warnungen &amp; Interaktionen: <a href="#" onclick="window.switchToolTab&&window.switchToolTab(\'medcheck\'); return false;" style="color:#2e7d32; text-decoration:underline; font-weight:600;">Medikationscheck-Tab öffnen</a></div>';
+
+  resEl.style.display = 'block';
+  resEl.style.background = '#f1f8e9';
+  resEl.style.borderColor = '#c8e6c9';
+  resEl.style.padding = '10px 12px';
+  resEl.innerHTML = html;
+};
+
+window.ckdMedTextClear = function() {
+  var ta = document.getElementById('ckd-med-text');
+  if (ta) ta.value = '';
+  var resEl = document.getElementById('ckd-med-results');
+  if (resEl) { resEl.style.display = 'none'; resEl.innerHTML = ''; }
+  // Aus mc-freetext den CKD-Direkteingabe-Block entfernen
+  var ft = document.getElementById('mc-freetext');
+  if (ft) {
+    var marker = '\n--- aus CKD-Direkteingabe ---\n';
+    var idx = ft.value.indexOf(marker);
+    if (idx >= 0) ft.value = ft.value.substring(0, idx);
+    if (typeof window.mcParseFreeText === 'function') window.mcParseFreeText();
+    if (typeof window.mcRunCheck === 'function')      window.mcRunCheck();
+  }
+};
+
 // ── AKTIVE PASTE-ZIEL-ZONE im CKD-Tab ─────────────────────────
 window.activateOcrZone = function(name) {
   window.activeOcrZone = name;
   var lab = document.getElementById('lab-ocr-zone');
   var med = document.getElementById('ckd-med-ocr-zone');
+  var diag = document.getElementById('vd-drop-zone');
   if (lab) lab.classList.toggle('ocr-paste-active', name === 'lab');
   if (med) med.classList.toggle('ocr-paste-active', name === 'med');
+  if (diag) diag.classList.toggle('ocr-paste-active', name === 'diag');
 };
 // Standard nach Tab-Wechsel: keine Zone aktiv (Default = Labor bei Paste, falls nichts geklickt)
 window.activeOcrZone = null;
@@ -2377,31 +2546,43 @@ window.ckdMedOcrFromCkd = function(file) {
     ckdSetMedOcrStatus('error', '❌ Bitte ein Bild (PNG, JPG, etc.) hochladen.');
     return;
   }
-  if (typeof window.mcMedOcrHandle !== 'function') {
-    ckdSetMedOcrStatus('error', '❌ Medikations-Handler nicht verfügbar. Seite neu laden.');
+  if (typeof window.ocrLoadTesseract !== 'function') {
+    ckdSetMedOcrStatus('error', '❌ OCR-Engine nicht verfügbar. Seite neu laden.');
     return;
   }
-  // Status-Update vor Delegation
-  ckdSetMedOcrStatus('loading', '⏳ Bild wird gelesen — Status auch im Medikationscheck-Tab sichtbar…');
 
-  // Delegation an Med-OCR-Handler (schreibt in mc-freetext + checkt Boxes)
-  // Wir hooken kurz in den mc-ocr-status, um Ergebnis hier zu spiegeln
-  var mcStatusEl = document.getElementById('mc-ocr-status');
-  var observer = null;
-  if (mcStatusEl && typeof MutationObserver !== 'undefined') {
-    observer = new MutationObserver(function(){
-      ckdSetMedOcrStatus(mcStatusEl.className.replace('mc-ocr-status ',''), mcStatusEl.innerHTML);
-      // Bei Erfolg/Fehler beenden
-      if (mcStatusEl.className.indexOf('success') >= 0 || mcStatusEl.className.indexOf('error') >= 0) {
-        setTimeout(function(){ if (observer) observer.disconnect(); }, 100);
+  // Eigene OCR direkt — Ergebnis in CKD-Textarea einsetzen, dann ckdMedTextChange triggern
+  window.ocrLoadTesseract(function(msg){ ckdSetMedOcrStatus('loading', msg); }).then(function(){
+    ckdSetMedOcrStatus('loading', '⏳ Bild wird gelesen — kann 5–15 Sekunden dauern…');
+    return Tesseract.recognize(file, 'deu', {
+      logger: function(m){
+        if (m.status === 'recognizing text') {
+          var pct = Math.round((m.progress||0) * 100);
+          ckdSetMedOcrStatus('loading', '⏳ OCR läuft… ' + pct + '%');
+        }
       }
     });
-    observer.observe(mcStatusEl, { attributes:true, childList:true, subtree:true, characterData:true });
-  }
-  window.mcMedOcrHandle(file);
-  // File-Input zurücksetzen
-  var fi = document.getElementById('ckd-med-ocr-file');
-  if (fi) fi.value = '';
+  }).then(function(result){
+    var text = (result && result.data && result.data.text) || '';
+    if (!text.trim()) {
+      ckdSetMedOcrStatus('error', '⚠️ Kein Text im Bild erkannt. Bildqualität prüfen.');
+      return;
+    }
+    // Text in Textarea einsetzen (additiv) und Parsing triggern
+    var ta = document.getElementById('ckd-med-text');
+    if (ta) {
+      var existing = (ta.value || '').trim();
+      ta.value = existing ? (existing + '\n' + text) : text;
+      if (typeof window.ckdMedTextChange === 'function') window.ckdMedTextChange(ta.value);
+    }
+    ckdSetMedOcrStatus('success', '✅ Bild eingelesen — siehe Erkennung unten');
+    setTimeout(function(){ var s=document.getElementById('ckd-med-ocr-status'); if (s && s.className.indexOf('success')>=0) { s.style.display='none'; s.innerHTML=''; } }, 4000);
+    var fi = document.getElementById('ckd-med-ocr-file');
+    if (fi) fi.value = '';
+  }).catch(function(err){
+    ckdSetMedOcrStatus('error', '❌ Fehler: ' + (err && err.message ? err.message : 'OCR fehlgeschlagen.'));
+    console.error('CKD-Med-OCR Error:', err);
+  });
 };
 
 // Drag-and-Drop für CKD-Med-Drop-Zone
@@ -2431,6 +2612,300 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', ckdInitMedOcrDropZone);
 } else {
   ckdInitMedOcrDropZone();
+}
+
+// ── VORDIAGNOSEN: Text + Bild (OCR) Paste/Drop ────────────────
+// Kategorien für thematische Sortierung — Reihenfolge = Output-Reihenfolge
+// Nephrologisch zuerst (Pattern-Priorität: "Hypertensive Nephropathie" → Nephro, nicht Kardio)
+var VD_CATEGORIES = [
+  { name:'Nephrologisch', patterns:[
+    /nephropath/i, /nephritis/i, /glomerul/i, /\bckd\b/i, /niereninsuff/i, /nierenversag/i,
+    /\bfsgs\b/i, /\bigan\b/i, /iga[-\s]?neph/i, /\badpkd\b/i, /polyzyst/i, /zystennier/i,
+    /lupus[-\s]?nephr/i, /\banca\b/i, /vaskulit/i, /wegener/i, /polyangiit/i,
+    /nierentx/i, /nierentransplant/i, /\bntx\b/i, /transplantierte?\s+niere/i,
+    /dialyse/i, /hämodial/i, /haemodial/i, /peritoneald/i, /proteinuri/i, /albuminur/i, /hämaturi/i, /nephrektomi/i,
+    /membran[a-zäöü]*\s+nephro/i, /minimal[-\s]?change/i, /nephroskleros/i, /\buacr\b/i, /\begfr\b/i
+  ]},
+  { name:'Kardiovaskulär', patterns:[
+    /\bkhk\b/i, /koronar/i, /\bpci\b/i, /\bstent/i, /myokardinfarkt/i, /\bnstemi\b/i, /\bstemi\b/i,
+    /herzinsuff/i, /\bhfpef\b/i, /\bhfref\b/i, /\bhfmref\b/i, /\bnyha\b/i, /\bvhf\b/i, /vorhofflimmer/i, /atrial\s+fibrill/i,
+    /kardiomyopath/i, /\bklappen/i, /aortenstenos/i, /aorteninsuff/i, /mitralklapp/i, /trikuspidal/i,
+    /perikard/i, /bradykard/i, /tachykard/i, /av[-\s]?block/i, /schrittmacher/i, /\bicd\b/i, /\bcrt\b/i,
+    /\bpavk\b/i, /periphere\s+arterielle/i, /aneurysma/i, /aortendissekt/i,
+    /hyperton/i, /bluthochdruck/i
+  ]},
+  { name:'Endokrin/Stoffwechsel', patterns:[
+    /diabetes\s+mellitus/i, /\bdm\s*[12]\b/i, /typ\s*[12]\s*diab/i, /\bt[12]dm\b/i,
+    /hypothyreo/i, /hyperthyreo/i, /schilddrüs/i, /struma/i, /hashimoto/i, /basedow/i,
+    /nebennier/i, /\bcushing/i, /akromeg/i, /hypophysen/i, /diabetes\s+insipidus/i,
+    /hyperlipid/i, /hypercholester/i, /dyslipid/i, /adipositas/i, /\bbmi\b/i,
+    /\bgicht\b/i, /hyperurik/i, /metabolisch/i
+  ]},
+  { name:'Pulmonologisch', patterns:[
+    /\bcopd\b/i, /\basthma\b/i, /lungenemboli/i, /\blae\b/i, /pneumoni/i, /tuberkulos/i, /\btbc\b/i,
+    /lungenkarzin/i, /bronchialkarzin/i, /schlafapnoe/i, /\bosas\b/i, /lungenfibros/i, /emphysem/i, /sarkoidos/i
+  ]},
+  { name:'Neurologisch', patterns:[
+    /schlaganfall/i, /apoplex/i, /\binsult\b/i, /\btia\b/i, /parkinson/i, /epilep/i,
+    /\bdemenz/i, /alzheimer/i, /multiple\s+sklero/i, /\bms\b/i, /polyneuropath/i,
+    /migrän/i, /kopfschmerz/i, /gliom/i, /meningeom/i, /hirntumor/i, /enzephal/i, /\btumor.*hirn/i
+  ]},
+  { name:'Gastroenterologisch', patterns:[
+    /gastrit/i, /\bulkus\b/i, /\bulcus\b/i, /reflux/i, /\bgerd\b/i, /colit/i, /morbus\s+crohn/i,
+    /divertikul/i, /leberzirrh/i, /hepatitis/i, /pankreatit/i, /cholelith/i, /cholezyst/i,
+    /reizdarm/i, /zöliaki/i
+  ]},
+  { name:'Hämatologisch', patterns:[
+    /\banämi/i, /\banaemi/i, /thrombozytopen/i, /\bmgus\b/i, /leukopen/i, /neutropen/i,
+    /gerinnungsstör/i, /blutungsneig/i, /\bitp\b/i, /\bttp\b/i
+  ]},
+  { name:'Onkologisch', patterns:[
+    /karzinom/i, /malignom/i, /\btumor\b/i, /metastas/i, /leukäm/i, /lymphom/i, /sarkom/i, /melanom/i,
+    /z\.?n\.?\s*(ca|karzinom|malignom)/i, /mamma[-\s]?ca/i, /bronchial[-\s]?ca/i, /prostata[-\s]?ca/i,
+    /kolorektal/i, /chemotherap/i, /radiatio/i, /\bbestrahl/i
+  ]},
+  { name:'Rheumatologisch/Orthopädisch', patterns:[
+    /osteoporos/i, /arthros/i, /rheumatoid/i, /ankylo/i, /spondylarthr/i, /coxarthr/i, /gonarthr/i,
+    /bandscheib/i, /hallux/i, /osteomyel/i, /fibromyalg/i
+  ]},
+  { name:'Psychiatrisch', patterns:[
+    /depress/i, /angststör/i, /bipolar/i, /schizo/i, /psychose/i, /bulimi/i, /anorexi/i,
+    /sucht/i, /alkohol[-\s]?abhäng/i, /drogenabhäng/i, /\bptbs\b/i, /burnout/i
+  ]},
+  { name:'Urologisch/Gynäkologisch', patterns:[
+    /prostatahyper/i, /\bbph\b/i, /benigne\s+prostata/i, /endometrio/i, /uterusmyom/i, /hysterekt/i,
+    /harninkontin/i, /ovarial/i, /zystitis/i, /harnwegs/i
+  ]},
+  { name:'Infektiös', patterns:[
+    /\bhiv\b/i, /\bhbv\b/i, /\bhcv\b/i, /\bzoster\b/i, /\bsepsis\b/i, /septisch/i
+  ]},
+  { name:'Dermatologisch', patterns:[
+    /psoriasis/i, /ekzem/i, /atopische?\s+dermat/i, /urticari/i
+  ]}
+];
+
+function vdClassifyLine(line) {
+  for (var i = 0; i < VD_CATEGORIES.length; i++) {
+    var c = VD_CATEGORIES[i];
+    for (var j = 0; j < c.patterns.length; j++) {
+      if (c.patterns[j].test(line)) return c.name;
+    }
+  }
+  return null;
+}
+
+window.vdSortByCategory = function() {
+  var ta = document.getElementById('vordiagnosen');
+  if (!ta) return;
+  var lines = (ta.value || '').split('\n').map(function(s){return s.trim();}).filter(function(s){return s.length > 0;});
+  if (lines.length < 2) return;
+
+  var groups = {};
+  var unclassified = [];
+  lines.forEach(function(line){
+    var cat = vdClassifyLine(line);
+    if (cat) {
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(line);
+    } else {
+      unclassified.push(line);
+    }
+  });
+
+  var out = [];
+  var catOrder = VD_CATEGORIES.map(function(c){return c.name;});
+  catOrder.forEach(function(name){
+    if (groups[name] && groups[name].length) {
+      if (out.length) out.push('');
+      groups[name].forEach(function(l){ out.push(l); });
+    }
+  });
+  if (unclassified.length) {
+    if (out.length) out.push('');
+    unclassified.forEach(function(l){ out.push(l); });
+  }
+  ta.value = out.join('\n');
+  if (window.vdTextChange) window.vdTextChange(ta.value);
+};
+
+var VD_PATTERNS = [
+  { key:'diabetisch',  label:'Diabetische Nephropathie',  regex:/(diab[a-zäöü]*\s+nephropath|diab[a-zäöü]*\s+nieren|nephropathia\s+diabet)/i },
+  { key:'hypertensiv', label:'Hypertensive Nephropathie', regex:/(hyperton[a-zäöü]*\s+nephropath|hypertens[a-zäöü]*\s+nephropath|hypertens[a-zäöü]*\s+nieren|nephrosklerose)/i },
+  { key:'igan',        label:'IgA-Nephropathie',          regex:/(iga[\s-]?nephr|\bigan\b|morbus\s+berger)/i },
+  { key:'fsgs',        label:'FSGS',                       regex:/(\bfsgs\b|fokal[a-zäöü]*\s+segmental)/i },
+  { key:'mgn',         label:'Membranöse Nephropathie',   regex:/(membran[a-zäöü]*\s+nephropath|membran[a-zäöü]*\s+glomerul|\bmgn\b)/i },
+  { key:'adpkd',       label:'ADPKD',                      regex:/(\badpkd\b|polyzyst|zystenniere)/i },
+  { key:'lupus',       label:'Lupusnephritis',             regex:/(lupus[-\s]?nephr|lupusnephritis)/i },
+  { key:'vaskulitis',  label:'ANCA-Vaskulitis',            regex:/(\banca\b|vaskulit|wegener|mikroskop[a-zäöü]*\s*polyangiit|granulomat[a-zäöü]*\s*polyangiit|churg[-\s]?strauss|\bgpa\b|\bmpa\b|\begpa\b)/i },
+  { key:'transplantat',label:'Nierentransplantat',         regex:/(nierentx|nierentransplant|\bntx\b|transplantierte?\s+niere)/i }
+];
+
+var VD_COMORB = [
+  { label:'Arterielle Hypertonie',       regex:/(arteriell[a-zäöü]*\s+hyperton|\bhyperton(?!ie?\s+nephro)|bluthochdruck)/i },
+  { label:'Diabetes mellitus',           regex:/(diabetes\s+mellitus|\bdm\s*[12]\b|typ\s*[12]\s*diabet|\bt[12]dm\b)/i },
+  { label:'KHK',                         regex:/(\bkhk\b|koronare?\s+herzkrank|z\.?n\.?\s*(pci|stent)|myokardinfarkt|\bnstemi\b|\bstemi\b)/i },
+  { label:'Herzinsuffizienz',            regex:/(herzinsuff|\bhfref\b|\bhfpef\b|\bhfmref\b|nyha)/i },
+  { label:'Vorhofflimmern',              regex:/(vorhofflimmer|\bvhf\b|atrial\s+fibrill)/i },
+  { label:'pAVK',                        regex:/(\bpavk\b|periphere\s+arterielle\s+verschlu)/i },
+  { label:'Z.n. Schlaganfall/TIA',       regex:/(schlaganfall|\btia\b|apoplex|insult)/i },
+  { label:'Adipositas',                  regex:/(adipositas|bmi\s*[><=]\s*30)/i },
+  { label:'Hyperlipidämie',              regex:/(hyperlipid|hypercholesterin|dyslipid)/i },
+  { label:'COPD',                        regex:/(\bcopd\b|chron[a-zäöü]*\s+obstrukt[a-zäöü]*\s+lung)/i },
+  { label:'Asthma',                      regex:/(\basthma\b)/i },
+  { label:'Hypothyreose',                regex:/(hypothyreo)/i },
+  { label:'Hyperthyreose',               regex:/(hyperthyreo)/i },
+  { label:'Hyperurikämie / Gicht',       regex:/(\bgicht\b|hyperurik)/i },
+  { label:'Osteoporose',                 regex:/(osteoporose)/i },
+  { label:'Z.n. Malignom',               regex:/(z\.?n\.?\s*(malignom|karzinom|\bca\b|tumor)|mamma[-\s]?ca|bronchial[-\s]?ca|prostata[-\s]?ca)/i },
+  { label:'Anämie',                      regex:/(\banämie\b|\banaemie\b)/i },
+  { label:'Depression',                  regex:/(depress)/i }
+];
+
+function vdSetOcrStatus(cls, msg) {
+  var el = document.getElementById('vd-ocr-status');
+  if (!el) return;
+  el.className = cls;
+  el.innerHTML = msg;
+}
+
+window.vdTextChange = function(text) {
+  var resEl = document.getElementById('vd-results');
+  if (!resEl) return;
+  var t = (text || '').trim();
+  if (!t) { resEl.style.display = 'none'; resEl.innerHTML = ''; return; }
+
+  var items = t.split(/\n|;/).map(function(s){return s.trim();}).filter(function(s){return s.length > 2;});
+  var count = items.length;
+
+  var matched = [];
+  VD_PATTERNS.forEach(function(p){
+    if (p.regex.test(text)) {
+      matched.push(p);
+      var cb = document.querySelector('#disease-checkboxes input[type="checkbox"][value="' + p.key + '"]');
+      if (cb && !cb.checked) {
+        cb.checked = true;
+        var lbl = cb.closest('.checkbox-item');
+        if (lbl) lbl.classList.add('checked');
+      }
+    }
+  });
+
+  var comorbs = [];
+  VD_COMORB.forEach(function(c){ if (c.regex.test(text)) comorbs.push(c.label); });
+
+  // Pro-Zeile Klassifikation → Kategorien-Zählung
+  var catCounts = {};
+  items.forEach(function(line){
+    var cat = vdClassifyLine(line);
+    if (cat) catCounts[cat] = (catCounts[cat] || 0) + 1;
+  });
+  var catOrderNames = VD_CATEGORIES.map(function(c){return c.name;});
+  var catsInOrder = catOrderNames.filter(function(n){ return catCounts[n]; });
+  var classifiedCount = Object.keys(catCounts).reduce(function(a,n){ return a + catCounts[n]; }, 0);
+
+  var html = '<div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; margin-bottom:8px;">';
+  html += '<span style="font-size:.82rem; color:#4a148c; font-weight:700;">📋 ' + count + ' Zeile' + (count!==1?'n':'') + ' · ' + matched.length + ' renale Grunderkrankung' + (matched.length!==1?'en':'') + ' · ' + comorbs.length + ' Begleitdiagnose' + (comorbs.length!==1?'n':'') + '</span>';
+  if (count >= 2) {
+    html += '<button type="button" onclick="event.stopPropagation(); window.vdSortByCategory&&window.vdSortByCategory();" style="padding:5px 12px; background:#6a1b9a; color:#fff; border:none; border-radius:8px; font-size:.73rem; font-weight:600; cursor:pointer; white-space:nowrap;">🔀 Thematisch sortieren</button>';
+  }
+  html += '</div>';
+
+  if (catsInOrder.length) {
+    html += '<div style="margin-bottom:8px; background:#fff; border:1px solid #ce93d8; border-radius:8px; padding:6px 10px;">';
+    html += '<div style="font-size:.7rem; color:#6a1b9a; font-weight:700; margin-bottom:4px;">🗂️ Kategorien (' + classifiedCount + '/' + count + ' klassifiziert):</div>';
+    catsInOrder.forEach(function(name){
+      html += '<span style="display:inline-block; background:#f3e5f5; border:1px solid #ce93d8; color:#4a148c; padding:2px 8px; border-radius:12px; font-size:.7rem; font-weight:600; margin:2px 4px 2px 0;">' + name + ' <span style="background:#6a1b9a; color:#fff; border-radius:8px; padding:0 6px; margin-left:3px;">' + catCounts[name] + '</span></span>';
+    });
+    html += '</div>';
+  }
+  if (matched.length) {
+    html += '<div style="margin-bottom:8px;">';
+    html += '<div style="font-size:.72rem; color:#6a1b9a; font-weight:700; margin-bottom:4px;">🫘 Renal (Grunderkrankungen ausgewählt):</div>';
+    matched.forEach(function(p){
+      html += '<span style="display:inline-block; background:#8e24aa; color:#fff; padding:3px 10px; border-radius:14px; font-size:.73rem; font-weight:600; margin:2px 4px 2px 0;">✓ ' + p.label + '</span>';
+    });
+    html += '</div>';
+  }
+  if (comorbs.length) {
+    html += '<div>';
+    html += '<div style="font-size:.72rem; color:#6a1b9a; font-weight:700; margin-bottom:4px;">🩺 Begleitdiagnosen (erkannt):</div>';
+    comorbs.forEach(function(lbl){
+      html += '<span style="display:inline-block; background:#fff; border:1px solid #ce93d8; color:#6a1b9a; padding:3px 10px; border-radius:14px; font-size:.73rem; font-weight:600; margin:2px 4px 2px 0;">' + lbl + '</span>';
+    });
+    html += '</div>';
+  }
+  if (!matched.length && !comorbs.length && count > 0) {
+    html += '<div style="font-size:.72rem; color:#6a1b9a;">Keine Standard-Kategorien erkannt — Text erscheint trotzdem im Arztbrief.</div>';
+  }
+  resEl.style.display = 'block';
+  resEl.innerHTML = html;
+};
+
+window.vdOcrHandle = function(file) {
+  if (!file) return;
+  if (!file.type || file.type.indexOf('image') !== 0) {
+    vdSetOcrStatus('error', '❌ Bitte ein Bild (PNG, JPG, etc.) hochladen.');
+    return;
+  }
+  if (typeof window.ocrLoadTesseract !== 'function') {
+    vdSetOcrStatus('error', '❌ OCR-Engine nicht verfügbar. Seite neu laden.');
+    return;
+  }
+  window.ocrLoadTesseract(function(msg){ vdSetOcrStatus('loading', msg); }).then(function(){
+    vdSetOcrStatus('loading', '⏳ Bild wird gelesen — kann 5–15 Sekunden dauern…');
+    return Tesseract.recognize(file, 'deu', {
+      logger: function(m){
+        if (m.status === 'recognizing text') {
+          var pct = Math.round((m.progress||0) * 100);
+          vdSetOcrStatus('loading', '⏳ OCR läuft… ' + pct + '%');
+        }
+      }
+    });
+  }).then(function(result){
+    var text = (result && result.data && result.data.text) || '';
+    if (!text.trim()) {
+      vdSetOcrStatus('error', '⚠️ Kein Text im Bild erkannt. Bildqualität prüfen.');
+      return;
+    }
+    var ta = document.getElementById('vordiagnosen');
+    if (ta) {
+      var existing = (ta.value || '').trim();
+      ta.value = existing ? (existing + '\n' + text) : text;
+      if (typeof window.vdTextChange === 'function') window.vdTextChange(ta.value);
+    }
+    vdSetOcrStatus('success', '✅ Bild eingelesen — siehe Erkennung unten');
+    setTimeout(function(){ var s=document.getElementById('vd-ocr-status'); if (s && s.className.indexOf('success')>=0) { s.style.display='none'; s.innerHTML=''; } }, 4000);
+    var fi = document.getElementById('vd-ocr-file');
+    if (fi) fi.value = '';
+  }).catch(function(err){
+    vdSetOcrStatus('error', '❌ Fehler: ' + (err && err.message ? err.message : 'OCR fehlgeschlagen.'));
+    console.error('VD-OCR Error:', err);
+  });
+};
+
+function vdInitDropZone() {
+  var zone = document.getElementById('vd-drop-zone');
+  if (!zone) return;
+  ['dragenter','dragover','dragleave','drop'].forEach(function(ev){
+    zone.addEventListener(ev, function(e){ e.preventDefault(); e.stopPropagation(); }, false);
+  });
+  ['dragenter','dragover'].forEach(function(ev){
+    zone.addEventListener(ev, function(){ zone.classList.add('dragover'); }, false);
+  });
+  ['dragleave','drop'].forEach(function(ev){
+    zone.addEventListener(ev, function(){ zone.classList.remove('dragover'); }, false);
+  });
+  zone.addEventListener('drop', function(e){
+    var dt = e.dataTransfer;
+    if (dt && dt.files && dt.files[0]) {
+      window.vdOcrHandle(dt.files[0]);
+    }
+  }, false);
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', vdInitDropZone);
+} else {
+  vdInitDropZone();
 }
 
 })();
@@ -9915,7 +10390,7 @@ abxRender();
   <!-- Title -->
   <div class="hwi-title-bar">
     <h2>🔬 Harnwegsinfekt (HWI) — Klinischer Algorithmus</h2>
-    <p>Diagnose-Wizard · Therapieempfehlung · Komplikationsmanagement | Quelle: Plan 2 ABx V18.2 (09/2024, KSchlieps)</p>
+    <p>Diagnose-Wizard · Therapieempfehlung · Komplikationsmanagement</p>
   </div>
 
   <div id="hwi-import-hint" class="hwi-import-hint" style="display:none;">
@@ -12438,6 +12913,84 @@ window.mcClearMeds = function() {
   });
   // Re-Run für Update der Dosierungs- und Regel-Anzeige
   if (typeof mcRunCheckInner === 'function') mcRunCheckInner();
+};
+
+// ── DOSING-PREVIEW für Freitext (CKD-Tab nutzt das) ──────────
+// Gibt HTML zurück für eine Tabelle: erkannte Wirkstoffe mit eGFR-adaptierter Dosis.
+window.mcBuildDosingHtmlFromText = function(text, egfrInput, dialysisMode) {
+  var lower = (text || '').toLowerCase();
+  if (!lower.trim()) return { count: 0, html: '' };
+
+  var detected = [];
+  var seen = {};
+  MC_DOSING.forEach(function(drug){
+    var hit = false;
+    if (drug.name) {
+      var n = drug.name.toLowerCase();
+      if (n.indexOf('/') >= 0) {
+        // Kombipräparat (z.B. Sacubitril/Valsartan): nur Treffer, wenn ALLE Teile im Text
+        var parts = n.split('/').map(function(p){return p.trim();}).filter(function(p){return p.length > 3;});
+        hit = parts.length > 0 && parts.every(function(p){ return lower.indexOf(p) >= 0; });
+      } else if (n.length > 3 && lower.indexOf(n) >= 0) {
+        hit = true;
+      }
+    }
+    if (!hit && drug.brand) {
+      var bt = drug.brand.replace(/®/g,'').toLowerCase().split(/\//).map(function(t){return t.trim();}).filter(function(t){return t.length > 3;});
+      hit = bt.some(function(t){ return lower.indexOf(t) >= 0; });
+    }
+    if (hit && !seen[drug.name]) { detected.push(drug); seen[drug.name] = true; }
+  });
+
+  var band = mcGetEgfrBand(egfrInput, dialysisMode);
+  if (!detected.length) return { count: 0, html: '', band: band };
+
+  var html = '';
+  html += '<div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px;">';
+  html += '<span style="font-size:.85rem; color:#1b5e20; font-weight:700;">✅ ' + detected.length + ' Wirkstoff' + (detected.length!==1?'e':'') + ' erkannt</span>';
+  if (band) {
+    html += '<span class="mc-egfr-band ' + mcGetEgfrBandCls(band) + '" style="padding:3px 10px; border-radius:12px; font-size:.78rem; font-weight:700;">' + mcGetEgfrBandLabel(band) + ' ml/min</span>';
+  } else {
+    html += '<span style="padding:3px 10px; border-radius:12px; font-size:.72rem; background:#fff8e1; color:#e65100; border:1px solid #ffe082;">⚠️ eGFR fehlt — Dosis erst nach eGFR-Berechnung</span>';
+  }
+  html += '</div>';
+
+  if (band) {
+    html += '<div style="background:#fff; border:1px solid #c8e6c9; border-radius:8px; overflow:hidden; max-height:360px; overflow-y:auto;">';
+    html += '<table style="width:100%; border-collapse:collapse; font-size:.78rem;">';
+    html += '<thead><tr style="background:#f5f5f5; text-align:left; position:sticky; top:0;">';
+    html += '<th style="padding:6px 8px; border-bottom:1px solid #e0e0e0; white-space:nowrap;">Wirkstoff</th>';
+    html += '<th style="padding:6px 8px; border-bottom:1px solid #e0e0e0;">Dosis (eGFR-adaptiert)</th>';
+    html += '<th style="padding:6px 8px; border-bottom:1px solid #e0e0e0;">Hinweis</th>';
+    html += '</tr></thead><tbody>';
+    detected.forEach(function(drug){
+      var d = drug.dosierung[band];
+      if (!d && band === 'PD') d = drug.dosierung['<15'];
+      if (!d) d = { dosis: '—', hinweis: '' };
+      var dl = (d.dosis || '').toLowerCase();
+      var style = 'color:#2e7d32;';
+      if (dl.indexOf('kontraindiziert') >= 0 || dl.indexOf('vermeiden') >= 0 || dl === 'nicht empfohlen' || dl.indexOf('nicht indiziert') >= 0 || dl.indexOf('nicht zugelassen') >= 0) {
+        style = 'color:#c62828; font-weight:700;';
+      } else if (dl.indexOf('nicht empfohlen') >= 0 || dl.indexOf('vorsicht') >= 0 || dl.indexOf('begrenzte daten') >= 0 || dl.indexOf('50%') >= 0 || dl.indexOf('25%') >= 0 || dl.indexOf('reduz') >= 0 || dl.indexOf('max.') >= 0) {
+        style = 'color:#e65100; font-weight:600;';
+      }
+      html += '<tr style="border-top:1px solid #f0f0f0;">';
+      html += '<td style="padding:6px 8px; vertical-align:top;"><strong>' + drug.name + '</strong>';
+      if (drug.brand) html += '<br><span style="font-size:.7rem; color:#90a4ae;">' + drug.brand + '</span>';
+      html += '</td>';
+      html += '<td style="padding:6px 8px; vertical-align:top; ' + style + '">' + (d.dosis || '—') + '</td>';
+      html += '<td style="padding:6px 8px; vertical-align:top; color:#546e7a;">' + (d.hinweis || '—') + '</td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table></div>';
+  } else {
+    html += '<div style="background:#fff; border:1px solid #cfd8dc; border-radius:8px; padding:8px 12px; font-size:.8rem; color:#455a64;">';
+    html += '<strong>Erkannt:</strong> ';
+    detected.forEach(function(d,i){ html += (i?', ':'') + d.name; });
+    html += '</div>';
+  }
+
+  return { count: detected.length, html: html, band: band, drugs: detected };
 };
 
 // ── EXPOSE ────────────────────────────────────────────────────
