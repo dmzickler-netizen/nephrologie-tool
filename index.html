@@ -1546,38 +1546,99 @@ label .lip-optional {
           <span class="unit">mg/g Kreatinin</span>
         </div>
         <div class="form-group">
-          <label>Blutdruck (RR)</label>
-          <div style="display:flex; align-items:center; gap:6px;">
-            <input type="number" id="bp_sys" placeholder="sys" min="80" max="250" style="flex:1;">
-            <span style="font-weight:700; color:#455a64; font-size:1.1rem;">/</span>
-            <input type="number" id="bp_dia" placeholder="dia" min="40" max="160" style="flex:1;">
-          </div>
-          <span class="unit">mmHg (systolisch / diastolisch)</span>
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
           <label>Kalium</label>
           <input type="number" id="kalium" placeholder="z.B. 4.8" step="0.1" min="1" max="9">
           <span class="unit">mmol/l (Finerenon, Spiro, RAAS)</span>
         </div>
+      </div>
+
+      <div class="form-row">
         <div class="form-group">
           <label>pH (venös/arteriell)</label>
           <input type="number" id="ph" placeholder="z.B. 7.32" step="0.01" min="6.8" max="7.8">
           <span class="unit">pH</span>
         </div>
-      </div>
-      <div class="form-row">
         <div class="form-group">
           <label>Bikarbonat (HCO₃⁻)</label>
           <input type="number" id="bicarb" placeholder="z.B. 20" step="0.5" min="0">
           <span class="unit">mmol/l</span>
         </div>
-        <div class="form-group"></div>
       </div>
 
-      <div style="margin-bottom:12px;">
+      <!-- ═══ SCHRITT 4: Blutdruck ═══ -->
+      <div class="step-banner">
+        <div class="step-num">4</div>
+        <div class="step-text">
+          <div class="step-title">Blutdruck</div>
+          <div class="step-sub">Praxis-RR (Office BP) und optional Heim-RR (HBPM)</div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Praxis-RR <span style="font-weight:400; color:#607d8b;">(Office BP)</span></label>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <input type="number" id="bp_sys" placeholder="sys" min="60" max="280" style="flex:1;">
+            <span style="font-weight:700; color:#455a64; font-size:1.1rem;">/</span>
+            <input type="number" id="bp_dia" placeholder="dia" min="30" max="180" style="flex:1;">
+          </div>
+          <span class="unit">mmHg</span>
+          <div style="font-size:.73rem; color:#78909c; margin-top:3px; line-height:1.4;">
+            Standardmessung in der Praxis · 3× nach 5 min Ruhe, Mittelwert · idealer Weise ohne Arzt im Raum (AOBP) · Zielwert &lt;130/80 mmHg
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Heim-RR <span style="font-weight:400; color:#607d8b;">(HBPM)</span> <span style="color:#90a4ae; font-weight:400;">(optional)</span></label>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <input type="number" id="bp_home_sys" placeholder="sys" min="60" max="280" style="flex:1;">
+            <span style="font-weight:700; color:#455a64; font-size:1.1rem;">/</span>
+            <input type="number" id="bp_home_dia" placeholder="dia" min="30" max="180" style="flex:1;">
+          </div>
+          <span class="unit">mmHg</span>
+          <div style="font-size:.73rem; color:#78909c; margin-top:3px; line-height:1.4;">
+            Home Blood Pressure Monitoring · ≥3 Tage, morgens + abends, je 2 Messungen, Mittelwert · Zielwert &lt;130/80 mmHg
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ SCHRITT 5: Aktuelle Medikation ═══ -->
+      <div class="step-banner">
+        <div class="step-num">5</div>
+        <div class="step-text">
+          <div class="step-title">Aktuelle Medikation</div>
+          <div class="step-sub">Foto/Screenshot der Medikamentenliste — wird in den Medikationscheck-Tab übernommen</div>
+        </div>
+      </div>
+
+      <style>
+      #ckd-med-ocr-zone { border:2px dashed #a5d6a7; border-radius:12px; padding:14px 18px; background:#f1f8e9; margin-bottom:8px; transition:all .2s; cursor:pointer; }
+      #ckd-med-ocr-zone:hover, #ckd-med-ocr-zone.dragover { background:#e8f5e9; border-color:#2e7d32; }
+      #ckd-med-ocr-zone.dragover { transform:scale(1.01); box-shadow:0 4px 12px rgba(46,125,50,.15); }
+      #ckd-med-ocr-zone .ckd-med-ocr-row { display:flex; align-items:center; gap:14px; }
+      #ckd-med-ocr-zone .ckd-med-ocr-icon { font-size:1.8rem; }
+      #ckd-med-ocr-zone .ckd-med-ocr-text { flex:1; }
+      #ckd-med-ocr-zone .ckd-med-ocr-title { font-size:.95rem; font-weight:700; color:#2e7d32; margin-bottom:2px; }
+      #ckd-med-ocr-zone .ckd-med-ocr-sub { font-size:.78rem; color:#546e7a; line-height:1.4; }
+      #ckd-med-ocr-zone .ckd-med-ocr-privacy { font-size:.7rem; color:#1b5e20; font-weight:600; margin-top:4px; }
+      #ckd-med-ocr-status { display:none; margin-top:10px; padding:10px 14px; border-radius:8px; font-size:.85rem; }
+      #ckd-med-ocr-status.loading { display:block; background:#fff8e1; color:#e65100; border-left:3px solid #f57c00; }
+      #ckd-med-ocr-status.success { display:block; background:#e8f5e9; color:#2e7d32; border-left:3px solid #43a047; }
+      #ckd-med-ocr-status.error { display:block; background:#ffebee; color:#c62828; border-left:3px solid #e53935; }
+      </style>
+      <div id="ckd-med-ocr-zone" onclick="document.getElementById('ckd-med-ocr-file').click();">
+        <div class="ckd-med-ocr-row">
+          <div class="ckd-med-ocr-icon">💊</div>
+          <div class="ckd-med-ocr-text">
+            <div class="ckd-med-ocr-title">Medikamentenliste per Bild einlesen (OCR)</div>
+            <div class="ckd-med-ocr-sub">Screenshot der Medikation hierher ziehen, klicken oder <strong>Strg+V</strong> einfügen. Erkennt Wirkstoffe + Handelsnamen, kreuzt sie automatisch im Medikationscheck-Tab an.</div>
+            <div class="ckd-med-ocr-privacy">🔒 100 % lokal — Bild verlässt diesen Browser nicht.</div>
+          </div>
+        </div>
+        <input type="file" id="ckd-med-ocr-file" accept="image/*" style="display:none;" onchange="window.ckdMedOcrFromCkd&&window.ckdMedOcrFromCkd(this.files[0]);">
+        <div id="ckd-med-ocr-status"></div>
+      </div>
+
+      <div style="margin-bottom:12px; margin-top:18px;">
         <label style="font-size:0.78rem;font-weight:600;color:#455a64;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:8px;">Grunderkrankung(en)</label>
         <div class="checkbox-grid" id="disease-checkboxes">
           <label class="checkbox-item" onclick="toggleCheck(this)">
@@ -2233,6 +2294,76 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initDropZone);
 } else {
   initDropZone();
+}
+
+// ── MED-OCR aus CKD-Tab — delegiert an window.mcMedOcrHandle ──
+function ckdSetMedOcrStatus(cls, msg) {
+  var el = document.getElementById('ckd-med-ocr-status');
+  if (!el) return;
+  el.className = cls;
+  el.innerHTML = msg;
+}
+
+window.ckdMedOcrFromCkd = function(file) {
+  if (!file) return;
+  if (!file.type || file.type.indexOf('image') !== 0) {
+    ckdSetMedOcrStatus('error', '❌ Bitte ein Bild (PNG, JPG, etc.) hochladen.');
+    return;
+  }
+  if (typeof window.mcMedOcrHandle !== 'function') {
+    ckdSetMedOcrStatus('error', '❌ Medikations-Handler nicht verfügbar. Seite neu laden.');
+    return;
+  }
+  // Status-Update vor Delegation
+  ckdSetMedOcrStatus('loading', '⏳ Bild wird gelesen — Status auch im Medikationscheck-Tab sichtbar…');
+
+  // Delegation an Med-OCR-Handler (schreibt in mc-freetext + checkt Boxes)
+  // Wir hooken kurz in den mc-ocr-status, um Ergebnis hier zu spiegeln
+  var mcStatusEl = document.getElementById('mc-ocr-status');
+  var observer = null;
+  if (mcStatusEl && typeof MutationObserver !== 'undefined') {
+    observer = new MutationObserver(function(){
+      ckdSetMedOcrStatus(mcStatusEl.className.replace('mc-ocr-status ',''), mcStatusEl.innerHTML);
+      // Bei Erfolg/Fehler beenden
+      if (mcStatusEl.className.indexOf('success') >= 0 || mcStatusEl.className.indexOf('error') >= 0) {
+        setTimeout(function(){ if (observer) observer.disconnect(); }, 100);
+      }
+    });
+    observer.observe(mcStatusEl, { attributes:true, childList:true, subtree:true, characterData:true });
+  }
+  window.mcMedOcrHandle(file);
+  // File-Input zurücksetzen
+  var fi = document.getElementById('ckd-med-ocr-file');
+  if (fi) fi.value = '';
+};
+
+// Drag-and-Drop für CKD-Med-Drop-Zone
+function ckdInitMedOcrDropZone() {
+  var zone = document.getElementById('ckd-med-ocr-zone');
+  if (!zone) return;
+  ['dragenter','dragover','dragleave','drop'].forEach(function(ev){
+    zone.addEventListener(ev, function(e){ e.preventDefault(); e.stopPropagation(); }, false);
+  });
+  ['dragenter','dragover'].forEach(function(ev){
+    zone.addEventListener(ev, function(){ zone.classList.add('dragover'); }, false);
+  });
+  ['dragleave','drop'].forEach(function(ev){
+    zone.addEventListener(ev, function(){ zone.classList.remove('dragover'); }, false);
+  });
+  zone.addEventListener('drop', function(e){
+    var dt = e.dataTransfer;
+    if (dt && dt.files && dt.files[0]) {
+      window.ckdMedOcrFromCkd(dt.files[0]);
+    }
+  }, false);
+  // Hinweis: Strg+V Paste-Listener bereits im Lab-OCR aktiv für CKD-Tab — der schreibt aber in Lab-OCR.
+  // Damit Strg+V hier auch Medikamente einlesen kann, müsste der User bewusst in dieser Zone fokussieren —
+  // wir lassen Paste hier weg, um Konflikt mit Lab-OCR Paste zu vermeiden. Drag-and-Drop + Klick reichen.
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', ckdInitMedOcrDropZone);
+} else {
+  ckdInitMedOcrDropZone();
 }
 
 })();
@@ -13972,7 +14103,8 @@ window.ckdSyncAgeBirth = ckdSyncAgeBirth;
 // ===== CLEAR / RESET CKD FORM =====
 function clearCKD() {
   // Text & number inputs (Typos korrigiert: bicarb statt bicarbonate, phosphat statt phosphate)
-  ['age','birthyear','creatinine','cystatinc','uacr','bp_sys','bp_dia','weight','height',
+  ['age','birthyear','creatinine','cystatinc','uacr','bp_sys','bp_dia','bp_home_sys','bp_home_dia',
+   'weight','height',
    'hb','ferritin','tsat','pth','ph','bicarb','phosphat','calcium','vitd',
    'kalium','extra_info'].forEach(id => {
     const el = document.getElementById(id);
@@ -16561,6 +16693,12 @@ function htnAutoImport() {
   if (bpSys)  { document.getElementById('htn-sys').value = bpSys;   }
   if (bpDia)  { document.getElementById('htn-dia').value = bpDia;   }
   if (bpSys)  imported.push('RR ' + bpSys + (bpDia ? '/' + bpDia : '') + ' mmHg');
+  // HBPM aus CKD-Tab übernehmen
+  const bpHomeSys = document.getElementById('bp_home_sys')?.value;
+  const bpHomeDia = document.getElementById('bp_home_dia')?.value;
+  if (bpHomeSys) { const e = document.getElementById('htn-home-sys'); if (e) e.value = bpHomeSys; }
+  if (bpHomeDia) { const e = document.getElementById('htn-home-dia'); if (e) e.value = bpHomeDia; }
+  if (bpHomeSys) imported.push('Heim-RR ' + bpHomeSys + (bpHomeDia ? '/' + bpHomeDia : '') + ' mmHg');
   if (uacr)   { document.getElementById('htn-uacr').value = uacr;   imported.push('uACR ' + uacr + ' mg/g'); }
   if (kalium) { document.getElementById('htn-kalium').value = kalium; imported.push('K\u207A ' + kalium + ' mmol/l'); }
 
