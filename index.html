@@ -1407,6 +1407,39 @@ label .lip-optional {
 <div id="tab-ckd">
 <div class="container">
 
+  <!-- LAB-OCR Drop-Zone -->
+  <style>
+  #lab-ocr-zone { border:2px dashed #90caf9; border-radius:12px; padding:14px 18px; background:#f5fafd; margin-bottom:16px; transition:all .2s; cursor:pointer; }
+  #lab-ocr-zone:hover, #lab-ocr-zone.dragover { background:#e3f2fd; border-color:#1565c0; }
+  #lab-ocr-zone.dragover { transform:scale(1.01); box-shadow:0 4px 12px rgba(21,101,192,.15); }
+  #lab-ocr-zone .lab-ocr-row { display:flex; align-items:center; gap:14px; }
+  #lab-ocr-zone .lab-ocr-icon { font-size:1.8rem; }
+  #lab-ocr-zone .lab-ocr-text { flex:1; }
+  #lab-ocr-zone .lab-ocr-title { font-size:.95rem; font-weight:700; color:#1565c0; margin-bottom:2px; }
+  #lab-ocr-zone .lab-ocr-sub { font-size:.78rem; color:#546e7a; line-height:1.4; }
+  #lab-ocr-zone .lab-ocr-privacy { font-size:.7rem; color:#2e7d32; font-weight:600; margin-top:4px; }
+  #lab-ocr-status { display:none; margin-top:10px; padding:10px 14px; border-radius:8px; font-size:.85rem; }
+  #lab-ocr-status.loading { display:block; background:#fff8e1; color:#e65100; border-left:3px solid #f57c00; }
+  #lab-ocr-status.success { display:block; background:#e8f5e9; color:#2e7d32; border-left:3px solid #43a047; }
+  #lab-ocr-status.error { display:block; background:#ffebee; color:#c62828; border-left:3px solid #e53935; }
+  #lab-ocr-results { display:none; margin-top:10px; padding:10px 14px; background:#e8f5e9; border-radius:8px; font-size:.82rem; }
+  #lab-ocr-results .lab-ocr-pill { display:inline-block; background:#fff; border:1px solid #a5d6a7; color:#2e7d32; padding:3px 10px; border-radius:14px; font-size:.78rem; font-weight:600; margin:3px 4px 0 0; }
+  #lab-ocr-results .lab-ocr-pill .v { color:#1b5e20; font-weight:700; }
+  </style>
+  <div id="lab-ocr-zone" onclick="document.getElementById('lab-ocr-file').click();">
+    <div class="lab-ocr-row">
+      <div class="lab-ocr-icon">📷</div>
+      <div class="lab-ocr-text">
+        <div class="lab-ocr-title">Laborbefund per Bild einlesen (OCR)</div>
+        <div class="lab-ocr-sub">Screenshot oder Foto hierher ziehen — oder klicken, um Datei auszuwählen. Erkennt Krea, eGFR, uACR, Hb, Ferritin, K⁺, HCO₃, PTH, Phosphat, Ca, HbA1c, LDL, Harnsäure u.a.</div>
+        <div class="lab-ocr-privacy">🔒 100 % lokal — Bild verlässt diesen Browser nicht. Personenbezogene Daten trotzdem vorher überdecken.</div>
+      </div>
+    </div>
+    <input type="file" id="lab-ocr-file" accept="image/*" style="display:none;" onchange="window.ckdLabOcrHandle&&window.ckdLabOcrHandle(this.files[0]);">
+    <div id="lab-ocr-status"></div>
+    <div id="lab-ocr-results"></div>
+  </div>
+
   <!-- Row 1: Input + Results -->
   <div class="grid-2" style="margin-bottom:20px;">
 
@@ -1754,6 +1787,387 @@ label .lip-optional {
 
 </div>
 </div>
+
+<!-- ════════════════════════════════════════════════════════════
+     LAB-OCR: Tesseract.js Drop-Zone für Laborbefunde
+     - 100% clientseitig (Datenschutz)
+     - Whitelist-Parser: nur bekannte Laborbegriffe + Zahl
+     - Befüllt Felder über alle Tabs (CKD, MBD, Diabetes, Lipid, Gicht)
+     ════════════════════════════════════════════════════════════ -->
+<script>
+(function(){
+'use strict';
+
+var TESSERACT_LOADED = false;
+var TESSERACT_LOADING = false;
+
+function setStatus(cls, msg) {
+  var el = document.getElementById('lab-ocr-status');
+  if (!el) return;
+  el.className = cls;
+  el.innerHTML = msg;
+}
+
+function loadTesseract() {
+  return new Promise(function(resolve, reject){
+    if (TESSERACT_LOADED) return resolve();
+    if (TESSERACT_LOADING) {
+      var iv = setInterval(function(){
+        if (TESSERACT_LOADED) { clearInterval(iv); resolve(); }
+      }, 200);
+      return;
+    }
+    TESSERACT_LOADING = true;
+    setStatus('loading', '⏳ OCR-Engine wird geladen (~2 MB, einmalig)…');
+    var s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+    s.onload = function(){
+      TESSERACT_LOADED = true;
+      TESSERACT_LOADING = false;
+      resolve();
+    };
+    s.onerror = function(){
+      TESSERACT_LOADING = false;
+      reject(new Error('Tesseract.js konnte nicht geladen werden — Internetverbindung prüfen.'));
+    };
+    document.head.appendChild(s);
+  });
+}
+
+// ── PARSER ────────────────────────────────────────────────────
+// Whitelist-Ansatz: Nur bekannte Laborbegriffe → Zahl daneben
+// Vermeidet Verwechslungen mit Patienten-IDs/Geb-Datum
+function parseLabText(text) {
+  // Normalisierung
+  var t = text.replace(/[\u00A0\u2007\u202F]/g, ' ');
+  t = t.replace(/,/g, '.');  // dt. Komma → Punkt
+  t = t.replace(/\s+/g, ' ');
+
+  // Helper: erste Zahl nach Begriff finden (innerhalb von 0–25 Zeichen)
+  function find(patterns) {
+    for (var i = 0; i < patterns.length; i++) {
+      var re = patterns[i];
+      var m = t.match(re);
+      if (m && m[1]) {
+        var v = parseFloat(m[1]);
+        if (!isNaN(v) && isFinite(v)) return v;
+      }
+    }
+    return null;
+  }
+
+  var v = {};
+  // Kreatinin (mg/dl: 0.3–15)
+  v.creatinine = find([
+    /\b(?:Krea(?:tinin)?|Crea(?:tinin)?|Creatinin)\s*[:=*]?\s*(\d+\.?\d*)\s*mg\/dl/i,
+    /\b(?:Krea(?:tinin)?|Crea(?:tinin)?)\s*[:=*]?\s*(\d+\.?\d*)\b/i
+  ]);
+  if (v.creatinine !== null && (v.creatinine < 0.2 || v.creatinine > 20)) v.creatinine = null;
+
+  // Cystatin C (mg/l: 0.4–8)
+  v.cystatinc = find([
+    /\b(?:Cystatin[\s\-]?C)\s*[:=*]?\s*(\d+\.?\d*)/i
+  ]);
+  if (v.cystatinc !== null && (v.cystatinc < 0.3 || v.cystatinc > 10)) v.cystatinc = null;
+
+  // eGFR (ml/min: 5–150)
+  v.egfr = find([
+    /\b(?:e?GFR(?:[\s\-]?CKD-?EPI)?)\s*[:=*]?\s*(\d+\.?\d*)/i,
+    /\bGFR\s*[:=*]?\s*(\d+\.?\d*)/i
+  ]);
+  if (v.egfr !== null && (v.egfr < 3 || v.egfr > 200)) v.egfr = null;
+
+  // uACR (mg/g: 1–10000)
+  v.uacr = find([
+    /\b(?:u?ACR|Albumin\/Krea(?:tinin)?(?:[\s\-]?Quot)?|Alb\/Krea)\s*[:=*]?\s*(\d+\.?\d*)/i,
+    /\bMikroalbumin(?:urie)?\s*[:=*]?\s*(\d+\.?\d*)/i
+  ]);
+  if (v.uacr !== null && v.uacr > 30000) v.uacr = null;
+
+  // Hb (g/dl: 4–20)
+  v.hb = find([
+    /\b(?:H[äa]moglobin|Hb)\s*[:=*]?\s*(\d+\.?\d*)\s*g\/dl/i,
+    /\b(?:H[äa]moglobin|Hb)\s*[:=*]?\s*(\d+\.?\d*)\b/i
+  ]);
+  if (v.hb !== null && (v.hb < 3 || v.hb > 25)) v.hb = null;
+
+  // Ferritin (µg/l oder ng/ml: 5–5000)
+  v.ferritin = find([
+    /\bFerritin\s*[:=*]?\s*(\d+\.?\d*)/i
+  ]);
+  if (v.ferritin !== null && (v.ferritin < 1 || v.ferritin > 10000)) v.ferritin = null;
+
+  // TSAT (%: 1–100)
+  v.tsat = find([
+    /\b(?:TSAT|Transferrin[\s\-]?S[äa]ttigung|Transferrins[äa]ttigung)\s*[:=*]?\s*(\d+\.?\d*)/i
+  ]);
+  if (v.tsat !== null && (v.tsat < 1 || v.tsat > 100)) v.tsat = null;
+
+  // Kalium (mmol/l: 2–8)
+  v.kalium = find([
+    /\b(?:K(?:alium)?)\s*[\(\[]?\s*[+]?\s*[\)\]]?\s*[:=*]?\s*(\d+\.?\d*)\s*mmol\/l/i,
+    /\bKalium\s*[:=*]?\s*(\d+\.?\d*)\b/i,
+    /\bK\+\s*[:=*]?\s*(\d+\.?\d*)/i
+  ]);
+  if (v.kalium !== null && (v.kalium < 1.5 || v.kalium > 9)) v.kalium = null;
+
+  // Bicarbonat / HCO3 (mmol/l: 5–40)
+  v.bicarb = find([
+    /\b(?:HCO3|Bicarbonat|Bikarbonat|Bic|Standard[\s\-]?Bicarbonat|St?\.?Bic)\s*[\-]?\s*[:=*]?\s*(\d+\.?\d*)/i
+  ]);
+  if (v.bicarb !== null && (v.bicarb < 5 || v.bicarb > 50)) v.bicarb = null;
+
+  // pH (6.8–7.8)
+  v.ph = find([
+    /\bpH\s*[:=*]?\s*(\d\.\d+)/i
+  ]);
+  if (v.ph !== null && (v.ph < 6.5 || v.ph > 8.0)) v.ph = null;
+
+  // PTH (pg/ml: 5–3000)
+  v.pth = find([
+    /\b(?:PTH|Parathormon|iPTH)\s*[:=*]?\s*(\d+\.?\d*)/i
+  ]);
+  if (v.pth !== null && (v.pth < 1 || v.pth > 5000)) v.pth = null;
+
+  // Phosphat (mmol/l: 0.3–4 ODER mg/dl: 1–15)
+  v.phosphat = find([
+    /\b(?:Phosphat|PO4|Anorg(?:anisches)?[\.\s\-]?Phosphat)\s*[:=*]?\s*(\d+\.?\d*)/i
+  ]);
+  if (v.phosphat !== null) {
+    // Wenn Wert > 4 → wahrscheinlich mg/dl, konvertiere zu mmol/l
+    if (v.phosphat > 5 && v.phosphat < 20) v.phosphat = +(v.phosphat / 3.097).toFixed(2);
+    if (v.phosphat < 0.2 || v.phosphat > 5) v.phosphat = null;
+  }
+
+  // Calcium (mmol/l: 1.5–4 ODER mg/dl: 6–15)
+  v.calcium = find([
+    /\b(?:Calcium|Ca(?:lcium)?|Ges[\.\s\-]?Ca)\s*[:=*]?\s*(\d+\.?\d*)/i
+  ]);
+  if (v.calcium !== null) {
+    if (v.calcium > 4 && v.calcium < 20) v.calcium = +(v.calcium / 4.008).toFixed(2);
+    if (v.calcium < 1.0 || v.calcium > 5) v.calcium = null;
+  }
+
+  // Vitamin D / 25-OH-Vit D (ng/ml: 3–150)
+  v.vitd = find([
+    /\b(?:25[\s\-]?OH[\s\-]?Vit(?:amin)?[\s\-]?D|25[\s\-]?Hydroxy[\s\-]?Vit(?:amin)?[\s\-]?D|Vit(?:amin)?[\s\-]?D|Calcidiol)\s*[:=*]?\s*(\d+\.?\d*)/i
+  ]);
+  if (v.vitd !== null && (v.vitd < 2 || v.vitd > 200)) v.vitd = null;
+
+  // HbA1c (%: 4–18)
+  v.hba1c = find([
+    /\bHbA1c\s*[:=*]?\s*(\d+\.?\d*)/i
+  ]);
+  if (v.hba1c !== null && (v.hba1c < 3 || v.hba1c > 20)) v.hba1c = null;
+
+  // LDL (mg/dl: 20–500)
+  v.ldl = find([
+    /\bLDL(?:[\s\-]?Cholesterin)?\s*[:=*]?\s*(\d+\.?\d*)/i
+  ]);
+  if (v.ldl !== null && (v.ldl < 10 || v.ldl > 600)) v.ldl = null;
+
+  // HDL (mg/dl: 10–150)
+  v.hdl = find([
+    /\bHDL(?:[\s\-]?Cholesterin)?\s*[:=*]?\s*(\d+\.?\d*)/i
+  ]);
+  if (v.hdl !== null && (v.hdl < 5 || v.hdl > 200)) v.hdl = null;
+
+  // Triglyceride (mg/dl: 30–5000)
+  v.tg = find([
+    /\b(?:Triglyceride|Triglyzeride|TG)\s*[:=*]?\s*(\d+\.?\d*)/i
+  ]);
+  if (v.tg !== null && (v.tg < 20 || v.tg > 8000)) v.tg = null;
+
+  // Harnsäure (mg/dl: 1–25)
+  v.harnsaure = find([
+    /\b(?:Harns[äa]ure|Urat|Uric[\s\-]?Acid)\s*[:=*]?\s*(\d+\.?\d*)/i
+  ]);
+  if (v.harnsaure !== null && (v.harnsaure < 0.5 || v.harnsaure > 30)) v.harnsaure = null;
+
+  // Blutdruck (sys/dia mmHg)
+  var bpMatch = t.match(/\b(?:RR|Blutdruck|BP|BD)\s*[:=*]?\s*(\d{2,3})\s*\/\s*(\d{2,3})/i);
+  if (bpMatch) {
+    var sys = parseInt(bpMatch[1]);
+    var dia = parseInt(bpMatch[2]);
+    if (sys >= 70 && sys <= 260 && dia >= 30 && dia <= 180) {
+      v.bp_sys = sys;
+      v.bp_dia = dia;
+    }
+  }
+
+  // Alter (Jahre)
+  v.age = find([
+    /\bAlter\s*[:=*]?\s*(\d+)\s*(?:J|Jahre)/i
+  ]);
+  if (v.age !== null && (v.age < 1 || v.age > 120)) v.age = null;
+
+  return v;
+}
+
+// ── FIELD MAPPER ──────────────────────────────────────────────
+// Mappt geparste Werte auf DOM-IDs in allen Tabs
+var FIELD_MAP = {
+  creatinine: ['creatinine'],
+  cystatinc:  ['cystatinc'],
+  uacr:       ['uacr'],
+  kalium:     ['kalium'],
+  bicarb:     ['bicarb'],
+  ph:         ['ph'],
+  hb:         ['mbd2-hb'],
+  ferritin:   ['mbd2-ferritin'],
+  tsat:       ['mbd2-tsat'],
+  pth:        ['mbd2-pth'],
+  phosphat:   ['mbd2-phosphat'],
+  calcium:    ['mbd2-calcium'],
+  vitd:       ['mbd2-vitd'],
+  hba1c:      ['diab-hba1c'],
+  ldl:        ['lip-ldl-input'],
+  hdl:        ['lip-hdl'],
+  tg:         ['lip-tg'],
+  harnsaure:  ['gicht-hs'],
+  bp_sys:     ['bp_sys'],
+  bp_dia:     ['bp_dia'],
+  age:        ['age']
+};
+
+var FIELD_LABELS = {
+  creatinine:'Krea', cystatinc:'CysC', uacr:'uACR', kalium:'K⁺', bicarb:'HCO₃', ph:'pH',
+  hb:'Hb', ferritin:'Ferritin', tsat:'TSAT', pth:'PTH', phosphat:'Phosphat', calcium:'Ca',
+  vitd:'Vit D', hba1c:'HbA1c', ldl:'LDL', hdl:'HDL', tg:'TG', harnsaure:'Harnsäure',
+  bp_sys:'RR sys', bp_dia:'RR dia', age:'Alter'
+};
+
+function fillFields(values) {
+  var filled = [];
+  Object.keys(values).forEach(function(key){
+    if (values[key] === null || values[key] === undefined) return;
+    var ids = FIELD_MAP[key] || [];
+    ids.forEach(function(id){
+      var el = document.getElementById(id);
+      if (el) {
+        el.value = values[key];
+        // Trigger input event for auto-calculations
+        var ev = new Event('input', { bubbles: true });
+        el.dispatchEvent(ev);
+        var ev2 = new Event('change', { bubbles: true });
+        el.dispatchEvent(ev2);
+      }
+    });
+    filled.push({ label: FIELD_LABELS[key]||key, value: values[key] });
+  });
+  // Trigger main calculation
+  if (typeof calculate === 'function') { try { calculate(); } catch(e){} }
+  return filled;
+}
+
+function renderResults(filled) {
+  var el = document.getElementById('lab-ocr-results');
+  if (!el) return;
+  if (filled.length === 0) {
+    el.style.display = 'block';
+    el.style.background = '#fff8e1';
+    el.innerHTML = '<strong>⚠️ Keine Laborwerte erkannt.</strong> Bildqualität prüfen oder Werte manuell eingeben.';
+    return;
+  }
+  var html = '<strong>✅ ' + filled.length + ' Wert' + (filled.length>1?'e':'') + ' erkannt und übernommen:</strong><br>';
+  filled.forEach(function(f){
+    html += '<span class="lab-ocr-pill">' + f.label + ': <span class="v">' + f.value + '</span></span>';
+  });
+  html += '<div style="margin-top:8px;font-size:.72rem;color:#558b6e;">💡 Werte wurden in alle relevanten Tabs (CKD, Anämie/Ca-P, Diabetes, Lipid, Gicht) übernommen. Bitte vor klinischer Anwendung prüfen.</div>';
+  el.style.display = 'block';
+  el.style.background = '#e8f5e9';
+  el.innerHTML = html;
+}
+
+// ── HANDLE FILE ───────────────────────────────────────────────
+window.ckdLabOcrHandle = function(file) {
+  if (!file) return;
+  if (!file.type || file.type.indexOf('image') !== 0) {
+    setStatus('error', '❌ Bitte ein Bild (PNG, JPG, etc.) hochladen.');
+    return;
+  }
+
+  var resEl = document.getElementById('lab-ocr-results');
+  if (resEl) resEl.style.display = 'none';
+
+  loadTesseract().then(function(){
+    setStatus('loading', '⏳ Bild wird gelesen — kann 5–15 Sekunden dauern…');
+
+    return Tesseract.recognize(file, 'deu', {
+      logger: function(m) {
+        if (m.status === 'recognizing text') {
+          var pct = Math.round((m.progress||0) * 100);
+          setStatus('loading', '⏳ OCR läuft… ' + pct + '%');
+        }
+      }
+    });
+  }).then(function(result){
+    var text = (result && result.data && result.data.text) || '';
+    if (!text.trim()) {
+      setStatus('error', '⚠️ Kein Text im Bild erkannt. Bildqualität prüfen.');
+      return;
+    }
+    var values = parseLabText(text);
+    var filled = fillFields(values);
+    setStatus('success', '✅ Bild erfolgreich gelesen.');
+    renderResults(filled);
+    // File-Input zurücksetzen für erneute Nutzung
+    var fi = document.getElementById('lab-ocr-file');
+    if (fi) fi.value = '';
+  }).catch(function(err){
+    setStatus('error', '❌ Fehler: ' + (err && err.message ? err.message : 'OCR fehlgeschlagen.'));
+    console.error('Lab-OCR Error:', err);
+  });
+};
+
+// ── DRAG & DROP ───────────────────────────────────────────────
+function initDropZone() {
+  var zone = document.getElementById('lab-ocr-zone');
+  if (!zone) return;
+  ['dragenter','dragover','dragleave','drop'].forEach(function(ev){
+    zone.addEventListener(ev, function(e){ e.preventDefault(); e.stopPropagation(); }, false);
+  });
+  ['dragenter','dragover'].forEach(function(ev){
+    zone.addEventListener(ev, function(){ zone.classList.add('dragover'); }, false);
+  });
+  ['dragleave','drop'].forEach(function(ev){
+    zone.addEventListener(ev, function(){ zone.classList.remove('dragover'); }, false);
+  });
+  zone.addEventListener('drop', function(e){
+    var dt = e.dataTransfer;
+    if (dt && dt.files && dt.files[0]) {
+      window.ckdLabOcrHandle(dt.files[0]);
+    }
+  }, false);
+
+  // Auch globaler Paste-Listener (Strg+V mit Bild aus Zwischenablage)
+  document.addEventListener('paste', function(e){
+    // nur wenn CKD-Tab aktiv
+    var ckdTab = document.getElementById('tab-ckd');
+    if (!ckdTab || ckdTab.style.display === 'none') return;
+    if (!e.clipboardData || !e.clipboardData.items) return;
+    for (var i = 0; i < e.clipboardData.items.length; i++) {
+      var item = e.clipboardData.items[i];
+      if (item.type && item.type.indexOf('image') === 0) {
+        var file = item.getAsFile();
+        if (file) {
+          e.preventDefault();
+          window.ckdLabOcrHandle(file);
+          return;
+        }
+      }
+    }
+  }, false);
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initDropZone);
+} else {
+  initDropZone();
+}
+
+})();
+</script>
 
 <!-- ============================================================
      ANÄMIE / MBD TOOL
