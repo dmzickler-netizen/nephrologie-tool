@@ -1407,9 +1407,17 @@ label .lip-optional {
 <div id="tab-ckd">
 <div class="container">
 
-  <!-- LAB-OCR Drop-Zone -->
+  <!-- LAB-OCR + Schritt-Banner Styles -->
   <style>
-  #lab-ocr-zone { border:2px dashed #90caf9; border-radius:12px; padding:14px 18px; background:#f5fafd; margin-bottom:16px; transition:all .2s; cursor:pointer; }
+  /* Schritt-Banner für didaktische Gliederung */
+  .step-banner { display:flex; align-items:center; gap:10px; margin:18px 0 12px; padding:8px 14px; background:linear-gradient(90deg,#e8eaf6,#f5f7fa); border-left:4px solid #1565c0; border-radius:6px; }
+  .step-banner:first-child { margin-top:0; }
+  .step-banner .step-num { display:flex; align-items:center; justify-content:center; width:28px; height:28px; background:#1565c0; color:#fff; border-radius:50%; font-weight:800; font-size:.95rem; flex-shrink:0; }
+  .step-banner .step-text { flex:1; }
+  .step-banner .step-title { font-size:.92rem; font-weight:700; color:#1a237e; line-height:1.2; }
+  .step-banner .step-sub { font-size:.74rem; color:#546e7a; margin-top:1px; }
+  /* OCR Drop-Zone */
+  #lab-ocr-zone { border:2px dashed #90caf9; border-radius:12px; padding:14px 18px; background:#f5fafd; margin-bottom:8px; transition:all .2s; cursor:pointer; }
   #lab-ocr-zone:hover, #lab-ocr-zone.dragover { background:#e3f2fd; border-color:#1565c0; }
   #lab-ocr-zone.dragover { transform:scale(1.01); box-shadow:0 4px 12px rgba(21,101,192,.15); }
   #lab-ocr-zone .lab-ocr-row { display:flex; align-items:center; gap:14px; }
@@ -1425,20 +1433,12 @@ label .lip-optional {
   #lab-ocr-results { display:none; margin-top:10px; padding:10px 14px; background:#e8f5e9; border-radius:8px; font-size:.82rem; }
   #lab-ocr-results .lab-ocr-pill { display:inline-block; background:#fff; border:1px solid #a5d6a7; color:#2e7d32; padding:3px 10px; border-radius:14px; font-size:.78rem; font-weight:600; margin:3px 4px 0 0; }
   #lab-ocr-results .lab-ocr-pill .v { color:#1b5e20; font-weight:700; }
+  /* Alter + Geburtsjahr Kombi */
+  .age-birth-combo { display:flex; gap:6px; align-items:flex-end; }
+  .age-birth-combo .age-input { flex:1; }
+  .age-birth-combo .birth-input { flex:1.1; }
+  .age-birth-combo .or { color:#90a4ae; font-weight:700; font-size:.85rem; padding:0 4px 8px; }
   </style>
-  <div id="lab-ocr-zone" onclick="document.getElementById('lab-ocr-file').click();">
-    <div class="lab-ocr-row">
-      <div class="lab-ocr-icon">📷</div>
-      <div class="lab-ocr-text">
-        <div class="lab-ocr-title">Laborbefund per Bild einlesen (OCR)</div>
-        <div class="lab-ocr-sub">Screenshot oder Foto hierher ziehen — oder klicken, um Datei auszuwählen. Erkennt Krea, eGFR, uACR, Hb, Ferritin, K⁺, HCO₃, PTH, Phosphat, Ca, HbA1c, LDL, Harnsäure u.a.</div>
-        <div class="lab-ocr-privacy">🔒 100 % lokal — Bild verlässt diesen Browser nicht. Personenbezogene Daten trotzdem vorher überdecken.</div>
-      </div>
-    </div>
-    <input type="file" id="lab-ocr-file" accept="image/*" style="display:none;" onchange="window.ckdLabOcrHandle&&window.ckdLabOcrHandle(this.files[0]);">
-    <div id="lab-ocr-status"></div>
-    <div id="lab-ocr-results"></div>
-  </div>
 
   <!-- Row 1: Input + Results -->
   <div class="grid-2" style="margin-bottom:20px;">
@@ -1447,11 +1447,28 @@ label .lip-optional {
     <div class="card">
       <h2>📋 Patientendaten &amp; Labor</h2>
 
+      <!-- ═══ SCHRITT 1: Stammdaten ═══ -->
+      <div class="step-banner">
+        <div class="step-num">1</div>
+        <div class="step-text">
+          <div class="step-title">Stammdaten</div>
+          <div class="step-sub">Alter (oder Geburtsjahr), Geschlecht und Körpergewicht</div>
+        </div>
+      </div>
+
       <div class="form-row">
         <div class="form-group">
-          <label>Alter</label>
-          <input type="number" id="age" placeholder="z.B. 65" min="18" max="110" oninput="calculate()">
-          <span class="unit">Jahre</span>
+          <label>Alter / Geburtsjahr</label>
+          <div class="age-birth-combo">
+            <div class="age-input">
+              <input type="number" id="age" placeholder="Alter, z.B. 65" min="0" max="120" oninput="ckdSyncAgeBirth('age'); calculate();">
+            </div>
+            <span class="or">oder</span>
+            <div class="birth-input">
+              <input type="number" id="birthyear" placeholder="Jahr, z.B. 1960" min="1900" max="2025" oninput="ckdSyncAgeBirth('birth'); calculate();">
+            </div>
+          </div>
+          <span class="unit">Jahre / 4-stellig</span>
         </div>
         <div class="form-group">
           <label>Geschlecht</label>
@@ -1461,6 +1478,51 @@ label .lip-optional {
             <input type="radio" name="sex" id="sex-female" value="female" onchange="calculate()">
             <label for="sex-female">Weiblich</label>
           </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Körpergewicht</label>
+          <input type="number" id="weight" placeholder="z.B. 75" min="30" max="250">
+          <span class="unit">kg (für EPO-Dosierung, BMI)</span>
+        </div>
+        <div class="form-group">
+          <label>Körpergröße</label>
+          <input type="number" id="height" placeholder="z.B. 175" step="1" min="100" max="250">
+          <span class="unit">cm (für BMI, optional)</span>
+        </div>
+      </div>
+
+      <!-- ═══ SCHRITT 2: Laborwerte einlesen ═══ -->
+      <div class="step-banner">
+        <div class="step-num">2</div>
+        <div class="step-text">
+          <div class="step-title">Laborwerte einlesen</div>
+          <div class="step-sub">Screenshot per Drag-and-Drop, Strg+V — <em>oder</em> manuell unten eintragen</div>
+        </div>
+      </div>
+
+      <div id="lab-ocr-zone" onclick="document.getElementById('lab-ocr-file').click();">
+        <div class="lab-ocr-row">
+          <div class="lab-ocr-icon">📷</div>
+          <div class="lab-ocr-text">
+            <div class="lab-ocr-title">Laborbefund per Bild einlesen (OCR)</div>
+            <div class="lab-ocr-sub">Screenshot oder Foto hierher ziehen — oder klicken, um Datei auszuwählen. Erkennt Krea, eGFR, uACR, Hb, Ferritin, K⁺, HCO₃, PTH, Phosphat, Ca, HbA1c, LDL, Harnsäure u.a.</div>
+            <div class="lab-ocr-privacy">🔒 100 % lokal — Bild verlässt diesen Browser nicht. Personenbezogene Daten trotzdem vorher überdecken.</div>
+          </div>
+        </div>
+        <input type="file" id="lab-ocr-file" accept="image/*" style="display:none;" onchange="window.ckdLabOcrHandle&&window.ckdLabOcrHandle(this.files[0]);">
+        <div id="lab-ocr-status"></div>
+        <div id="lab-ocr-results"></div>
+      </div>
+
+      <!-- ═══ SCHRITT 3: Manuelle Laborwerte ═══ -->
+      <div class="step-banner">
+        <div class="step-num">3</div>
+        <div class="step-text">
+          <div class="step-title">Laborwerte (manuell ergänzen / korrigieren)</div>
+          <div class="step-sub">Werte aus dem Screenshot werden hier automatisch eingetragen</div>
         </div>
       </div>
 
@@ -1552,19 +1614,7 @@ label .lip-optional {
       </div>
 
       <!-- ADDITIONAL LABS -->
-      <div class="lab-section-label">⚖️ Gewicht, Größe &amp; Dialysestatus</div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Körpergewicht</label>
-          <input type="number" id="weight" placeholder="z.B. 75" min="30" max="250">
-          <span class="unit">kg (für EPO-Dosierung, BMI)</span>
-        </div>
-        <div class="form-group">
-          <label>Körpergröße</label>
-          <input type="number" id="height" placeholder="z.B. 175" step="1" min="100" max="250">
-          <span class="unit">cm (für BMI)</span>
-        </div>
-      </div>
+      <div class="lab-section-label">🩺 Dialysestatus</div>
       <div class="form-row">
         <div class="form-group">
           <label>Dialysestatus</label>
@@ -13738,10 +13788,36 @@ function updateDrugEGFR(egfr) {
 buildMatrix(-1, -1);
 buildDrugTable();
 
+// ===== ALTER ↔ GEBURTSJAHR SYNC =====
+// 'age' = User hat Alter geändert → Geburtsjahr ableiten
+// 'birth' = User hat Geburtsjahr geändert → Alter ableiten
+function ckdSyncAgeBirth(source) {
+  const ageEl   = document.getElementById('age');
+  const birthEl = document.getElementById('birthyear');
+  if (!ageEl || !birthEl) return;
+  const currentYear = new Date().getFullYear();
+  if (source === 'age') {
+    const age = parseInt(ageEl.value);
+    if (!isNaN(age) && age >= 0 && age <= 120) {
+      birthEl.value = currentYear - age;
+    } else if (ageEl.value === '') {
+      birthEl.value = '';
+    }
+  } else if (source === 'birth') {
+    const yr = parseInt(birthEl.value);
+    if (!isNaN(yr) && yr >= 1900 && yr <= currentYear) {
+      ageEl.value = currentYear - yr;
+    } else if (birthEl.value === '') {
+      ageEl.value = '';
+    }
+  }
+}
+window.ckdSyncAgeBirth = ckdSyncAgeBirth;
+
 // ===== CLEAR / RESET CKD FORM =====
 function clearCKD() {
   // Text & number inputs (Typos korrigiert: bicarb statt bicarbonate, phosphat statt phosphate)
-  ['age','creatinine','cystatinc','uacr','bp_sys','bp_dia','weight',
+  ['age','birthyear','creatinine','cystatinc','uacr','bp_sys','bp_dia','weight','height',
    'hb','ferritin','tsat','pth','ph','bicarb','phosphat','calcium','vitd',
    'kalium','extra_info'].forEach(id => {
     const el = document.getElementById(id);
