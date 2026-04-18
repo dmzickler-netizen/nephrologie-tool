@@ -1436,11 +1436,13 @@ label .lip-optional {
   #lab-ocr-results { display:none; margin-top:10px; padding:10px 14px; background:#e8f5e9; border-radius:8px; font-size:.82rem; }
   #lab-ocr-results .lab-ocr-pill { display:inline-block; background:#fff; border:1px solid #a5d6a7; color:#2e7d32; padding:3px 10px; border-radius:14px; font-size:.78rem; font-weight:600; margin:3px 4px 0 0; }
   #lab-ocr-results .lab-ocr-pill .v { color:#1b5e20; font-weight:700; }
-  /* Alter + Geburtsjahr Kombi */
-  .age-birth-combo { display:flex; gap:6px; align-items:flex-end; }
-  .age-birth-combo .age-input { flex:1; }
-  .age-birth-combo .birth-input { flex:1.1; }
-  .age-birth-combo .or { color:#90a4ae; font-weight:700; font-size:.85rem; padding:0 4px 8px; }
+  /* Alter + Geburtsjahr Kombi — vertikal gestapelt, zentriert */
+  .age-birth-combo { display:flex; flex-direction:column; align-items:center; gap:6px; padding:6px 0; }
+  .age-birth-combo .age-block,
+  .age-birth-combo .birth-block { display:flex; flex-direction:column; align-items:center; gap:3px; width:100%; max-width:200px; }
+  .age-birth-combo .ab-label { font-size:.78rem; font-weight:700; color:#455a64; text-transform:uppercase; letter-spacing:.4px; }
+  .age-birth-combo input[type="number"] { width:100%; text-align:center; padding:8px 10px; font-size:1rem; font-weight:600; }
+  .age-birth-combo .or { color:#90a4ae; font-weight:700; font-size:.78rem; text-transform:uppercase; letter-spacing:.5px; padding:2px 0; }
   </style>
 
   <!-- Row 1: Input + Results -->
@@ -1461,14 +1463,15 @@ label .lip-optional {
 
       <div class="form-row">
         <div class="form-group">
-          <label>Alter / Geburtsjahr</label>
           <div class="age-birth-combo">
-            <div class="age-input">
-              <input type="number" id="age" placeholder="Alter, z.B. 65" min="0" max="120" oninput="ckdSyncAgeBirth('age'); calculate();">
+            <div class="age-block">
+              <span class="ab-label">Alter</span>
+              <input type="number" id="age" placeholder="z.B. 65" min="0" max="120" oninput="ckdSyncAgeBirth('age'); calculate();">
             </div>
             <span class="or">oder</span>
-            <div class="birth-input">
-              <input type="number" id="birthyear" placeholder="Geburtsjahr z.B. 1960" min="1920" max="2025" oninput="ckdSyncAgeBirth('birth'); calculate();" onfocus="if(!this.value){this.value=1970; ckdSyncAgeBirth('birth'); calculate();}">
+            <div class="birth-block">
+              <span class="ab-label">Geburtsjahr</span>
+              <input type="number" id="birthyear" placeholder="z.B. 1960" min="1920" max="2025" oninput="ckdSyncAgeBirth('birth'); calculate();" onfocus="if(!this.value){this.value=1970; ckdSyncAgeBirth('birth'); calculate();}">
             </div>
           </div>
         </div>
