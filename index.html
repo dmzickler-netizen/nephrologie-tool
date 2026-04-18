@@ -1857,133 +1857,141 @@ function parseLabText(text) {
     return null;
   }
 
+  // Lax-Pattern-Builder: erlaubt Klammerzusatz "(venös)" oder Komma-Qualifier ", gesamt" zwischen Begriff und Wert
+  // terms = Array von Begriff-Regex-Strings (alternativ verbunden)
+  function lax(terms, allowNeg) {
+    var sign = allowNeg ? '-?' : '';
+    return new RegExp(
+      '\\b(?:' + terms.join('|') + ')\\b' +
+      '(?:\\s*\\([^)]{1,40}\\))?' +                             // (descriptor)
+      '(?:\\s*[,;]\\s*[\\wäöüÄÖÜß][\\wäöüÄÖÜß\\.\\-\\s]{0,25})?' + // , gesamt / , anorg.
+      '\\s*[:=*\\-]?\\s*' +
+      '(' + sign + '\\d+\\.?\\d*)',
+      'i'
+    );
+  }
+
   var v = {};
+
   // Kreatinin (mg/dl: 0.3–15)
-  v.creatinine = find([
-    /\b(?:Krea(?:tinin)?|Crea(?:tinin)?|Creatinin)\s*[:=*]?\s*(\d+\.?\d*)\s*mg\/dl/i,
-    /\b(?:Krea(?:tinin)?|Crea(?:tinin)?)\s*[:=*]?\s*(\d+\.?\d*)\b/i
-  ]);
+  v.creatinine = find([lax(['Krea(?:tinin)?','Crea(?:tinin)?','Creatinin'])]);
   if (v.creatinine !== null && (v.creatinine < 0.2 || v.creatinine > 20)) v.creatinine = null;
 
   // Cystatin C (mg/l: 0.4–8)
-  v.cystatinc = find([
-    /\b(?:Cystatin[\s\-]?C)\s*[:=*]?\s*(\d+\.?\d*)/i
-  ]);
+  v.cystatinc = find([lax(['Cystatin[\\s\\-]?C'])]);
   if (v.cystatinc !== null && (v.cystatinc < 0.3 || v.cystatinc > 10)) v.cystatinc = null;
 
   // eGFR (ml/min: 5–150)
-  v.egfr = find([
-    /\b(?:e?GFR(?:[\s\-]?CKD-?EPI)?)\s*[:=*]?\s*(\d+\.?\d*)/i,
-    /\bGFR\s*[:=*]?\s*(\d+\.?\d*)/i
-  ]);
+  v.egfr = find([lax(['e?GFR','GFR(?:[\\s\\-]?CKD-?EPI)?'])]);
   if (v.egfr !== null && (v.egfr < 3 || v.egfr > 200)) v.egfr = null;
 
   // uACR (mg/g: 1–10000)
   v.uacr = find([
-    /\b(?:u?ACR|Albumin\/Krea(?:tinin)?(?:[\s\-]?Quot)?|Alb\/Krea)\s*[:=*]?\s*(\d+\.?\d*)/i,
-    /\bMikroalbumin(?:urie)?\s*[:=*]?\s*(\d+\.?\d*)/i
+    lax(['u?ACR','Albumin\\/Krea(?:tinin)?(?:[\\s\\-]?Quot)?','Alb\\/Krea','Mikroalbumin(?:urie)?'])
   ]);
   if (v.uacr !== null && v.uacr > 30000) v.uacr = null;
 
   // Hb (g/dl: 4–20)
   v.hb = find([
-    /\b(?:H[äa]moglobin|Hb)\s*[:=*]?\s*(\d+\.?\d*)\s*g\/dl/i,
-    /\b(?:H[äa]moglobin|Hb)\s*[:=*]?\s*(\d+\.?\d*)\b/i
+    /\b(?:H[äa]moglobin|Hb)(?:\s*\([^)]{1,40}\))?\s*[:=*]?\s*(\d+\.?\d*)\s*g\/dl/i,
+    lax(['H[äa]moglobin','Hb'])
   ]);
   if (v.hb !== null && (v.hb < 3 || v.hb > 25)) v.hb = null;
 
-  // Ferritin (µg/l oder ng/ml: 5–5000)
-  v.ferritin = find([
-    /\bFerritin\s*[:=*]?\s*(\d+\.?\d*)/i
-  ]);
+  // Ferritin
+  v.ferritin = find([lax(['Ferritin'])]);
   if (v.ferritin !== null && (v.ferritin < 1 || v.ferritin > 10000)) v.ferritin = null;
 
-  // TSAT (%: 1–100)
-  v.tsat = find([
-    /\b(?:TSAT|Transferrin[\s\-]?S[äa]ttigung|Transferrins[äa]ttigung)\s*[:=*]?\s*(\d+\.?\d*)/i
-  ]);
+  // TSAT
+  v.tsat = find([lax(['TSAT','Transferrin[\\s\\-]?S[äa]ttigung','Transferrins[äa]ttigung'])]);
   if (v.tsat !== null && (v.tsat < 1 || v.tsat > 100)) v.tsat = null;
 
-  // Kalium (mmol/l: 2–8)
+  // Kalium
   v.kalium = find([
-    /\b(?:K(?:alium)?)\s*[\(\[]?\s*[+]?\s*[\)\]]?\s*[:=*]?\s*(\d+\.?\d*)\s*mmol\/l/i,
-    /\bKalium\s*[:=*]?\s*(\d+\.?\d*)\b/i,
-    /\bK\+\s*[:=*]?\s*(\d+\.?\d*)/i
+    /\bK(?:alium)?\s*[\(\[]?\s*\+?\s*[\)\]]?\s*[:=*]?\s*(\d+\.?\d*)\s*mmol\/l/i,
+    lax(['Kalium']),
+    /\bK\+?\s*[:=*]?\s*(\d+\.?\d*)/i
   ]);
   if (v.kalium !== null && (v.kalium < 1.5 || v.kalium > 9)) v.kalium = null;
 
-  // Bicarbonat / HCO3 (mmol/l: 5–40)
+  // Bicarbonat / HCO3
   v.bicarb = find([
-    /\b(?:HCO3|Bicarbonat|Bikarbonat|Bic|Standard[\s\-]?Bicarbonat|St?\.?Bic)\s*[\-]?\s*[:=*]?\s*(\d+\.?\d*)/i
+    lax(['HCO3','HCO3-','Bicarbonat','Bikarbonat','Standard[\\s\\-]?Bicarbonat','St[\\s\\.\\-]?Bic','Bic'], true)
   ]);
   if (v.bicarb !== null && (v.bicarb < 5 || v.bicarb > 50)) v.bicarb = null;
 
-  // pH (6.8–7.8)
+  // pH (6.8–7.8) — robust gegen "(venös)" / "(arteriell)"
   v.ph = find([
-    /\bpH\s*[:=*]?\s*(\d\.\d+)/i
+    /\bpH(?:\s*\([^)]{1,40}\))?\s*[:=*]?\s*(\d\.\d+)/i
   ]);
   if (v.ph !== null && (v.ph < 6.5 || v.ph > 8.0)) v.ph = null;
 
-  // PTH (pg/ml: 5–3000)
-  v.pth = find([
-    /\b(?:PTH|Parathormon|iPTH)\s*[:=*]?\s*(\d+\.?\d*)/i
-  ]);
+  // Base Excess (kann negativ sein!)
+  v.bex = find([lax(['Base[\\s\\-]?Excess','BE','SBE'], true)]);
+  if (v.bex !== null && (v.bex < -30 || v.bex > 30)) v.bex = null;
+
+  // PTH — robust gegen "(Intakt-PTH)"
+  v.pth = find([lax(['PTH','Parathormon','iPTH','Intakt[\\s\\-]?PTH'])]);
   if (v.pth !== null && (v.pth < 1 || v.pth > 5000)) v.pth = null;
 
-  // Phosphat (mmol/l: 0.3–4 ODER mg/dl: 1–15)
+  // Phosphat — robust gegen ", anorg." / "(anorg)"
   v.phosphat = find([
-    /\b(?:Phosphat|PO4|Anorg(?:anisches)?[\.\s\-]?Phosphat)\s*[:=*]?\s*(\d+\.?\d*)/i
+    lax(['Phosphat','PO4','Anorg(?:anisches)?[\\.\\s\\-]?Phosphat'])
   ]);
   if (v.phosphat !== null) {
-    // Wenn Wert > 4 → wahrscheinlich mg/dl, konvertiere zu mmol/l
+    // Wenn Wert > 5 → wahrscheinlich mg/dl, konvertiere zu mmol/l
     if (v.phosphat > 5 && v.phosphat < 20) v.phosphat = +(v.phosphat / 3.097).toFixed(2);
     if (v.phosphat < 0.2 || v.phosphat > 5) v.phosphat = null;
   }
 
-  // Calcium (mmol/l: 1.5–4 ODER mg/dl: 6–15)
-  v.calcium = find([
-    /\b(?:Calcium|Ca(?:lcium)?|Ges[\.\s\-]?Ca)\s*[:=*]?\s*(\d+\.?\d*)/i
-  ]);
+  // Calcium — robust gegen ", gesamt" / "(gesamt)"
+  v.calcium = find([lax(['Calcium','Ca(?:lcium)?','Ges[\\.\\s\\-]?Ca'])]);
   if (v.calcium !== null) {
     if (v.calcium > 4 && v.calcium < 20) v.calcium = +(v.calcium / 4.008).toFixed(2);
     if (v.calcium < 1.0 || v.calcium > 5) v.calcium = null;
   }
 
-  // Vitamin D / 25-OH-Vit D (ng/ml: 3–150)
+  // Vitamin D
   v.vitd = find([
-    /\b(?:25[\s\-]?OH[\s\-]?Vit(?:amin)?[\s\-]?D|25[\s\-]?Hydroxy[\s\-]?Vit(?:amin)?[\s\-]?D|Vit(?:amin)?[\s\-]?D|Calcidiol)\s*[:=*]?\s*(\d+\.?\d*)/i
+    lax(['25[\\s\\-]?OH[\\s\\-]?Vit(?:amin)?[\\s\\-]?D','25[\\s\\-]?Hydroxy[\\s\\-]?Vit(?:amin)?[\\s\\-]?D','Vit(?:amin)?[\\s\\-]?D','Calcidiol'])
   ]);
   if (v.vitd !== null && (v.vitd < 2 || v.vitd > 200)) v.vitd = null;
 
-  // HbA1c (%: 4–18)
-  v.hba1c = find([
-    /\bHbA1c\s*[:=*]?\s*(\d+\.?\d*)/i
-  ]);
+  // HbA1c
+  v.hba1c = find([lax(['HbA1c'])]);
   if (v.hba1c !== null && (v.hba1c < 3 || v.hba1c > 20)) v.hba1c = null;
 
-  // LDL (mg/dl: 20–500)
+  // LDL — explizit, damit nicht "Cholesterin" → LDL gemappt wird
   v.ldl = find([
-    /\bLDL(?:[\s\-]?Cholesterin)?\s*[:=*]?\s*(\d+\.?\d*)/i
+    /\bLDL(?:[\s\-]?Cholesterin)?(?:\s*\([^)]{1,40}\))?\s*[:=*]?\s*(\d+\.?\d*)/i
   ]);
   if (v.ldl !== null && (v.ldl < 10 || v.ldl > 600)) v.ldl = null;
 
-  // HDL (mg/dl: 10–150)
+  // HDL
   v.hdl = find([
-    /\bHDL(?:[\s\-]?Cholesterin)?\s*[:=*]?\s*(\d+\.?\d*)/i
+    /\bHDL(?:[\s\-]?Cholesterin)?(?:\s*\([^)]{1,40}\))?\s*[:=*]?\s*(\d+\.?\d*)/i
   ]);
   if (v.hdl !== null && (v.hdl < 5 || v.hdl > 200)) v.hdl = null;
 
-  // Triglyceride (mg/dl: 30–5000)
-  v.tg = find([
-    /\b(?:Triglyceride|Triglyzeride|TG)\s*[:=*]?\s*(\d+\.?\d*)/i
-  ]);
+  // Gesamt-Cholesterin (separat von LDL/HDL — entferne LDL/HDL-Zeilen vorher temporär)
+  var noLdlHdl = t.replace(/\b(?:LDL|HDL)[\s\-]?Cholesterin[^\n]*/gi,'');
+  var cholMatch = noLdlHdl.match(/\b(?:Cholesterin(?:[\s,]*ges(?:amt)?)?|Gesamt[\s\-]?Cholesterin|Total[\s\-]?Cholesterol)(?:\s*\([^)]{1,40}\))?\s*[:=*]?\s*(\d+\.?\d*)/i);
+  if (cholMatch) {
+    var ch = parseFloat(cholMatch[1]);
+    if (ch >= 50 && ch <= 800) v.chol = ch;
+  }
+
+  // Triglyceride
+  v.tg = find([lax(['Triglyceride','Triglyzeride','TG'])]);
   if (v.tg !== null && (v.tg < 20 || v.tg > 8000)) v.tg = null;
 
-  // Harnsäure (mg/dl: 1–25)
-  v.harnsaure = find([
-    /\b(?:Harns[äa]ure|Urat|Uric[\s\-]?Acid)\s*[:=*]?\s*(\d+\.?\d*)/i
-  ]);
+  // Harnsäure
+  v.harnsaure = find([lax(['Harns[äa]ure','Urat','Uric[\\s\\-]?Acid'])]);
   if (v.harnsaure !== null && (v.harnsaure < 0.5 || v.harnsaure > 30)) v.harnsaure = null;
+
+  // Harnstoff (Urea, mg/dl: 5–500)
+  v.harnstoff = find([lax(['Harnstoff','Urea','BUN'])]);
+  if (v.harnstoff !== null && (v.harnstoff < 3 || v.harnstoff > 800)) v.harnstoff = null;
 
   // Blutdruck (sys/dia mmHg)
   var bpMatch = t.match(/\b(?:RR|Blutdruck|BP|BD)\s*[:=*]?\s*(\d{2,3})\s*\/\s*(\d{2,3})/i);
@@ -2034,8 +2042,9 @@ var FIELD_MAP = {
 
 var FIELD_LABELS = {
   creatinine:'Krea', cystatinc:'CysC', uacr:'uACR', kalium:'K⁺', bicarb:'HCO₃', ph:'pH',
-  hb:'Hb', ferritin:'Ferritin', tsat:'TSAT', pth:'PTH', phosphat:'Phosphat', calcium:'Ca',
-  vitd:'Vit D', hba1c:'HbA1c', ldl:'LDL', hdl:'HDL', tg:'TG', harnsaure:'Harnsäure',
+  bex:'BE', hb:'Hb', ferritin:'Ferritin', tsat:'TSAT', pth:'PTH', phosphat:'Phosphat',
+  calcium:'Ca', vitd:'Vit D', hba1c:'HbA1c', ldl:'LDL', hdl:'HDL', chol:'Chol gesamt',
+  tg:'TG', harnsaure:'Harnsäure', harnstoff:'Harnstoff',
   bp_sys:'RR sys', bp_dia:'RR dia', age:'Alter'
 };
 
