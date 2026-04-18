@@ -10958,6 +10958,13 @@ window.hwiUpdate = function() {
       <textarea class="mc-freetext" id="mc-freetext" placeholder="z.B. Ramipril 5mg, Forxiga 10mg, Atorvastatin 40mg, Nephrotrans 1-0-1 …" oninput="mcParseFreeText(); mcRunCheck()"></textarea>
       <div id="mc-freetext-matches" class="mc-match-pills"></div>
     </div>
+
+    <div style="margin-top:14px; display:flex; justify-content:flex-end;">
+      <button onclick="mcClearMeds()" title="Alle Medikamenten-Häkchen + Freitext leeren (Patientendaten bleiben)" style="padding:6px 12px; background:#fff; color:#c62828; border:1.5px solid #ef9a9a; border-radius:8px; font-size:.78rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all .15s;" onmouseover="this.style.background='#ffebee';" onmouseout="this.style.background='#fff';">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>
+        Medikamente leeren
+      </button>
+    </div>
   </div>
 
   <!-- Karte 3: Dosierungsübersicht -->
@@ -12329,6 +12336,32 @@ if (document.readyState === 'loading') {
 } else {
   mcInitOcrDropZone();
 }
+
+// ── MEDIKAMENTE LEEREN (nur Häkchen + Freitext, Patientendaten bleiben) ──
+window.mcClearMeds = function() {
+  // Alle Medikamenten-Checkboxen abhaken
+  document.querySelectorAll('#tab-medcheck input[type="checkbox"]').forEach(function(cb){
+    cb.checked = false;
+    delete cb.dataset.userUnchecked;
+  });
+  // Freitext + Match-Pills leeren
+  var ft = document.getElementById('mc-freetext');
+  if (ft) ft.value = '';
+  var pills = document.getElementById('mc-freetext-matches');
+  if (pills) pills.innerHTML = '';
+  // OCR-Status (lokale Med-OCR im Medcheck-Tab) leeren
+  var ocrStatus = document.getElementById('mc-ocr-status');
+  if (ocrStatus) { ocrStatus.style.display = 'none'; ocrStatus.innerHTML = ''; }
+  // OCR-Status im CKD-Tab (Med-Drop-Zone) leeren
+  var ckdMedStatus = document.getElementById('ckd-med-ocr-status');
+  if (ckdMedStatus) { ckdMedStatus.style.display = 'none'; ckdMedStatus.innerHTML = ''; }
+  // Spiegelung in HTN/Diab Med-Checkboxes auch leeren
+  document.querySelectorAll('#tab-htn input[type="checkbox"][id^="htn-med-"], #tab-diabetes input[type="checkbox"][id^="diab-med-"]').forEach(function(cb){
+    cb.checked = false;
+  });
+  // Re-Run für Update der Dosierungs- und Regel-Anzeige
+  if (typeof mcRunCheckInner === 'function') mcRunCheckInner();
+};
 
 // ── EXPOSE ────────────────────────────────────────────────────
 window.mcRunCheck = mcRunCheckInner;
