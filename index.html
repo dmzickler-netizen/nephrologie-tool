@@ -5105,14 +5105,17 @@ if (document.readyState === 'loading') {
         <input type="number" id="hi-lvef" min="5" max="80" step="1" placeholder="z.B. 30" oninput="hiCalcAll()">
       </div>
       <div class="hi-field">
-        <label for="hi-nyha">NYHA-Klasse</label>
-        <select id="hi-nyha" onchange="hiCalcAll()">
-          <option value="">— wählen —</option>
-          <option value="1">I — beschwerdefrei</option>
-          <option value="2">II — bei stärkerer Belastung</option>
-          <option value="3">III — bei leichter Belastung</option>
-          <option value="4">IV — in Ruhe</option>
-        </select>
+        <label>NYHA-Klasse</label>
+        <div class="diab-toggle-group" style="flex-wrap:wrap;">
+          <input type="radio" name="hi-nyha" id="hi-nyha-1" value="1" onchange="hiCalcAll()">
+          <label for="hi-nyha-1" title="beschwerdefrei">I</label>
+          <input type="radio" name="hi-nyha" id="hi-nyha-2" value="2" onchange="hiCalcAll()">
+          <label for="hi-nyha-2" title="bei stärkerer Belastung">II</label>
+          <input type="radio" name="hi-nyha" id="hi-nyha-3" value="3" onchange="hiCalcAll()">
+          <label for="hi-nyha-3" title="bei leichter Belastung">III</label>
+          <input type="radio" name="hi-nyha" id="hi-nyha-4" value="4" onchange="hiCalcAll()">
+          <label for="hi-nyha-4" title="in Ruhe">IV</label>
+        </div>
       </div>
       <div class="hi-field">
         <label for="hi-ntprobnp">NT-proBNP (pg/mL)</label>
@@ -5395,7 +5398,7 @@ if (document.readyState === 'loading') {
 
   function hiCalcClass(){
     var lvef = num('hi-lvef');
-    var nyha = (document.getElementById('hi-nyha')||{}).value;
+    var nyha = (document.querySelector('input[name="hi-nyha"]:checked')||{}).value || '';
     var el = document.getElementById('hi-class-result');
     if (!el) return;
     if (lvef == null) { el.className='hi-result hi-res-none'; el.textContent='LVEF eingeben.'; return; }
@@ -5500,7 +5503,7 @@ if (document.readyState === 'loading') {
 
   function hiCalcDevice(){
     var lvef = num('hi-lvef');
-    var nyha = parseInt((document.getElementById('hi-nyha')||{}).value) || 0;
+    var nyha = parseInt((document.querySelector('input[name="hi-nyha"]:checked')||{}).value) || 0;
     var el = document.getElementById('hi-device-result');
     if (!el) return;
     if (lvef == null) { el.className='hi-result hi-res-none'; el.textContent='LVEF eingeben.'; return; }
@@ -5761,8 +5764,8 @@ if (document.readyState === 'loading') {
   <div class="diab-card">
     <h2>🫀 Herzerkrankung &amp; Komorbiditäten</h2>
     <div class="diab-med-grid">
-      <div class="diab-check-item"><input type="checkbox" id="vhf-hfref"><label for="vhf-hfref"><strong>HFrEF</strong> <small>(LVEF ≤ 40%)</small></label></div>
-      <div class="diab-check-item"><input type="checkbox" id="vhf-hfpef"><label for="vhf-hfpef"><strong>HFpEF / HFmrEF</strong> <small>(LVEF &gt; 40%)</small></label></div>
+      <div class="diab-check-item"><input type="checkbox" id="vhf-hfref" onchange="if(this.checked){var o=document.getElementById('vhf-hfpef');if(o)o.checked=false;}"><label for="vhf-hfref"><strong>HFrEF</strong> <small>(LVEF ≤ 40%)</small></label></div>
+      <div class="diab-check-item"><input type="checkbox" id="vhf-hfpef" onchange="if(this.checked){var o=document.getElementById('vhf-hfref');if(o)o.checked=false;}"><label for="vhf-hfpef"><strong>HFpEF / HFmrEF</strong> <small>(LVEF &gt; 40%)</small></label></div>
       <div class="diab-check-item"><input type="checkbox" id="vhf-mechvalve"><label for="vhf-mechvalve"><strong>Mechanische Herzklappe</strong> <small>→ VKA zwingend, DOAC kontraindiziert</small></label></div>
       <div class="diab-check-item"><input type="checkbox" id="vhf-rheumms"><label for="vhf-rheumms"><strong>Rheumatische Mitralstenose</strong> <small>(mod.–schwer) → VKA zwingend</small></label></div>
       <div class="diab-check-item"><input type="checkbox" id="vhf-khk"><label for="vhf-khk"><strong>KHK / Z.n. MI</strong></label></div>
