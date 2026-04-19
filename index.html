@@ -1412,7 +1412,7 @@ window.goHome = function(e){
   <button class="nav-tab-btn" data-tab="tma" onclick="switchToolTab('tma')">🩸 TTP / HUS / HELLP</button>
   <button class="nav-tab-btn" data-tab="gn" onclick="switchToolTab('gn')">🔬 Glomerulonephritis</button>
   <button class="nav-tab-btn" data-tab="ns" onclick="switchToolTab('ns')">🫧 Nephrotisches Syndrom</button>
-  <button class="nav-tab-btn" data-tab="elektrolyte" onclick="switchToolTab('elektrolyte')">⚗️ Elektrolyte</button>
+  <button class="nav-tab-btn" data-tab="elektrolyte" onclick="switchToolTab('elektrolyte')">⚗️ Elektrolyte &amp; BGA</button>
   <button class="nav-tab-btn" data-tab="abx" onclick="switchToolTab('abx')">🦠 ABx-Dosierung</button>
   <button class="nav-tab-btn" data-tab="hwi" onclick="switchToolTab('hwi')">🔬 HWI</button>
   <button class="nav-tab-btn" data-tab="medcheck" onclick="switchToolTab('medcheck')">💊 Medikationscheck</button>
@@ -8939,8 +8939,12 @@ window.gichtAutoImport = function() {
             <input type="number" id="sab-ph" placeholder="7.40" step="0.01" min="6.5" max="8.0" oninput="sabWorkup()">
           </div>
           <div class="sab-field">
-            <label>pCO₂ (mmHg)</label>
+            <label>pCO₂ (mmHg) <a href="#" onclick="event.preventDefault(); var el=document.getElementById('sab-pco2-si-box'); if(el) el.style.display = el.style.display==='block'?'none':'block'; return false;" style="font-size:.65rem; color:#90a4ae; text-decoration:none; font-weight:500; margin-left:4px;" title="SI-Einheit kPa ↔ mmHg">· kPa?</a></label>
             <input type="number" id="sab-pco2" placeholder="40" step="1" oninput="sabWorkup()">
+            <div id="sab-pco2-si-box" style="display:none; margin-top:3px; padding:4px 6px; background:#f5f5f5; border-radius:4px;">
+              <input type="number" id="sab-pco2-kpa" placeholder="kPa" step="0.1" style="width:60px; padding:3px 5px; font-size:.78rem; border:1px solid #ccc; border-radius:4px;" oninput="(function(){var v=parseFloat(this.value); if(!isNaN(v)){ document.getElementById('sab-pco2').value = Math.round(v*7.5006); if(typeof sabWorkup==='function') sabWorkup(); }}).call(this);">
+              <span style="font-size:.65rem; color:#78909c;"> × 7,5 → mmHg</span>
+            </div>
           </div>
           <div class="sab-field">
             <label>HCO₃⁻ (mmol/l)</label>
@@ -9349,6 +9353,10 @@ window.gichtAutoImport = function() {
   function connector() {
     return '<div class="sab-connector"></div>';
   }
+  // Didaktische Erklärbox, zeigt WARUM ein Schritt durchgeführt wird
+  function didactic(text) {
+    return '<div style="background:#e1f5fe; border-left:3px solid #0288d1; padding:7px 11px; margin-bottom:8px; font-size:.75rem; color:#01579b; line-height:1.55; border-radius:0 6px 6px 0;"><span style="font-weight:700;">💡 </span>' + text + '</div>';
+  }
 
   /* ── acc toggle ── */
   window.sabToggleAcc = function(id) {
@@ -9431,7 +9439,7 @@ window.gichtAutoImport = function() {
       phCls = 'danger';
       phExtra = '<strong>Notfall!</strong> Sofortige Intervention erforderlich.';
     }
-    var step1Body = phBadge + '<br>' + result(phCls, phExtra + '<br><small>Normal: 7,35\u20137,45</small>');
+    var step1Body = didactic('Der pH zeigt, ob der Patient <em>insgesamt</em> zu sauer (Azidose) oder basisch (Alkalose) ist. Normalbereich 7,35–7,45. Ein <strong>normaler pH schließt eine Störung NICHT aus</strong> — Kompensation kann ihn zurück in den Normbereich ziehen (→ Schritt 4).') + phBadge + '<br>' + result(phCls, phExtra + '<br><small>Normal: 7,35\u20137,45</small>');
     html += step(1, 'pH beurteilen', step1Body);
     html += connector();
 
@@ -9507,10 +9515,11 @@ window.gichtAutoImport = function() {
     } else {
       primBody = result('neutral', 'HCO\u2083\u207b und pCO\u2082 eingeben f\u00fcr Primärstörung.');
     }
-    html += step(2, 'Prim\u00e4re St\u00f6rung', primBody);
+    primBody = didactic('HCO₃⁻ und pCO₂ zeigen, <em>wo</em> die Störung sitzt.<br>• <strong>HCO₃⁻ ↓ (&lt; 22)</strong> = metabolische Azidose · <strong>HCO₃⁻ ↑ (&gt; 26)</strong> = metabolische Alkalose<br>• <strong>pCO₂ ↑ (&gt; 45)</strong> = respiratorische Azidose · <strong>pCO₂ ↓ (&lt; 35)</strong> = respiratorische Alkalose<br>Beide abnormal bei normalem pH → gemischte oder kompensierte Störung.') + primBody;
+    html += step(2, 'HCO\u2083\u207b &amp; pCO\u2082 \u2014 Prim\u00e4re St\u00f6rung', primBody);
     html += connector();
 
-    /* ══ SCHRITT 3: Kompensation ══ */
+    /* ══ SCHRITT 4 (ehemals 3): Kompensation ══ */
     var kompBody = '';
     if (hasHco3 && hasPco2 && primType) {
       if (primType === 'metazid') {
@@ -9600,10 +9609,9 @@ window.gichtAutoImport = function() {
     } else {
       kompBody = result('neutral', 'HCO\u2083\u207b und pCO\u2082 eingeben f\u00fcr Kompensationspr\u00fcfung.');
     }
-    html += step(3, 'Kompensation adäquat?', kompBody);
-    html += connector();
+    // → Kompensation wird erst NACH Anionenlücke gerendert (Schritt 4).
 
-    /* ══ SCHRITT 4: Anionenlücke ══ */
+    /* ══ SCHRITT 3 (ehemals 4): Anionenlücke ══ */
     var al = NaN, alKorr = NaN;
     var alBody = '';
     var highAG = false;
@@ -9649,10 +9657,11 @@ window.gichtAutoImport = function() {
     } else {
       alBody = result('neutral', 'Na\u207a, Cl\u207b und HCO\u2083\u207b eingeben f\u00fcr Anionenlücke.');
     }
-    html += step(4, 'Anionenlücke (AL)', alBody);
+    alBody = didactic('Bei <em>metabolischer Azidose</em> verrät die Anionenlücke die Ursache:<br>• <strong>AL ↑ (&gt; 12)</strong> = "Lücken"-Azidose — Laktat, Ketone, Urämie, Toxine. Merkhilfe: <strong>GOLDMARK</strong>.<br>• <strong>AL normal (8–12)</strong> = hyperchlorämische Azidose — Diarrhö, RTA, NaCl-Infusion.<br>Bei Hypoalbuminämie korrigieren (+2,5 mmol/l pro 10 g/l Albumin unter 40).') + alBody;
+    html += step(3, 'Anionenlücke (AL)', alBody);
     html += connector();
 
-    /* ══ SCHRITT 4b: Delta-Delta ══ */
+    /* ══ SCHRITT 3b (ehemals 4b): Delta-Delta ══ */
     var ddBody = '';
     if (highAG && hasHco3) {
       var alUse2 = isset(alKorr) ? alKorr : al;
@@ -9676,9 +9685,15 @@ window.gichtAutoImport = function() {
       } else {
         ddBody2 += result('warn', 'HCO\u2083\u207b normal oder erhöht bei erhöhter AL \u2192 zus. metabolische Alkalose m\u00f6glich!');
       }
-      html += step('4b', 'Delta-Delta-Verhältnis', ddBody2);
+      ddBody2 = didactic('Vergleicht, wie sehr die Anionenlücke <em>steigt</em> vs. wie sehr HCO₃⁻ <em>fällt</em>.<br>Bei reiner AG-Azidose ~1:1. Abweichungen → zusätzliche Störung: DR &lt; 1 = zusätzl. normale-AL-Azidose, DR &gt; 2 = zusätzl. met. Alkalose.') + ddBody2;
+      html += step('3b', 'Delta-Delta-Verhältnis', ddBody2);
       html += connector();
     }
+
+    /* ══ SCHRITT 4: Kompensation (nach Anionenlücke gerendert) ══ */
+    kompBody = didactic('Der Körper gleicht eine Primärstörung durch <em>Gegenregulation</em> aus. Weicht die gemessene Kompensation stark von der erwarteten ab → liegt eine <strong>zweite, unabhängige Störung</strong> vor.<br>• Met. Azidose → Hyperventilation (<strong>Winter-Formel:</strong> pCO₂ = 1,5 × HCO₃⁻ + 8 ± 2)<br>• Met. Alkalose → Hypoventilation (pCO₂ = 0,7 × HCO₃⁻ + 21)<br>• Resp. Störungen → renale HCO₃⁻-Anpassung (akut vs. chronisch)') + kompBody;
+    html += step(4, 'Kompensation adäquat?', kompBody);
+    html += connector();
 
     /* ══ SCHRITT 5: Summary ══ */
     var sumFindings = [];
