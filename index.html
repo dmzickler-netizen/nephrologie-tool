@@ -1826,10 +1826,12 @@ window.goHome = function(e){
         <div id="ckd-med-results" style="display:none; margin-top:8px; padding:8px 12px; background:#fff; border:1px solid #c8e6c9; border-radius:8px;"></div>
 
         <div style="margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-          <button onclick="event.stopPropagation(); document.getElementById('ckd-med-ocr-file').click();" style="padding:6px 14px; background:#2e7d32; color:#fff; border:none; border-radius:8px; font-size:.78rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">📁 Bild auswählen</button>
+          <button onclick="event.stopPropagation(); document.getElementById('ckd-med-ocr-cam').click();" style="padding:6px 14px; background:#2e7d32; color:#fff; border:none; border-radius:8px; font-size:.78rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">📷 Foto aufnehmen</button>
+          <button onclick="event.stopPropagation(); document.getElementById('ckd-med-ocr-file').click();" style="padding:6px 14px; background:#fff; color:#2e7d32; border:1.5px solid #a5d6a7; border-radius:8px; font-size:.78rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">📁 Bild auswählen</button>
           <button onclick="event.stopPropagation(); window.ckdMedTextClear&&window.ckdMedTextClear();" style="padding:6px 14px; background:#fff; color:#c62828; border:1.5px solid #ef9a9a; border-radius:8px; font-size:.78rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">🗑️ Text leeren</button>
-          <span style="font-size:.72rem; color:#558b6e;">oder Bild per Drag-and-Drop</span>
+          <span style="font-size:.72rem; color:#558b6e;">oder Bild per Drag-and-Drop / Strg+V</span>
         </div>
+        <input type="file" id="ckd-med-ocr-cam" accept="image/*" capture="environment" style="display:none;" onchange="window.ckdMedOcrFromCkd&&window.ckdMedOcrFromCkd(this.files[0]);">
         <input type="file" id="ckd-med-ocr-file" accept="image/*" style="display:none;" onchange="window.ckdMedOcrFromCkd&&window.ckdMedOcrFromCkd(this.files[0]);">
         <div id="ckd-med-ocr-status"></div>
       </div>
