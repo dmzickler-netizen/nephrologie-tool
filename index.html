@@ -1468,7 +1468,7 @@ window.goHome = function(e){
     weight:     ['weight','hi-weight','vhf-weight','tah-weight','diab-weight','ak-p-weight','ak-t-weight','ak-u-weight','ak-h-weight','aki-weight','mbd2-weight','hwi-pat-weight','mc-weight'],
     age:        ['age','vhf-age','tah-age','diab-age','lip-age','htn-age','aki-age','mc-age'],
     height:     ['height','diab-height'],
-    creatinine: ['creatinine','vhf-creat','tah-creat'],
+    creatinine: ['creatinine','vhf-creat','tah-creat','tma-krea'],
     egfr:       ['htn-egfr','diab-egfr','hi-egfr','gicht-egfr','ak-p-egfr','ak-t-egfr','ak-u-egfr','ak-h-egfr','hwi-pat-egfr','mc-egfr'],
     kalium:     ['kalium','htn-kalium','diab-kalium','hi-kalium'],
     uacr:       ['uacr','htn-uacr','diab-uacr'],
@@ -2525,6 +2525,45 @@ function parseLabText(text) {
   ], serumText);
   if (v.laktat !== null && (v.laktat < 0.2 || v.laktat > 30)) v.laktat = null;
 
+  // ─── Werte für TMA/HELLP-Differenzialdiagnostik ─────────────────
+  // LDH (U/l)
+  v.ldh = find([lax(['LDH','Laktatdehydrogenase'])]);
+  if (v.ldh !== null && (v.ldh < 50 || v.ldh > 10000)) v.ldh = null;
+
+  // Bilirubin gesamt (mg/dl 0.1–30)
+  v.bilirubin = find([
+    /\b(?:Gesamt[-\s]?)?Bilirubin(?:\s*(?:gesamt|ges\.?|total))?(?:\s*\([^)]{1,30}\))?\s*[:=*]?\s*(\d+\.?\d*)/i,
+    lax(['Bili','Bilirubin'])
+  ]);
+  if (v.bilirubin !== null && (v.bilirubin < 0.1 || v.bilirubin > 30)) v.bilirubin = null;
+
+  // Thrombozyten (Gpt/l oder /nl, 1–1500)
+  v.thrombozyten = find([
+    lax(['Thrombo(?:zyten)?','Thrombos','Platelets','PLT','Thc']),
+    /\bThrombozyten(?:\s*\([^)]{1,30}\))?\s*[:=*]?\s*(\d+\.?\d*)\s*(?:\/nl|Gpt\/l|×10|x10)/i
+  ]);
+  if (v.thrombozyten !== null && (v.thrombozyten < 1 || v.thrombozyten > 3000)) v.thrombozyten = null;
+
+  // INR (0.5–10)
+  v.inr = find([lax(['INR','International[\\s\\-]?normalized[\\s\\-]?Ratio'])]);
+  if (v.inr !== null && (v.inr < 0.5 || v.inr > 12)) v.inr = null;
+
+  // MCV (fl, 50–130)
+  v.mcv = find([lax(['MCV','Mean[\\s\\-]?corpuscular[\\s\\-]?volume','mittleres?\\s+korpuskul[aä]res?\\s+volumen'])]);
+  if (v.mcv !== null && (v.mcv < 40 || v.mcv > 140)) v.mcv = null;
+
+  // Fibrinogen (mg/dl 50–900 oder g/l 0.5–9.0)
+  v.fibrinogen = find([lax(['Fibrinogen'])]);
+  if (v.fibrinogen !== null && (v.fibrinogen < 0.3 || v.fibrinogen > 1500)) v.fibrinogen = null;
+
+  // AST/GOT (U/l, 5–5000)
+  v.ast = find([lax(['AST','GOT','ASAT','Aspartat[\\s\\-]?Amino(?:transferase)?'])]);
+  if (v.ast !== null && (v.ast < 5 || v.ast > 10000)) v.ast = null;
+
+  // ALT/GPT (U/l, 5–5000)
+  v.alt = find([lax(['ALT','GPT','ALAT','Alanin[\\s\\-]?Amino(?:transferase)?'])]);
+  if (v.alt !== null && (v.alt < 5 || v.alt > 10000)) v.alt = null;
+
   // Plasma-Albumin (g/l: 15–60)
   v.albumin_plasma = findIn([
     /\bAlbumin(?:\s*\([^)]{1,30}\))?\s*[:=*]?\s*(\d+\.?\d*)\s*g\/l/i,
@@ -2574,7 +2613,7 @@ function parseLabText(text) {
 // Eingangs-Felder (wo der User selbst eintippt) dürfen nicht überschrieben
 // werden, wenn sie schon gefüllt sind — das ist in fillFields() geregelt.
 var FIELD_MAP = {
-  creatinine: ['creatinine','lip-creatinine','mc-krea'],
+  creatinine: ['creatinine','lip-creatinine','mc-krea','tma-krea'],
   cystatinc:  ['cystatinc'],
   uacr:       ['uacr','diab-uacr','htn-uacr'],
   kalium:     ['kalium','hypo-k','sab-k','diab-kalium','htn-kalium'],
@@ -2609,7 +2648,16 @@ var FIELD_MAP = {
   urin_na:        ['hypo-una'],
   urin_k:         ['hypo-uk'],
   urin_osm:       ['hypo-uosm'],
-  urin_harnsaure: ['hypo-uha']
+  urin_harnsaure: ['hypo-uha'],
+  // TMA / TTP / HUS / HELLP
+  ldh:         ['tma-ldh'],
+  bilirubin:   ['tma-bili'],
+  thrombozyten:['tma-plt'],
+  inr:         ['tma-inr'],
+  mcv:         ['tma-mcv'],
+  fibrinogen:  ['tma-fibrin'],
+  ast:         ['tma-ast'],
+  alt:         ['tma-alt']
 };
 
 var FIELD_LABELS = {
@@ -2620,7 +2668,9 @@ var FIELD_LABELS = {
   bp_sys:'RR sys', bp_dia:'RR dia', age:'Alter',
   na:'Na⁺', cl:'Cl⁻', glucose:'Glukose', pco2:'pCO₂', laktat:'Laktat',
   albumin_plasma:'Albumin', osm:'Osm',
-  urin_na:'U-Na', urin_k:'U-K', urin_osm:'U-Osm', urin_harnsaure:'U-Harnsäure'
+  urin_na:'U-Na', urin_k:'U-K', urin_osm:'U-Osm', urin_harnsaure:'U-Harnsäure',
+  ldh:'LDH', bilirubin:'Bili', thrombozyten:'Thrombo', inr:'INR', mcv:'MCV',
+  fibrinogen:'Fibrinogen', ast:'AST', alt:'ALT'
 };
 
 function fillFields(values) {
