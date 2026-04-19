@@ -7256,6 +7256,29 @@ window.gichtAutoImport = function() {
   <!-- ===== DIAGNOSTIK ===== -->
   <div id="tma-diag" class="tma-tab active">
 
+    <!-- OCR-Upload-Zone: nutzt denselben Parser wie Elektrolyte/CKD-Labor -->
+    <div class="tma-card" style="border:2px dashed #ef9a9a; background:#fff8f8; cursor:pointer;"
+         onclick="document.getElementById('tma-lab-ocr-file').click();"
+         ondragover="event.preventDefault(); this.style.background='#ffcdd2';"
+         ondragleave="this.style.background='#fff8f8';"
+         ondrop="event.preventDefault(); this.style.background='#fff8f8'; if(window.ckdLabOcrHandle) window.ckdLabOcrHandle(event.dataTransfer.files);">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="font-size:1.8rem;">📷</div>
+        <div style="flex:1;">
+          <div style="font-size:.95rem; font-weight:700; color:#c62828; margin-bottom:2px;">Laborbefund einlesen — Bild / PDF (OCR)</div>
+          <div style="font-size:.78rem; color:#78909c; line-height:1.4;">
+            Bild per Drag-and-Drop hierher ziehen, Foto/Screenshot einfügen oder unten auswählen.
+            Erkennt <strong>Krea, LDH, Bilirubin, Thrombozyten, INR, MCV, Fibrinogen, AST, ALT, Hb</strong> u.a.
+          </div>
+          <div style="font-size:.72rem; color:#2e7d32; font-weight:600; margin-top:4px;">🔒 100 % lokal — Bild verlässt den Browser nicht.</div>
+        </div>
+      </div>
+      <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+        <button onclick="event.stopPropagation(); document.getElementById('tma-lab-ocr-file').click();" style="padding:6px 14px; background:#c62828; color:#fff; border:none; border-radius:8px; font-size:.78rem; font-weight:600; cursor:pointer;">📁 Bild / PDF wählen</button>
+      </div>
+      <input type="file" id="tma-lab-ocr-file" accept="image/*,application/pdf,.pdf" multiple style="display:none;" onchange="if(window.ckdLabOcrHandle) window.ckdLabOcrHandle(this.files);">
+    </div>
+
     <div class="tma-card">
       <div class="tma-card-title">🧪 Laborparameter</div>
       <div class="tma-grid">
