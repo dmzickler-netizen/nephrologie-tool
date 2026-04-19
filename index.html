@@ -2366,11 +2366,12 @@ function parseLabText(text) {
 
   // Bicarbonat / HCO₃⁻ — OCR liest Unicode-Subscript/Superscript oft als
   // 3 / ₃ / 8 / s / 5 / . / , / ; / :, und Superscript-Minus als -/—/⁻/¯/~
-  // oder gar nicht.
+  // oder gar nicht. Zusätzlich super-permissives Fallback, das zwischen
+  // "HCO" und "mmol" ALLES (außer Buchstaben/Zahlen) im 6-Zeichen-Fenster
+  // akzeptiert — fängt Tesseract-Artefakte wie "HCO_" "HCO‾" etc. ab.
   v.bicarb = find([
-    // mit mmol-Unit (am zuverlässigsten)
     /\bHC[O0]\s*[3₃8s5.,;:]?\s*[-−⁻¯~—]?\s*[:=*]?\s*(-?\d+\.?\d*)\s*mmol/i,
-    // ohne Unit, aber Negative-Lookahead gegen Folgezahlen
+    /\bHC[O0][^A-Za-z\d\n]{0,6}?(-?\d+\.?\d*)\s*mmol/i,
     /\bHC[O0]\s*[3₃8s5.,;:]?\s*[-−⁻¯~—]?\s*[:=*]?\s*(-?\d+\.?\d*)(?!\s*\d)/i,
     lax(['HCO3','HCO₃','Bicarbonat','Bikarbonat','Standard[\\s\\-]?Bicarbonat','St[\\s\\.\\-]?Bic','Bic'], true)
   ]);
@@ -2802,7 +2803,11 @@ window.ckdLabOcrHandle = function(fileOrList) {
       setStatus('error', '⚠️ Kein Text in den Quellen erkannt. Bildqualität prüfen.');
       return;
     }
+    // Debug: rohen OCR-Text in der Konsole ausgeben, damit wir sehen können,
+    // wie Tesseract z.B. 'HCO₃⁻' gelesen hat, wenn die Extraktion scheitert.
+    try { console.log('[Lab-OCR raw text]\n' + bundle.combined); } catch(_){}
     var values = parseLabText(bundle.combined);
+    try { console.log('[Lab-OCR parsed values]', values); } catch(_){}
     var filled = fillFields(values);
     setStatus('success', '✅ ' + bundle.count + ' Quelle' + (bundle.count>1?'n':'') + ' gelesen, ' + filled.length + ' Wert' + (filled.length!==1?'e':'') + ' übernommen.');
     renderResults(filled);
