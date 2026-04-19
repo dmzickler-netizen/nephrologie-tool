@@ -13882,11 +13882,10 @@ function generateTexts(age, sex, scr, cys, uacr, bpSys, bpDia, extraInfo,
     diagnoseText += '\n';
   }
   diagnoseText += 'Diagnosen:\n';
-  let dNum = 1;
-  nephroLines.forEach(l => { diagnoseText += `${dNum++}. ${l}\n`; });
+  nephroLines.forEach(l => { diagnoseText += `${l}\n`; });
   if (vordiagnosenLines.length > 0) {
     diagnoseText += '\n';
-    vordiagnosenLines.forEach(l => { diagnoseText += `${dNum++}. ${l}\n`; });
+    vordiagnosenLines.forEach(l => { diagnoseText += `${l}\n`; });
   }
 
   document.getElementById('text-diagnose').value = diagnoseText;
