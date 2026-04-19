@@ -68,38 +68,39 @@
 /* "Starte hier"-Hinweis über dem CKD-Tab (nur beim ersten Besuch) */
 .start-hint {
   position: absolute;
-  top: -44px;
-  left: 28px;
-  background: #ffc107;
+  top: -36px;
+  left: 135px;
+  transform: translateX(-50%);
+  background: #ffffff;
   color: #1a237e;
-  padding: 6px 14px;
-  border-radius: 10px;
-  font-size: 0.88rem;
-  font-weight: 800;
+  padding: 5px 14px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
   letter-spacing: 0.2px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.18);
   z-index: 20;
   pointer-events: none;
   white-space: nowrap;
-  animation: startHintBounce 1.4s ease-in-out infinite;
+  animation: startHintFloat 1.8s ease-in-out infinite;
 }
 .start-hint::after {
   content: "";
   position: absolute;
-  bottom: -9px;
-  left: 26px;
+  bottom: -7px;
+  left: 50%;
+  transform: translateX(-50%);
   width: 0; height: 0;
-  border-left: 9px solid transparent;
-  border-right: 9px solid transparent;
-  border-top: 10px solid #ffc107;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 8px solid #ffffff;
 }
-@keyframes startHintBounce {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-5px); }
+@keyframes startHintFloat {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50%      { transform: translateX(-50%) translateY(-3px); }
 }
 @media (max-width: 600px) {
-  .start-hint { font-size: 0.78rem; left: 14px; top: -38px; padding: 4px 10px; }
-  .start-hint::after { left: 18px; }
+  .start-hint { font-size: 0.72rem; top: -32px; padding: 4px 10px; }
 }
 
 #tab-ckd { display: block; }
@@ -1457,7 +1458,7 @@ window.goHome = function(e){
      NAV TABS
      ============================================================ -->
 <div class="nav-tabs-bar" style="position:relative;">
-  <div id="start-hint" class="start-hint" style="display:none;">👉 Starte hier</div>
+  <div id="start-hint" class="start-hint" style="display:none;">Starte hier</div>
   <button class="nav-tab-btn active" data-tab="ckd" onclick="switchToolTab('ckd')">🫘 CKD-Staging</button>
   <button class="nav-tab-btn" data-tab="mbd" onclick="switchToolTab('mbd')">🩸 Anämie / Ca-Phosphat</button>
   <button class="nav-tab-btn" data-tab="lipid" onclick="switchToolTab('lipid')">💊 Lipidtherapie</button>
