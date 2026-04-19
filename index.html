@@ -3448,9 +3448,13 @@ var VD_CATEGORIES = [
     /depress/i, /angststör/i, /bipolar/i, /schizo/i, /psychose/i, /bulimi/i, /anorexi/i,
     /sucht/i, /alkohol[-\s]?abhäng/i, /drogenabhäng/i, /\bptbs\b/i, /burnout/i
   ]},
-  { name:'Urologisch/Gynäkologisch', patterns:[
-    /prostatahyper/i, /\bbph\b/i, /benigne\s+prostata/i, /endometrio/i, /uterusmyom/i, /hysterekt/i,
-    /harninkontin/i, /ovarial/i, /zystitis/i, /harnwegs/i
+  { name:'Urologisch', patterns:[
+    /prostatahyper/i, /\bbph\b/i, /benigne\s+prostata/i,
+    /harninkontin/i, /harnwegs/i, /\bzystitis\b/i,
+    /nephrolithias/i, /urolithias/i, /\bhoden/i, /\bphimose\b/i, /\bvarikozele\b/i
+  ]},
+  { name:'Gynäkologisch', patterns:[
+    /endometrio/i, /uterusmyom/i, /hysterekt/i, /ovarial/i, /adnex/i, /menopaus/i, /ovarektom/i, /\boophor/i
   ]},
   { name:'Infektiös', patterns:[
     /\bhiv\b/i, /\bhbv\b/i, /\bhcv\b/i, /\bzoster\b/i, /\bsepsis\b/i, /septisch/i
@@ -15124,6 +15128,10 @@ function generateTexts(age, sex, scr, cys, uacr, bpSys, bpDia, extraInfo,
     // Thematische Gliederung wie im typischen Arztbrief:
     // Renal · Kardial · Gastroenterologisch · Pulmologisch · Endokrinologisch ·
     // Orthopädisch · Neurologisch · Sonstiges
+    // Sex-abhängiger Uro-/Gyn-Header: Frau → beide zusammen, Mann → nur urologisch,
+    // gyn-Treffer bei Männern landen in Sonstiges.
+    const uroKey   = 'UroGyn';
+    const uroLabel = (sex === 'female') ? 'Urologisch / Gynäkologisch' : 'Urologisch';
     const catMap = {
       'Nephrologisch': 'Renal',
       'Kardiovaskulär': 'Kardial',
@@ -15133,10 +15141,11 @@ function generateTexts(age, sex, scr, cys, uacr, bpSys, bpDia, extraInfo,
       'Endokrin/Stoffwechsel': 'Endokrinologisch',
       'Rheumatologisch/Orthopädisch': 'Orthopädisch',
       'Onkologisch': 'Onkologisch',
-      'Urologisch/Gynäkologisch': 'Urologisch/Gynäkologisch'
+      'Urologisch': uroKey,
+      'Gynäkologisch': (sex === 'female') ? uroKey : 'Sonstiges'
       // Hämatologisch, Psychiatrisch, Infektiös, Dermatologisch → Sonstiges
     };
-    const order = ['Renal','Kardial','Gastroenterologisch','Pulmologisch','Endokrinologisch','Orthopädisch','Neurologisch','Onkologisch','Urologisch/Gynäkologisch','Sonstiges'];
+    const order = ['Renal','Kardial','Gastroenterologisch','Pulmologisch','Endokrinologisch','Orthopädisch','Neurologisch','Onkologisch', uroKey, 'Sonstiges'];
     const groups = {};
     order.forEach(k => { groups[k] = []; });
 
@@ -15148,7 +15157,8 @@ function generateTexts(age, sex, scr, cys, uacr, bpSys, bpDia, extraInfo,
 
     order.forEach(cat => {
       if (groups[cat].length) {
-        diagnoseText += `\n${cat}\n`;
+        const label = (cat === uroKey) ? uroLabel : cat;
+        diagnoseText += `\n${label}\n`;
         groups[cat].forEach(l => { diagnoseText += `${l}\n`; });
       }
     });
