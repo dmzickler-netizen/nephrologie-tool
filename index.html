@@ -8971,7 +8971,7 @@ window.gichtAutoImport = function() {
             <input type="number" id="sab-lak" placeholder="" step="0.1" oninput="sabWorkup()">
           </div>
         </div>
-        <div class="sab-note">HCO₃⁻ aus BGA ablesen ODER berechnen: HCO₃⁻ = 0,03 × pCO₂ × 10^(pH − 6,1)</div>
+        <div class="sab-note">HCO₃⁻ aus BGA ablesen.</div>
       </div>
 
       <!-- FLOWCHART RESULTS -->
@@ -9515,8 +9515,8 @@ window.gichtAutoImport = function() {
     } else {
       primBody = result('neutral', 'HCO\u2083\u207b und pCO\u2082 eingeben f\u00fcr Primärstörung.');
     }
-    primBody = didactic('HCO₃⁻ und pCO₂ zeigen, <em>wo</em> die Störung sitzt.<br>• <strong>HCO₃⁻ ↓ (&lt; 22)</strong> = metabolische Azidose · <strong>HCO₃⁻ ↑ (&gt; 26)</strong> = metabolische Alkalose<br>• <strong>pCO₂ ↑ (&gt; 45)</strong> = respiratorische Azidose · <strong>pCO₂ ↓ (&lt; 35)</strong> = respiratorische Alkalose<br>Beide abnormal bei normalem pH → gemischte oder kompensierte Störung.') + primBody;
-    html += step(2, 'HCO\u2083\u207b &amp; pCO\u2082 \u2014 Prim\u00e4re St\u00f6rung', primBody);
+    primBody = didactic('Zuerst nur auf <strong>HCO₃⁻</strong> schauen (Normal 22–26 mmol/l):<br>• <strong>HCO₃⁻ ↓</strong> → metabolische Azidose<br>• <strong>HCO₃⁻ ↑</strong> → metabolische Alkalose<br>Ist HCO₃⁻ im Normbereich, der pH aber gestört → primär respiratorische Störung (dann auf <strong>pCO₂</strong> schauen: ↑ = resp. Azidose, ↓ = resp. Alkalose).') + primBody;
+    html += step(2, 'HCO\u2083\u207b \u2014 Prim\u00e4re St\u00f6rung', primBody);
     html += connector();
 
     /* ══ SCHRITT 4 (ehemals 3): Kompensation ══ */
