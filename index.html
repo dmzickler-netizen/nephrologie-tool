@@ -1811,7 +1811,7 @@ window.goHome = function(e){
       <div id="ckd-med-ocr-zone" onclick="window.activateOcrZone&&window.activateOcrZone('med');">
         <span class="ocr-paste-badge">📋 Strg+V aktiv</span>
         <div class="ckd-med-ocr-row">
-          <div class="ckd-med-ocr-icon">💊</div>
+          <div class="ckd-med-ocr-icon">📷</div>
           <div class="ckd-med-ocr-text">
             <div class="ckd-med-ocr-title">Aktuelle Medikation — Bestandsaufnahme</div>
             <div class="ckd-med-ocr-sub"><strong>Keine Empfehlung</strong> — hier wird nur übernommen, was der Patient <em>aktuell</em> nimmt. Tippen, Einfügen (Strg+V) oder Bild ziehen (Screenshot BMP, Entlassbrief, Medi-Plan). Format: Wirkstoff · Stärke · Form · Schema (1-0-0) · Appl (p.o./s.c./i.v.).</div>
@@ -1826,12 +1826,9 @@ window.goHome = function(e){
         <div id="ckd-med-results" style="display:none; margin-top:8px; padding:8px 12px; background:#fff; border:1px solid #c8e6c9; border-radius:8px;"></div>
 
         <div style="margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-          <button onclick="event.stopPropagation(); document.getElementById('ckd-med-ocr-cam').click();" style="padding:6px 14px; background:#2e7d32; color:#fff; border:none; border-radius:8px; font-size:.78rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">📷 Foto aufnehmen</button>
-          <button onclick="event.stopPropagation(); document.getElementById('ckd-med-ocr-file').click();" style="padding:6px 14px; background:#fff; color:#2e7d32; border:1.5px solid #a5d6a7; border-radius:8px; font-size:.78rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">📁 Bild auswählen</button>
+          <button onclick="event.stopPropagation(); document.getElementById('ckd-med-ocr-file').click();" style="padding:6px 14px; background:#2e7d32; color:#fff; border:none; border-radius:8px; font-size:.78rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">📁 Bild / Foto wählen</button>
           <button onclick="event.stopPropagation(); window.ckdMedTextClear&&window.ckdMedTextClear();" style="padding:6px 14px; background:#fff; color:#c62828; border:1.5px solid #ef9a9a; border-radius:8px; font-size:.78rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">🗑️ Text leeren</button>
-          <span style="font-size:.72rem; color:#558b6e;">oder Bild per Drag-and-Drop / Strg+V</span>
         </div>
-        <input type="file" id="ckd-med-ocr-cam" accept="image/*" capture="environment" style="display:none;" onchange="window.ckdMedOcrFromCkd&&window.ckdMedOcrFromCkd(this.files[0]);">
         <input type="file" id="ckd-med-ocr-file" accept="image/*" style="display:none;" onchange="window.ckdMedOcrFromCkd&&window.ckdMedOcrFromCkd(this.files[0]);">
         <div id="ckd-med-ocr-status"></div>
       </div>
@@ -5038,7 +5035,37 @@ if (document.readyState === 'loading') {
 #tab-hi .hi-info-row strong { color:#4a148c; min-width:120px; }
 #tab-hi .hi-disclaimer { background:#fff8e1; border-left:4px solid #ffa000; padding:10px 14px; border-radius:6px; font-size:.82rem; color:#4a148c; margin-top:16px; }
 #tab-hi .hi-import-banner { display:flex; align-items:center; gap:8px; padding:8px 14px; background:#e8f5e9; border:1px solid #a5d6a7; color:#1b5e20; border-radius:6px; font-size:.88rem; font-weight:600; margin-bottom:12px; }
-#tab-hi abbr[title] { text-decoration: underline dotted #ad1457; text-underline-offset: 3px; cursor: help; font-weight: inherit; }
+#tab-hi abbr[data-abbr] { position: relative; text-decoration: underline dotted #ad1457; text-underline-offset: 3px; cursor: help; font-weight: inherit; }
+#tab-hi abbr[data-abbr]::after {
+  content: attr(data-abbr);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 7px 11px;
+  background: #37474f;
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 500;
+  border-radius: 6px;
+  line-height: 1.4;
+  text-align: left;
+  width: max-content;
+  max-width: 260px;
+  white-space: normal;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+  transition-delay: 0s;
+  z-index: 50;
+  box-shadow: 0 4px 12px rgba(0,0,0,.2);
+}
+#tab-hi abbr[data-abbr]:hover::after { opacity: 1; transition-delay: 2s; }
+#tab-hi .hi-legend-table { width:100%; border-collapse: collapse; font-size:.9rem; }
+#tab-hi .hi-legend-table th { text-align:left; padding:8px 10px; background:#fce4ec; color:#880e4f; font-weight:800; border-bottom:2px solid #ce93d8; }
+#tab-hi .hi-legend-table td { padding:8px 10px; border-bottom:1px solid #eee; vertical-align:top; }
+#tab-hi .hi-legend-table td:first-child { font-weight:800; color:#ad1457; white-space:nowrap; width:110px; }
+#tab-hi .hi-legend-table tr:nth-child(even) td { background:#fafafa; }
 </style>
 <div class="hi-container">
 
@@ -5051,6 +5078,7 @@ if (document.readyState === 'loading') {
     <button class="hi-tab-btn" onclick="hiShowTab('gdmt',this)">💊 Medikamentöse Therapie HFrEF</button>
     <button class="hi-tab-btn" onclick="hiShowTab('hfpef',this)">🩺 HFpEF / HFmrEF</button>
     <button class="hi-tab-btn" onclick="hiShowTab('dev',this)">🔧 Zusatz &amp; Device</button>
+    <button class="hi-tab-btn" onclick="hiShowTab('abbr',this)">📖 Abkürzungen</button>
     <button class="hi-tab-btn" onclick="hiShowTab('info',this)">📚 Quellen</button>
   </div>
 
@@ -5106,7 +5134,7 @@ if (document.readyState === 'loading') {
       <div class="hi-info-row"><strong>HFrEF</strong> <span>LVEF ≤ 40% — reduced ejection fraction</span></div>
       <div class="hi-info-row"><strong>HFmrEF</strong> <span>LVEF 41 – 49% — mildly reduced</span></div>
       <div class="hi-info-row"><strong>HFpEF</strong> <span>LVEF ≥ 50% — preserved (mit Zeichen diastolischer Dysfunktion + ↑NT-proBNP)</span></div>
-      <div class="hi-info-row"><strong>HFimpEF</strong> <span>vorher ≤40%, jetzt &gt;40% nach <abbr title="Guideline-Directed Medical Therapy — leitliniengerechte medikamentöse Therapie">GDMT</abbr> — <em>Therapie fortsetzen!</em></span></div>
+      <div class="hi-info-row"><strong>HFimpEF</strong> <span>vorher ≤40%, jetzt &gt;40% nach <abbr data-abbr="Guideline-Directed Medical Therapy — leitliniengerechte medikamentöse Therapie">GDMT</abbr> — <em>Therapie fortsetzen!</em></span></div>
       <div id="hi-class-result" class="hi-result hi-res-none">LVEF und NYHA eingeben für automatische Klassifikation.</div>
     </div>
 
@@ -5230,7 +5258,7 @@ if (document.readyState === 'loading') {
       <h2>💊 Weitere Medikamente (selektiv, bei persistierender Symptomatik)</h2>
       <div class="hi-pillar">
         <div class="hi-pillar-title">Vericiguat (Verquvo)</div>
-        <div class="hi-pillar-drug">LVEF &lt; 45% nach rezenter Dekompensation trotz <abbr title="Guideline-Directed Medical Therapy — leitliniengerechte medikamentöse Therapie">GDMT</abbr> (VICTORIA) — 2.5 → 5 → 10 mg/d; RR ≥ 100 mmHg</div>
+        <div class="hi-pillar-drug">LVEF &lt; 45% nach rezenter Dekompensation trotz <abbr data-abbr="Guideline-Directed Medical Therapy — leitliniengerechte medikamentöse Therapie">GDMT</abbr> (VICTORIA) — 2.5 → 5 → 10 mg/d; RR ≥ 100 mmHg</div>
       </div>
       <div class="hi-pillar">
         <div class="hi-pillar-title">Ivabradin (Procoralan)</div>
@@ -5238,7 +5266,7 @@ if (document.readyState === 'loading') {
       </div>
       <div class="hi-pillar">
         <div class="hi-pillar-title">Hydralazin + ISDN</div>
-        <div class="hi-pillar-drug">Add-on bei afroamerikanischen Patienten NYHA III–IV unter <abbr title="Guideline-Directed Medical Therapy — leitliniengerechte medikamentöse Therapie">GDMT</abbr> (A-HeFT)</div>
+        <div class="hi-pillar-drug">Add-on bei afroamerikanischen Patienten NYHA III–IV unter <abbr data-abbr="Guideline-Directed Medical Therapy — leitliniengerechte medikamentöse Therapie">GDMT</abbr> (A-HeFT)</div>
       </div>
       <div class="hi-pillar">
         <div class="hi-pillar-title">Digoxin</div>
@@ -5254,15 +5282,51 @@ if (document.readyState === 'loading') {
       <h2>⚡ Device-Therapie</h2>
       <div id="hi-device-result" class="hi-result hi-res-none">LVEF + NYHA eingeben für Device-Indikation.</div>
       <div class="hi-pillar">
-        <div class="hi-pillar-title">ICD (primärprophylaktisch) — Klasse I</div>
-        <div class="hi-pillar-drug">LVEF ≤ 35% nach <strong>≥ 3 Monaten optimaler <abbr title="Guideline-Directed Medical Therapy — leitliniengerechte medikamentöse Therapie">GDMT</abbr></strong>, NYHA II–III, Lebenserwartung &gt; 1 Jahr<br>
+        <div class="hi-pillar-title"><abbr data-abbr="Implantable Cardioverter-Defibrillator — implantierbarer Defibrillator">ICD</abbr> (primärprophylaktisch) — Klasse I</div>
+        <div class="hi-pillar-drug">LVEF ≤ 35% nach <strong>≥ 3 Monaten optimaler <abbr data-abbr="Guideline-Directed Medical Therapy — leitliniengerechte medikamentöse Therapie">GDMT</abbr></strong>, NYHA II–III, Lebenserwartung &gt; 1 Jahr<br>
         Bei ischämischer Kardiomyopathie &gt; 40 Tage nach Infarkt</div>
       </div>
       <div class="hi-pillar">
-        <div class="hi-pillar-title">CRT — Klasse I</div>
-        <div class="hi-pillar-drug">Sinus + LVEF ≤ 35% + LBBB + QRS ≥ 150 ms + NYHA II–IV trotz <abbr title="Guideline-Directed Medical Therapy — leitliniengerechte medikamentöse Therapie">GDMT</abbr><br>
-        Klasse IIa: QRS 130–149 ms mit LBBB · Klasse IIb: QRS ≥ 150 ms ohne LBBB</div>
+        <div class="hi-pillar-title"><abbr data-abbr="Cardiac Resynchronization Therapy — kardiale Resynchronisation (biventrikulärer Schrittmacher)">CRT</abbr> — Klasse I</div>
+        <div class="hi-pillar-drug">Sinus + LVEF ≤ 35% + <abbr data-abbr="Left Bundle Branch Block — Linksschenkelblock">LBBB</abbr> + QRS ≥ 150 ms + NYHA II–IV trotz <abbr data-abbr="Guideline-Directed Medical Therapy — leitliniengerechte medikamentöse Therapie">GDMT</abbr><br>
+        Klasse IIa: QRS 130–149 ms mit <abbr data-abbr="Left Bundle Branch Block — Linksschenkelblock">LBBB</abbr> · Klasse IIb: QRS ≥ 150 ms ohne LBBB</div>
       </div>
+    </div>
+  </div>
+
+  <!-- ABKÜRZUNGEN -->
+  <div id="hi-pane-abbr" class="hi-pane">
+    <div class="hi-card">
+      <h2>📖 Abkürzungen</h2>
+      <table class="hi-legend-table">
+        <thead><tr><th>Kürzel</th><th>Bedeutung</th></tr></thead>
+        <tbody>
+          <tr><td>GDMT</td><td><strong>Guideline-Directed Medical Therapy</strong> — leitliniengerechte medikamentöse Therapie</td></tr>
+          <tr><td>HFrEF</td><td>Heart Failure with <strong>reduced</strong> Ejection Fraction — LVEF ≤ 40%</td></tr>
+          <tr><td>HFmrEF</td><td>Heart Failure with <strong>mildly reduced</strong> EF — LVEF 41–49%</td></tr>
+          <tr><td>HFpEF</td><td>Heart Failure with <strong>preserved</strong> EF — LVEF ≥ 50%</td></tr>
+          <tr><td>HFimpEF</td><td>Heart Failure mit <strong>improved</strong> EF — zuvor ≤ 40%, jetzt &gt; 40%</td></tr>
+          <tr><td>LVEF</td><td>Left Ventricular Ejection Fraction — linksventrikuläre Auswurffraktion</td></tr>
+          <tr><td>NYHA</td><td>New York Heart Association — Funktionsklasse I–IV der Herzinsuffizienz</td></tr>
+          <tr><td>NT-proBNP</td><td>N-terminales pro-Brain Natriuretic Peptide — Biomarker der HF</td></tr>
+          <tr><td>ARNI</td><td>Angiotensin Receptor-Neprilysin Inhibitor (Sacubitril/Valsartan, Entresto)</td></tr>
+          <tr><td>ACEi</td><td>ACE-Hemmer — Angiotensin-Converting-Enzym-Inhibitor (Ramipril, Enalapril …)</td></tr>
+          <tr><td>ARB</td><td>Angiotensin-II-Rezeptor-Blocker — „Sartan" (Candesartan, Losartan …)</td></tr>
+          <tr><td>MRA</td><td>Mineralokortikoid-Rezeptor-Antagonist (Spironolacton, Eplerenon, Finerenon)</td></tr>
+          <tr><td>SGLT2i</td><td>SGLT2-Inhibitor / „Gliflozin" (Dapagliflozin, Empagliflozin)</td></tr>
+          <tr><td>RAAS</td><td>Renin-Angiotensin-Aldosteron-System</td></tr>
+          <tr><td>ICD</td><td>Implantable Cardioverter-Defibrillator — implantierbarer Defibrillator</td></tr>
+          <tr><td>CRT</td><td>Cardiac Resynchronization Therapy — kardiale Resynchronisation (biventrikulärer Schrittmacher)</td></tr>
+          <tr><td>LBBB</td><td>Left Bundle Branch Block — Linksschenkelblock</td></tr>
+          <tr><td>QRS</td><td>QRS-Komplex-Dauer im EKG (ms)</td></tr>
+          <tr><td>TSAT</td><td>Transferrin-Sättigung (%)</td></tr>
+          <tr><td>FCM</td><td>Ferric Carboxymaltose — Eisencarboxymaltose (Ferinject)</td></tr>
+          <tr><td>ISDN</td><td>Isosorbid-Dinitrat</td></tr>
+          <tr><td>LE</td><td>Lebenserwartung</td></tr>
+          <tr><td>MCS</td><td>Mechanical Circulatory Support — mechanische Kreislaufunterstützung (z.B. LVAD)</td></tr>
+        </tbody>
+      </table>
+      <div style="font-size:.82rem; color:#555; margin-top:10px;">Kürzel im Fließtext sind gepunktet unterstrichen — länger als ~2 s darauf verweilen zeigt die Bedeutung.</div>
     </div>
   </div>
 
@@ -5293,7 +5357,7 @@ if (document.readyState === 'loading') {
   'use strict';
 
   window.hiShowTab = function(id, btn){
-    ['class','gdmt','hfpef','dev','info'].forEach(function(k){
+    ['class','gdmt','hfpef','dev','abbr','info'].forEach(function(k){
       var p = document.getElementById('hi-pane-'+k);
       if (p) p.classList.remove('active');
     });
@@ -5302,7 +5366,7 @@ if (document.readyState === 'loading') {
     document.querySelectorAll('#tab-hi .hi-tab-btn').forEach(function(b){ b.classList.remove('active'); });
     if (btn) btn.classList.add('active');
     var basis = document.getElementById('hi-basis-card');
-    if (basis) basis.style.display = (id === 'info') ? 'none' : '';
+    if (basis) basis.style.display = (id === 'info' || id === 'abbr') ? 'none' : '';
   };
 
   function num(id){ var v = parseFloat((document.getElementById(id)||{}).value); return isNaN(v)?null:v; }
@@ -5398,7 +5462,7 @@ if (document.readyState === 'loading') {
     setStatus('hi-p-sglt-status', sglt || '<span class="hi-ok">starten (eGFR ≥ 20)</span>');
 
     sum.className = 'hi-result hi-res-hfref';
-    sum.innerHTML = '<strong>HFrEF (LVEF '+lvef+'%)</strong> — 4-Säulen-<abbr title="Guideline-Directed Medical Therapy — leitliniengerechte medikamentöse Therapie">GDMT</abbr> indiziert. Hinweise pro Säule oben.';
+    sum.innerHTML = '<strong>HFrEF (LVEF '+lvef+'%)</strong> — 4-Säulen-<abbr data-abbr="Guideline-Directed Medical Therapy — leitliniengerechte medikamentöse Therapie">GDMT</abbr> indiziert. Hinweise pro Säule oben.';
   }
 
   window.hiCalcIron = function(){
@@ -5427,8 +5491,8 @@ if (document.readyState === 'loading') {
     if (!el) return;
     if (lvef == null) { el.className='hi-result hi-res-none'; el.textContent='LVEF eingeben.'; return; }
     var msg = [];
-    if (lvef <= 35 && nyha >= 2 && nyha <= 3) msg.push('<strong>ICD-Indikation (Klasse I)</strong> — nach ≥ 3 Monaten optimaler <abbr title="Guideline-Directed Medical Therapy — leitliniengerechte medikamentöse Therapie">GDMT</abbr>, LE &gt; 1 J.');
-    if (lvef <= 35 && nyha >= 2) msg.push('<strong>CRT erwägen</strong> — bei Sinus + LBBB + QRS ≥ 150 ms (Klasse I), 130–149 ms mit LBBB (IIa)');
+    if (lvef <= 35 && nyha >= 2 && nyha <= 3) msg.push('<strong>ICD-Indikation (Klasse I)</strong> — nach ≥ 3 Monaten optimaler <abbr data-abbr="Guideline-Directed Medical Therapy — leitliniengerechte medikamentöse Therapie">GDMT</abbr>, LE &gt; 1 J.');
+    if (lvef <= 35 && nyha >= 2) msg.push('<strong><abbr data-abbr="Cardiac Resynchronization Therapy — kardiale Resynchronisation">CRT</abbr> erwägen</strong> — bei Sinus + <abbr data-abbr="Left Bundle Branch Block — Linksschenkelblock">LBBB</abbr> + QRS ≥ 150 ms (Klasse I), 130–149 ms mit LBBB (IIa)');
     if (!msg.length) { el.className='hi-result hi-res-none'; el.innerHTML = 'Keine Device-Indikation nach den aktuellen Parametern (LVEF &gt; 35% oder NYHA I/IV).'; return; }
     el.className = 'hi-result hi-res-hfref';
     el.innerHTML = msg.join('<br>');
