@@ -2959,40 +2959,63 @@ if (document.readyState === 'loading') {
 var VD_CATEGORIES = [
   { name:'Nephrologisch', patterns:[
     /nephropath/i, /nephritis/i, /glomerul/i, /\bckd\b/i, /niereninsuff/i, /nierenversag/i,
+    /nierenzyst/i, /schrumpfnier/i, /\bniere/i,
     /\bfsgs\b/i, /\bigan\b/i, /iga[-\s]?neph/i, /\badpkd\b/i, /polyzyst/i, /zystennier/i,
     /lupus[-\s]?nephr/i, /\banca\b/i, /vaskulit/i, /wegener/i, /polyangiit/i,
     /nierentx/i, /nierentransplant/i, /\bntx\b/i, /transplantierte?\s+niere/i,
     /dialyse/i, /hämodial/i, /haemodial/i, /peritoneald/i, /proteinuri/i, /albuminur/i, /hämaturi/i, /nephrektomi/i,
-    /membran[a-zäöü]*\s+nephro/i, /minimal[-\s]?change/i, /nephroskleros/i, /\buacr\b/i, /\begfr\b/i
+    /membran[a-zäöü]*\s+nephro/i, /minimal[-\s]?change/i, /nephroskleros/i, /\buacr\b/i, /\begfr\b/i,
+    // CKD-assoziierte Komplikationen (Mineral-Knochen-Stoffwechsel, Anämie, Elektrolyte)
+    /hyperphosph/i, /hyperparathy/i, /renale?\s+an[aä]m/i, /hyperkali/i, /hypokali/i,
+    /renale.*osteopath/i, /mbd/i
   ]},
   { name:'Kardiovaskulär', patterns:[
     /\bkhk\b/i, /koronar/i, /\bpci\b/i, /\bstent/i, /myokardinfarkt/i, /\bnstemi\b/i, /\bstemi\b/i,
     /herzinsuff/i, /\bhfpef\b/i, /\bhfref\b/i, /\bhfmref\b/i, /\bnyha\b/i, /\bvhf\b/i, /vorhofflimmer/i, /atrial\s+fibrill/i,
-    /kardiomyopath/i, /\bklappen/i, /aortenstenos/i, /aorteninsuff/i, /mitralklapp/i, /trikuspidal/i,
+    /kardiomyopath/i, /klappenersatz/i, /klappeninsuff/i, /klappenstenos/i,
+    /aortenklapp/i, /mitralklapp/i, /trikuspidalklapp/i, /pulmonalklapp/i,
+    /aortenstenos/i, /aorteninsuff/i, /linksventrikul/i, /linksherz/i, /rechtsherz/i,
     /perikard/i, /bradykard/i, /tachykard/i, /av[-\s]?block/i, /schrittmacher/i, /\bicd\b/i, /\bcrt\b/i,
-    /\bpavk\b/i, /periphere\s+arterielle/i, /aneurysma/i, /aortendissekt/i,
-    /hyperton/i, /bluthochdruck/i
+    /\bpavk\b/i, /periphere\s+arterielle/i, /aneurysma/i, /aortendissekt/i, /arteriolosklero/i,
+    /hyperton/i, /bluthochdruck/i,
+    // Gefäß (wird im Arztbrief meist kardial eingeordnet)
+    /beinvenenthrombos/i, /\btvt\b/i, /\btbvt\b/i, /varizen/i, /thrombose/i, /embolie/i,
+    /herztumor/i
   ]},
   { name:'Endokrin/Stoffwechsel', patterns:[
     /diabetes\s+mellitus/i, /\bdm\s*[12]\b/i, /typ\s*[12]\s*diab/i, /\bt[12]dm\b/i,
     /hypothyreo/i, /hyperthyreo/i, /schilddrüs/i, /struma/i, /hashimoto/i, /basedow/i,
     /nebennier/i, /\bcushing/i, /akromeg/i, /hypophysen/i, /diabetes\s+insipidus/i,
     /hyperlipid/i, /hypercholester/i, /dyslipid/i, /adipositas/i, /\bbmi\b/i,
-    /\bgicht\b/i, /hyperurik/i, /metabolisch/i
+    /\bgicht\b/i, /hyperurik/i, /metabolisch/i, /vitamin.?d.?mangel/i
   ]},
   { name:'Pulmonologisch', patterns:[
     /\bcopd\b/i, /\basthma\b/i, /lungenemboli/i, /\blae\b/i, /pneumoni/i, /tuberkulos/i, /\btbc\b/i,
-    /lungenkarzin/i, /bronchialkarzin/i, /schlafapnoe/i, /\bosas\b/i, /lungenfibros/i, /emphysem/i, /sarkoidos/i
+    /lungenkarzin/i, /bronchialkarzin/i, /schlafapnoe/i, /\bosas\b/i, /lungenfibros/i, /emphysem/i, /sarkoidos/i,
+    /ventilationsstör/i, /restriktiv.*lung/i, /restriktive?\s+ventil/i, /obstruktiv.*lung/i,
+    /pulmonalarteriell/i, /\bpah\b/i, /lungenhochdruck/i
+  ]},
+  { name:'Rheumatologisch/Orthopädisch', patterns:[
+    /osteoporos/i, /arthros/i, /rheumatoid/i, /ankylo/i, /spondylarthr/i, /coxarthr/i, /gonarthr/i,
+    /bandscheib/i, /hallux/i, /osteomyel/i, /fibromyalg/i,
+    /spondylo/i, /wirbelkörper/i, /\bhwk\b/i, /\blwk\b/i, /\bbwk\b/i, /\bwirbelsäule/i,
+    /halswirbel/i, /lendenwirbel/i, /brustwirbel/i, /wirbelkörperfrakt/i, /bandscheiben/i,
+    /skoliose/i, /kyphose/i, /diszit/i
   ]},
   { name:'Neurologisch', patterns:[
     /schlaganfall/i, /apoplex/i, /\binsult\b/i, /\btia\b/i, /parkinson/i, /epilep/i,
     /\bdemenz/i, /alzheimer/i, /multiple\s+sklero/i, /\bms\b/i, /polyneuropath/i,
-    /migrän/i, /kopfschmerz/i, /gliom/i, /meningeom/i, /hirntumor/i, /enzephal/i, /\btumor.*hirn/i
+    /migrän/i, /kopfschmerz/i, /gliom/i, /meningeom/i, /hirntumor/i, /enzephal/i, /\btumor.*hirn/i,
+    // Weitere typische Neurologie-Befunde
+    /hirninfarkt/i, /\bmca\b/i, /aphasie/i, /\bparese/i, /plegie/i, /facialis/i, /ataxie/i,
+    /myelonkompress/i, /\bmyelon/i, /rückenmark/i, /nervus\s+\w+/i, /ischämi.*hirn/i, /l[aä]gerungsschwindel/i
   ]},
   { name:'Gastroenterologisch', patterns:[
     /gastrit/i, /\bulkus\b/i, /\bulcus\b/i, /reflux/i, /\bgerd\b/i, /colit/i, /morbus\s+crohn/i,
     /divertikul/i, /leberzirrh/i, /hepatitis/i, /pankreatit/i, /cholelith/i, /cholezyst/i,
-    /reizdarm/i, /zöliaki/i
+    /reizdarm/i, /zöliaki/i,
+    /lebertransplant/i, /leber[-\s]?tx/i, /portal.*hyperton/i, /portale?\s+gastropath/i,
+    /asplen/i, /splenektomi/i, /obstipation/i
   ]},
   { name:'Hämatologisch', patterns:[
     /\banämi/i, /\banaemi/i, /thrombozytopen/i, /\bmgus\b/i, /leukopen/i, /neutropen/i,
@@ -3002,10 +3025,6 @@ var VD_CATEGORIES = [
     /karzinom/i, /malignom/i, /\btumor\b/i, /metastas/i, /leukäm/i, /lymphom/i, /sarkom/i, /melanom/i,
     /z\.?n\.?\s*(ca|karzinom|malignom)/i, /mamma[-\s]?ca/i, /bronchial[-\s]?ca/i, /prostata[-\s]?ca/i,
     /kolorektal/i, /chemotherap/i, /radiatio/i, /\bbestrahl/i
-  ]},
-  { name:'Rheumatologisch/Orthopädisch', patterns:[
-    /osteoporos/i, /arthros/i, /rheumatoid/i, /ankylo/i, /spondylarthr/i, /coxarthr/i, /gonarthr/i,
-    /bandscheib/i, /hallux/i, /osteomyel/i, /fibromyalg/i
   ]},
   { name:'Psychiatrisch', patterns:[
     /depress/i, /angststör/i, /bipolar/i, /schizo/i, /psychose/i, /bulimi/i, /anorexi/i,
@@ -3023,6 +3042,15 @@ var VD_CATEGORIES = [
   ]}
 ];
 
+window.vdClassifyLine = function(line) {
+  for (var i = 0; i < VD_CATEGORIES.length; i++) {
+    var c = VD_CATEGORIES[i];
+    for (var j = 0; j < c.patterns.length; j++) {
+      if (c.patterns[j].test(line)) return c.name;
+    }
+  }
+  return null;
+};
 function vdClassifyLine(line) {
   for (var i = 0; i < VD_CATEGORIES.length; i++) {
     var c = VD_CATEGORIES[i];
@@ -13883,9 +13911,38 @@ function generateTexts(age, sex, scr, cys, uacr, bpSys, bpDia, extraInfo,
   }
   diagnoseText += 'Diagnosen:\n';
   nephroLines.forEach(l => { diagnoseText += `${l}\n`; });
+
   if (vordiagnosenLines.length > 0) {
-    diagnoseText += '\n';
-    vordiagnosenLines.forEach(l => { diagnoseText += `${l}\n`; });
+    // Thematische Gliederung wie im typischen Arztbrief:
+    // Renal · Kardial · Gastroenterologisch · Pulmologisch · Endokrinologisch ·
+    // Orthopädisch · Neurologisch · Sonstiges
+    const catMap = {
+      'Nephrologisch': 'Renal',
+      'Kardiovaskulär': 'Kardial',
+      'Gastroenterologisch': 'Gastroenterologisch',
+      'Pulmonologisch': 'Pulmologisch',
+      'Neurologisch': 'Neurologisch',
+      'Endokrin/Stoffwechsel': 'Endokrinologisch',
+      'Rheumatologisch/Orthopädisch': 'Orthopädisch'
+      // Hämatologisch, Onkologisch, Psychiatrisch, Urologisch/Gynäkologisch,
+      // Infektiös, Dermatologisch → Sonstiges
+    };
+    const order = ['Renal','Kardial','Gastroenterologisch','Pulmologisch','Endokrinologisch','Orthopädisch','Neurologisch','Sonstiges'];
+    const groups = {};
+    order.forEach(k => { groups[k] = []; });
+
+    vordiagnosenLines.forEach(line => {
+      const raw = (typeof window.vdClassifyLine === 'function') ? window.vdClassifyLine(line) : null;
+      const mapped = (raw && catMap[raw]) ? catMap[raw] : 'Sonstiges';
+      groups[mapped].push(line);
+    });
+
+    order.forEach(cat => {
+      if (groups[cat].length) {
+        diagnoseText += `\n${cat}\n`;
+        groups[cat].forEach(l => { diagnoseText += `${l}\n`; });
+      }
+    });
   }
 
   document.getElementById('text-diagnose').value = diagnoseText;
