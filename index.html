@@ -13453,6 +13453,74 @@ function mcParseFreeTextInner(){
     pillsHtml+='<span class="mc-match-pill">\u2714 '+(groupNames[g]||g)+'</span>';
   });
   pillEl.innerHTML=pillsHtml;
+
+  // Propagation: mc-med-* → diab-med-*, htn-med-*, Lipid-Therapie
+  mcPropagateToOtherTabs();
+}
+
+// Überträgt die Medikationscheck-Checkboxen (mc-med-*) auf die
+// entsprechenden Felder in Diabetes, Hypertonie und Lipid-Tab.
+// Wird aus mcParseFreeText() aufgerufen, sodass ein Med-Upload im
+// CKD-Tab automatisch alle relevanten Tabs vorausfüllt.
+function mcPropagateToOtherTabs() {
+  function isOn(grp) {
+    var cb = document.getElementById('mc-med-' + grp);
+    return !!(cb && cb.checked);
+  }
+  function setCheck(id, val) {
+    var el = document.getElementById(id);
+    if (!el || el.type !== 'checkbox') return;
+    // Respektiere vom User aktiv abgehakte Felder
+    if (el.dataset.userUnchecked && val) return;
+    if (el.checked === !!val) return;
+    el.checked = !!val;
+    // Change-Event für abhängige Berechnungen auslösen
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  // Diabetes-Tab
+  setCheck('diab-med-metformin', isOn('metformin'));
+  setCheck('diab-med-sglt2i',    isOn('sglt2i'));
+  setCheck('diab-med-glp1',      isOn('glp1ra'));
+  setCheck('diab-med-dpp4i',     isOn('dpp4i'));
+  setCheck('diab-med-su',        isOn('su'));
+  setCheck('diab-med-insulin',   isOn('insulin'));
+  setCheck('diab-med-ace',       isOn('acei') || isOn('arb'));
+  setCheck('diab-med-finerenon', isOn('finerenon'));
+  setCheck('diab-med-statin',    isOn('statin'));
+
+  // Hypertonie-Tab
+  setCheck('htn-med-acei',    isOn('acei'));
+  setCheck('htn-med-arb',     isOn('arb'));
+  setCheck('htn-med-ccb',     isOn('ccb'));
+  setCheck('htn-med-thiazid', isOn('thiazid'));
+  setCheck('htn-med-bb',      isOn('bb'));
+  setCheck('htn-med-spiro',   isOn('spiro'));
+  setCheck('htn-med-loop',    isOn('loop'));
+  setCheck('htn-med-alpha',   isOn('alpha'));
+
+  // Lipid-Tab: nutzt die bereits vorhandene Auto-Select-Funktion.
+  // Setzt intern state.therapy + CSS-Klasse — zusätzlich hier das radio
+  // 'checked'-Attribut explizit setzen, damit die UI synchron ist.
+  if (typeof window.lipAutoSelectTherapy === 'function') {
+    try { window.lipAutoSelectTherapy(); } catch(e){}
+  }
+  var hasSt = isOn('statin');
+  var hasEz = isOn('ezetimib');
+  var hasPc = isOn('pcsk9');
+  var therapy = null;
+  if (hasSt && hasEz && hasPc) therapy = 'triple';
+  else if (hasSt && hasPc)     therapy = 'statin_pcsk9';
+  else if (hasSt && hasEz)     therapy = 'statin_ezetimib';
+  else if (hasSt)              therapy = 'statin';
+  else if (hasEz)              therapy = 'ezetimib_only';
+  if (therapy) {
+    var radio = document.querySelector('#tab-lipid input[name="therapy"][value="' + therapy + '"]');
+    if (radio && !radio.checked) {
+      radio.checked = true;
+      radio.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  }
 }
 
 // ── MAIN CALC ─────────────────────────────────────────────────
