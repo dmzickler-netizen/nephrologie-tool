@@ -13869,13 +13869,6 @@ function generateTexts(age, sex, scr, cys, uacr, bpSys, bpDia, extraInfo,
       else if (uacr >= 300)  nephroLines.push('Schwere Albuminurie (uACR 300–1999 mg/g)');
       else                   nephroLines.push('Mäßige Albuminurie (uACR 30–299 mg/g)');
     }
-    // Renale Anämie (immer bei CKD — daher kurz, ohne 'bei CKD'-Zusatz)
-    if (hb && ((sex === 'male' && hb < 13) || (sex === 'female' && hb < 12))) {
-      nephroLines.push('Renale Anämie');
-    }
-    // Sekundärer Hyperparathyreoidismus: PTH oberhalb des oberen Normwerts
-    // (~65 pg/mL) bei bestehender CKD.
-    if (pth && pth > 65) nephroLines.push('Sekundärer Hyperparathyreoidismus');
     if (riskInfo && (riskInfo.css === 'risk-very-high' || riskInfo.css === 'risk-ext-high')) {
       nephroLines.push('Hohes kardiovaskuläres und renales Progressionsrisiko');
     }
