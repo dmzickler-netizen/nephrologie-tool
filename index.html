@@ -2362,10 +2362,13 @@ function parseLabText(text) {
   if (v.kalium !== null && (v.kalium < 1.5 || v.kalium > 9)) v.kalium = null;
 
   // Bicarbonat / HCO₃⁻ — OCR liest Unicode-Subscript/Superscript oft als
-  // 3 / ₃ / 8 / s / 0, und Superscript-Minus als - / — / ⁻ / ¯ oder gar nicht.
+  // 3 / ₃ / 8 / s / 5 / . / , / ; / :, und Superscript-Minus als -/—/⁻/¯/~
+  // oder gar nicht.
   v.bicarb = find([
-    /\bHC[O0]\s*[3₃8s5]\s*[-−⁻¯]?\s*[:=*]?\s*(-?\d+\.?\d*)\s*mmol/i,
-    /\bHC[O0]\s*[3₃8s5]\s*[-−⁻¯]?\s*[:=*]?\s*(-?\d+\.?\d*)(?!\s*\d)/i,
+    // mit mmol-Unit (am zuverlässigsten)
+    /\bHC[O0]\s*[3₃8s5.,;:]?\s*[-−⁻¯~—]?\s*[:=*]?\s*(-?\d+\.?\d*)\s*mmol/i,
+    // ohne Unit, aber Negative-Lookahead gegen Folgezahlen
+    /\bHC[O0]\s*[3₃8s5.,;:]?\s*[-−⁻¯~—]?\s*[:=*]?\s*(-?\d+\.?\d*)(?!\s*\d)/i,
     lax(['HCO3','HCO₃','Bicarbonat','Bikarbonat','Standard[\\s\\-]?Bicarbonat','St[\\s\\.\\-]?Bic','Bic'], true)
   ]);
   if (v.bicarb !== null && (v.bicarb < 5 || v.bicarb > 50)) v.bicarb = null;
@@ -2505,8 +2508,12 @@ function parseLabText(text) {
   ], serumText);
   if (v.glucose !== null && (v.glucose < 20 || v.glucose > 1500)) v.glucose = null;
 
-  // pCO2 (BGA, 10–150)
-  v.pco2 = findIn([ /\bpCO[₂2](?:\s*\([^)]{1,30}\))?\s*[:=*]?\s*(\d+\.?\d*)/i ], t);
+  // pCO2 (BGA, 10–150) — OCR liest subscript ₂ oft als 2 / , / . / ; / : / z
+  // oder verliert es ganz. Mit mmHg-Unit zuerst (am zuverlässigsten).
+  v.pco2 = findIn([
+    /\bp[Cc]O[₂2zZ,;.:]?\s*(?:\([^)]{1,30}\))?\s*[:=*]?\s*(\d+\.?\d*)\s*mmHg/i,
+    /\bp[Cc]O[₂2zZ,;.:]?\s*(?:\([^)]{1,30}\))?\s*[:=*]?\s*(\d+\.?\d*)/i
+  ], t);
   if (v.pco2 !== null && (v.pco2 < 10 || v.pco2 > 150)) v.pco2 = null;
 
   // Laktat (0.2–30 mmol/l)
