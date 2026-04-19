@@ -5048,11 +5048,11 @@ if (document.readyState === 'loading') {
     <button class="hi-tab-btn" onclick="hiShowTab('gdmt',this)">💊 GDMT HFrEF</button>
     <button class="hi-tab-btn" onclick="hiShowTab('hfpef',this)">🩺 HFpEF / HFmrEF</button>
     <button class="hi-tab-btn" onclick="hiShowTab('dev',this)">🔧 Zusatz &amp; Device</button>
-    <button class="hi-tab-btn" onclick="hiShowTab('info',this)">ℹ️ Info</button>
+    <button class="hi-tab-btn" onclick="hiShowTab('info',this)">📚 Quellen</button>
   </div>
 
-  <!-- BASISDATEN (global für alle Sub-Tabs) -->
-  <div class="hi-card">
+  <!-- BASISDATEN (global für alle Sub-Tabs außer Quellen) -->
+  <div class="hi-card" id="hi-basis-card">
     <h2>🫀 Basisdaten</h2>
     <div class="hi-grid2">
       <div class="hi-field">
@@ -5298,6 +5298,8 @@ if (document.readyState === 'loading') {
     if (pane) pane.classList.add('active');
     document.querySelectorAll('#tab-hi .hi-tab-btn').forEach(function(b){ b.classList.remove('active'); });
     if (btn) btn.classList.add('active');
+    var basis = document.getElementById('hi-basis-card');
+    if (basis) basis.style.display = (id === 'info') ? 'none' : '';
   };
 
   function num(id){ var v = parseFloat((document.getElementById(id)||{}).value); return isNaN(v)?null:v; }
