@@ -2430,9 +2430,13 @@ function ckdParseCurrentMeds(text) {
 
   var RE_SCHEMA4 = /(\d+(?:[,\.]\d+)?)\s*-\s*(\d+(?:[,\.]\d+)?)\s*-\s*(\d+(?:[,\.]\d+)?)\s*-\s*(\d+(?:[,\.]\d+)?)/;
   var RE_SCHEMA3 = /(\d+(?:[,\.]\d+)?)\s*-\s*(\d+(?:[,\.]\d+)?)\s*-\s*(\d+(?:[,\.]\d+)?)/;
-  var RE_APPL    = /\b(p\.?\s*o\.?|s\.?\s*c\.?|i\.?\s*v\.?|i\.?\s*m\.?|s\.?\s*l\.?|p\.?\s*r\.?|oral|subkutan|intravenös|intramuskulär|sublingual|nasal|inhalativ|topisch)\b/i;
+  // Abkürzungen MÜSSEN Punkte haben (p.o., nicht "po" — sonst matched "Pr" in "Prävention",
+  // weil JS \b Umlaute als Nicht-Wort-Zeichen behandelt). Kein terminierendes \b,
+  // damit auch der letzte Punkt mitgenommen wird (sonst bleibt "p.o." → matcht "p.o" + "." bleibt).
+  var RE_APPL    = /\b(p\.\s*o\.?|s\.\s*c\.?|i\.\s*v\.?|i\.\s*m\.?|s\.\s*l\.?|p\.\s*r\.?|oral|subkutan|intraven[öo]s|intramuskulär|sublingual|nasal|inhalativ|topisch)/i;
   var RE_FORM    = /\b(Retardtabl\.?|Retardkaps\.?|Retard|Tablette[n]?|Filmtabl\.?|Tbl\.?|Tabl\.?|Kapsel[n]?|Kaps\.?|Drg\.?|Dragee[s]?|Tropfen|Tropf\.?|Tr\.?|Amp\.?|Ampulle[n]?|Inhal\.?|Inhalat|Spray|Lösung|Salbe|Creme|Gel|Pflaster|Patch|Zäpfchen|Supp\.?|Injektion|Inj\.?|Fertigspritze|Pen|Stick)\b/i;
-  var RE_STRENGTH = /(\d+(?:[,\.]\d+)?(?:\s*\/\s*\d+(?:[,\.]\d+)?)?)\s*(mg|µg|mcg|ug|g\b|ml|IE|I\.E\.|Einheiten|E\.?|%)/i;
+  // Einheit am Wortende (\b) erzwingen, sonst matcht z.B. "2 e" in "DM2 eGFR".
+  var RE_STRENGTH = /(\d+(?:[,\.]\d+)?(?:\s*\/\s*\d+(?:[,\.]\d+)?)?)\s*(mg|µg|mcg|ug|g|ml|IE|I\.E\.|Einheiten|E\.?|%)\b/i;
   var RE_HINT    = /\b(bei\s+Bedarf|b\.?\s*B\.?|nach\s+Bedarf|morgens|mittags|abends|zur\s+Nacht|nüchtern|vor\s+d(?:em|\.)\s+Essen|nach\s+d(?:em|\.)\s+Essen|n\.?\s*E\.?|mit\s+Mahlzeit|ret\.?|abhängig|individuell|n(?:ach)?\.?\s*INR|nach\s+Quick)\b/i;
 
   lines.forEach(function(raw){
@@ -2510,11 +2514,31 @@ function ckdParseCurrentMeds(text) {
       line = line.replace(mHint[0], ' ');
     }
 
-    // 6) Rest = Wirkstoff (+ ggf. Handelsname in Klammern)
-    //    clean up: Kommas, überschüssige Whitespace, einzelne Zeichen
-    var rest = line.replace(/[,;]+/g,' ').replace(/\s+/g,' ').trim();
-    // Einzelne Leerzeichen-umgebene Tokens sind oft OCR-Rauschen → wegwerfen, wenn Länge < 2
-    rec.wirkstoff = rest.split(/\s+/).filter(function(w){return w.length >= 2;}).join(' ');
+    // 6) Wirkstoff extrahieren — strikt gegen MC_DOSING (oder fallback)
+    var drugMatch = (typeof window.mcMatchFirstDrug === 'function') ? window.mcMatchFirstDrug(raw) : null;
+    var restCleaned = line.replace(/[;]+/g,' ').replace(/\s+/g,' ').trim();
+    if (drugMatch) {
+      rec.wirkstoff = drugMatch.name;
+      // Restliches Token(s), das nicht der Wirkstoff ist → Hinweis (falls keiner gesetzt)
+      var tok = drugMatch.matchedToken;
+      var remaining = restCleaned.replace(new RegExp(tok, 'gi'), '').replace(/\s+/g,' ').trim();
+      // Nur halbwegs sinnvollen Rest übernehmen (≥3 Zeichen, keine Solitaire-Kommas)
+      remaining = remaining.replace(/^[,\s\-–—]+|[,\s\-–—]+$/g,'');
+      if (remaining && remaining.length >= 3 && !rec.hinweis) {
+        rec.hinweis = remaining;
+      } else if (remaining && remaining.length >= 3 && rec.hinweis) {
+        rec.hinweis = rec.hinweis + '; ' + remaining;
+      }
+    } else {
+      // Fallback: erstes "Wirkstoff-artiges" Wort nehmen (Groß-klein, >3 Zeichen, keine Zahl)
+      var tokens = restCleaned.split(/\s+/).filter(function(w){return w.length >= 3 && !/^\d/.test(w);});
+      if (tokens.length) {
+        rec.wirkstoff = tokens[0];
+        var restTokens = tokens.slice(1).join(' ').trim();
+        if (restTokens && !rec.hinweis) rec.hinweis = restTokens;
+        else if (restTokens && rec.hinweis) rec.hinweis = rec.hinweis + '; ' + restTokens;
+      }
+    }
 
     // Nur Zeilen mit irgendeinem Inhalt übernehmen
     if (rec.wirkstoff || rec.staerke || rec.m || rec.mi || rec.a || rec.n) {
@@ -2525,48 +2549,203 @@ function ckdParseCurrentMeds(text) {
   return out;
 }
 
-// BMP-Tabelle rendern — read-only, formatiert, nicht editierbar
+// Map für manuelle Overrides in leeren Zellen.
+// Key = normalisierter Wirkstoff+Stärke, Value = { form, appl, einheit, hinweis, ... }
+window.ckdMedOverrides = window.ckdMedOverrides || {};
+// Manuell hinzugefügte Zeilen (ohne Quelle im Freitext)
+window.ckdMedManualRows  = window.ckdMedManualRows  || [];
+
+function ckdOverrideKey(rec){
+  return ((rec.wirkstoff||'') + '|' + (rec.staerke||'')).toLowerCase().replace(/\s+/g,'');
+}
+
+function ckdApplyOverrides(parsed){
+  parsed.forEach(function(rec){
+    var ov = window.ckdMedOverrides[ckdOverrideKey(rec)];
+    if (!ov) return;
+    ['form','appl','einheit','hinweis','m','mi','a','n'].forEach(function(f){
+      if ((!rec[f] || rec[f] === '') && ov[f]) rec[f] = ov[f];
+    });
+  });
+  return parsed;
+}
+
+// Einzelne Zelle rendern — leere editierbare als <input>, sonst Text
+function ckdCell(rec, field, opts){
+  opts = opts || {};
+  var val = rec[field] || '';
+  var isSchema = (field==='m' || field==='mi' || field==='a' || field==='n');
+  var padding = isSchema ? '5px 2px' : (opts.padding||'5px 8px');
+  var align   = isSchema ? 'center' : 'left';
+  var key = ckdOverrideKey(rec);
+  var isOverride = !!(window.ckdMedOverrides[key] && window.ckdMedOverrides[key][field]);
+
+  if (val) {
+    var color = opts.color || (isSchema ? '#1b5e20' : '#37474f');
+    var fw = opts.fw || (isSchema ? '600' : '500');
+    var extra = isOverride ? ' background:#fff59d;' : '';
+    return '<td style="padding:'+padding+'; text-align:'+align+'; font-weight:'+fw+'; color:'+color+';'+extra+'"'
+         + (opts.wirkstoff ? ' style="padding:5px 8px; font-weight:600; color:#1b5e20;"' : '')
+         + '>' + val + '</td>';
+  }
+  // Leeres Feld: kleines Input zum Nachtragen (außer Wirkstoff/Stärke — die kommen aus Text oben)
+  if (field === 'wirkstoff' || field === 'staerke') {
+    return '<td style="padding:'+padding+'; text-align:'+align+'; color:#bdbdbd;">—</td>';
+  }
+  // Kein Placeholder-Text — würde wie gefüllter Wert wirken.
+  // Die hellorange Zellfarbe reicht als Hinweis "editierbar".
+  var inputStyle = 'width:100%; min-width:24px; border:none; background:transparent; font:inherit; color:#37474f; text-align:'+align+'; padding:0; outline:none;';
+  var cellStyle = 'padding:'+padding+'; text-align:'+align+'; background:rgba(255,243,224,.5); cursor:text;';
+  var title = {form:'Form nachtragen',appl:'Appl. nachtragen',einheit:'Einheit nachtragen',hinweis:'Hinweis nachtragen',m:'morgens',mi:'mittags',a:'abends',n:'nachts'}[field] || 'nachtragen';
+  return '<td style="'+cellStyle+'" title="'+title+'"><input type="text" data-k="'+key+'" data-f="'+field+'" onchange="window.ckdSetOverride&&window.ckdSetOverride(this)" style="'+inputStyle+'"></td>';
+}
+
+window.ckdSetOverride = function(input){
+  var key = input.getAttribute('data-k');
+  var field = input.getAttribute('data-f');
+  var val = (input.value || '').trim();
+  if (!key || !field) return;
+  if (!window.ckdMedOverrides[key]) window.ckdMedOverrides[key] = {};
+  if (val) window.ckdMedOverrides[key][field] = val;
+  else delete window.ckdMedOverrides[key][field];
+  // Re-render unter Behalt der Scroll-Position
+  var ta = document.getElementById('ckd-med-text');
+  if (ta && typeof window.ckdMedTextChange === 'function') window.ckdMedTextChange(ta.value);
+};
+
+// Manuell zusätzliche Zeile hinzufügen
+window.ckdMedAddManualRow = function(){
+  var form = document.getElementById('ckd-med-manual-form');
+  if (!form || form.style.display === 'block') { form.style.display = 'none'; return; }
+  form.style.display = 'block';
+  var f = document.getElementById('ckd-med-manual-wirkstoff');
+  if (f) f.focus();
+};
+window.ckdMedManualSave = function(){
+  var get = function(id){ var e=document.getElementById(id); return e ? e.value.trim() : ''; };
+  var rec = {
+    wirkstoff: get('ckd-med-manual-wirkstoff'),
+    staerke:   get('ckd-med-manual-staerke'),
+    form:      get('ckd-med-manual-form-val'),
+    m:  get('ckd-med-manual-m'),
+    mi: get('ckd-med-manual-mi'),
+    a:  get('ckd-med-manual-a'),
+    n:  get('ckd-med-manual-n'),
+    einheit: get('ckd-med-manual-einheit'),
+    appl:    get('ckd-med-manual-appl'),
+    hinweis: get('ckd-med-manual-hinweis'),
+    _manual: true
+  };
+  if (!rec.wirkstoff && !rec.staerke) { alert('Bitte mindestens Wirkstoff oder Stärke angeben.'); return; }
+  window.ckdMedManualRows.push(rec);
+  // Felder leeren + Formular zu
+  ['wirkstoff','staerke','form-val','m','mi','a','n','einheit','appl','hinweis'].forEach(function(k){
+    var e = document.getElementById('ckd-med-manual-'+k); if (e) e.value = '';
+  });
+  var f = document.getElementById('ckd-med-manual-form'); if (f) f.style.display = 'none';
+  var ta = document.getElementById('ckd-med-text');
+  if (typeof window.ckdMedTextChange === 'function') window.ckdMedTextChange(ta ? ta.value : '');
+};
+window.ckdMedManualCancel = function(){
+  var f = document.getElementById('ckd-med-manual-form'); if (f) f.style.display = 'none';
+};
+window.ckdMedManualRemove = function(i){
+  window.ckdMedManualRows.splice(i, 1);
+  var ta = document.getElementById('ckd-med-text');
+  if (typeof window.ckdMedTextChange === 'function') window.ckdMedTextChange(ta ? ta.value : '');
+};
+
+// BMP-Tabelle rendern — Wirkstoff/Stärke read-only, leere Felder editierbar
 function ckdRenderCurrentMedsTable(parsed) {
-  if (!parsed.length) return '';
+  // Overrides + manuelle Zeilen anfügen
+  parsed = ckdApplyOverrides(parsed.slice());
+  var allRows = parsed.concat(window.ckdMedManualRows);
+  if (!allRows.length) return '';
+
   var html = '';
   html += '<div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; margin-bottom:8px;">';
-  html += '<div style="font-size:.82rem; color:#1b5e20; font-weight:700;">📋 Aktuelle Medikation · ' + parsed.length + ' Eintr' + (parsed.length!==1?'äge':'ag') + '</div>';
-  html += '<div style="font-size:.68rem; color:#78909c; background:#f5f5f5; padding:3px 8px; border-radius:4px; font-weight:600;">BESTANDSAUFNAHME · KEINE EMPFEHLUNG</div>';
+  html += '<div style="font-size:.82rem; color:#1b5e20; font-weight:700;">📋 Aktuelle Medikation · ' + allRows.length + ' Eintr' + (allRows.length!==1?'äge':'ag') + '</div>';
+  html += '<div style="font-size:.72rem; color:#fff; background:#c62828; padding:4px 10px; border-radius:4px; font-weight:700; letter-spacing:.3px;">⚠️ BESTANDSAUFNAHME · KEINE EMPFEHLUNG</div>';
   html += '</div>';
 
-  html += '<div style="overflow-x:auto; background:#fff; border:1px solid #c8e6c9; border-radius:8px;" contenteditable="false">';
+  // Warnhinweis
+  html += '<div style="background:#fff3e0; border-left:3px solid #ef6c00; padding:8px 12px; margin-bottom:8px; font-size:.75rem; color:#e65100; font-weight:600;">⚠️ Ergebnisse sorgfältig auf Vollständigkeit und Richtigkeit prüfen. Automatische Erkennung nicht 100 % zuverlässig.</div>';
+
+  html += '<div style="overflow-x:auto; background:#fff; border:1px solid #c8e6c9; border-radius:8px;">';
   html += '<table style="width:100%; border-collapse:collapse; font-size:.76rem; font-family:\'Helvetica Neue\',Arial,sans-serif; user-select:text;">';
   html += '<thead><tr style="background:#2e7d32; color:#fff; text-align:left;">';
   html += '<th style="padding:6px 8px; font-weight:600; white-space:nowrap;">Wirkstoff</th>';
   html += '<th style="padding:6px 8px; font-weight:600; white-space:nowrap;">Stärke</th>';
   html += '<th style="padding:6px 8px; font-weight:600; white-space:nowrap;">Form</th>';
-  html += '<th style="padding:6px 4px; font-weight:600; text-align:center; width:32px;" title="morgens">Mor</th>';
-  html += '<th style="padding:6px 4px; font-weight:600; text-align:center; width:32px;" title="mittags">Mit</th>';
-  html += '<th style="padding:6px 4px; font-weight:600; text-align:center; width:32px;" title="abends">Abd</th>';
-  html += '<th style="padding:6px 4px; font-weight:600; text-align:center; width:32px;" title="zur Nacht">Nacht</th>';
+  html += '<th style="padding:6px 4px; font-weight:600; text-align:center; width:34px;" title="morgens">Mor</th>';
+  html += '<th style="padding:6px 4px; font-weight:600; text-align:center; width:34px;" title="mittags">Mit</th>';
+  html += '<th style="padding:6px 4px; font-weight:600; text-align:center; width:34px;" title="abends">Abd</th>';
+  html += '<th style="padding:6px 4px; font-weight:600; text-align:center; width:34px;" title="zur Nacht">Nacht</th>';
   html += '<th style="padding:6px 6px; font-weight:600;">Einh.</th>';
   html += '<th style="padding:6px 6px; font-weight:600;">Appl</th>';
   html += '<th style="padding:6px 8px; font-weight:600;">Hinweis</th>';
+  html += '<th style="padding:6px 4px; width:28px;"></th>';
   html += '</tr></thead><tbody>';
 
-  parsed.forEach(function(m, i){
+  allRows.forEach(function(m, i){
+    var isManual = !!m._manual;
+    var manualIdx = isManual ? (i - parsed.length) : -1;
     var bg = i % 2 === 0 ? '#fff' : '#fafbf9';
+    if (isManual) bg = '#e3f2fd';
     html += '<tr style="background:' + bg + '; border-top:1px solid #e8f5e9;">';
-    html += '<td style="padding:5px 8px; font-weight:600; color:#1b5e20;">' + (m.wirkstoff || '<span style="color:#bdbdbd;">—</span>') + '</td>';
+    // Wirkstoff (read-only)
+    html += '<td style="padding:5px 8px; font-weight:600; color:#1b5e20;">' + (m.wirkstoff || '<span style="color:#bdbdbd;">—</span>') + (isManual?'<span style="font-size:.65rem;color:#1565c0;font-weight:600;margin-left:4px;">✎</span>':'') + '</td>';
+    // Stärke (read-only)
     html += '<td style="padding:5px 8px; white-space:nowrap;">' + (m.staerke || '<span style="color:#bdbdbd;">—</span>') + '</td>';
-    html += '<td style="padding:5px 8px; white-space:nowrap; color:#546e7a;">' + (m.form || '<span style="color:#bdbdbd;">—</span>') + '</td>';
-    html += '<td style="padding:5px 4px; text-align:center; font-weight:600;' + (m.m && m.m !== '0' ? ' color:#1b5e20;' : ' color:#bdbdbd;') + '">' + (m.m || '—') + '</td>';
-    html += '<td style="padding:5px 4px; text-align:center; font-weight:600;' + (m.mi && m.mi !== '0' ? ' color:#1b5e20;' : ' color:#bdbdbd;') + '">' + (m.mi || '—') + '</td>';
-    html += '<td style="padding:5px 4px; text-align:center; font-weight:600;' + (m.a && m.a !== '0' ? ' color:#1b5e20;' : ' color:#bdbdbd;') + '">' + (m.a || '—') + '</td>';
-    html += '<td style="padding:5px 4px; text-align:center; font-weight:600;' + (m.n && m.n !== '0' ? ' color:#1b5e20;' : ' color:#bdbdbd;') + '">' + (m.n || '—') + '</td>';
-    html += '<td style="padding:5px 6px; color:#546e7a;">' + (m.einheit || '<span style="color:#bdbdbd;">—</span>') + '</td>';
-    html += '<td style="padding:5px 6px; color:#546e7a;">' + (m.appl || '<span style="color:#bdbdbd;">—</span>') + '</td>';
-    html += '<td style="padding:5px 8px; color:#546e7a; font-size:.72rem;">' + (m.hinweis || '') + '</td>';
+    // Form (editierbar wenn leer)
+    html += ckdCell(m, 'form');
+    // Schema
+    html += ckdCell(m, 'm');
+    html += ckdCell(m, 'mi');
+    html += ckdCell(m, 'a');
+    html += ckdCell(m, 'n');
+    html += ckdCell(m, 'einheit');
+    html += ckdCell(m, 'appl');
+    html += ckdCell(m, 'hinweis');
+    // Manuell-Zeile: Löschen-Button
+    if (isManual) {
+      html += '<td style="padding:5px 4px; text-align:center;"><button onclick="window.ckdMedManualRemove('+manualIdx+')" title="Zeile entfernen" style="border:none; background:transparent; color:#c62828; cursor:pointer; font-size:1rem; padding:0;">×</button></td>';
+    } else {
+      html += '<td></td>';
+    }
     html += '</tr>';
   });
   html += '</tbody></table>';
   html += '</div>';
-  html += '<div style="font-size:.68rem; color:#78909c; margin-top:6px;">Tabelle nicht editierbar — zum Korrigieren Text oben anpassen. Leere Felder bleiben leer (kein Raten).</div>';
+
+  // Aktions-Leiste + manuelle Eingabe
+  html += '<div style="display:flex; gap:10px; align-items:center; margin-top:10px; flex-wrap:wrap;">';
+  html += '<button type="button" onclick="window.ckdMedAddManualRow&&window.ckdMedAddManualRow()" style="padding:6px 12px; background:#1565c0; color:#fff; border:none; border-radius:8px; font-size:.78rem; font-weight:600; cursor:pointer;">➕ Medikament manuell hinzufügen</button>';
+  html += '<div style="font-size:.68rem; color:#78909c;">Leere Felder sind bearbeitbar (hellorange) · manuell hinzugefügte Zeilen blau hinterlegt</div>';
+  html += '</div>';
+
+  // Manuelles Eingabeformular (default hidden)
+  html += '<div id="ckd-med-manual-form" style="display:none; margin-top:10px; padding:12px 14px; background:#e3f2fd; border:1px solid #90caf9; border-radius:8px;">';
+  html += '<div style="font-size:.82rem; color:#0d47a1; font-weight:700; margin-bottom:8px;">Medikament manuell hinzufügen</div>';
+  html += '<div style="display:grid; grid-template-columns:1fr 1fr; gap:8px 10px;">';
+  html += '<div><label style="font-size:.7rem; color:#455a64; font-weight:600;">Wirkstoff *</label><input id="ckd-med-manual-wirkstoff" type="text" style="width:100%; padding:6px 8px; border:1.5px solid #90caf9; border-radius:6px; font-size:.82rem; margin-top:2px;" placeholder="z.B. Eisen(III)-Carboxymaltose"></div>';
+  html += '<div><label style="font-size:.7rem; color:#455a64; font-weight:600;">Stärke</label><input id="ckd-med-manual-staerke" type="text" style="width:100%; padding:6px 8px; border:1.5px solid #90caf9; border-radius:6px; font-size:.82rem; margin-top:2px;" placeholder="z.B. 1000 mg"></div>';
+  html += '<div><label style="font-size:.7rem; color:#455a64; font-weight:600;">Form</label><input id="ckd-med-manual-form-val" type="text" style="width:100%; padding:6px 8px; border:1.5px solid #90caf9; border-radius:6px; font-size:.82rem; margin-top:2px;" placeholder="Tbl./Kps./Inj."></div>';
+  html += '<div><label style="font-size:.7rem; color:#455a64; font-weight:600;">Einheit</label><input id="ckd-med-manual-einheit" type="text" style="width:100%; padding:6px 8px; border:1.5px solid #90caf9; border-radius:6px; font-size:.82rem; margin-top:2px;" placeholder="mg/ml/IE"></div>';
+  html += '<div style="grid-column:1/-1; display:grid; grid-template-columns:repeat(4,1fr); gap:6px;">';
+  html += '<div><label style="font-size:.7rem; color:#455a64; font-weight:600;">Morgens</label><input id="ckd-med-manual-m" type="text" style="width:100%; padding:6px 8px; border:1.5px solid #90caf9; border-radius:6px; font-size:.82rem; margin-top:2px;" placeholder="0"></div>';
+  html += '<div><label style="font-size:.7rem; color:#455a64; font-weight:600;">Mittags</label><input id="ckd-med-manual-mi" type="text" style="width:100%; padding:6px 8px; border:1.5px solid #90caf9; border-radius:6px; font-size:.82rem; margin-top:2px;" placeholder="0"></div>';
+  html += '<div><label style="font-size:.7rem; color:#455a64; font-weight:600;">Abends</label><input id="ckd-med-manual-a" type="text" style="width:100%; padding:6px 8px; border:1.5px solid #90caf9; border-radius:6px; font-size:.82rem; margin-top:2px;" placeholder="0"></div>';
+  html += '<div><label style="font-size:.7rem; color:#455a64; font-weight:600;">Nacht</label><input id="ckd-med-manual-n" type="text" style="width:100%; padding:6px 8px; border:1.5px solid #90caf9; border-radius:6px; font-size:.82rem; margin-top:2px;" placeholder=""></div>';
+  html += '</div>';
+  html += '<div><label style="font-size:.7rem; color:#455a64; font-weight:600;">Appl.</label><input id="ckd-med-manual-appl" type="text" style="width:100%; padding:6px 8px; border:1.5px solid #90caf9; border-radius:6px; font-size:.82rem; margin-top:2px;" placeholder="p.o./s.c./i.v."></div>';
+  html += '<div><label style="font-size:.7rem; color:#455a64; font-weight:600;">Hinweis</label><input id="ckd-med-manual-hinweis" type="text" style="width:100%; padding:6px 8px; border:1.5px solid #90caf9; border-radius:6px; font-size:.82rem; margin-top:2px;" placeholder="z.B. bei Bedarf"></div>';
+  html += '</div>';
+  html += '<div style="margin-top:10px; display:flex; gap:8px;">';
+  html += '<button onclick="window.ckdMedManualSave()" style="padding:6px 14px; background:#1565c0; color:#fff; border:none; border-radius:6px; font-size:.78rem; font-weight:600; cursor:pointer;">✓ Hinzufügen</button>';
+  html += '<button onclick="window.ckdMedManualCancel()" style="padding:6px 14px; background:#fff; color:#455a64; border:1.5px solid #b0bec5; border-radius:6px; font-size:.78rem; font-weight:600; cursor:pointer;">Abbrechen</button>';
+  html += '</div>';
+  html += '</div>';
   return html;
 }
 
@@ -2622,6 +2801,9 @@ window.ckdMedTextClear = function() {
   if (ta) ta.value = '';
   var resEl = document.getElementById('ckd-med-results');
   if (resEl) { resEl.style.display = 'none'; resEl.innerHTML = ''; }
+  // Overrides und manuelle Zeilen ebenfalls zurücksetzen
+  window.ckdMedOverrides = {};
+  window.ckdMedManualRows  = [];
   // Aus mc-freetext den CKD-Direkteingabe-Block entfernen
   var ft = document.getElementById('mc-freetext');
   if (ft) {
@@ -13115,6 +13297,36 @@ window.mcBuildDosingHtmlFromText = function(text, egfrInput, dialysisMode) {
   }
 
   return { count: detected.length, html: html, band: band, drugs: detected };
+};
+
+// Findet den ersten in einem Text genannten Wirkstoff aus MC_DOSING.
+// Gibt { name, brand, matchedToken } zurück oder null.
+window.mcMatchFirstDrug = function(text) {
+  var lower = (text || '').toLowerCase();
+  if (!lower.trim()) return null;
+  for (var i = 0; i < MC_DOSING.length; i++) {
+    var drug = MC_DOSING[i];
+    // Name
+    if (drug.name) {
+      var n = drug.name.toLowerCase();
+      if (n.indexOf('/') >= 0) {
+        var parts = n.split('/').map(function(p){return p.trim();}).filter(function(p){return p.length > 3;});
+        if (parts.length && parts.every(function(p){ return lower.indexOf(p) >= 0; })) {
+          return { name: drug.name, brand: drug.brand || '', matchedToken: parts[0] };
+        }
+      } else if (n.length > 3 && lower.indexOf(n) >= 0) {
+        return { name: drug.name, brand: drug.brand || '', matchedToken: n };
+      }
+    }
+    // Brand
+    if (drug.brand) {
+      var bt = drug.brand.replace(/®/g,'').toLowerCase().split(/\//).map(function(t){return t.trim();}).filter(function(t){return t.length > 3;});
+      for (var j = 0; j < bt.length; j++) {
+        if (lower.indexOf(bt[j]) >= 0) return { name: drug.name, brand: drug.brand || '', matchedToken: bt[j] };
+      }
+    }
+  }
+  return null;
 };
 
 // ── EXPOSE ────────────────────────────────────────────────────
