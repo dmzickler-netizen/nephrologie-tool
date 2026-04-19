@@ -65,6 +65,43 @@
   background: rgba(255,255,255,0.08);
 }
 
+/* "Starte hier"-Hinweis über dem CKD-Tab (nur beim ersten Besuch) */
+.start-hint {
+  position: absolute;
+  top: -44px;
+  left: 28px;
+  background: #ffc107;
+  color: #1a237e;
+  padding: 6px 14px;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  z-index: 20;
+  pointer-events: none;
+  white-space: nowrap;
+  animation: startHintBounce 1.4s ease-in-out infinite;
+}
+.start-hint::after {
+  content: "";
+  position: absolute;
+  bottom: -9px;
+  left: 26px;
+  width: 0; height: 0;
+  border-left: 9px solid transparent;
+  border-right: 9px solid transparent;
+  border-top: 10px solid #ffc107;
+}
+@keyframes startHintBounce {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-5px); }
+}
+@media (max-width: 600px) {
+  .start-hint { font-size: 0.78rem; left: 14px; top: -38px; padding: 4px 10px; }
+  .start-hint::after { left: 18px; }
+}
+
 #tab-ckd { display: block; }
 #tab-lipid { display: none; }
 #tab-diabetes { display: none; }
@@ -1393,12 +1430,33 @@ window.goHome = function(e){
   window.scrollTo({ top: 0, behavior: 'smooth' });
   return false;
 };
+
+// "Starte hier"-Pfeil: einblenden, solange User ihn nicht durch Tab-Klick gesehen hat
+(function(){
+  var KEY = 'nt-start-hint-dismissed';
+  function init(){
+    var hint = document.getElementById('start-hint');
+    if (!hint) return;
+    if (localStorage.getItem(KEY) === '1') return;
+    hint.style.display = 'block';
+    function dismiss(){
+      hint.style.display = 'none';
+      try { localStorage.setItem(KEY, '1'); } catch(_){}
+    }
+    document.querySelectorAll('.nav-tab-btn').forEach(function(b){
+      b.addEventListener('click', dismiss, { once: true });
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
 </script>
 
 <!-- ============================================================
      NAV TABS
      ============================================================ -->
-<div class="nav-tabs-bar">
+<div class="nav-tabs-bar" style="position:relative;">
+  <div id="start-hint" class="start-hint" style="display:none;">👉 Starte hier</div>
   <button class="nav-tab-btn active" data-tab="ckd" onclick="switchToolTab('ckd')">🫘 CKD-Staging</button>
   <button class="nav-tab-btn" data-tab="mbd" onclick="switchToolTab('mbd')">🩸 Anämie / Ca-Phosphat</button>
   <button class="nav-tab-btn" data-tab="lipid" onclick="switchToolTab('lipid')">💊 Lipidtherapie</button>
