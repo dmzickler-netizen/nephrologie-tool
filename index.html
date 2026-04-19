@@ -11333,11 +11333,12 @@ window.hwiUpdate = function() {
       </div>
       <div>
         <label style="font-size:.72rem;font-weight:700;color:#455a64;text-transform:uppercase;letter-spacing:.5px;">Geschlecht</label>
-        <select id="mc-sex" onchange="mcRunCheck()" style="width:100%;padding:8px 10px;border:1.5px solid #c5cae9;border-radius:8px;font-size:.95rem;margin-top:4px;background:#fff;">
-          <option value="">—</option>
-          <option value="male">♂ männlich</option>
-          <option value="female">♀ weiblich</option>
-        </select>
+        <div class="diab-toggle-group" style="margin-top:4px;">
+          <input type="radio" name="mc-sex-radio" id="mc-sex-male" value="male" onchange="mcRunCheck()">
+          <label for="mc-sex-male">♂ männlich</label>
+          <input type="radio" name="mc-sex-radio" id="mc-sex-female" value="female" onchange="mcRunCheck()">
+          <label for="mc-sex-female">♀ weiblich</label>
+        </div>
       </div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
@@ -12323,7 +12324,7 @@ function mcBuildContext() {
   // Priorität: lokale Medcheck-Felder, dann CKD-Tab als Fallback
   c.age = pf('mc-age') || pf('age');
   c.weight = pf('mc-weight') || pf('weight');
-  c.sex = (function(){var s=document.getElementById('mc-sex');if(s&&s.value)return s.value;return (typeof getSex === 'function') ? getSex('sex') : '';})();
+  c.sex = (function(){var r=document.querySelector('input[name="mc-sex-radio"]:checked');if(r)return r.value;return (typeof getSex === 'function') ? getSex('sex') : '';})();
   c.egfr = pf('mc-egfr') || ((typeof currentEGFR !== 'undefined' && currentEGFR) ? currentEGFR : null);
   c.krea = pf('mc-krea');
   c.dialysisMode = (function(){var s=document.getElementById('mc-dialysis');return s?s.value:'no';})();
@@ -12684,10 +12685,13 @@ function mcAutoImportInner(){
   if (fillIfEmpty('mc-age','age')) imported.push('Alter');
   if (fillIfEmpty('mc-krea','creatinine')) imported.push('Kreatinin');
   // Sex
-  var mcSex = document.getElementById('mc-sex');
-  if (mcSex && !mcSex.value) {
+  var mcSexChecked = document.querySelector('input[name="mc-sex-radio"]:checked');
+  if (!mcSexChecked) {
     var sexVal = (typeof getSex === 'function') ? getSex('sex') : '';
-    if (sexVal) { mcSex.value = sexVal; imported.push('Geschlecht'); }
+    if (sexVal) {
+      var rb = document.getElementById('mc-sex-' + sexVal);
+      if (rb) { rb.checked = true; imported.push('Geschlecht'); }
+    }
   }
   // Dialysis
   var mcDial = document.getElementById('mc-dialysis');
@@ -14895,8 +14899,7 @@ function clearAllTabs() {
   ['mc-egfr','mc-weight','mc-age','mc-krea','mc-freetext'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
-  const mcSex = document.getElementById('mc-sex');
-  if (mcSex) mcSex.selectedIndex = 0;
+  document.querySelectorAll('input[name="mc-sex-radio"]').forEach(function(r){ r.checked = false; });
   const mcDial = document.getElementById('mc-dialysis');
   if (mcDial) mcDial.selectedIndex = 0;
   // ALLE Medikamenten-Checkboxen im Medcheck-Tab abhaken
