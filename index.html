@@ -106,6 +106,7 @@
 #tab-lipid { display: none; }
 #tab-diabetes { display: none; }
 #tab-htn { display: none; }
+#tab-hi  { display: none; }
 #tab-vhf { display: none; }
 #tab-aki { display: none; }
 #tab-mbd { display: none; }
@@ -1462,6 +1463,7 @@ window.goHome = function(e){
   <button class="nav-tab-btn" data-tab="lipid" onclick="switchToolTab('lipid')">💊 Lipidtherapie</button>
   <button class="nav-tab-btn" data-tab="diabetes" onclick="switchToolTab('diabetes')">🩺 Diabetes</button>
   <button class="nav-tab-btn" data-tab="htn" onclick="switchToolTab('htn')">❤️‍🩹 Hypertonie</button>
+  <button class="nav-tab-btn" data-tab="hi" onclick="switchToolTab('hi')">💔 Herzinsuffizienz</button>
   <button class="nav-tab-btn" data-tab="vhf" onclick="switchToolTab('vhf')">💜 Vorhofflimmern</button>
   <button class="nav-tab-btn" data-tab="tah" onclick="switchToolTab('tah')">🔴 Antiaggregation</button>
   <button class="nav-tab-btn" data-tab="antikoag" onclick="switchToolTab('antikoag')">💉 Antikoagulation</button>
@@ -4897,6 +4899,480 @@ if (document.readyState === 'loading') {
 
 </div><!-- end diab-container -->
 </div><!-- end tab-htn -->
+
+<!-- ============================================================
+     HERZINSUFFIZIENZ-TOOL
+     Quellen: AHA/ACC/HFSA 2022 (Heidenreich), ESC 2021/2023,
+     van Essen 2025, STEP-HFpEF, FINEARTS-HF 2024
+     ============================================================ -->
+<div id="tab-hi">
+<style>
+#tab-hi .hi-container { max-width: 980px; margin: 0 auto; padding: 18px; }
+#tab-hi .hi-card { background:#fff; border:1px solid #e0e0e0; border-radius:12px; padding:18px 20px; margin-bottom:16px; box-shadow:0 2px 6px rgba(0,0,0,.04); }
+#tab-hi .hi-card h2 { margin:0 0 12px; color:#ad1457; font-size:1.15rem; border-bottom:2px solid #fce4ec; padding-bottom:8px; }
+#tab-hi .hi-card h3 { margin:12px 0 8px; color:#880e4f; font-size:.98rem; }
+#tab-hi .hi-tabs { display:flex; gap:4px; flex-wrap:wrap; background:#fce4ec; padding:6px; border-radius:10px; margin-bottom:16px; }
+#tab-hi .hi-tab-btn { flex:1; min-width:120px; padding:10px 14px; background:transparent; border:none; border-radius:8px; font-size:.88rem; font-weight:700; color:#880e4f; cursor:pointer; transition:all .15s; }
+#tab-hi .hi-tab-btn:hover { background:rgba(255,255,255,.5); }
+#tab-hi .hi-tab-btn.active { background:#ad1457; color:#fff; box-shadow:0 2px 6px rgba(173,20,87,.3); }
+#tab-hi .hi-pane { display:none; }
+#tab-hi .hi-pane.active { display:block; }
+#tab-hi .hi-grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+@media(max-width:700px){ #tab-hi .hi-grid2 { grid-template-columns:1fr; } }
+#tab-hi .hi-field { display:flex; flex-direction:column; gap:4px; margin-bottom:10px; }
+#tab-hi .hi-field label { font-size:.82rem; font-weight:600; color:#455a64; }
+#tab-hi .hi-field input, #tab-hi .hi-field select { padding:8px 10px; border:1.5px solid #e1bee7; border-radius:6px; font-size:.95rem; font-family:inherit; }
+#tab-hi .hi-field input:focus, #tab-hi .hi-field select:focus { outline:none; border-color:#ad1457; }
+#tab-hi .hi-result { padding:14px 16px; border-radius:10px; margin-top:12px; font-size:.93rem; line-height:1.5; }
+#tab-hi .hi-res-hfref { background:#ffebee; border-left:5px solid #c62828; }
+#tab-hi .hi-res-hfmref { background:#fff3e0; border-left:5px solid #ef6c00; }
+#tab-hi .hi-res-hfpef { background:#e3f2fd; border-left:5px solid #1565c0; }
+#tab-hi .hi-res-none { background:#f5f5f5; border-left:5px solid #9e9e9e; color:#616161; }
+#tab-hi .hi-pillar { background:#fafafa; border:1.5px solid #e0e0e0; border-radius:10px; padding:14px 16px; margin-bottom:10px; }
+#tab-hi .hi-pillar.active { border-color:#ad1457; background:#fce4ec; }
+#tab-hi .hi-pillar-title { font-weight:800; color:#ad1457; font-size:.95rem; margin-bottom:6px; display:flex; align-items:center; gap:6px; }
+#tab-hi .hi-pillar-drug { font-size:.88rem; line-height:1.5; }
+#tab-hi .hi-pillar-drug strong { color:#4a148c; }
+#tab-hi .hi-warn { display:inline-block; background:#fff3e0; color:#e65100; padding:2px 8px; border-radius:4px; font-size:.78rem; font-weight:700; margin-left:6px; }
+#tab-hi .hi-ok   { display:inline-block; background:#e8f5e9; color:#2e7d32; padding:2px 8px; border-radius:4px; font-size:.78rem; font-weight:700; margin-left:6px; }
+#tab-hi .hi-danger { display:inline-block; background:#ffcdd2; color:#b71c1c; padding:2px 8px; border-radius:4px; font-size:.78rem; font-weight:700; margin-left:6px; }
+#tab-hi .hi-check-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:6px; }
+@media(max-width:600px){ #tab-hi .hi-check-grid { grid-template-columns:1fr; } }
+#tab-hi .hi-check { display:flex; align-items:center; gap:8px; padding:8px 10px; background:#fafafa; border:1px solid #eee; border-radius:6px; font-size:.9rem; }
+#tab-hi .hi-check input[type="checkbox"] { width:18px; height:18px; accent-color:#ad1457; }
+#tab-hi .hi-info-row { display:flex; gap:10px; padding:10px 12px; background:#f3e5f5; border-radius:6px; margin-bottom:6px; font-size:.88rem; }
+#tab-hi .hi-info-row strong { color:#4a148c; min-width:120px; }
+#tab-hi .hi-disclaimer { background:#fff8e1; border-left:4px solid #ffa000; padding:10px 14px; border-radius:6px; font-size:.82rem; color:#4a148c; margin-top:16px; }
+#tab-hi .hi-import-banner { display:flex; align-items:center; gap:8px; padding:8px 14px; background:#e8f5e9; border:1px solid #a5d6a7; color:#1b5e20; border-radius:6px; font-size:.88rem; font-weight:600; margin-bottom:12px; }
+</style>
+<div class="hi-container">
+
+  <div id="hi-import-banner" class="hi-import-banner" style="display:none;">
+    <span>📥</span><span id="hi-import-text"></span>
+  </div>
+
+  <div class="hi-tabs">
+    <button class="hi-tab-btn active" onclick="hiShowTab('class',this)">📋 Klassifikation</button>
+    <button class="hi-tab-btn" onclick="hiShowTab('gdmt',this)">💊 GDMT HFrEF</button>
+    <button class="hi-tab-btn" onclick="hiShowTab('hfpef',this)">🩺 HFpEF / HFmrEF</button>
+    <button class="hi-tab-btn" onclick="hiShowTab('dev',this)">🔧 Zusatz &amp; Device</button>
+    <button class="hi-tab-btn" onclick="hiShowTab('info',this)">ℹ️ Info</button>
+  </div>
+
+  <!-- BASISDATEN (global für alle Sub-Tabs) -->
+  <div class="hi-card">
+    <h2>🫀 Basisdaten</h2>
+    <div class="hi-grid2">
+      <div class="hi-field">
+        <label for="hi-lvef">LVEF (%)</label>
+        <input type="number" id="hi-lvef" min="5" max="80" step="1" placeholder="z.B. 30" oninput="hiCalcAll()">
+      </div>
+      <div class="hi-field">
+        <label for="hi-nyha">NYHA-Klasse</label>
+        <select id="hi-nyha" onchange="hiCalcAll()">
+          <option value="">— wählen —</option>
+          <option value="1">I — beschwerdefrei</option>
+          <option value="2">II — bei stärkerer Belastung</option>
+          <option value="3">III — bei leichter Belastung</option>
+          <option value="4">IV — in Ruhe</option>
+        </select>
+      </div>
+      <div class="hi-field">
+        <label for="hi-ntprobnp">NT-proBNP (pg/mL)</label>
+        <input type="number" id="hi-ntprobnp" min="0" step="1" placeholder="z.B. 450" oninput="hiCalcAll()">
+      </div>
+      <div class="hi-field">
+        <label for="hi-weight">Gewicht (kg)</label>
+        <input type="number" id="hi-weight" min="30" max="200" step="1" placeholder="aus CKD-Tab" oninput="hiCalcAll()">
+      </div>
+      <div class="hi-field">
+        <label for="hi-egfr">eGFR (mL/min/1.73m²)</label>
+        <input type="number" id="hi-egfr" min="0" max="150" step="1" placeholder="aus CKD-Tab" oninput="hiCalcAll()">
+      </div>
+      <div class="hi-field">
+        <label for="hi-kalium">Kalium (mmol/L)</label>
+        <input type="number" id="hi-kalium" min="2" max="8" step="0.1" placeholder="z.B. 4.5" oninput="hiCalcAll()">
+      </div>
+      <div class="hi-field">
+        <label for="hi-sys">Systolischer RR (mmHg)</label>
+        <input type="number" id="hi-sys" min="60" max="250" step="1" placeholder="z.B. 115" oninput="hiCalcAll()">
+      </div>
+      <div class="hi-field">
+        <label for="hi-hr">Herzfrequenz (Sinus) /min</label>
+        <input type="number" id="hi-hr" min="30" max="200" step="1" placeholder="z.B. 78" oninput="hiCalcAll()">
+      </div>
+    </div>
+  </div>
+
+  <!-- KLASSIFIKATION -->
+  <div id="hi-pane-class" class="hi-pane active">
+    <div class="hi-card">
+      <h2>📋 HF-Klassifikation nach LVEF</h2>
+      <div class="hi-info-row"><strong>HFrEF</strong> <span>LVEF ≤ 40% — reduced ejection fraction</span></div>
+      <div class="hi-info-row"><strong>HFmrEF</strong> <span>LVEF 41 – 49% — mildly reduced</span></div>
+      <div class="hi-info-row"><strong>HFpEF</strong> <span>LVEF ≥ 50% — preserved (mit Zeichen diastolischer Dysfunktion + ↑NT-proBNP)</span></div>
+      <div class="hi-info-row"><strong>HFimpEF</strong> <span>vorher ≤40%, jetzt &gt;40% nach GDMT — <em>GDMT fortsetzen!</em></span></div>
+      <div id="hi-class-result" class="hi-result hi-res-none">LVEF und NYHA eingeben für automatische Klassifikation.</div>
+    </div>
+
+    <div class="hi-card">
+      <h2>🧭 AHA/ACC-Stadien</h2>
+      <div class="hi-info-row"><strong>Stadium A</strong> <span>At risk (HTN, DM, CAD, Kardiotoxine) — keine Struktur/Symptome</span></div>
+      <div class="hi-info-row"><strong>Stadium B</strong> <span>Pre-HF — Strukturanomalie / ↑BNP, keine Symptome</span></div>
+      <div class="hi-info-row"><strong>Stadium C</strong> <span>Symptomatische HF</span></div>
+      <div class="hi-info-row"><strong>Stadium D</strong> <span>Fortgeschritten — Transplantation / MCS / Palliativ</span></div>
+    </div>
+
+    <div class="hi-card">
+      <h2>🔬 NT-proBNP Interpretation</h2>
+      <div class="hi-info-row"><strong>Ausschluss ambulant</strong> <span>&lt; 125 pg/mL</span></div>
+      <div class="hi-info-row"><strong>Akute HF &lt; 50 J</strong> <span>≥ 450 pg/mL (Einschluss)</span></div>
+      <div class="hi-info-row"><strong>Akute HF 50–75 J</strong> <span>≥ 900 pg/mL</span></div>
+      <div class="hi-info-row"><strong>Akute HF &gt; 75 J</strong> <span>≥ 1800 pg/mL</span></div>
+      <div class="hi-info-row"><strong>Cave</strong> <span>↑ bei VHF, Sepsis, Niereninsuff.; ↓ bei Adipositas</span></div>
+      <div id="hi-bnp-result" class="hi-result hi-res-none">NT-proBNP + Alter eingeben (Alter aus CKD-Tab) für Interpretation.</div>
+    </div>
+  </div>
+
+  <!-- GDMT HFrEF -->
+  <div id="hi-pane-gdmt" class="hi-pane">
+    <div class="hi-card">
+      <h2>💊 Die 4 Säulen der GDMT bei HFrEF (LVEF ≤ 40%)</h2>
+      <p style="font-size:.88rem; color:#555; margin:0 0 14px;">Ziel: alle 4 Säulen innerhalb <strong>4–6 Wochen</strong> simultan starten (niedrig-dosiert), dann über <strong>3–6 Monate</strong> auftitrieren.</p>
+
+      <div class="hi-pillar" id="hi-p-rasi">
+        <div class="hi-pillar-title">1️⃣ ARNI / ACEi / ARB <span id="hi-p-rasi-status"></span></div>
+        <div class="hi-pillar-drug">
+          <strong>Sacubitril/Valsartan (Entresto)</strong> — 1. Wahl bei NYHA II–III<br>
+          Start: 49/51 mg 2×/d (24/26 mg 2×/d bei RR&lt;100, eGFR&lt;30 oder bisher kein/niedrig-dosierter ACEi)<br>
+          Ziel: 97/103 mg 2×/d (alle 2–4 Wochen verdoppeln)<br>
+          <em>⚠️ ACEi-Washout ≥ 36 h vor Start!</em><br><br>
+          <strong>Alternativen</strong>: Ramipril 1.25→10 mg/d · Enalapril 2.5→20 mg 2×/d · Candesartan 4→32 mg/d (bei ACEi-Unverträglichkeit)
+        </div>
+      </div>
+
+      <div class="hi-pillar" id="hi-p-bb">
+        <div class="hi-pillar-title">2️⃣ Betablocker <span id="hi-p-bb-status"></span></div>
+        <div class="hi-pillar-drug">
+          <strong>Bisoprolol</strong> 1.25 → 10 mg/d · <strong>Carvedilol</strong> 3.125 → 25 mg 2×/d · <strong>Metoprolol-Succinat</strong> 12.5 → 200 mg/d<br>
+          <em>Titration alle 2 Wochen verdoppeln; HR-Ziel 55–70/min im Sinus.</em>
+        </div>
+      </div>
+
+      <div class="hi-pillar" id="hi-p-mra">
+        <div class="hi-pillar-title">3️⃣ MRA <span id="hi-p-mra-status"></span></div>
+        <div class="hi-pillar-drug">
+          <strong>Spironolacton</strong> 12.5–25 → 25–50 mg/d · <strong>Eplerenon</strong> 25 → 50 mg/d<br>
+          Kontrolle K⁺ + Krea nach 1, 4, 8, 12 Wo und bei Dosis-Änderung
+        </div>
+      </div>
+
+      <div class="hi-pillar" id="hi-p-sglt">
+        <div class="hi-pillar-title">4️⃣ SGLT2-Inhibitor <span id="hi-p-sglt-status"></span></div>
+        <div class="hi-pillar-drug">
+          <strong>Dapagliflozin</strong> 10 mg/d · <strong>Empagliflozin</strong> 10 mg/d<br>
+          Keine Titration nötig; eGFR ≥ 20 mL/min beginnen; bei Dialyse absetzen
+        </div>
+      </div>
+
+      <div id="hi-gdmt-summary" class="hi-result hi-res-none">LVEF eingeben — bei ≤ 40% erscheint individualisierte Dosierung mit eGFR/K⁺-Warnungen.</div>
+    </div>
+  </div>
+
+  <!-- HFpEF / HFmrEF -->
+  <div id="hi-pane-hfpef" class="hi-pane">
+    <div class="hi-card">
+      <h2>🩺 HFpEF (LVEF ≥ 50%)</h2>
+      <div class="hi-pillar">
+        <div class="hi-pillar-title">Klasse I — SGLT2-Inhibitor <span class="hi-ok">2022/2023</span></div>
+        <div class="hi-pillar-drug"><strong>Empagliflozin</strong> 10 mg/d (EMPEROR-Preserved) · <strong>Dapagliflozin</strong> 10 mg/d (DELIVER) — reduziert HF-Hospitalisierung und kardiovaskulären Tod</div>
+      </div>
+      <div class="hi-pillar">
+        <div class="hi-pillar-title">Klasse IIa — MRA</div>
+        <div class="hi-pillar-drug"><strong>Spironolacton</strong> (TOPCAT post-hoc) oder <strong>Finerenon</strong> (FINEARTS-HF 2024 — neu: LVEF ≥ 40% mit CV-Benefit)</div>
+      </div>
+      <div class="hi-pillar">
+        <div class="hi-pillar-title">Klasse IIb — ARNI / ARB</div>
+        <div class="hi-pillar-drug"><strong>Sacubitril/Valsartan</strong> (PARAGON-HF, v.a. LVEF 45–57%) · <strong>Candesartan</strong> (CHARM-Preserved)</div>
+      </div>
+      <div class="hi-pillar">
+        <div class="hi-pillar-title">Klasse I — Schleifendiuretikum bei Stauung</div>
+        <div class="hi-pillar-drug">Furosemid 20–80 mg/d · Torasemid 10–20 mg/d · Ziel: euvolämer Zustand</div>
+      </div>
+      <div class="hi-pillar">
+        <div class="hi-pillar-title">Komorbiditäten behandeln</div>
+        <div class="hi-pillar-drug">HTN (RR &lt; 130/80) · AFib (Rhythmus- vs. Frequenzkontrolle) · DM · Adipositas (Semaglutid bei BMI ≥ 30 — STEP-HFpEF) · Eisenmangel</div>
+      </div>
+    </div>
+
+    <div class="hi-card">
+      <h2>🟠 HFmrEF (LVEF 41 – 49%)</h2>
+      <div class="hi-pillar-drug" style="padding:10px 14px;">
+        Therapie analog HFrEF (Klasse IIa): <strong>SGLT2i · MRA · ARNI/ACEi/ARB · Betablocker</strong> + Schleifendiuretikum bei Stauung.<br>
+        Evidenz schwächer als bei HFrEF, aber Gesamtnutzen sehr wahrscheinlich.
+      </div>
+    </div>
+  </div>
+
+  <!-- ZUSATZ & DEVICE -->
+  <div id="hi-pane-dev" class="hi-pane">
+    <div class="hi-card">
+      <h2>🩸 Eisenmangel</h2>
+      <div class="hi-grid2">
+        <div class="hi-field"><label for="hi-fe">Ferritin (µg/L)</label><input type="number" id="hi-fe" min="0" step="1" oninput="hiCalcIron()"></div>
+        <div class="hi-field"><label for="hi-tsat">TSAT (%)</label><input type="number" id="hi-tsat" min="0" max="100" step="1" oninput="hiCalcIron()"></div>
+        <div class="hi-field"><label for="hi-hb">Hb (g/dL)</label><input type="number" id="hi-hb" min="3" max="20" step="0.1" oninput="hiCalcIron()"></div>
+      </div>
+      <div id="hi-iron-result" class="hi-result hi-res-none">Ferritin + TSAT eingeben.</div>
+      <div style="font-size:.85rem; color:#555; margin-top:8px;">
+        <strong>Definition (HF):</strong> Ferritin &lt; 100 µg/L <em>oder</em> (Ferritin 100–299 µg/L <strong>und</strong> TSAT &lt; 20%)<br>
+        <strong>Therapie:</strong> <strong>Eisencarboxymaltose (Ferinject) i.v.</strong> — AFFIRM-AHF, CONFIRM-HF, IRONMAN — reduziert HF-Hospitalisierung<br>
+        <strong>Gesamtdosis:</strong> Hb ≥ 10 &amp; Gewicht ≥ 70 kg → 1000 mg · Hb &lt; 10 oder Gewicht &lt; 70 kg → 1500 mg (2 Infusionen)
+      </div>
+    </div>
+
+    <div class="hi-card">
+      <h2>💊 Weitere Medikamente (selektiv, bei persistierender Symptomatik)</h2>
+      <div class="hi-pillar">
+        <div class="hi-pillar-title">Vericiguat (Verquvo)</div>
+        <div class="hi-pillar-drug">LVEF &lt; 45% nach rezenter Dekompensation trotz GDMT (VICTORIA) — 2.5 → 5 → 10 mg/d; RR ≥ 100 mmHg</div>
+      </div>
+      <div class="hi-pillar">
+        <div class="hi-pillar-title">Ivabradin (Procoralan)</div>
+        <div class="hi-pillar-drug">Sinus + HR ≥ 70/min, LVEF ≤ 35%, NYHA II–IV unter max. BB oder BB-Unverträglichkeit — 5 mg 2×/d</div>
+      </div>
+      <div class="hi-pillar">
+        <div class="hi-pillar-title">Hydralazin + ISDN</div>
+        <div class="hi-pillar-drug">Add-on bei afroamerikanischen Patienten NYHA III–IV unter GDMT (A-HeFT)</div>
+      </div>
+      <div class="hi-pillar">
+        <div class="hi-pillar-title">Digoxin</div>
+        <div class="hi-pillar-drug">Nur symptomatisch, HR-Kontrolle bei VHF — Spiegel 0.5–0.9 ng/mL; eGFR-Dosisanpassung</div>
+      </div>
+      <div class="hi-pillar">
+        <div class="hi-pillar-title">Schleifendiuretika (Stauung)</div>
+        <div class="hi-pillar-drug">Furosemid 20–240 mg/d · Torasemid 10–40 mg/d · niedrigste wirksame Dosis</div>
+      </div>
+    </div>
+
+    <div class="hi-card">
+      <h2>⚡ Device-Therapie</h2>
+      <div id="hi-device-result" class="hi-result hi-res-none">LVEF + NYHA eingeben für Device-Indikation.</div>
+      <div class="hi-pillar">
+        <div class="hi-pillar-title">ICD (primärprophylaktisch) — Klasse I</div>
+        <div class="hi-pillar-drug">LVEF ≤ 35% nach <strong>≥ 3 Monaten optimaler GDMT</strong>, NYHA II–III, Lebenserwartung &gt; 1 Jahr<br>
+        Bei ischämischer Kardiomyopathie &gt; 40 Tage nach Infarkt</div>
+      </div>
+      <div class="hi-pillar">
+        <div class="hi-pillar-title">CRT — Klasse I</div>
+        <div class="hi-pillar-drug">Sinus + LVEF ≤ 35% + LBBB + QRS ≥ 150 ms + NYHA II–IV trotz GDMT<br>
+        Klasse IIa: QRS 130–149 ms mit LBBB · Klasse IIb: QRS ≥ 150 ms ohne LBBB</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INFO -->
+  <div id="hi-pane-info" class="hi-pane">
+    <div class="hi-card">
+      <h2>📚 Quellen &amp; Leitlinien</h2>
+      <ul style="line-height:1.7; font-size:.9rem;">
+        <li><strong>Heidenreich PA et al.</strong> 2022 AHA/ACC/HFSA Guideline for the Management of Heart Failure. J Am Coll Cardiol 2022;79(17):e263-e421</li>
+        <li><strong>McDonagh TA et al.</strong> 2021 ESC Guidelines for the diagnosis and treatment of acute and chronic heart failure. Eur Heart J 2021;42:3599-3726</li>
+        <li><strong>McDonagh TA et al.</strong> 2023 Focused Update ESC HF Guidelines. Eur Heart J 2023;44:3627-3639</li>
+        <li><strong>van Essen BJ et al.</strong> Pharmacologic treatment of HFrEF — Review 2025</li>
+        <li><strong>FINEARTS-HF 2024</strong> — Finerenon bei HFpEF/HFmrEF</li>
+        <li><strong>EMPEROR-Preserved, DELIVER</strong> — SGLT2i bei HFpEF</li>
+        <li><strong>STEP-HFpEF</strong> — Semaglutid bei Adipositas + HFpEF</li>
+        <li><strong>AFFIRM-AHF, IRONMAN</strong> — Eisencarboxymaltose bei Eisenmangel</li>
+      </ul>
+      <div class="hi-disclaimer">
+        ⚕️ <strong>Hinweis:</strong> Dieses Tool dient der ärztlichen Entscheidungsunterstützung und ersetzt keine klinische Beurteilung. Dosierungen sind Richtwerte — stets Fachinfo konsultieren. eGFR- und Kalium-abhängige Kontraindikationen sind kontextabhängig.
+      </div>
+    </div>
+  </div>
+
+</div><!-- end hi-container -->
+
+<script>
+(function(){
+  'use strict';
+
+  window.hiShowTab = function(id, btn){
+    ['class','gdmt','hfpef','dev','info'].forEach(function(k){
+      var p = document.getElementById('hi-pane-'+k);
+      if (p) p.classList.remove('active');
+    });
+    var pane = document.getElementById('hi-pane-'+id);
+    if (pane) pane.classList.add('active');
+    document.querySelectorAll('#tab-hi .hi-tab-btn').forEach(function(b){ b.classList.remove('active'); });
+    if (btn) btn.classList.add('active');
+  };
+
+  function num(id){ var v = parseFloat((document.getElementById(id)||{}).value); return isNaN(v)?null:v; }
+  function getAge(){ return num('age'); }
+
+  function classify(lvef){
+    if (lvef == null) return null;
+    if (lvef <= 40) return 'hfref';
+    if (lvef <= 49) return 'hfmref';
+    return 'hfpef';
+  }
+
+  function hiCalcClass(){
+    var lvef = num('hi-lvef');
+    var nyha = (document.getElementById('hi-nyha')||{}).value;
+    var el = document.getElementById('hi-class-result');
+    if (!el) return;
+    if (lvef == null) { el.className='hi-result hi-res-none'; el.textContent='LVEF eingeben.'; return; }
+    var cls = classify(lvef);
+    var lbl = cls==='hfref'?'HFrEF (reduced)':cls==='hfmref'?'HFmrEF (mildly reduced)':'HFpEF (preserved)';
+    var txt = '<strong>LVEF '+lvef+'% → '+lbl+'</strong>';
+    if (nyha) txt += ' · NYHA '+['','I','II','III','IV'][parseInt(nyha)];
+    txt += '<br>';
+    if (cls==='hfref') txt += '→ <strong>4-Säulen-GDMT</strong> (Tab „💊 GDMT HFrEF")';
+    else if (cls==='hfmref') txt += '→ GDMT analog HFrEF (Klasse IIa) — siehe Tab „🩺 HFpEF / HFmrEF"';
+    else txt += '→ SGLT2i + Diuretika + Komorbiditäten — siehe Tab „🩺 HFpEF / HFmrEF"';
+    el.className = 'hi-result hi-res-'+cls;
+    el.innerHTML = txt;
+  }
+
+  function hiCalcBNP(){
+    var bnp = num('hi-ntprobnp');
+    var age = getAge();
+    var el = document.getElementById('hi-bnp-result');
+    if (!el) return;
+    if (bnp == null) { el.className='hi-result hi-res-none'; el.textContent='NT-proBNP eingeben.'; return; }
+    var txt = '<strong>NT-proBNP '+bnp+' pg/mL</strong><br>';
+    if (bnp < 125) { txt += '→ HF ambulant <strong>sehr unwahrscheinlich</strong>'; el.className='hi-result hi-res-none'; }
+    else {
+      var cut = age==null?null:(age<50?450:age<=75?900:1800);
+      if (cut && bnp >= cut) { txt += '→ <strong>akute HF wahrscheinlich</strong> (Alter '+age+' J → Schwelle '+cut+')'; el.className='hi-result hi-res-hfref'; }
+      else if (cut) { txt += '→ Graubereich — Alter '+age+' J, Schwelle akut '+cut+'. Klinik + Echo entscheidend.'; el.className='hi-result hi-res-hfmref'; }
+      else { txt += '→ erhöht; akute Schwelle altersabhängig (Alter fehlt)'; el.className='hi-result hi-res-hfmref'; }
+    }
+    el.innerHTML = txt;
+  }
+
+  function setStatus(id, html){ var el = document.getElementById(id); if (el) el.innerHTML = html; }
+  function setPillarActive(id, on){ var el = document.getElementById(id); if (!el) return; el.classList.toggle('active', !!on); }
+
+  function hiCalcGDMT(){
+    var lvef = num('hi-lvef');
+    var egfr = num('hi-egfr');
+    var k    = num('hi-kalium');
+    var sys  = num('hi-sys');
+    var hr   = num('hi-hr');
+    var sum  = document.getElementById('hi-gdmt-summary');
+    if (!sum) return;
+    var cls = classify(lvef);
+    var active = (cls === 'hfref');
+    ['hi-p-rasi','hi-p-bb','hi-p-mra','hi-p-sglt'].forEach(function(id){ setPillarActive(id, active); });
+    if (!active) {
+      sum.className = 'hi-result hi-res-none';
+      sum.textContent = lvef==null ? 'LVEF eingeben.' : 'LVEF '+lvef+'% → keine HFrEF-4-Säulen-Indikation. Siehe Tab „HFpEF / HFmrEF".';
+      setStatus('hi-p-rasi-status',''); setStatus('hi-p-bb-status',''); setStatus('hi-p-mra-status',''); setStatus('hi-p-sglt-status','');
+      return;
+    }
+    // ARNI/ACEi/ARB
+    var rasi = '';
+    if (sys != null && sys < 100) rasi = '<span class="hi-warn">RR niedrig — Start niedrig-dosiert</span>';
+    if (egfr != null && egfr < 30) rasi += '<span class="hi-warn">eGFR &lt; 30 — ARNI Start-Dosis 24/26</span>';
+    if (egfr != null && egfr < 20) rasi = '<span class="hi-danger">eGFR &lt; 20 — ARNI/ACEi/ARB vermeiden, Nephro-Konsil</span>';
+    if (k != null && k >= 5.5)     rasi = '<span class="hi-danger">K⁺ ≥ 5.5 — pausieren, Kalium senken</span>';
+    else if (k != null && k >= 5.0) rasi += '<span class="hi-warn">K⁺ 5.0–5.4 — engmaschig kontrollieren</span>';
+    setStatus('hi-p-rasi-status', rasi || '<span class="hi-ok">starten/titrieren</span>');
+
+    // Betablocker
+    var bb = '';
+    if (hr != null && hr < 55) bb = '<span class="hi-warn">HR &lt; 55 — Titration pausieren</span>';
+    else if (sys != null && sys < 90) bb = '<span class="hi-warn">RR niedrig — vorsichtig</span>';
+    setStatus('hi-p-bb-status', bb || '<span class="hi-ok">starten/titrieren</span>');
+
+    // MRA
+    var mra = '';
+    if (k != null && k >= 5.5)     mra = '<span class="hi-danger">K⁺ ≥ 5.5 — pausieren</span>';
+    else if (k != null && k >= 5.0) mra = '<span class="hi-warn">K⁺ ≥ 5.0 — nicht starten / pausieren</span>';
+    if (egfr != null && egfr < 30) mra = '<span class="hi-danger">eGFR &lt; 30 — MRA vermeiden (ggf. Finerenon erwägen)</span>';
+    setStatus('hi-p-mra-status', mra || '<span class="hi-ok">starten</span>');
+
+    // SGLT2i
+    var sglt = '';
+    if (egfr != null && egfr < 20) sglt = '<span class="hi-warn">eGFR &lt; 20 — SGLT2i-Neustart nicht empfohlen</span>';
+    setStatus('hi-p-sglt-status', sglt || '<span class="hi-ok">starten (eGFR ≥ 20)</span>');
+
+    sum.className = 'hi-result hi-res-hfref';
+    sum.innerHTML = '<strong>HFrEF (LVEF '+lvef+'%)</strong> — 4-Säulen-GDMT indiziert. Hinweise pro Säule oben.';
+  }
+
+  window.hiCalcIron = function(){
+    var fe = num('hi-fe'), t = num('hi-tsat'), hb = num('hi-hb'), w = num('hi-weight');
+    var el = document.getElementById('hi-iron-result');
+    if (!el) return;
+    if (fe == null && t == null) { el.className='hi-result hi-res-none'; el.textContent='Ferritin und/oder TSAT eingeben.'; return; }
+    var deficient = false;
+    if (fe != null && fe < 100) deficient = true;
+    else if (fe != null && fe < 300 && t != null && t < 20) deficient = true;
+    if (!deficient) {
+      el.className='hi-result hi-res-none';
+      el.innerHTML = 'Kein Eisenmangel nach HF-Definition.';
+      return;
+    }
+    var dose = 1000;
+    if ((hb != null && hb < 10) || (w != null && w < 70)) dose = 1500;
+    el.className='hi-result hi-res-hfref';
+    el.innerHTML = '<strong>Eisenmangel (HF-Definition) — Ferinject i.v. indiziert.</strong><br>Gesamtdosis: <strong>'+dose+' mg</strong>'+(dose===1500?' (als 2× 500–1000 mg, mind. 1 Woche Abstand)':'')+'.<br>Kontrolle nach 12 Wo, Wdh bei Persistenz.';
+  };
+
+  function hiCalcDevice(){
+    var lvef = num('hi-lvef');
+    var nyha = parseInt((document.getElementById('hi-nyha')||{}).value) || 0;
+    var el = document.getElementById('hi-device-result');
+    if (!el) return;
+    if (lvef == null) { el.className='hi-result hi-res-none'; el.textContent='LVEF eingeben.'; return; }
+    var msg = [];
+    if (lvef <= 35 && nyha >= 2 && nyha <= 3) msg.push('<strong>ICD-Indikation (Klasse I)</strong> — nach ≥ 3 Monaten optimaler GDMT, LE &gt; 1 J.');
+    if (lvef <= 35 && nyha >= 2) msg.push('<strong>CRT erwägen</strong> — bei Sinus + LBBB + QRS ≥ 150 ms (Klasse I), 130–149 ms mit LBBB (IIa)');
+    if (!msg.length) { el.className='hi-result hi-res-none'; el.innerHTML = 'Keine Device-Indikation nach den aktuellen Parametern (LVEF &gt; 35% oder NYHA I/IV).'; return; }
+    el.className = 'hi-result hi-res-hfref';
+    el.innerHTML = msg.join('<br>');
+  }
+
+  window.hiCalcAll = function(){
+    hiCalcClass();
+    hiCalcBNP();
+    hiCalcGDMT();
+    hiCalcDevice();
+  };
+
+  window.hiAutoImport = function(){
+    var imported = [];
+    function pull(src, tgt, lbl){
+      var s = document.getElementById(src);
+      var t = document.getElementById(tgt);
+      if (s && t && s.value && !t.value) { t.value = s.value; imported.push(lbl); }
+    }
+    pull('weight','hi-weight','Gewicht');
+    // eGFR aus CKD-Ergebnis
+    var egfrTxt = (document.getElementById('egfr-result-val')||{}).textContent || '';
+    var egfrMatch = egfrTxt.match(/(\d+(?:[.,]\d+)?)/);
+    var hiEgfr = document.getElementById('hi-egfr');
+    if (egfrMatch && hiEgfr && !hiEgfr.value) { hiEgfr.value = Math.round(parseFloat(egfrMatch[1].replace(',','.'))); imported.push('eGFR'); }
+    // Kalium aus Elektrolyt-Tab falls vorhanden
+    pull('elek-k','hi-kalium','Kalium');
+    // RR aus HTN-Tab falls vorhanden
+    pull('htn-sys','hi-sys','RR sys');
+
+    var b = document.getElementById('hi-import-banner');
+    var t = document.getElementById('hi-import-text');
+    if (imported.length && b && t) {
+      t.textContent = imported.join(', ') + ' aus anderen Tabs übernommen';
+      b.style.display = 'flex';
+    }
+    window.hiCalcAll();
+  };
+})();
+</script>
+</div><!-- end tab-hi -->
 
 <div id="tab-vhf">
 <div class="diab-container">
@@ -16006,6 +16482,8 @@ function switchToolTab(tabName) {
   if (tabName === 'htn' && window.htnAutoImport) {
     window.htnAutoImport();
   }
+  document.getElementById('tab-hi').style.display = tabName === 'hi' ? 'block' : 'none';
+  if (tabName === 'hi' && window.hiAutoImport) { window.hiAutoImport(); }
   document.getElementById('tab-vhf').style.display = tabName === 'vhf' ? 'block' : 'none';
   if (tabName === 'vhf' && window.vhfAutoImport) {
     window.vhfAutoImport();
