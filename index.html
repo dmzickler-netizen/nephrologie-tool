@@ -19039,9 +19039,100 @@ function renderDiabResults(target, recs, warnings, nephroRecs, dietRecs, screeni
   });
   html += `</ul></div>`;
 
+  // Arztbrief-Satz
+  const letter = generateDiabLetter(target, recs, hba1cOnTarget);
+  html += `<div class="diab-result-card" style="border-left:5px solid #1a237e;">
+    <h3 style="color:#1a237e;margin-bottom:10px;">📄 Arztbrief-Satz</h3>
+    <div id="diab-letter-box" style="background:#f5f7fa; border:1px solid #cfd8dc; border-radius:8px; padding:14px 16px; position:relative;">
+      <div id="diab-letter-text" style="font-size:.9rem; line-height:1.6; color:#263238; padding-right:80px;">${letter}</div>
+      <button id="diab-copy-btn" onclick="copyDiabLetter()" style="position:absolute; top:10px; right:10px; padding:6px 12px; background:#1a237e; color:#fff; border:none; border-radius:6px; font-size:.78rem; font-weight:600; cursor:pointer;">Kopieren</button>
+    </div>
+    <p style="font-size:.78rem; color:#78909c; margin-top:8px;">Dieser Text kann direkt in einen Arztbrief oder eine Kurz-Epikrise übernommen werden.</p>
+  </div>`;
+
   el.innerHTML = html;
   el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
+
+// ── ARZTBRIEF-SATZ ─────────────────────────────────────────────
+function generateDiabLetter(target, recs, hba1cOnTarget) {
+  // Patient-Phrase (Alter + Geschlecht)
+  const female = DS.sex === 'female';
+  const patientPhrase = DS.age
+    ? `${DS.age}-jährige${female ? 'n' : 'n'} Patient${female ? 'in' : 'en'}`
+    : (female ? 'Patientin' : 'Patient');
+
+  const typeStr = DS.diabType === 't1d' ? 'Typ-1-Diabetes' : 'Diabetes mellitus Typ 2';
+  const hba1cFmt = String(DS.hba1c).replace('.', ',');
+  const hba1cDescr = hba1cOnTarget ? 'gut eingestelltem' : 'nicht ausreichend eingestelltem';
+  const zielStr = target.num ? `, Therapieziel ${target.target}` : '';
+
+  // CKD-Anteil
+  let ckdPart = '';
+  if (DS.egfr != null && DS.egfr < 60) {
+    const stage = DS.egfr < 15 ? 'G5' : DS.egfr < 30 ? 'G4' : DS.egfr < 45 ? 'G3b' : 'G3a';
+    let albCat = '';
+    if (DS.uacr != null) {
+      albCat = DS.uacr >= 300 ? 'A3' : DS.uacr >= 30 ? 'A2' : 'A1';
+    }
+    const uacrInfo = DS.uacr != null ? `, uACR ${DS.uacr} mg/g` : '';
+    ckdPart = ` und chronischer Niereninsuffizienz (CKD ${stage}${albCat ? ' ' + albCat : ''}, eGFR ${Math.round(DS.egfr)} ml/min/1,73 m²${uacrInfo})`;
+  }
+
+  // Komorbiditäten
+  const comor = [];
+  if (DS.ascvd) comor.push('manifester ASCVD');
+  if (DS.hf) {
+    const hfDesc = DS.hfType === 'hfref' ? 'HFrEF' : DS.hfType === 'hfpef' ? 'HFpEF' : DS.hfType === 'hfmref' ? 'HFmrEF' : 'Herzinsuffizienz';
+    comor.push(hfDesc);
+  }
+  if (DS.masld) comor.push('MASLD');
+  const comorStr = comor.length ? ` sowie ${comor.join(', ')}` : '';
+
+  const bmiStr = DS.bmi && DS.bmi >= 30 ? `, Adipositas (BMI ${String(DS.bmi).replace('.',',')} kg/m²)` : '';
+
+  const article = female ? 'einer' : 'einem';
+  const intro = `Bei ${article} ${patientPhrase} mit ${hba1cDescr} ${typeStr} (HbA1c ${hba1cFmt} %${zielStr})${ckdPart}${comorStr}${bmiStr} `;
+
+  // Top-Empfehlungen (urgent + recommended) — Titel bereinigen
+  // (Emoji vorn weg, Priority-Suffix "— dringend empfohlen" etc. weg)
+  const cleanTitle = t => (t || '')
+    .replace(/^[^\w\säöüÄÖÜß]+\s*/, '')
+    .replace(/\s*[—–-]\s*(dringend\s+empfohlen|dringend\s+indiziert|empfohlen|erwägen|Option|bereits\s+korrekt\s+verordnet).*$/i, '')
+    .replace(/^\+\s*/, '')
+    .trim();
+  const top = recs
+    .filter(r => r.priority === 'urgent' || r.priority === 'recommended')
+    .slice(0, 3)
+    .map(r => cleanTitle(r.title))
+    .filter(s => s.length);
+
+  let action = '';
+  if (top.length) {
+    const joined = top.length === 1 ? top[0]
+                 : top.length === 2 ? top.join(' sowie ')
+                 : top.slice(0, -1).join(', ') + ' sowie ' + top[top.length - 1];
+    action = `empfehlen wir ${joined}.`;
+  } else if (hba1cOnTarget) {
+    action = 'ist der HbA1c-Zielwert erreicht; die bestehende Therapie wird unverändert fortgeführt. Nächste Kontrolle in 3–6 Monaten.';
+  } else {
+    action = 'empfehlen wir eine leitliniengerechte Intensivierung der antihyperglykämischen Therapie.';
+  }
+
+  return intro + action + ' Therapieempfehlung gemäß ADA Standards of Care in Diabetes 2026, KDIGO 2024 CKD und KDIGO 2022 Diabetes in CKD.';
+}
+
+window.copyDiabLetter = function(){
+  const t = (document.getElementById('diab-letter-text')||{}).textContent || '';
+  navigator.clipboard.writeText(t).then(()=>{
+    const b = document.getElementById('diab-copy-btn');
+    if (!b) return;
+    const old = b.textContent;
+    b.textContent = '✓ Kopiert';
+    b.style.background = '#2e7d32';
+    setTimeout(()=>{ b.textContent = old; b.style.background = '#1a237e'; }, 1500);
+  });
+};
 
 // ── EXPOSE GLOBALS ─────────────────────────────────────────────
 window.diabAutoImport    = diabAutoImport;
