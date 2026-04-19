@@ -1654,14 +1654,14 @@ label .lip-optional {
         <div class="ckd-med-ocr-row">
           <div class="ckd-med-ocr-icon">💊</div>
           <div class="ckd-med-ocr-text">
-            <div class="ckd-med-ocr-title">Medikamentenliste einlesen — Bild oder Text</div>
-            <div class="ckd-med-ocr-sub"><strong>Tippen, Einfügen (Strg+V)</strong> oder Bild ziehen. Wirkstoffe + Handelsnamen werden automatisch erkannt und im Medikationscheck-Tab angekreuzt.</div>
+            <div class="ckd-med-ocr-title">Aktuelle Medikation — Bestandsaufnahme</div>
+            <div class="ckd-med-ocr-sub"><strong>Keine Empfehlung</strong> — hier wird nur übernommen, was der Patient <em>aktuell</em> nimmt. Tippen, Einfügen (Strg+V) oder Bild ziehen (Screenshot BMP, Entlassbrief, Medi-Plan). Format: Wirkstoff · Stärke · Form · Schema (1-0-0) · Appl (p.o./s.c./i.v.).</div>
             <div class="ckd-med-ocr-privacy">🔒 100 % lokal — Bild verlässt diesen Browser nicht.</div>
           </div>
         </div>
 
         <!-- Direktes Textfeld zum Einfügen / Tippen -->
-        <textarea id="ckd-med-text" placeholder="Medikamentenliste hier einfügen oder tippen — z.B.&#10;Ramipril 5 mg 1-0-0&#10;Forxiga 10 mg&#10;Atorvastatin 40 mg" rows="4" oninput="window.ckdMedTextChange&&window.ckdMedTextChange(this.value)" onclick="event.stopPropagation();" style="width:100%; min-height:80px; padding:10px; border:1.5px solid #a5d6a7; border-radius:8px; font-size:.85rem; font-family:inherit; resize:vertical; margin-top:10px; box-sizing:border-box; background:#fff;"></textarea>
+        <textarea id="ckd-med-text" placeholder="Aktuelle Medikation — z.B.&#10;Ramipril 5 mg Tbl 1-0-0 p.o.&#10;Bisoprolol 2,5 mg Tbl 1-0-0&#10;Pantoprazol 40 mg 1-0-0 p.o.&#10;Atorvastatin 40 mg 0-0-1&#10;Heparin 5000 IE 0-0-0-1 s.c.&#10;Unvollständige Felder einfach weglassen." rows="4" oninput="window.ckdMedTextChange&&window.ckdMedTextChange(this.value)" onclick="event.stopPropagation();" style="width:100%; min-height:80px; padding:10px; border:1.5px solid #a5d6a7; border-radius:8px; font-size:.85rem; font-family:inherit; resize:vertical; margin-top:10px; box-sizing:border-box; background:#fff;"></textarea>
 
         <!-- Ergebnisse: Pills + Status -->
         <div id="ckd-med-results" style="display:none; margin-top:8px; padding:8px 12px; background:#fff; border:1px solid #c8e6c9; border-radius:8px;"></div>
@@ -2420,6 +2420,156 @@ function initDropZone() {
   }, false);
 }
 
+// ── BMP-Parser: aktuelle Medikation strukturiert aus Freitext ─
+// Extrahiert pro Zeile: wirkstoff, staerke, form, appl, m, mi, a, n, einheit, hinweis
+// Unvollständige Felder bleiben leer — kein Raten, keine Ergänzung aus Datenbank
+function ckdParseCurrentMeds(text) {
+  if (!text || !text.trim()) return [];
+  var lines = text.split(/\n|;/).map(function(l){return l.trim();}).filter(function(l){return l.length > 1;});
+  var out = [];
+
+  var RE_SCHEMA4 = /(\d+(?:[,\.]\d+)?)\s*-\s*(\d+(?:[,\.]\d+)?)\s*-\s*(\d+(?:[,\.]\d+)?)\s*-\s*(\d+(?:[,\.]\d+)?)/;
+  var RE_SCHEMA3 = /(\d+(?:[,\.]\d+)?)\s*-\s*(\d+(?:[,\.]\d+)?)\s*-\s*(\d+(?:[,\.]\d+)?)/;
+  var RE_APPL    = /\b(p\.?\s*o\.?|s\.?\s*c\.?|i\.?\s*v\.?|i\.?\s*m\.?|s\.?\s*l\.?|p\.?\s*r\.?|oral|subkutan|intravenös|intramuskulär|sublingual|nasal|inhalativ|topisch)\b/i;
+  var RE_FORM    = /\b(Retardtabl\.?|Retardkaps\.?|Retard|Tablette[n]?|Filmtabl\.?|Tbl\.?|Tabl\.?|Kapsel[n]?|Kaps\.?|Drg\.?|Dragee[s]?|Tropfen|Tropf\.?|Tr\.?|Amp\.?|Ampulle[n]?|Inhal\.?|Inhalat|Spray|Lösung|Salbe|Creme|Gel|Pflaster|Patch|Zäpfchen|Supp\.?|Injektion|Inj\.?|Fertigspritze|Pen|Stick)\b/i;
+  var RE_STRENGTH = /(\d+(?:[,\.]\d+)?(?:\s*\/\s*\d+(?:[,\.]\d+)?)?)\s*(mg|µg|mcg|ug|g\b|ml|IE|I\.E\.|Einheiten|E\.?|%)/i;
+  var RE_HINT    = /\b(bei\s+Bedarf|b\.?\s*B\.?|nach\s+Bedarf|morgens|mittags|abends|zur\s+Nacht|nüchtern|vor\s+d(?:em|\.)\s+Essen|nach\s+d(?:em|\.)\s+Essen|n\.?\s*E\.?|mit\s+Mahlzeit|ret\.?|abhängig|individuell|n(?:ach)?\.?\s*INR|nach\s+Quick)\b/i;
+
+  lines.forEach(function(raw){
+    var line = raw;
+    var rec = { wirkstoff:'', staerke:'', form:'', appl:'', m:'', mi:'', a:'', n:'', einheit:'', hinweis:'', raw:raw };
+
+    // 1) Appl extrahieren
+    var mAppl = line.match(RE_APPL);
+    if (mAppl) {
+      rec.appl = mAppl[0].replace(/\s+/g,'').toLowerCase();
+      // Normalisieren auf p.o./s.c./i.v. etc.
+      var a = rec.appl;
+      if (/^p\.?o\.?$|oral/.test(a)) rec.appl = 'p.o.';
+      else if (/^s\.?c\.?$|subkutan/.test(a)) rec.appl = 's.c.';
+      else if (/^i\.?v\.?$|intraven/.test(a)) rec.appl = 'i.v.';
+      else if (/^i\.?m\.?$|intramusk/.test(a)) rec.appl = 'i.m.';
+      else if (/^s\.?l\.?$|sublingual/.test(a)) rec.appl = 's.l.';
+      else if (/^p\.?r\.?$/.test(a)) rec.appl = 'p.r.';
+      line = line.replace(mAppl[0], ' ');
+    }
+
+    // 2) Schema 4er oder 3er
+    var mSch = line.match(RE_SCHEMA4);
+    if (mSch) {
+      rec.m = mSch[1]; rec.mi = mSch[2]; rec.a = mSch[3]; rec.n = mSch[4];
+      line = line.replace(mSch[0], ' ');
+    } else {
+      mSch = line.match(RE_SCHEMA3);
+      if (mSch) {
+        rec.m = mSch[1]; rec.mi = mSch[2]; rec.a = mSch[3]; rec.n = '';
+        line = line.replace(mSch[0], ' ');
+      }
+    }
+
+    // 3) Form
+    var mForm = line.match(RE_FORM);
+    if (mForm) {
+      var f = mForm[0];
+      // Normalisieren auf saubere Kürzel
+      if (/^Retardtabl/i.test(f)) f = 'Ret.-Tbl.';
+      else if (/^Retardkaps/i.test(f)) f = 'Ret.-Kps.';
+      else if (/^Retard/i.test(f)) f = 'Ret.';
+      else if (/^Filmtabl/i.test(f)) f = 'Filmtbl.';
+      else if (/^Tbl\.?$/i.test(f)) f = 'Tbl.';
+      else if (/^Tabl|^Tabletten?/i.test(f)) f = 'Tbl.';
+      else if (/^Kaps|^Kapsel/i.test(f)) f = 'Kps.';
+      else if (/^Drg|^Dragee/i.test(f)) f = 'Drg.';
+      else if (/^Tropf|^Tropfen/i.test(f)) f = 'Tr.';
+      else if (/^Tr\.?$/i.test(f)) f = 'Tr.';
+      else if (/^Amp|^Ampulle/i.test(f)) f = 'Amp.';
+      else if (/^Inj/i.test(f)) f = 'Inj.';
+      else if (/^Inhal/i.test(f)) f = 'Inhal.';
+      else if (/^Supp|^Zäpf/i.test(f)) f = 'Supp.';
+      else if (/^Fertigspritze/i.test(f)) f = 'Spritze';
+      else f = f.charAt(0).toUpperCase() + f.slice(1);
+      rec.form = f;
+      line = line.replace(mForm[0], ' ');
+    }
+
+    // 4) Stärke + Einheit
+    var mStr = line.match(RE_STRENGTH);
+    if (mStr) {
+      rec.staerke = (mStr[1] + ' ' + mStr[2]).replace(/\s+/g,' ').trim();
+      // Einheit normalisieren
+      var u = mStr[2].toLowerCase();
+      if (/^i\.?e\.?$|einheiten/i.test(mStr[2])) rec.einheit = 'IE';
+      else rec.einheit = u.replace(/\./g,'');
+      line = line.replace(mStr[0], ' ');
+    }
+
+    // 5) Hinweis
+    var mHint = line.match(RE_HINT);
+    if (mHint) {
+      rec.hinweis = mHint[0];
+      line = line.replace(mHint[0], ' ');
+    }
+
+    // 6) Rest = Wirkstoff (+ ggf. Handelsname in Klammern)
+    //    clean up: Kommas, überschüssige Whitespace, einzelne Zeichen
+    var rest = line.replace(/[,;]+/g,' ').replace(/\s+/g,' ').trim();
+    // Einzelne Leerzeichen-umgebene Tokens sind oft OCR-Rauschen → wegwerfen, wenn Länge < 2
+    rec.wirkstoff = rest.split(/\s+/).filter(function(w){return w.length >= 2;}).join(' ');
+
+    // Nur Zeilen mit irgendeinem Inhalt übernehmen
+    if (rec.wirkstoff || rec.staerke || rec.m || rec.mi || rec.a || rec.n) {
+      out.push(rec);
+    }
+  });
+
+  return out;
+}
+
+// BMP-Tabelle rendern — read-only, formatiert, nicht editierbar
+function ckdRenderCurrentMedsTable(parsed) {
+  if (!parsed.length) return '';
+  var html = '';
+  html += '<div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; margin-bottom:8px;">';
+  html += '<div style="font-size:.82rem; color:#1b5e20; font-weight:700;">📋 Aktuelle Medikation · ' + parsed.length + ' Eintr' + (parsed.length!==1?'äge':'ag') + '</div>';
+  html += '<div style="font-size:.68rem; color:#78909c; background:#f5f5f5; padding:3px 8px; border-radius:4px; font-weight:600;">BESTANDSAUFNAHME · KEINE EMPFEHLUNG</div>';
+  html += '</div>';
+
+  html += '<div style="overflow-x:auto; background:#fff; border:1px solid #c8e6c9; border-radius:8px;" contenteditable="false">';
+  html += '<table style="width:100%; border-collapse:collapse; font-size:.76rem; font-family:\'Helvetica Neue\',Arial,sans-serif; user-select:text;">';
+  html += '<thead><tr style="background:#2e7d32; color:#fff; text-align:left;">';
+  html += '<th style="padding:6px 8px; font-weight:600; white-space:nowrap;">Wirkstoff</th>';
+  html += '<th style="padding:6px 8px; font-weight:600; white-space:nowrap;">Stärke</th>';
+  html += '<th style="padding:6px 8px; font-weight:600; white-space:nowrap;">Form</th>';
+  html += '<th style="padding:6px 4px; font-weight:600; text-align:center; width:32px;" title="morgens">Mor</th>';
+  html += '<th style="padding:6px 4px; font-weight:600; text-align:center; width:32px;" title="mittags">Mit</th>';
+  html += '<th style="padding:6px 4px; font-weight:600; text-align:center; width:32px;" title="abends">Abd</th>';
+  html += '<th style="padding:6px 4px; font-weight:600; text-align:center; width:32px;" title="zur Nacht">Nacht</th>';
+  html += '<th style="padding:6px 6px; font-weight:600;">Einh.</th>';
+  html += '<th style="padding:6px 6px; font-weight:600;">Appl</th>';
+  html += '<th style="padding:6px 8px; font-weight:600;">Hinweis</th>';
+  html += '</tr></thead><tbody>';
+
+  parsed.forEach(function(m, i){
+    var bg = i % 2 === 0 ? '#fff' : '#fafbf9';
+    html += '<tr style="background:' + bg + '; border-top:1px solid #e8f5e9;">';
+    html += '<td style="padding:5px 8px; font-weight:600; color:#1b5e20;">' + (m.wirkstoff || '<span style="color:#bdbdbd;">—</span>') + '</td>';
+    html += '<td style="padding:5px 8px; white-space:nowrap;">' + (m.staerke || '<span style="color:#bdbdbd;">—</span>') + '</td>';
+    html += '<td style="padding:5px 8px; white-space:nowrap; color:#546e7a;">' + (m.form || '<span style="color:#bdbdbd;">—</span>') + '</td>';
+    html += '<td style="padding:5px 4px; text-align:center; font-weight:600;' + (m.m && m.m !== '0' ? ' color:#1b5e20;' : ' color:#bdbdbd;') + '">' + (m.m || '—') + '</td>';
+    html += '<td style="padding:5px 4px; text-align:center; font-weight:600;' + (m.mi && m.mi !== '0' ? ' color:#1b5e20;' : ' color:#bdbdbd;') + '">' + (m.mi || '—') + '</td>';
+    html += '<td style="padding:5px 4px; text-align:center; font-weight:600;' + (m.a && m.a !== '0' ? ' color:#1b5e20;' : ' color:#bdbdbd;') + '">' + (m.a || '—') + '</td>';
+    html += '<td style="padding:5px 4px; text-align:center; font-weight:600;' + (m.n && m.n !== '0' ? ' color:#1b5e20;' : ' color:#bdbdbd;') + '">' + (m.n || '—') + '</td>';
+    html += '<td style="padding:5px 6px; color:#546e7a;">' + (m.einheit || '<span style="color:#bdbdbd;">—</span>') + '</td>';
+    html += '<td style="padding:5px 6px; color:#546e7a;">' + (m.appl || '<span style="color:#bdbdbd;">—</span>') + '</td>';
+    html += '<td style="padding:5px 8px; color:#546e7a; font-size:.72rem;">' + (m.hinweis || '') + '</td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  html += '</div>';
+  html += '<div style="font-size:.68rem; color:#78909c; margin-top:6px;">Tabelle nicht editierbar — zum Korrigieren Text oben anpassen. Leere Felder bleiben leer (kein Raten).</div>';
+  return html;
+}
+
 // ── CKD-Tab: Medikamenten-Text live verarbeiten ──────────────
 // Direkter Eingabepfad — Text in textarea → Parsing → Pills + Status
 window.ckdMedTextChange = function(text) {
@@ -2445,60 +2595,20 @@ window.ckdMedTextChange = function(text) {
   var resEl = document.getElementById('ckd-med-results');
   if (!resEl) return;
 
-  // eGFR aus CKD-Tab holen (global currentEGFR oder egfr-result-val)
-  var egfrVal = null;
-  if (typeof window.currentEGFR === 'number' && window.currentEGFR) egfrVal = window.currentEGFR;
-  if (!egfrVal) {
-    var eEl = document.getElementById('egfr-result-val');
-    if (eEl) { var v = parseFloat(eEl.textContent); if (!isNaN(v)) egfrVal = v; }
-  }
-  // Dialysestatus aus CKD-Tab
-  var dsMode = null;
-  var dsEl = document.getElementById('dialysis_status');
-  if (dsEl) {
-    if (dsEl.value === 'haemodialysis') dsMode = 'hd';
-    else if (dsEl.value === 'peritoneal') dsMode = 'pd';
-  }
+  // PRIMÄR: Bestandsaufnahme als BMP-Tabelle (keine Empfehlung!)
+  var parsed = ckdParseCurrentMeds(text);
 
-  // Dosing-Tabelle aus Medcheck-Modul rendern
-  var result = (typeof window.mcBuildDosingHtmlFromText === 'function')
-    ? window.mcBuildDosingHtmlFromText(text, egfrVal, dsMode)
-    : { count: 0, html: '' };
-
-  // Fallback: Gruppen aus mcParseFreeText (falls kein konkretes Präparat, aber Wirkstoffklasse erkannt)
-  var groupPills = '';
-  if (!result.count) {
-    var groupNames = {acei:'ACE-Hemmer',arb:'ARB',arni:'ARNI',sglt2i:'SGLT2i',finerenon:'Finerenon',
-      statin:'Statin',ezetimib:'Ezetimib',pcsk9:'PCSK9',metformin:'Metformin',glp1ra:'GLP-1-RA',
-      dpp4i:'DPP-4i',insulin:'Insulin',su:'Sulfonylharnstoff',doac:'DOAK',vka:'VKA',ass:'ASS',
-      clopidogrel:'P2Y12',ccb:'Ca-Antagonist',thiazid:'Thiazid',bb:'Betablocker',loop:'Schleifendiuretikum',
-      spiro:'MRA',alpha:'Alpha-Blocker'};
-    var checkedGroups = [];
-    document.querySelectorAll('#tab-medcheck input[type="checkbox"]:checked').forEach(function(cb){
-      if (cb.id && cb.id.indexOf('mc-med-') === 0) {
-        var g = cb.id.substring(7);
-        if (groupNames[g]) checkedGroups.push(groupNames[g]);
-      }
-    });
-    if (checkedGroups.length) {
-      groupPills = '<div style="font-size:.82rem;color:#1b5e20;font-weight:700;margin-bottom:6px;">✅ ' + checkedGroups.length + ' Wirkstoffklasse' + (checkedGroups.length!==1?'n':'') + ' erkannt</div>';
-      checkedGroups.forEach(function(label){
-        groupPills += '<span style="display:inline-block;background:#f1f8e9;border:1px solid #a5d6a7;color:#1b5e20;padding:3px 10px;border-radius:14px;font-size:.75rem;font-weight:600;margin:2px 4px 2px 0;">✔ ' + label + '</span>';
-      });
-      groupPills += '<div style="font-size:.7rem;color:#78909c;margin-top:8px;">Für Wirkstoff-spezifische Dosis: konkretes Präparat eingeben (z.B. <em>Ramipril</em> statt „ACE-Hemmer").</div>';
-    }
-  }
-
-  if (!result.count && !groupPills) {
+  if (!parsed.length) {
     resEl.style.display = 'block';
     resEl.style.background = '#fff8e1';
     resEl.style.borderColor = '#ffe082';
-    resEl.innerHTML = '<div style="color:#e65100;font-size:.82rem;font-weight:600;">⚠️ Noch keine Wirkstoffe erkannt. Beispiel: <em>Ramipril 5 mg, Forxiga, Atorvastatin</em></div>';
+    resEl.style.padding = '10px 12px';
+    resEl.innerHTML = '<div style="color:#e65100;font-size:.82rem;font-weight:600;">⚠️ Noch keine Medikamente erkannt. Beispiel: <em>Ramipril 5 mg Tbl 1-0-0 p.o.</em></div>';
     return;
   }
 
-  var html = result.html || groupPills;
-  html += '<div style="font-size:.7rem; color:#78909c; margin-top:8px;">📋 Vollständiger Check inkl. Warnungen &amp; Interaktionen: <a href="#" onclick="window.switchToolTab&&window.switchToolTab(\'medcheck\'); return false;" style="color:#2e7d32; text-decoration:underline; font-weight:600;">Medikationscheck-Tab öffnen</a></div>';
+  var html = ckdRenderCurrentMedsTable(parsed);
+  html += '<div style="font-size:.7rem; color:#78909c; margin-top:10px; padding-top:8px; border-top:1px dashed #c8e6c9;">Für eGFR-adaptierte Dosis-Empfehlung &amp; Kontraindikations-Check: <a href="#" onclick="window.switchToolTab&&window.switchToolTab(\'medcheck\'); return false;" style="color:#2e7d32; text-decoration:underline; font-weight:600;">Medikationscheck-Tab öffnen</a></div>';
 
   resEl.style.display = 'block';
   resEl.style.background = '#f1f8e9';
