@@ -5036,6 +5036,7 @@ if (document.readyState === 'loading') {
 #tab-hi .hi-info-row strong { color:#4a148c; min-width:120px; }
 #tab-hi .hi-disclaimer { background:#fff8e1; border-left:4px solid #ffa000; padding:10px 14px; border-radius:6px; font-size:.82rem; color:#4a148c; margin-top:16px; }
 #tab-hi .hi-import-banner { display:flex; align-items:center; gap:8px; padding:8px 14px; background:#e8f5e9; border:1px solid #a5d6a7; color:#1b5e20; border-radius:6px; font-size:.88rem; font-weight:600; margin-bottom:12px; }
+#tab-hi abbr[title] { text-decoration: underline dotted #ad1457; text-underline-offset: 3px; cursor: help; font-weight: inherit; }
 </style>
 <div class="hi-container">
 
@@ -5043,23 +5044,9 @@ if (document.readyState === 'loading') {
     <span>📥</span><span id="hi-import-text"></span>
   </div>
 
-  <!-- GDMT-Erklärung ganz oben, immer sichtbar -->
-  <div class="hi-card" style="background:#f3e5f5; border-color:#ce93d8;">
-    <h2 style="color:#4a148c; border-bottom-color:#ce93d8;">📖 GDMT — Guideline-Directed Medical Therapy</h2>
-    <p style="font-size:.92rem; line-height:1.55; margin:0 0 8px; color:#333;">
-      <strong>GDMT</strong> ist die <strong>leitliniengerechte medikamentöse Therapie der Herzinsuffizienz</strong>.
-      Bei <strong>HFrEF</strong> sind das die <strong>„4 Säulen"</strong>: ARNI/ACEi/ARB · Betablocker · MRA · SGLT2-Inhibitor.
-      Jede Säule senkt für sich Mortalität und HF-Hospitalisierung — der Benefit ist <strong>additiv</strong>.
-    </p>
-    <p style="font-size:.88rem; line-height:1.55; margin:0; color:#333;">
-      <strong>Strategie:</strong> alle 4 Säulen <strong>möglichst parallel starten</strong> (niedrig dosiert),
-      dann über 3–6 Monate auftitrieren — individuell nach RR, HF, eGFR und Kalium.
-    </p>
-  </div>
-
   <div class="hi-tabs">
     <button class="hi-tab-btn active" onclick="hiShowTab('class',this)">📋 Klassifikation</button>
-    <button class="hi-tab-btn" onclick="hiShowTab('gdmt',this)">💊 GDMT HFrEF</button>
+    <button class="hi-tab-btn" onclick="hiShowTab('gdmt',this)">💊 Medikamentöse Therapie HFrEF</button>
     <button class="hi-tab-btn" onclick="hiShowTab('hfpef',this)">🩺 HFpEF / HFmrEF</button>
     <button class="hi-tab-btn" onclick="hiShowTab('dev',this)">🔧 Zusatz &amp; Device</button>
     <button class="hi-tab-btn" onclick="hiShowTab('info',this)">📚 Quellen</button>
@@ -5117,7 +5104,7 @@ if (document.readyState === 'loading') {
       <div class="hi-info-row"><strong>HFrEF</strong> <span>LVEF ≤ 40% — reduced ejection fraction</span></div>
       <div class="hi-info-row"><strong>HFmrEF</strong> <span>LVEF 41 – 49% — mildly reduced</span></div>
       <div class="hi-info-row"><strong>HFpEF</strong> <span>LVEF ≥ 50% — preserved (mit Zeichen diastolischer Dysfunktion + ↑NT-proBNP)</span></div>
-      <div class="hi-info-row"><strong>HFimpEF</strong> <span>vorher ≤40%, jetzt &gt;40% nach GDMT — <em>GDMT fortsetzen!</em></span></div>
+      <div class="hi-info-row"><strong>HFimpEF</strong> <span>vorher ≤40%, jetzt &gt;40% nach <abbr title="Guideline-Directed Medical Therapy — leitliniengerechte medikamentöse Therapie">GDMT</abbr> — <em>Therapie fortsetzen!</em></span></div>
       <div id="hi-class-result" class="hi-result hi-res-none">LVEF und NYHA eingeben für automatische Klassifikation.</div>
     </div>
 
@@ -5241,7 +5228,7 @@ if (document.readyState === 'loading') {
       <h2>💊 Weitere Medikamente (selektiv, bei persistierender Symptomatik)</h2>
       <div class="hi-pillar">
         <div class="hi-pillar-title">Vericiguat (Verquvo)</div>
-        <div class="hi-pillar-drug">LVEF &lt; 45% nach rezenter Dekompensation trotz GDMT (VICTORIA) — 2.5 → 5 → 10 mg/d; RR ≥ 100 mmHg</div>
+        <div class="hi-pillar-drug">LVEF &lt; 45% nach rezenter Dekompensation trotz <abbr title="Guideline-Directed Medical Therapy — leitliniengerechte medikamentöse Therapie">GDMT</abbr> (VICTORIA) — 2.5 → 5 → 10 mg/d; RR ≥ 100 mmHg</div>
       </div>
       <div class="hi-pillar">
         <div class="hi-pillar-title">Ivabradin (Procoralan)</div>
@@ -5249,7 +5236,7 @@ if (document.readyState === 'loading') {
       </div>
       <div class="hi-pillar">
         <div class="hi-pillar-title">Hydralazin + ISDN</div>
-        <div class="hi-pillar-drug">Add-on bei afroamerikanischen Patienten NYHA III–IV unter GDMT (A-HeFT)</div>
+        <div class="hi-pillar-drug">Add-on bei afroamerikanischen Patienten NYHA III–IV unter <abbr title="Guideline-Directed Medical Therapy — leitliniengerechte medikamentöse Therapie">GDMT</abbr> (A-HeFT)</div>
       </div>
       <div class="hi-pillar">
         <div class="hi-pillar-title">Digoxin</div>
@@ -5266,12 +5253,12 @@ if (document.readyState === 'loading') {
       <div id="hi-device-result" class="hi-result hi-res-none">LVEF + NYHA eingeben für Device-Indikation.</div>
       <div class="hi-pillar">
         <div class="hi-pillar-title">ICD (primärprophylaktisch) — Klasse I</div>
-        <div class="hi-pillar-drug">LVEF ≤ 35% nach <strong>≥ 3 Monaten optimaler GDMT</strong>, NYHA II–III, Lebenserwartung &gt; 1 Jahr<br>
+        <div class="hi-pillar-drug">LVEF ≤ 35% nach <strong>≥ 3 Monaten optimaler <abbr title="Guideline-Directed Medical Therapy — leitliniengerechte medikamentöse Therapie">GDMT</abbr></strong>, NYHA II–III, Lebenserwartung &gt; 1 Jahr<br>
         Bei ischämischer Kardiomyopathie &gt; 40 Tage nach Infarkt</div>
       </div>
       <div class="hi-pillar">
         <div class="hi-pillar-title">CRT — Klasse I</div>
-        <div class="hi-pillar-drug">Sinus + LVEF ≤ 35% + LBBB + QRS ≥ 150 ms + NYHA II–IV trotz GDMT<br>
+        <div class="hi-pillar-drug">Sinus + LVEF ≤ 35% + LBBB + QRS ≥ 150 ms + NYHA II–IV trotz <abbr title="Guideline-Directed Medical Therapy — leitliniengerechte medikamentöse Therapie">GDMT</abbr><br>
         Klasse IIa: QRS 130–149 ms mit LBBB · Klasse IIb: QRS ≥ 150 ms ohne LBBB</div>
       </div>
     </div>
@@ -5337,8 +5324,8 @@ if (document.readyState === 'loading') {
     var txt = '<strong>LVEF '+lvef+'% → '+lbl+'</strong>';
     if (nyha) txt += ' · NYHA '+['','I','II','III','IV'][parseInt(nyha)];
     txt += '<br>';
-    if (cls==='hfref') txt += '→ <strong>4-Säulen-GDMT</strong> (Tab „💊 GDMT HFrEF")';
-    else if (cls==='hfmref') txt += '→ GDMT analog HFrEF (Klasse IIa) — siehe Tab „🩺 HFpEF / HFmrEF"';
+    if (cls==='hfref') txt += '→ <strong>4-Säulen-Therapie</strong> (Tab „💊 Medikamentöse Therapie HFrEF")';
+    else if (cls==='hfmref') txt += '→ medikamentöse Therapie analog HFrEF (Klasse IIa) — siehe Tab „🩺 HFpEF / HFmrEF"';
     else txt += '→ SGLT2i + Diuretika + Komorbiditäten — siehe Tab „🩺 HFpEF / HFmrEF"';
     el.className = 'hi-result hi-res-'+cls;
     el.innerHTML = txt;
@@ -5409,7 +5396,7 @@ if (document.readyState === 'loading') {
     setStatus('hi-p-sglt-status', sglt || '<span class="hi-ok">starten (eGFR ≥ 20)</span>');
 
     sum.className = 'hi-result hi-res-hfref';
-    sum.innerHTML = '<strong>HFrEF (LVEF '+lvef+'%)</strong> — 4-Säulen-GDMT indiziert. Hinweise pro Säule oben.';
+    sum.innerHTML = '<strong>HFrEF (LVEF '+lvef+'%)</strong> — 4-Säulen-<abbr title="Guideline-Directed Medical Therapy — leitliniengerechte medikamentöse Therapie">GDMT</abbr> indiziert. Hinweise pro Säule oben.';
   }
 
   window.hiCalcIron = function(){
@@ -5438,7 +5425,7 @@ if (document.readyState === 'loading') {
     if (!el) return;
     if (lvef == null) { el.className='hi-result hi-res-none'; el.textContent='LVEF eingeben.'; return; }
     var msg = [];
-    if (lvef <= 35 && nyha >= 2 && nyha <= 3) msg.push('<strong>ICD-Indikation (Klasse I)</strong> — nach ≥ 3 Monaten optimaler GDMT, LE &gt; 1 J.');
+    if (lvef <= 35 && nyha >= 2 && nyha <= 3) msg.push('<strong>ICD-Indikation (Klasse I)</strong> — nach ≥ 3 Monaten optimaler <abbr title="Guideline-Directed Medical Therapy — leitliniengerechte medikamentöse Therapie">GDMT</abbr>, LE &gt; 1 J.');
     if (lvef <= 35 && nyha >= 2) msg.push('<strong>CRT erwägen</strong> — bei Sinus + LBBB + QRS ≥ 150 ms (Klasse I), 130–149 ms mit LBBB (IIa)');
     if (!msg.length) { el.className='hi-result hi-res-none'; el.innerHTML = 'Keine Device-Indikation nach den aktuellen Parametern (LVEF &gt; 35% oder NYHA I/IV).'; return; }
     el.className = 'hi-result hi-res-hfref';
