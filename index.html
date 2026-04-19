@@ -15561,8 +15561,11 @@ function verlaufParsePaste() {
   var parsed = [];
 
   lines.forEach(function(line) {
-    // Trennzeichen normalisieren: Komma/Semikolon/Tab → Leerzeichen, Doppelpunkt nach Schlüsselwort entfernen
-    var l = line.replace(/[;,\t]/g, ' ').replace(/(\w)\s*:\s*/g, '$1 ').replace(/\s+/g, ' ');
+    // Trennzeichen normalisieren: Semikolon/Tab → Leerzeichen, Doppelpunkt nach Schlüsselwort entfernen.
+    // Komma NICHT ersetzen — ist im Deutschen Dezimaltrennzeichen (1,5 = 1.5).
+    // Komma als Listen-Separator wird später durch den Zahlen-Regex implizit gehandhabt
+    // (er matcht "1,5" als Einzelzahl, aber bei "1.4, 48" sind es zwei Zahlen durch Leerzeichen getrennt).
+    var l = line.replace(/[;\t]/g, ' ').replace(/(\w)\s*:\s*/g, '$1 ').replace(/\s+/g, ' ');
 
     var dateStr = '', krea = null, egfr = null;
 
@@ -15573,9 +15576,14 @@ function verlaufParsePaste() {
     if (m) { dateStr = m[1]+'.'+m[2]+'.'+m[3]; l = l.replace(m[0],''); }
 
     if (!dateStr) {
-      // MM/JJJJ oder MM-JJJJ
-      m = l.match(/\b(\d{1,2})[\/\-](\d{4})\b/);
-      if (m) { dateStr = m[1]+'/'+m[2]; l = l.replace(m[0],''); }
+      // MM/JJJJ oder MM-JJJJ oder MM/JJ (2-stelliges Jahr → 20JJ)
+      m = l.match(/\b(\d{1,2})[\/\-](\d{2,4})\b/);
+      if (m) {
+        var yr = m[2];
+        if (yr.length === 2) yr = '20' + yr;
+        dateStr = m[1] + '/' + yr;
+        l = l.replace(m[0],'');
+      }
     }
     if (!dateStr) {
       // JJJJ-MM (ISO month)
