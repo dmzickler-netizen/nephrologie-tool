@@ -16840,6 +16840,16 @@ function verlaufRenderTable() {
   if (!tbody) return;
   tbody.innerHTML = '';
 
+  // Fehlende eGFR-Werte aus Krea ergänzen, sobald Alter/Geschlecht
+  // verfügbar sind — sonst zeigt die Tabelle Leere, obwohl der Graph
+  // bereits Werte darstellen kann.
+  verlaufRows.forEach(function(row) {
+    if (row && row.krea && !row.egfr) {
+      var calc = verlaufEgfrFromKrea(parseFloat(row.krea));
+      if (calc) row.egfr = String(Math.round(calc * 10) / 10);
+    }
+  });
+
   // Historische Zeilen
   verlaufRows.forEach(function(row, i) {
     var tr = document.createElement('tr');
