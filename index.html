@@ -11953,8 +11953,8 @@ window.hwiUpdate = function() {
 
 <div class="mc-container">
   <div class="mc-title-bar">
-    <h2>💊 Medikationscheck</h2>
-    <p>Regelbasierter Abgleich der aktuellen Medikation gegen leitlinienbasierte Empfehlungen · Denkanstoß, keine Anordnung</p>
+    <h2>💊 Medikationscheck — eGFR-adaptierter Dosisrechner</h2>
+    <p>Wirkstoff-spezifische Dosierung nach eGFR/Dialyse · Kontraindikations- und Lücken-Check gegen Leitlinien · Denkanstoß, keine Anordnung</p>
   </div>
 
   <!-- Karte 1: Patientendaten -->
@@ -14445,6 +14445,10 @@ function generateTexts(age, sex, scr, cys, uacr, bpSys, bpDia, extraInfo,
     empfText += `${i + 1}. ${r}\n`;
   });
 
+  // Verweis auf den Medikationscheck-Tab — dort liegt der eGFR-adaptierte
+  // Wirkstoff-Dosisrechner inkl. Kontraindikations-Check.
+  empfText += '\n💊 Für Wirkstoff-spezifische Dosierung bei eingeschränkter eGFR sowie Kontraindikations-Check: siehe Medikationscheck-Tab.\n';
+
   document.getElementById('text-empfehlung').value = empfText;
 
   // Build therapy panel
@@ -14461,6 +14465,12 @@ function buildTherapyPanel(gfrStage, albStage, egfr, uacr, diseases, riskInfo) {
 
   let html = '<div class="therapy-section">';
   html += `<p style="font-size:0.82em;color:#666;margin:0 0 10px 0;line-height:1.4;">📋 Patientenspezifische Übersicht — Maßnahmen für Stadium <strong>${gfrStage.stage}${albStage ? albStage.stage : ''}</strong>${diseases.length ? ' bei ' + diseases.map(diseaseLabel).join(', ') : ''}</p>`;
+
+  // Verweis-Banner: konkrete Wirkstoff-Dosierungen im Medikationscheck-Tab
+  html += '<div style="background:#e8f5e9; border:1px solid #a5d6a7; border-left:4px solid #2e7d32; border-radius:8px; padding:8px 12px; margin:0 0 14px; font-size:.8rem; color:#1b5e20; display:flex; align-items:center; gap:10px; justify-content:space-between; flex-wrap:wrap;">' +
+    '<span>💊 <strong>Wirkstoff-Dosierung bei eingeschränkter eGFR</strong> und Kontraindikations-Check: im <strong>Medikationscheck-Tab</strong> berechnen.</span>' +
+    '<a href="#" onclick="window.switchToolTab&&window.switchToolTab(\'medcheck\'); return false;" style="background:#2e7d32; color:#fff; padding:4px 12px; border-radius:6px; text-decoration:none; font-weight:600; font-size:.75rem; white-space:nowrap;">→ Öffnen</a>' +
+    '</div>';
 
   // ── 1. Nephroprotektive Basistherapie ──────────────────────────────────
   html += `<div class="therapy-block">
