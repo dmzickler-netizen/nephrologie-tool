@@ -16880,7 +16880,14 @@ function verlaufDeleteRow(i) {
   verlaufDraw();
 }
 
+// Liefert zusätzlich zur Date-Instanz die Eingabe-Präzision
+// ('year' | 'month' | 'day'), damit die Achsen-Beschriftung nicht mehr
+// auflöst als der User tatsächlich angegeben hat.
 function verlaufParseDate(s) {
+  var r = verlaufParseDateFull(s);
+  return r ? r.date : null;
+}
+function verlaufParseDateFull(s) {
   if (!s || !s.trim()) return null;
   s = s.trim();
 
@@ -16888,35 +16895,35 @@ function verlaufParseDate(s) {
   if (/^\d{2,4}$/.test(s)) {
     var y = parseInt(s);
     if (y < 100) y += 2000;
-    return new Date(y, 6, 1); // Mitte des Jahres
+    return { date: new Date(y, 6, 1), precision: 'year' };
   }
 
-  // MM/JJJJ oder MM.JJJJ oder MM-JJJJ: "06/2023" "6/23"
+  // MM/JJJJ oder MM.JJJJ oder MM-JJJJ
   var m1 = s.match(/^(\d{1,2})[\/\.\-](\d{2,4})$/);
   if (m1) {
     var mo = parseInt(m1[1]) - 1;
     var yr = parseInt(m1[2]);
     if (yr < 100) yr += 2000;
-    return new Date(yr, mo, 15);
+    return { date: new Date(yr, mo, 15), precision: 'month' };
   }
 
-  // TT.MM.JJ oder TT.MM.JJJJ: "15.06.2023" "15.6.23"
+  // TT.MM.JJ oder TT.MM.JJJJ
   var m2 = s.match(/^(\d{1,2})[\/\.\-](\d{1,2})[\/\.\-](\d{2,4})$/);
   if (m2) {
     var day = parseInt(m2[1]);
     var mo2 = parseInt(m2[2]) - 1;
     var yr2 = parseInt(m2[3]);
     if (yr2 < 100) yr2 += 2000;
-    return new Date(yr2, mo2, day);
+    return { date: new Date(yr2, mo2, day), precision: 'day' };
   }
 
-  // ISO "2023-06" (type=month fallback)
+  // ISO "2023-06"
   var m3 = s.match(/^(\d{4})-(\d{2})$/);
-  if (m3) return new Date(parseInt(m3[1]), parseInt(m3[2])-1, 15);
+  if (m3) return { date: new Date(parseInt(m3[1]), parseInt(m3[2])-1, 15), precision: 'month' };
 
-  // ISO "2023-06-15"
+  // ISO "2023-06-15" oder Free-Form
   var d = new Date(s);
-  return isNaN(d) ? null : d;
+  return isNaN(d) ? null : { date: d, precision: 'day' };
 }
 
 function verlaufGetPoints() {
@@ -16927,8 +16934,8 @@ function verlaufGetPoints() {
     var krea = parseFloat(row.krea);
     if (!egfr && krea) egfr = verlaufEgfrFromKrea(krea);
     if (!egfr) return;
-    var date = verlaufParseDate(row.date);
-    raw.push({ date: date, egfr: egfr });
+    var parsed = verlaufParseDateFull(row.date);
+    raw.push({ date: parsed ? parsed.date : null, precision: parsed ? parsed.precision : null, egfr: egfr });
   });
 
   // Aktuellen eGFR aus CKD-Tab anhängen
@@ -16937,7 +16944,7 @@ function verlaufGetPoints() {
     var today = new Date(); today.setHours(0,0,0,0);
     // Nicht doppelt hinzufügen wenn bereits heute-Datum in Tabelle
     var exists = raw.some(function(p) { return p.date && p.date.toDateString() === today.toDateString(); });
-    if (!exists) raw.push({ date: today, egfr: curEgfr, current: true });
+    if (!exists) raw.push({ date: today, precision: 'day', egfr: curEgfr, current: true });
   }
 
   if (raw.length === 0) return { pts: [], dateMode: false };
@@ -17082,7 +17089,12 @@ function verlaufDraw() {
     var x = xPos(p, idx);
     var label;
     if (p.date && !isNaN(p.date)) {
-      label = p.date.toLocaleDateString('de-DE', { month: '2-digit', year: '2-digit' });
+      if (p.precision === 'year') {
+        // Nur Jahr angegeben — Achsenlabel soll das widerspiegeln
+        label = String(p.date.getFullYear());
+      } else {
+        label = p.date.toLocaleDateString('de-DE', { month: '2-digit', year: '2-digit' });
+      }
     } else {
       label = 'M' + (idx + 1);
     }
