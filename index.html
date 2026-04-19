@@ -2423,10 +2423,12 @@ function initDropZone() {
 // ── BMP-Parser: aktuelle Medikation strukturiert aus Freitext ─
 // Extrahiert pro Zeile: wirkstoff, staerke, form, appl, m, mi, a, n, einheit, hinweis
 // Unvollständige Felder bleiben leer — kein Raten, keine Ergänzung aus Datenbank
+// Rückgabe: { recognized: [...], unrecognized: ['raw line', ...] }
 function ckdParseCurrentMeds(text) {
-  if (!text || !text.trim()) return [];
+  if (!text || !text.trim()) return { recognized: [], unrecognized: [] };
   var lines = text.split(/\n|;/).map(function(l){return l.trim();}).filter(function(l){return l.length > 1;});
   var out = [];
+  var unrecognized = [];
 
   var RE_SCHEMA4 = /(\d+(?:[,\.]\d+)?)\s*-\s*(\d+(?:[,\.]\d+)?)\s*-\s*(\d+(?:[,\.]\d+)?)\s*-\s*(\d+(?:[,\.]\d+)?)/;
   var RE_SCHEMA3 = /(\d+(?:[,\.]\d+)?)\s*-\s*(\d+(?:[,\.]\d+)?)\s*-\s*(\d+(?:[,\.]\d+)?)/;
@@ -2514,39 +2516,51 @@ function ckdParseCurrentMeds(text) {
       line = line.replace(mHint[0], ' ');
     }
 
-    // 6) Wirkstoff extrahieren — strikt gegen MC_DOSING (oder fallback)
+    // 6) Wirkstoff extrahieren:
+    //    a) MC_DOSING-Match (präferiert) → saubere Wirkstoff-Auflösung
+    //    b) Fallback: wenn Stärke UND Schema vorhanden → erstes Wort nehmen
+    //       (das schließt ASS, Pantoprazol etc. ein, die nicht in MC_DOSING stehen)
+    //    c) Sonst: als 'nicht erkannt' markieren → User kann manuell ergänzen.
     var drugMatch = (typeof window.mcMatchFirstDrug === 'function') ? window.mcMatchFirstDrug(raw) : null;
     var restCleaned = line.replace(/[;]+/g,' ').replace(/\s+/g,' ').trim();
+
     if (drugMatch) {
       rec.wirkstoff = drugMatch.name;
-      // Restliches Token(s), das nicht der Wirkstoff ist → Hinweis (falls keiner gesetzt)
-      var tok = drugMatch.matchedToken;
-      var remaining = restCleaned.replace(new RegExp(tok, 'gi'), '').replace(/\s+/g,' ').trim();
-      // Nur halbwegs sinnvollen Rest übernehmen (≥3 Zeichen, keine Solitaire-Kommas)
-      remaining = remaining.replace(/^[,\s\-–—]+|[,\s\-–—]+$/g,'');
-      if (remaining && remaining.length >= 3 && !rec.hinweis) {
-        rec.hinweis = remaining;
-      } else if (remaining && remaining.length >= 3 && rec.hinweis) {
-        rec.hinweis = rec.hinweis + '; ' + remaining;
-      }
-    } else {
-      // Fallback: erstes "Wirkstoff-artiges" Wort nehmen (Groß-klein, >3 Zeichen, keine Zahl)
-      var tokens = restCleaned.split(/\s+/).filter(function(w){return w.length >= 3 && !/^\d/.test(w);});
-      if (tokens.length) {
-        rec.wirkstoff = tokens[0];
-        var restTokens = tokens.slice(1).join(' ').trim();
-        if (restTokens && !rec.hinweis) rec.hinweis = restTokens;
-        else if (restTokens && rec.hinweis) rec.hinweis = rec.hinweis + '; ' + restTokens;
-      }
+      var remaining = restCleaned;
+      (drugMatch.matchedTokens || []).forEach(function(tok){
+        remaining = remaining.replace(new RegExp(tok, 'gi'), ' ');
+      });
+      remaining = remaining.replace(/[\/\\]+/g, ' ').replace(/\s+/g,' ').trim();
+      remaining = remaining.replace(/^[,\s\-–—.]+|[,\s\-–—.]+$/g,'');
+      if (remaining && remaining.length >= 3 && !rec.hinweis) rec.hinweis = remaining;
+      else if (remaining && remaining.length >= 3 && rec.hinweis) rec.hinweis = rec.hinweis + '; ' + remaining;
+      out.push(rec);
+      return;
     }
 
-    // Nur Zeilen mit irgendeinem Inhalt übernehmen
-    if (rec.wirkstoff || rec.staerke || rec.m || rec.mi || rec.a || rec.n) {
-      out.push(rec);
+    // Kein MC_DOSING-Match → Fallback nur bei klarem Medikamenten-Muster
+    var hasStrength = !!rec.staerke;
+    var hasSchedule = !!(rec.m || rec.mi || rec.a || rec.n);
+    if (!hasStrength || !hasSchedule) {
+      unrecognized.push(raw);
+      return;
     }
+    // Erstes Wort extrahieren; Stopwords ausschließen
+    var tokens = restCleaned.split(/\s+/).filter(function(w){return w.length >= 2 && !/^\d/.test(w);});
+    var stopwords = ['alternativ','alt','medikament','medikamente','dosis','einnahme','indikation','bemerkung','kommentar','nephro','nephro-','kardioprotektion','sonstige','andere','weitere','bedarf'];
+    var firstClean = (tokens[0] || '').toLowerCase().replace(/[^a-zäöüß\-]/g,'');
+    if (!tokens.length || stopwords.indexOf(firstClean) >= 0) {
+      unrecognized.push(raw);
+      return;
+    }
+    rec.wirkstoff = tokens[0];
+    var restTokens = tokens.slice(1).join(' ').replace(/^[,\s\-–—.]+|[,\s\-–—.]+$/g,'').trim();
+    if (restTokens && !rec.hinweis) rec.hinweis = restTokens;
+    else if (restTokens && rec.hinweis) rec.hinweis = rec.hinweis + '; ' + restTokens;
+    out.push(rec);
   });
 
-  return out;
+  return { recognized: out, unrecognized: unrecognized };
 }
 
 // Map für manuelle Overrides in leeren Zellen.
@@ -2656,11 +2670,12 @@ window.ckdMedManualRemove = function(i){
 };
 
 // BMP-Tabelle rendern — Wirkstoff/Stärke read-only, leere Felder editierbar
-function ckdRenderCurrentMedsTable(parsed) {
+function ckdRenderCurrentMedsTable(parsed, unrecognized) {
+  unrecognized = unrecognized || [];
   // Overrides + manuelle Zeilen anfügen
   parsed = ckdApplyOverrides(parsed.slice());
   var allRows = parsed.concat(window.ckdMedManualRows);
-  if (!allRows.length) return '';
+  if (!allRows.length && !unrecognized.length) return '';
 
   var html = '';
   html += '<div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; margin-bottom:8px;">';
@@ -2717,6 +2732,19 @@ function ckdRenderCurrentMedsTable(parsed) {
   });
   html += '</tbody></table>';
   html += '</div>';
+
+  // Nicht erkannte Zeilen (Tabellen-Überschriften, Kategorien, unbekannte Präparate)
+  if (unrecognized.length) {
+    html += '<div style="margin-top:10px; padding:10px 12px; background:#fff3e0; border:1px solid #ffb74d; border-radius:8px;">';
+    html += '<div style="font-size:.78rem; color:#e65100; font-weight:700; margin-bottom:6px;">⚠️ ' + unrecognized.length + ' Zeile' + (unrecognized.length!==1?'n':'') + ' nicht erkannt <span style="font-weight:500; color:#bf360c;">(Wirkstoff nicht gefunden — ggf. Tabellen-Überschrift, Kategorie oder unbekanntes Präparat)</span></div>';
+    html += '<div style="font-size:.72rem; color:#5d4037; line-height:1.5; max-height:120px; overflow-y:auto; background:#fff; padding:6px 10px; border-radius:6px; border:1px solid #ffcc80;">';
+    unrecognized.forEach(function(l){
+      html += '<div style="font-family:monospace;">• ' + l.replace(/</g,'&lt;') + '</div>';
+    });
+    html += '</div>';
+    html += '<div style="font-size:.7rem; color:#6d4c41; margin-top:6px;">Für echte Medikamente diese Zeilen korrigieren oder über <strong>➕ Manuell hinzufügen</strong> ergänzen.</div>';
+    html += '</div>';
+  }
 
   // Aktions-Leiste + manuelle Eingabe
   html += '<div style="display:flex; gap:10px; align-items:center; margin-top:10px; flex-wrap:wrap;">';
@@ -2775,9 +2803,11 @@ window.ckdMedTextChange = function(text) {
   if (!resEl) return;
 
   // PRIMÄR: Bestandsaufnahme als BMP-Tabelle (keine Empfehlung!)
-  var parsed = ckdParseCurrentMeds(text);
+  var result = ckdParseCurrentMeds(text);
+  var parsed = result.recognized || [];
+  var unrec = result.unrecognized || [];
 
-  if (!parsed.length) {
+  if (!parsed.length && !unrec.length && !window.ckdMedManualRows.length) {
     resEl.style.display = 'block';
     resEl.style.background = '#fff8e1';
     resEl.style.borderColor = '#ffe082';
@@ -2786,7 +2816,7 @@ window.ckdMedTextChange = function(text) {
     return;
   }
 
-  var html = ckdRenderCurrentMedsTable(parsed);
+  var html = ckdRenderCurrentMedsTable(parsed, unrec);
   html += '<div style="font-size:.7rem; color:#78909c; margin-top:10px; padding-top:8px; border-top:1px dashed #c8e6c9;">Für eGFR-adaptierte Dosis-Empfehlung &amp; Kontraindikations-Check: <a href="#" onclick="window.switchToolTab&&window.switchToolTab(\'medcheck\'); return false;" style="color:#2e7d32; text-decoration:underline; font-weight:600;">Medikationscheck-Tab öffnen</a></div>';
 
   resEl.style.display = 'block';
@@ -13300,31 +13330,48 @@ window.mcBuildDosingHtmlFromText = function(text, egfrInput, dialysisMode) {
 };
 
 // Findet den ersten in einem Text genannten Wirkstoff aus MC_DOSING.
-// Gibt { name, brand, matchedToken } zurück oder null.
+// Gibt { name, brand, matchedTokens } zurück (matchedTokens als Array) oder null.
+// PASS 1: Kombi-Präparate zuerst (sonst matcht 'Valsartan' vor 'Sacubitril/Valsartan').
+// PASS 2: Einzel-Wirkstoffe.
 window.mcMatchFirstDrug = function(text) {
   var lower = (text || '').toLowerCase();
   if (!lower.trim()) return null;
-  for (var i = 0; i < MC_DOSING.length; i++) {
-    var drug = MC_DOSING[i];
+
+  function tryMatch(drug, onlyCombo){
+    var isCombo = drug.name && drug.name.indexOf('/') >= 0;
+    if (onlyCombo && !isCombo) return null;
+    if (!onlyCombo && isCombo) return null;
     // Name
     if (drug.name) {
       var n = drug.name.toLowerCase();
-      if (n.indexOf('/') >= 0) {
+      if (isCombo) {
         var parts = n.split('/').map(function(p){return p.trim();}).filter(function(p){return p.length > 3;});
         if (parts.length && parts.every(function(p){ return lower.indexOf(p) >= 0; })) {
-          return { name: drug.name, brand: drug.brand || '', matchedToken: parts[0] };
+          return { name: drug.name, brand: drug.brand || '', matchedTokens: parts };
         }
       } else if (n.length > 3 && lower.indexOf(n) >= 0) {
-        return { name: drug.name, brand: drug.brand || '', matchedToken: n };
+        return { name: drug.name, brand: drug.brand || '', matchedTokens: [n] };
       }
     }
     // Brand
     if (drug.brand) {
       var bt = drug.brand.replace(/®/g,'').toLowerCase().split(/\//).map(function(t){return t.trim();}).filter(function(t){return t.length > 3;});
       for (var j = 0; j < bt.length; j++) {
-        if (lower.indexOf(bt[j]) >= 0) return { name: drug.name, brand: drug.brand || '', matchedToken: bt[j] };
+        if (lower.indexOf(bt[j]) >= 0) return { name: drug.name, brand: drug.brand || '', matchedTokens: [bt[j]] };
       }
     }
+    return null;
+  }
+
+  // PASS 1: Kombis
+  for (var i = 0; i < MC_DOSING.length; i++) {
+    var r = tryMatch(MC_DOSING[i], true);
+    if (r) return r;
+  }
+  // PASS 2: Singles
+  for (var k = 0; k < MC_DOSING.length; k++) {
+    var r2 = tryMatch(MC_DOSING[k], false);
+    if (r2) return r2;
   }
   return null;
 };
