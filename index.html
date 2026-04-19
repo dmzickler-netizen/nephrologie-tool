@@ -2308,11 +2308,14 @@ function parseLabText(text) {
   // terms = Array von Begriff-Regex-Strings (alternativ verbunden)
   function lax(terms, allowNeg) {
     var sign = allowNeg ? '-?' : '';
+    // Wenn allowNeg: Minus NICHT als Separator akzeptieren, sonst schluckt
+    // der Separator das Vorzeichen der Zahl (z.B. Base Excess -7).
+    var sep  = allowNeg ? '[:=*]' : '[:=*\\-]';
     return new RegExp(
       '\\b(?:' + terms.join('|') + ')\\b' +
       '(?:\\s*\\([^)]{1,40}\\))?' +                             // (descriptor)
       '(?:\\s*[,;]\\s*[\\wäöüÄÖÜß][\\wäöüÄÖÜß\\.\\-\\s]{0,25})?' + // , gesamt / , anorg.
-      '\\s*[:=*\\-]?\\s*' +
+      '\\s*' + sep + '?\\s*' +
       '(' + sign + '\\d+\\.?\\d*)',
       'i'
     );
