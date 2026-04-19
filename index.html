@@ -1532,15 +1532,15 @@ window.goHome = function(e){
         <div class="lab-ocr-row">
           <div class="lab-ocr-icon">📷</div>
           <div class="lab-ocr-text">
-            <div class="lab-ocr-title">Laborbefund einlesen — Bild (OCR)</div>
-            <div class="lab-ocr-sub"><strong>1.</strong> Klick hier (aktiviert Strg+V) · <strong>2.</strong> Strg+V drücken — Bild aus Zwischenablage wird erkannt · <strong>oder:</strong> Drag-and-Drop / Datei-Knopf unten. Erkennt Krea, eGFR, uACR, Hb, Ferritin, K⁺, HCO₃, PTH, Phosphat, Ca, HbA1c, LDL, Harnsäure u.a.</div>
+            <div class="lab-ocr-title">Laborbefund einlesen — Bild(er) OCR</div>
+            <div class="lab-ocr-sub"><strong>1.</strong> Klick hier (aktiviert Strg+V) · <strong>2.</strong> Strg+V drücken — Bild aus Zwischenablage wird erkannt · <strong>oder:</strong> Drag-and-Drop <em>(auch mehrere Bilder gleichzeitig!)</em> / Datei-Knopf unten. Erkennt Krea, eGFR, uACR, Hb, Ferritin, K⁺, HCO₃, PTH, Phosphat, Ca, HbA1c, LDL, Harnsäure u.a.</div>
             <div class="lab-ocr-privacy">🔒 100 % lokal — Bild verlässt diesen Browser nicht. Personenbezogene Daten trotzdem vorher überdecken.</div>
           </div>
         </div>
         <div style="margin-top:10px;">
-          <button onclick="event.stopPropagation(); document.getElementById('lab-ocr-file').click();" style="padding:6px 14px; background:#1565c0; color:#fff; border:none; border-radius:8px; font-size:.78rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">📁 Datei wählen</button>
+          <button onclick="event.stopPropagation(); document.getElementById('lab-ocr-file').click();" style="padding:6px 14px; background:#1565c0; color:#fff; border:none; border-radius:8px; font-size:.78rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">📁 Datei(en) wählen</button>
         </div>
-        <input type="file" id="lab-ocr-file" accept="image/*" style="display:none;" onchange="window.ckdLabOcrHandle&&window.ckdLabOcrHandle(this.files[0]);">
+        <input type="file" id="lab-ocr-file" accept="image/*" multiple style="display:none;" onchange="window.ckdLabOcrHandle&&window.ckdLabOcrHandle(this.files);">
         <div id="lab-ocr-status"></div>
         <div id="lab-ocr-results"></div>
       </div>
@@ -2436,10 +2436,22 @@ function renderResults(filled) {
 }
 
 // ── HANDLE FILE ───────────────────────────────────────────────
-window.ckdLabOcrHandle = function(file) {
-  if (!file) return;
-  if (!file.type || file.type.indexOf('image') !== 0) {
-    setStatus('error', '❌ Bitte ein Bild (PNG, JPG, etc.) hochladen.');
+window.ckdLabOcrHandle = function(fileOrList) {
+  // Normalisieren: einzelner File → [file], FileList → Array
+  var files = [];
+  if (!fileOrList) return;
+  if (fileOrList.length !== undefined && fileOrList.item) {
+    // FileList
+    for (var i = 0; i < fileOrList.length; i++) files.push(fileOrList[i]);
+  } else if (Array.isArray(fileOrList)) {
+    files = fileOrList.slice();
+  } else {
+    files = [fileOrList];
+  }
+  // Nur Bilder
+  files = files.filter(function(f){ return f && f.type && f.type.indexOf('image') === 0; });
+  if (!files.length) {
+    setStatus('error', '❌ Bitte mindestens ein Bild (PNG, JPG, etc.) hochladen.');
     return;
   }
 
@@ -2447,27 +2459,39 @@ window.ckdLabOcrHandle = function(file) {
   if (resEl) resEl.style.display = 'none';
 
   loadTesseract().then(function(){
-    setStatus('loading', '⏳ Bild wird gelesen — kann 5–15 Sekunden dauern…');
+    setStatus('loading', '⏳ ' + files.length + ' Bild' + (files.length>1?'er':'') + ' werden gelesen…');
 
-    return Tesseract.recognize(file, 'deu', {
-      logger: function(m) {
-        if (m.status === 'recognizing text') {
-          var pct = Math.round((m.progress||0) * 100);
-          setStatus('loading', '⏳ OCR läuft… ' + pct + '%');
-        }
-      }
+    // Sequenziell alle Bilder per OCR lesen und Texte sammeln
+    var texts = [];
+    var chain = Promise.resolve();
+    files.forEach(function(file, idx){
+      chain = chain.then(function(){
+        var prefix = '⏳ Bild ' + (idx+1) + ' von ' + files.length + ' — ';
+        setStatus('loading', prefix + 'OCR läuft…');
+        return Tesseract.recognize(file, 'deu', {
+          logger: function(m) {
+            if (m.status === 'recognizing text') {
+              var pct = Math.round((m.progress||0) * 100);
+              setStatus('loading', prefix + pct + '%');
+            }
+          }
+        }).then(function(result){
+          var text = (result && result.data && result.data.text) || '';
+          if (text.trim()) texts.push(text);
+        });
+      });
     });
-  }).then(function(result){
-    var text = (result && result.data && result.data.text) || '';
-    if (!text.trim()) {
-      setStatus('error', '⚠️ Kein Text im Bild erkannt. Bildqualität prüfen.');
+    return chain.then(function(){ return texts.join('\n\n--- nächstes Bild ---\n\n'); });
+  }).then(function(combinedText){
+    if (!combinedText || !combinedText.trim()) {
+      setStatus('error', '⚠️ Kein Text in den Bildern erkannt. Bildqualität prüfen.');
       return;
     }
-    var values = parseLabText(text);
+    var values = parseLabText(combinedText);
     var filled = fillFields(values);
-    setStatus('success', '✅ Bild erfolgreich gelesen.');
+    var imgCount = (combinedText.match(/--- nächstes Bild ---/g) || []).length + 1;
+    setStatus('success', '✅ ' + imgCount + ' Bild' + (imgCount>1?'er':'') + ' gelesen, ' + filled.length + ' Wert' + (filled.length!==1?'e':'') + ' übernommen.');
     renderResults(filled);
-    // File-Input zurücksetzen für erneute Nutzung
     var fi = document.getElementById('lab-ocr-file');
     if (fi) fi.value = '';
   }).catch(function(err){
@@ -2491,8 +2515,8 @@ function initDropZone() {
   });
   zone.addEventListener('drop', function(e){
     var dt = e.dataTransfer;
-    if (dt && dt.files && dt.files[0]) {
-      window.ckdLabOcrHandle(dt.files[0]);
+    if (dt && dt.files && dt.files.length) {
+      window.ckdLabOcrHandle(dt.files);
     }
   }, false);
 
@@ -8547,29 +8571,35 @@ window.gichtAutoImport = function() {
     <div class="row">
       <div class="icon">📷</div>
       <div class="txt">
-        <div class="title">Laborbefund einlesen — Bild (OCR)</div>
-        <div class="sub">Drag-and-Drop · Strg+V · oder Datei wählen. Erkennt Na⁺, K⁺, Cl⁻, HCO₃⁻, pH, pCO₂, Glukose, Harnstoff, Osm, Laktat, Albumin sowie Urin-Na/K/Osm/Harnsäure.</div>
+        <div class="title">Laborbefund einlesen — Bild(er) OCR</div>
+        <div class="sub">Drag-and-Drop <em>(auch mehrere Bilder gleichzeitig)</em> · Strg+V · oder Datei(en) wählen. Erkennt Na⁺, K⁺, Cl⁻, HCO₃⁻, pH, pCO₂, Glukose, Harnstoff, Osm, Laktat, Albumin sowie Urin-Na/K/Osm/Harnsäure.</div>
         <div class="privacy">🔒 100 % lokal — Bild verlässt diesen Browser nicht.</div>
       </div>
-      <button type="button" onclick="document.getElementById('elek-ocr-file').click()" style="padding:6px 14px; background:#1565c0; color:#fff; border:none; border-radius:8px; font-size:.78rem; font-weight:600; cursor:pointer; white-space:nowrap;">📁 Datei wählen</button>
+      <button type="button" onclick="document.getElementById('elek-ocr-file').click()" style="padding:6px 14px; background:#1565c0; color:#fff; border:none; border-radius:8px; font-size:.78rem; font-weight:600; cursor:pointer; white-space:nowrap;">📁 Datei(en) wählen</button>
     </div>
-    <input type="file" id="elek-ocr-file" accept="image/*" style="display:none;" onchange="window.elekLabOcrHandle&&window.elekLabOcrHandle(this.files[0]);">
+    <input type="file" id="elek-ocr-file" accept="image/*" multiple style="display:none;" onchange="window.elekLabOcrHandle&&window.elekLabOcrHandle(this.files);">
     <div id="elek-ocr-status"></div>
     <div id="elek-ocr-results"></div>
   </div>
 
   <script>
   (function(){
-    window.elekLabOcrHandle = function(file){
-      if (!file) return;
+    window.elekLabOcrHandle = function(fileOrList){
       var setS = function(cls, msg){
         var el = document.getElementById('elek-ocr-status');
         if (el){ el.className = cls; el.innerHTML = msg; }
       };
-      if (!file.type || file.type.indexOf('image') !== 0){
-        setS('error', '❌ Bitte ein Bild (PNG, JPG, …) hochladen.');
-        return;
+      if (!fileOrList) return;
+      var files = [];
+      if (fileOrList.length !== undefined && fileOrList.item) {
+        for (var i = 0; i < fileOrList.length; i++) files.push(fileOrList[i]);
+      } else if (Array.isArray(fileOrList)) {
+        files = fileOrList.slice();
+      } else {
+        files = [fileOrList];
       }
+      files = files.filter(function(f){ return f && f.type && f.type.indexOf('image') === 0; });
+      if (!files.length){ setS('error', '❌ Bitte mindestens ein Bild (PNG, JPG, …) hochladen.'); return; }
       if (typeof window.ocrLoadTesseract !== 'function'){
         setS('error', '❌ OCR-Engine nicht verfügbar. Seite neu laden.');
         return;
@@ -8578,38 +8608,48 @@ window.gichtAutoImport = function() {
       if (resEl) resEl.style.display = 'none';
 
       window.ocrLoadTesseract(function(m){ setS('loading', m); }).then(function(){
-        setS('loading', '⏳ Bild wird gelesen — kann 5–15 Sekunden dauern…');
-        return Tesseract.recognize(file, 'deu', {
-          logger: function(m){
-            if (m.status === 'recognizing text'){
-              var pct = Math.round((m.progress||0)*100);
-              setS('loading', '⏳ OCR läuft… ' + pct + '%');
-            }
-          }
+        setS('loading', '⏳ ' + files.length + ' Bild' + (files.length>1?'er':'') + ' werden gelesen…');
+        var texts = [];
+        var chain = Promise.resolve();
+        files.forEach(function(file, idx){
+          chain = chain.then(function(){
+            var prefix = '⏳ Bild ' + (idx+1) + ' von ' + files.length + ' — ';
+            setS('loading', prefix + 'OCR läuft…');
+            return Tesseract.recognize(file, 'deu', {
+              logger: function(m){
+                if (m.status === 'recognizing text'){
+                  var pct = Math.round((m.progress||0)*100);
+                  setS('loading', prefix + pct + '%');
+                }
+              }
+            }).then(function(result){
+              var text = (result && result.data && result.data.text) || '';
+              if (text.trim()) texts.push(text);
+            });
+          });
         });
-      }).then(function(result){
-        var text = (result && result.data && result.data.text) || '';
-        if (!text.trim()){ setS('error', '⚠️ Kein Text im Bild erkannt. Bildqualität prüfen.'); return; }
+        return chain.then(function(){ return texts.join('\n\n--- nächstes Bild ---\n\n'); });
+      }).then(function(combinedText){
+        if (!combinedText || !combinedText.trim()){ setS('error', '⚠️ Kein Text erkannt. Bildqualität prüfen.'); return; }
         if (typeof window.parseLabText !== 'function' || typeof window.fillFields !== 'function'){
           setS('error', '❌ Parser nicht verfügbar.'); return;
         }
-        var values = window.parseLabText(text);
+        var values = window.parseLabText(combinedText);
         var filled = window.fillFields(values);
-        // Relevant für Elektrolyte/BGA — aus allen gefüllten herausfiltern
         var keep = ['Na⁺','K⁺','Cl⁻','HCO₃','pH','pCO₂','Glukose','Harnstoff','Osm','Laktat','Albumin','U-Na','U-K','U-Osm','U-Harnsäure'];
         var relev = filled.filter(function(f){ return keep.indexOf(f.label) >= 0; });
+        var imgCount = (combinedText.match(/--- nächstes Bild ---/g) || []).length + 1;
         if (resEl){
           resEl.style.display = 'block';
           if (relev.length){
-            resEl.innerHTML = '<strong>✅ Übernommen (' + relev.length + '):</strong> ' +
+            resEl.innerHTML = '<strong>✅ ' + imgCount + ' Bild' + (imgCount>1?'er':'') + ' gelesen — ' + relev.length + ' Werte übernommen:</strong> ' +
               relev.map(function(f){ return '<span class="pill">' + f.label + ': <b>' + f.value + '</b></span>'; }).join(' ');
-            setS('success', '✅ Bild eingelesen.');
+            setS('success', '✅ ' + imgCount + ' Bild' + (imgCount>1?'er':'') + ' eingelesen.');
           } else {
             resEl.innerHTML = '<em>Keine relevanten Elektrolyt-/BGA-Werte erkannt — bitte Bildqualität prüfen oder manuell eingeben.</em>';
             setS('error', '⚠️ Keine passenden Werte gefunden.');
           }
         }
-        // Trigger Re-Calc beider Subsections
         if (typeof hypoCalc === 'function') { try { hypoCalc(); } catch(e){} }
         if (typeof sabWorkup === 'function') { try { sabWorkup(); } catch(e){} }
         var fi = document.getElementById('elek-ocr-file'); if (fi) fi.value = '';
@@ -8634,7 +8674,7 @@ window.gichtAutoImport = function() {
       });
       zone.addEventListener('drop', function(e){
         var dt = e.dataTransfer;
-        if (dt && dt.files && dt.files[0]) window.elekLabOcrHandle(dt.files[0]);
+        if (dt && dt.files && dt.files.length) window.elekLabOcrHandle(dt.files);
       }, false);
 
       // Strg+V Paste — nur wenn Elektrolyte-Tab aktiv
