@@ -13923,11 +13923,12 @@ function generateTexts(age, sex, scr, cys, uacr, bpSys, bpDia, extraInfo,
       'Pulmonologisch': 'Pulmologisch',
       'Neurologisch': 'Neurologisch',
       'Endokrin/Stoffwechsel': 'Endokrinologisch',
-      'Rheumatologisch/Orthopädisch': 'Orthopädisch'
-      // Hämatologisch, Onkologisch, Psychiatrisch, Urologisch/Gynäkologisch,
-      // Infektiös, Dermatologisch → Sonstiges
+      'Rheumatologisch/Orthopädisch': 'Orthopädisch',
+      'Onkologisch': 'Onkologisch',
+      'Urologisch/Gynäkologisch': 'Urologisch/Gynäkologisch'
+      // Hämatologisch, Psychiatrisch, Infektiös, Dermatologisch → Sonstiges
     };
-    const order = ['Renal','Kardial','Gastroenterologisch','Pulmologisch','Endokrinologisch','Orthopädisch','Neurologisch','Sonstiges'];
+    const order = ['Renal','Kardial','Gastroenterologisch','Pulmologisch','Endokrinologisch','Orthopädisch','Neurologisch','Onkologisch','Urologisch/Gynäkologisch','Sonstiges'];
     const groups = {};
     order.forEach(k => { groups[k] = []; });
 
