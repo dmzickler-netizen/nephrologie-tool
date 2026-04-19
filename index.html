@@ -2306,13 +2306,16 @@ function parseLabText(text) {
 // ── FIELD MAPPER ──────────────────────────────────────────────
 // Mappt geparste Werte auf DOM-IDs in allen Tabs
 // Mappt geparste Werte auf DOM-IDs — Hidden-Bridge-Felder + sichtbare Felder
+// Jeder extrahierte Wert wird in ALLE Tabs propagiert, die dieses Feld abfragen.
+// Eingangs-Felder (wo der User selbst eintippt) dürfen nicht überschrieben
+// werden, wenn sie schon gefüllt sind — das ist in fillFields() geregelt.
 var FIELD_MAP = {
-  creatinine: ['creatinine'],
+  creatinine: ['creatinine','lip-creatinine','mc-krea'],
   cystatinc:  ['cystatinc'],
-  uacr:       ['uacr'],
-  kalium:     ['kalium','hypo-k','sab-k'],
-  bicarb:     ['bicarb','mbd2-bicarb','sab-hco3'],
-  ph:         ['ph','mbd2-ph','sab-ph'],
+  uacr:       ['uacr','diab-uacr','htn-uacr'],
+  kalium:     ['kalium','hypo-k','sab-k','diab-kalium','htn-kalium'],
+  bicarb:     ['bicarb','mbd2-bicarb','sab-hco3','aki-hco3'],
+  ph:         ['ph','mbd2-ph','sab-ph','aki-ph'],
   hb:         ['hb','mbd2-hb'],
   ferritin:   ['ferritin','mbd2-ferritin'],
   tsat:       ['tsat','mbd2-tsat'],
@@ -2322,13 +2325,14 @@ var FIELD_MAP = {
   vitd:       ['vitd','mbd2-vitd'],
   hba1c:      ['diab-hba1c'],
   ldl:        ['lip-ldl-input'],
-  hdl:        ['lip-hdl'],
+  hdl:        ['lip-hdl','htn-hdl'],
   tg:         ['lip-tg'],
   harnsaure:  ['gicht-hs'],
   harnstoff:  ['hypo-hst'],
-  bp_sys:     ['bp_sys'],
-  bp_dia:     ['bp_dia'],
-  age:        ['age'],
+  bp_sys:     ['bp_sys','htn-sys'],
+  bp_dia:     ['bp_dia','htn-dia'],
+  age:        ['age','aki-age','lip-age','diab-age','htn-age','vhf-age','tah-age','mc-age'],
+  egfr:       ['mc-egfr','diab-egfr','htn-egfr','gicht-egfr'],
   // Elektrolyte & Säure-Basen
   na:             ['hypo-na','sab-na'],
   cl:             ['sab-cl'],
@@ -2379,6 +2383,27 @@ function fillFields(values) {
   if (typeof window.lipCalculate === 'function')   { try { window.lipCalculate({silent:true}); } catch(e){} }
   if (typeof window.gichtCalc === 'function')      { try { window.gichtCalc({silent:true}); } catch(e){} }
   if (typeof window.mcRunCheck === 'function')     { try { window.mcRunCheck(); } catch(e){} }
+
+  // eGFR-Propagation: CKD berechnet eGFR aus Kreatinin → in alle anderen
+  // Tabs spiegeln, damit sie nicht leer bleiben, wenn der User gar keinen
+  // expliziten eGFR-Wert im Labor hatte.
+  try {
+    var ev = document.getElementById('egfr-result-val');
+    if (ev && ev.textContent) {
+      var egfrVal = parseFloat(ev.textContent);
+      if (!isNaN(egfrVal) && egfrVal > 0) {
+        ['mc-egfr','diab-egfr','htn-egfr','gicht-egfr'].forEach(function(id){
+          var t = document.getElementById(id);
+          if (t && !t.value) {
+            t.value = Math.round(egfrVal);
+            t.dispatchEvent(new Event('input', {bubbles:true}));
+            t.dispatchEvent(new Event('change', {bubbles:true}));
+          }
+        });
+      }
+    }
+  } catch(e){}
+
   return filled;
 }
 
