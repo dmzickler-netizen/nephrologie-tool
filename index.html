@@ -1381,12 +1381,19 @@ label .lip-optional {
      SHARED HEADER
      ============================================================ -->
 <header class="shared-header">
-  <img class="logo" src="img/kidney-logo.jpg" alt="Nephro-Tool Logo">
-  <div>
-    <h1>Nephro-Tool</h1>
-    <p>CKD · An&auml;mie/MBD · Lipide · Diabetes · Hypertonie · VHF · Antiaggregation · Antikoagulation · AKI · Gicht</p>
-  </div>
+  <a href="#" onclick="window.goHome&&window.goHome(event);" class="home-link" title="Zum Anfang" style="display:flex; align-items:center; gap:16px; text-decoration:none; color:inherit; cursor:pointer;">
+    <img class="logo" src="img/kidney-logo.jpg" alt="Nephro-Tool">
+    <h1 style="margin:0;">Nephro-Tool</h1>
+  </a>
 </header>
+<script>
+window.goHome = function(e){
+  if (e && e.preventDefault) e.preventDefault();
+  if (typeof window.switchToolTab === 'function') { try { window.switchToolTab('ckd'); } catch(_){} }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  return false;
+};
+</script>
 
 <!-- ============================================================
      NAV TABS
