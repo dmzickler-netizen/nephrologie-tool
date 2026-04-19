@@ -2166,6 +2166,14 @@ function parseLabText(text) {
   v.hba1c = find([lax(['HbA1c'])]);
   if (v.hba1c !== null && (v.hba1c < 3 || v.hba1c > 20)) v.hba1c = null;
 
+  // Lp(a) — mg/dL oder nmol/L. Wert wird nur übernommen, die Einheit
+  // bleibt beim aktuellen Toggle-Stand im Lipid-Tab.
+  v.lpa = find([
+    /\bLp\s*\(?\s*a\s*\)?(?:\s*\([^)]{1,30}\))?\s*[:=*]?\s*(\d+\.?\d*)/i,
+    /\bLipoprotein\s*\(?\s*a\s*\)?(?:\s*\([^)]{1,30}\))?\s*[:=*]?\s*(\d+\.?\d*)/i
+  ]);
+  if (v.lpa !== null && (v.lpa < 0.5 || v.lpa > 1000)) v.lpa = null;
+
   // LDL — explizit, damit nicht "Cholesterin" → LDL gemappt wird
   v.ldl = find([
     /\bLDL(?:[\s\-]?Cholesterin)?(?:\s*\([^)]{1,40}\))?\s*[:=*]?\s*(\d+\.?\d*)/i
@@ -2327,6 +2335,7 @@ var FIELD_MAP = {
   ldl:        ['lip-ldl-input'],
   hdl:        ['lip-hdl','htn-hdl'],
   tg:         ['lip-tg'],
+  lpa:        ['lip-lpa'],
   harnsaure:  ['gicht-hs'],
   harnstoff:  ['hypo-hst'],
   bp_sys:     ['bp_sys','htn-sys'],
@@ -2351,7 +2360,7 @@ var FIELD_LABELS = {
   creatinine:'Krea', cystatinc:'CysC', uacr:'uACR', kalium:'K⁺', bicarb:'HCO₃', ph:'pH',
   bex:'BE', hb:'Hb', ferritin:'Ferritin', tsat:'TSAT', pth:'PTH', phosphat:'Phosphat',
   calcium:'Ca', vitd:'Vit D', hba1c:'HbA1c', ldl:'LDL', hdl:'HDL', chol:'Chol gesamt',
-  tg:'TG', harnsaure:'Harnsäure', harnstoff:'Harnstoff',
+  tg:'TG', lpa:'Lp(a)', harnsaure:'Harnsäure', harnstoff:'Harnstoff',
   bp_sys:'RR sys', bp_dia:'RR dia', age:'Alter',
   na:'Na⁺', cl:'Cl⁻', glucose:'Glukose', pco2:'pCO₂', laktat:'Laktat',
   albumin_plasma:'Albumin', osm:'Osm',
