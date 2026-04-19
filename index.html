@@ -2034,6 +2034,11 @@ function loadTesseract(progressCb) {
 }
 // Global verfügbar für andere OCR-Nutzer (z.B. Medikationscheck)
 window.ocrLoadTesseract = loadTesseract;
+// Für Elektrolyte-Tab und weitere Verwender exponieren
+setTimeout(function(){
+  if (typeof parseLabText === 'function') window.parseLabText = parseLabText;
+  if (typeof fillFields === 'function') window.fillFields = fillFields;
+}, 0);
 
 // ── PARSER ────────────────────────────────────────────────────
 // Whitelist-Ansatz: Nur bekannte Laborbegriffe → Zahl daneben
@@ -2210,6 +2215,91 @@ function parseLabText(text) {
   ]);
   if (v.age !== null && (v.age < 1 || v.age > 120)) v.age = null;
 
+  // === ELEKTROLYTE & SÄURE-BASEN ================================
+  // Serum- vs Urin-Zeilen trennen, damit z.B. Urin-Na nicht in Serum-Na landet.
+  var rawNorm = text.replace(/[\u00A0\u2007\u202F]/g, ' ').replace(/,/g, '.');
+  var linesRaw = rawNorm.split(/\n/);
+  var isUrineLine = function(l){ return /urin|sammelurin|\bu[-\s]?(?:na|k|osm|chlorid|kalium|natrium|harns|kreat)/i.test(l); };
+  var serumText = linesRaw.filter(function(l){ return !isUrineLine(l); }).join(' ').replace(/\s+/g,' ');
+  var urineText = linesRaw.filter(isUrineLine).join(' ').replace(/\s+/g,' ');
+
+  function findIn(regexes, txt) {
+    for (var i = 0; i < regexes.length; i++) {
+      var m = txt.match(regexes[i]);
+      if (m && m[1]) { var x = parseFloat(m[1]); if (!isNaN(x) && isFinite(x)) return x; }
+    }
+    return null;
+  }
+
+  // Serum Na⁺ (110–170 mmol/l plausibel)
+  v.na = findIn([
+    /\bNa(?:\s*\+)?\s*[:=*]?\s*(\d{2,3}(?:\.\d+)?)\s*mmol\/l/i,
+    /\bNatrium(?:\s*\([^)]{1,30}\))?\s*[:=*]?\s*(\d{2,3}(?:\.\d+)?)/i
+  ], serumText);
+  if (v.na !== null && (v.na < 100 || v.na > 180)) v.na = null;
+
+  // Serum Cl⁻ (80–130)
+  v.cl = findIn([
+    /\bCl(?:\s*-)?\s*[:=*]?\s*(\d{2,3}(?:\.\d+)?)\s*mmol\/l/i,
+    /\bChlorid(?:\s*\([^)]{1,30}\))?\s*[:=*]?\s*(\d{2,3}(?:\.\d+)?)/i
+  ], serumText);
+  if (v.cl !== null && (v.cl < 70 || v.cl > 130)) v.cl = null;
+
+  // Glukose/Blutzucker (mg/dl: 30–800)
+  v.glucose = findIn([
+    /\b(?:Glukose|Glucose|Glc|Blutzucker|BZ)(?:\s*\([^)]{1,30}\))?\s*[:=*]?\s*(\d+\.?\d*)/i
+  ], serumText);
+  if (v.glucose !== null && (v.glucose < 20 || v.glucose > 1500)) v.glucose = null;
+
+  // pCO2 (BGA, 10–150)
+  v.pco2 = findIn([ /\bpCO[₂2](?:\s*\([^)]{1,30}\))?\s*[:=*]?\s*(\d+\.?\d*)/i ], t);
+  if (v.pco2 !== null && (v.pco2 < 10 || v.pco2 > 150)) v.pco2 = null;
+
+  // Laktat (0.2–30 mmol/l)
+  v.laktat = findIn([
+    /\b(?:Laktat|Lactat|Lactate)(?:\s*\([^)]{1,30}\))?\s*[:=*]?\s*(\d+\.?\d*)/i
+  ], serumText);
+  if (v.laktat !== null && (v.laktat < 0.2 || v.laktat > 30)) v.laktat = null;
+
+  // Plasma-Albumin (g/l: 15–60)
+  v.albumin_plasma = findIn([
+    /\bAlbumin(?:\s*\([^)]{1,30}\))?\s*[:=*]?\s*(\d+\.?\d*)\s*g\/l/i,
+    /\bAlbumin(?:\s*\([^)]{1,30}\))?\s*[:=*]?\s*(\d+\.?\d*)\b(?!\s*\/)/i
+  ], serumText);
+  if (v.albumin_plasma !== null && (v.albumin_plasma < 10 || v.albumin_plasma > 80)) v.albumin_plasma = null;
+
+  // Serum-Osmolalität (250–400 mOsm/kg)
+  v.osm = findIn([
+    /\bOsmo(?:lalit|larit)[aä]t(?:\s*\([^)]{1,30}\))?\s*[:=*]?\s*(\d+\.?\d*)/i
+  ], serumText);
+  if (v.osm !== null && (v.osm < 200 || v.osm > 400)) v.osm = null;
+
+  // Urin-Na⁺
+  v.urin_na = findIn([
+    /\b(?:Urin[-\s]?Na\+?|U[-\s]?Na\+?|Urin[-\s]?Natrium)(?:\s*\([^)]{1,30}\))?\s*[:=*]?\s*(\d+\.?\d*)/i,
+    /\bNa(?:\s*\+)?\s*[:=*]?\s*(\d+\.?\d*)/i
+  ], urineText);
+  if (v.urin_na !== null && (v.urin_na < 1 || v.urin_na > 400)) v.urin_na = null;
+
+  // Urin-K⁺
+  v.urin_k = findIn([
+    /\b(?:Urin[-\s]?K\+?|U[-\s]?K\+?|Urin[-\s]?Kalium)(?:\s*\([^)]{1,30}\))?\s*[:=*]?\s*(\d+\.?\d*)/i,
+    /\bK(?:alium|\s*\+)?\s*[:=*]?\s*(\d+\.?\d*)/i
+  ], urineText);
+  if (v.urin_k !== null && (v.urin_k < 1 || v.urin_k > 300)) v.urin_k = null;
+
+  // Urin-Osmolalität
+  v.urin_osm = findIn([
+    /\b(?:Urin[-\s]?Osm|U[-\s]?Osm|Osm)(?:olalit[aä]t|olarit[aä]t|olality)?(?:\s*\([^)]{1,30}\))?\s*[:=*]?\s*(\d+\.?\d*)/i
+  ], urineText);
+  if (v.urin_osm !== null && (v.urin_osm < 30 || v.urin_osm > 1500)) v.urin_osm = null;
+
+  // Urin-Harnsäure
+  v.urin_harnsaure = findIn([
+    /\b(?:Urin[-\s]?Harns[äa]ure|U[-\s]?Harns[äa]ure|Harns[äa]ure)(?:\s*\([^)]{1,30}\))?\s*[:=*]?\s*(\d+\.?\d*)/i
+  ], urineText);
+  if (v.urin_harnsaure !== null && (v.urin_harnsaure < 1 || v.urin_harnsaure > 200)) v.urin_harnsaure = null;
+
   return v;
 }
 
@@ -2220,9 +2310,9 @@ var FIELD_MAP = {
   creatinine: ['creatinine'],
   cystatinc:  ['cystatinc'],
   uacr:       ['uacr'],
-  kalium:     ['kalium'],
-  bicarb:     ['bicarb','mbd2-bicarb'],
-  ph:         ['ph','mbd2-ph'],
+  kalium:     ['kalium','hypo-k','sab-k'],
+  bicarb:     ['bicarb','mbd2-bicarb','sab-hco3'],
+  ph:         ['ph','mbd2-ph','sab-ph'],
   hb:         ['hb','mbd2-hb'],
   ferritin:   ['ferritin','mbd2-ferritin'],
   tsat:       ['tsat','mbd2-tsat'],
@@ -2235,9 +2325,22 @@ var FIELD_MAP = {
   hdl:        ['lip-hdl'],
   tg:         ['lip-tg'],
   harnsaure:  ['gicht-hs'],
+  harnstoff:  ['hypo-hst'],
   bp_sys:     ['bp_sys'],
   bp_dia:     ['bp_dia'],
-  age:        ['age']
+  age:        ['age'],
+  // Elektrolyte & Säure-Basen
+  na:             ['hypo-na','sab-na'],
+  cl:             ['sab-cl'],
+  glucose:        ['hypo-glu'],
+  pco2:           ['sab-pco2'],
+  laktat:         ['sab-lak'],
+  albumin_plasma: ['sab-alb'],
+  osm:            ['hypo-osm-mess'],
+  urin_na:        ['hypo-una'],
+  urin_k:         ['hypo-uk'],
+  urin_osm:       ['hypo-uosm'],
+  urin_harnsaure: ['hypo-uha']
 };
 
 var FIELD_LABELS = {
@@ -2245,7 +2348,10 @@ var FIELD_LABELS = {
   bex:'BE', hb:'Hb', ferritin:'Ferritin', tsat:'TSAT', pth:'PTH', phosphat:'Phosphat',
   calcium:'Ca', vitd:'Vit D', hba1c:'HbA1c', ldl:'LDL', hdl:'HDL', chol:'Chol gesamt',
   tg:'TG', harnsaure:'Harnsäure', harnstoff:'Harnstoff',
-  bp_sys:'RR sys', bp_dia:'RR dia', age:'Alter'
+  bp_sys:'RR sys', bp_dia:'RR dia', age:'Alter',
+  na:'Na⁺', cl:'Cl⁻', glucose:'Glukose', pco2:'pCO₂', laktat:'Laktat',
+  albumin_plasma:'Albumin', osm:'Osm',
+  urin_na:'U-Na', urin_k:'U-K', urin_osm:'U-Osm', urin_harnsaure:'U-Harnsäure'
 };
 
 function fillFields(values) {
@@ -8383,6 +8489,138 @@ window.gichtAutoImport = function() {
     <h2>⚗️ Elektrolyt- & Säure-Basen-Störungen</h2>
     <p>Hyponatriämie-Algorithmus · BGA-Auswertung · Anionenlücke · Urin-Anionenlücke</p>
   </div>
+
+  <style>
+    #elek-ocr-zone { border:2px dashed #90caf9; border-radius:12px; padding:12px 16px; background:#f5fafd; margin:0 0 14px; transition:all .2s; cursor:pointer; position:relative; }
+    #elek-ocr-zone:hover, #elek-ocr-zone.dragover { background:#e3f2fd; border-color:#1565c0; }
+    #elek-ocr-zone.dragover { transform:scale(1.005); box-shadow:0 4px 12px rgba(21,101,192,.15); }
+    #elek-ocr-zone .row { display:flex; align-items:center; gap:12px; }
+    #elek-ocr-zone .icon { font-size:1.6rem; }
+    #elek-ocr-zone .txt { flex:1; }
+    #elek-ocr-zone .title { font-size:.9rem; font-weight:700; color:#1565c0; margin-bottom:2px; }
+    #elek-ocr-zone .sub { font-size:.76rem; color:#546e7a; line-height:1.4; }
+    #elek-ocr-zone .privacy { font-size:.68rem; color:#2e7d32; font-weight:600; margin-top:3px; }
+    #elek-ocr-status { display:none; margin-top:8px; padding:8px 12px; border-radius:8px; font-size:.82rem; }
+    #elek-ocr-status.loading { display:block; background:#fff8e1; color:#e65100; border-left:3px solid #f57c00; }
+    #elek-ocr-status.success { display:block; background:#e8f5e9; color:#2e7d32; border-left:3px solid #43a047; }
+    #elek-ocr-status.error   { display:block; background:#ffebee; color:#c62828; border-left:3px solid #e53935; }
+    #elek-ocr-results { display:none; margin-top:8px; padding:8px 12px; background:#e3f2fd; border:1px solid #90caf9; border-radius:8px; font-size:.8rem; }
+    #elek-ocr-results .pill { display:inline-block; background:#fff; border:1.5px solid #b3e5fc; color:#0d47a1; padding:3px 10px; border-radius:14px; margin:2px 3px; font-size:.75rem; font-weight:600; }
+    #elek-ocr-results .pill b { color:#1565c0; font-weight:800; }
+  </style>
+
+  <div id="elek-ocr-zone">
+    <div class="row">
+      <div class="icon">📷</div>
+      <div class="txt">
+        <div class="title">Laborbefund einlesen — Bild (OCR)</div>
+        <div class="sub">Drag-and-Drop · Strg+V · oder Datei wählen. Erkennt Na⁺, K⁺, Cl⁻, HCO₃⁻, pH, pCO₂, Glukose, Harnstoff, Osm, Laktat, Albumin sowie Urin-Na/K/Osm/Harnsäure.</div>
+        <div class="privacy">🔒 100 % lokal — Bild verlässt diesen Browser nicht.</div>
+      </div>
+      <button type="button" onclick="document.getElementById('elek-ocr-file').click()" style="padding:6px 14px; background:#1565c0; color:#fff; border:none; border-radius:8px; font-size:.78rem; font-weight:600; cursor:pointer; white-space:nowrap;">📁 Datei wählen</button>
+    </div>
+    <input type="file" id="elek-ocr-file" accept="image/*" style="display:none;" onchange="window.elekLabOcrHandle&&window.elekLabOcrHandle(this.files[0]);">
+    <div id="elek-ocr-status"></div>
+    <div id="elek-ocr-results"></div>
+  </div>
+
+  <script>
+  (function(){
+    window.elekLabOcrHandle = function(file){
+      if (!file) return;
+      var setS = function(cls, msg){
+        var el = document.getElementById('elek-ocr-status');
+        if (el){ el.className = cls; el.innerHTML = msg; }
+      };
+      if (!file.type || file.type.indexOf('image') !== 0){
+        setS('error', '❌ Bitte ein Bild (PNG, JPG, …) hochladen.');
+        return;
+      }
+      if (typeof window.ocrLoadTesseract !== 'function'){
+        setS('error', '❌ OCR-Engine nicht verfügbar. Seite neu laden.');
+        return;
+      }
+      var resEl = document.getElementById('elek-ocr-results');
+      if (resEl) resEl.style.display = 'none';
+
+      window.ocrLoadTesseract(function(m){ setS('loading', m); }).then(function(){
+        setS('loading', '⏳ Bild wird gelesen — kann 5–15 Sekunden dauern…');
+        return Tesseract.recognize(file, 'deu', {
+          logger: function(m){
+            if (m.status === 'recognizing text'){
+              var pct = Math.round((m.progress||0)*100);
+              setS('loading', '⏳ OCR läuft… ' + pct + '%');
+            }
+          }
+        });
+      }).then(function(result){
+        var text = (result && result.data && result.data.text) || '';
+        if (!text.trim()){ setS('error', '⚠️ Kein Text im Bild erkannt. Bildqualität prüfen.'); return; }
+        if (typeof window.parseLabText !== 'function' || typeof window.fillFields !== 'function'){
+          setS('error', '❌ Parser nicht verfügbar.'); return;
+        }
+        var values = window.parseLabText(text);
+        var filled = window.fillFields(values);
+        // Relevant für Elektrolyte/BGA — aus allen gefüllten herausfiltern
+        var keep = ['Na⁺','K⁺','Cl⁻','HCO₃','pH','pCO₂','Glukose','Harnstoff','Osm','Laktat','Albumin','U-Na','U-K','U-Osm','U-Harnsäure'];
+        var relev = filled.filter(function(f){ return keep.indexOf(f.label) >= 0; });
+        if (resEl){
+          resEl.style.display = 'block';
+          if (relev.length){
+            resEl.innerHTML = '<strong>✅ Übernommen (' + relev.length + '):</strong> ' +
+              relev.map(function(f){ return '<span class="pill">' + f.label + ': <b>' + f.value + '</b></span>'; }).join(' ');
+            setS('success', '✅ Bild eingelesen.');
+          } else {
+            resEl.innerHTML = '<em>Keine relevanten Elektrolyt-/BGA-Werte erkannt — bitte Bildqualität prüfen oder manuell eingeben.</em>';
+            setS('error', '⚠️ Keine passenden Werte gefunden.');
+          }
+        }
+        // Trigger Re-Calc beider Subsections
+        if (typeof hypoCalc === 'function') { try { hypoCalc(); } catch(e){} }
+        if (typeof sabWorkup === 'function') { try { sabWorkup(); } catch(e){} }
+        var fi = document.getElementById('elek-ocr-file'); if (fi) fi.value = '';
+      }).catch(function(err){
+        setS('error', '❌ Fehler: ' + (err && err.message ? err.message : 'OCR fehlgeschlagen.'));
+        console.error('Elek-OCR Error:', err);
+      });
+    };
+
+    // Drag & Drop auf die Zone
+    function initZone(){
+      var zone = document.getElementById('elek-ocr-zone');
+      if (!zone) return;
+      ['dragenter','dragover','dragleave','drop'].forEach(function(ev){
+        zone.addEventListener(ev, function(e){ e.preventDefault(); e.stopPropagation(); }, false);
+      });
+      ['dragenter','dragover'].forEach(function(ev){
+        zone.addEventListener(ev, function(){ zone.classList.add('dragover'); }, false);
+      });
+      ['dragleave','drop'].forEach(function(ev){
+        zone.addEventListener(ev, function(){ zone.classList.remove('dragover'); }, false);
+      });
+      zone.addEventListener('drop', function(e){
+        var dt = e.dataTransfer;
+        if (dt && dt.files && dt.files[0]) window.elekLabOcrHandle(dt.files[0]);
+      }, false);
+
+      // Strg+V Paste — nur wenn Elektrolyte-Tab aktiv
+      document.addEventListener('paste', function(e){
+        var elTab = document.getElementById('tab-elektrolyte');
+        if (!elTab || elTab.style.display === 'none') return;
+        if (!e.clipboardData || !e.clipboardData.items) return;
+        for (var i = 0; i < e.clipboardData.items.length; i++){
+          var item = e.clipboardData.items[i];
+          if (item.type && item.type.indexOf('image') === 0){
+            var file = item.getAsFile();
+            if (file){ e.preventDefault(); window.elekLabOcrHandle(file); return; }
+          }
+        }
+      }, false);
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initZone);
+    else initZone();
+  })();
+  </script>
 
   <div class="elek-subtabs">
     <button class="elek-subtab-btn active" onclick="elekShowSection('hypo', this)">💧 Hyponatriämie</button>
