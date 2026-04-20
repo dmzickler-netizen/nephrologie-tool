@@ -1685,7 +1685,7 @@ window.goHome = function(e){
           <div class="lab-ocr-icon">📷</div>
           <div class="lab-ocr-text">
             <div class="lab-ocr-title">Laborbefund einlesen — Bild/PDF (OCR)</div>
-            <div class="lab-ocr-sub"><strong>1.</strong> Klick hier (aktiviert Strg+V) · <strong>2.</strong> Strg+V drücken — Bild aus Zwischenablage wird erkannt · <strong>oder:</strong> Drag-and-Drop <em>(Bilder JPG/PNG/HEIC UND PDFs, auch mehrere gleichzeitig)</em> / Datei-Knopf unten. Erkennt Krea, eGFR, uACR, Hb, Ferritin, K⁺, HCO₃, PTH, Phosphat, Ca, HbA1c, LDL, Harnsäure u.a.<br><strong style="color:#2e7d32;">💡 Beste Erkennung: Labor aus KIS als PDF exportieren</strong> — Text wird direkt gelesen, OCR entfällt.</div>
+            <div class="lab-ocr-sub"><strong>1.</strong> Klick hier (aktiviert Strg+V) · <strong>2.</strong> Strg+V drücken — Bild aus Zwischenablage wird erkannt · <strong>oder:</strong> Drag-and-Drop <em>(Bilder JPG/PNG/HEIC UND PDFs, auch mehrere gleichzeitig)</em> / Datei-Knopf unten. Erkennt Krea, eGFR, uACR, Hb, Ferritin, K⁺, HCO₃, PTH, Phosphat, Ca, HbA1c, LDL, Harnsäure u.a.<br><strong style="color:#2e7d32;">💡 Beste Erkennung: Labor aus KIS als PDF exportieren</strong> — Text wird direkt gelesen, OCR entfällt.<br><label style="display:inline-flex;gap:6px;align-items:center;font-size:.75rem;color:#6a1b9a;cursor:pointer;margin-top:6px;padding:3px 8px;background:#f3e5f5;border:1px solid #ce93d8;border-radius:8px;" onclick="event.stopPropagation();"><input type="checkbox" id="lab-ocr-ai-toggle" style="margin:0;cursor:pointer;"> <span>🧠 <strong>KI-OCR</strong> (Florence-2) — besser bei KIS-Tabellen · erster Start ~250 MB Download, dann gecacht · 100% lokal</span></label></div>
             <div class="lab-ocr-privacy">🔒 100 % lokal — Bild verlässt diesen Browser nicht. Personenbezogene Daten trotzdem vorher überdecken.</div>
           </div>
         </div>
@@ -2452,6 +2452,105 @@ function prepareOcrSource(file, progressCb) {
 window.imageToOcrCanvas = imageToOcrCanvas;
 window.prepareOcrSource = prepareOcrSource;
 
+// ── KI-OCR (Florence-2 via Transformers.js, opt-in) ─────────────
+// Modernes multimodales Vision-Modell, das Layout UND Tabellen-
+// Struktur versteht, nicht nur Zeichen klassifiziert. Läuft 100%
+// lokal im Browser (WebGPU wenn verfügbar, sonst WASM). Erster
+// Download ~250 MB, danach in IndexedDB gecacht. Opt-in über
+// Toggle in der Drop-Zone.
+var TRANSFORMERS_LOADED = false;
+var TRANSFORMERS_LOADING = false;
+var FLORENCE_PIPE = null;
+var FLORENCE_LOADING = false;
+function loadTransformersJs(progressCb) {
+  if (TRANSFORMERS_LOADED) return Promise.resolve(window.__Transformers);
+  if (TRANSFORMERS_LOADING) {
+    return new Promise(function(resolve, reject){
+      var iv = setInterval(function(){
+        if (TRANSFORMERS_LOADED) { clearInterval(iv); resolve(window.__Transformers); }
+      }, 200);
+    });
+  }
+  TRANSFORMERS_LOADING = true;
+  if (progressCb) progressCb('⏳ KI-OCR-Engine wird initialisiert…');
+  return import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.2/+esm').then(function(mod){
+    window.__Transformers = mod;
+    TRANSFORMERS_LOADED = true;
+    TRANSFORMERS_LOADING = false;
+    return mod;
+  }).catch(function(err){
+    TRANSFORMERS_LOADING = false;
+    throw new Error('Transformers.js konnte nicht geladen werden: ' + (err && err.message ? err.message : err));
+  });
+}
+function loadFlorencePipeline(progressCb) {
+  if (FLORENCE_PIPE) return Promise.resolve(FLORENCE_PIPE);
+  if (FLORENCE_LOADING) {
+    return new Promise(function(resolve, reject){
+      var iv = setInterval(function(){
+        if (FLORENCE_PIPE) { clearInterval(iv); resolve(FLORENCE_PIPE); }
+      }, 300);
+    });
+  }
+  FLORENCE_LOADING = true;
+  return loadTransformersJs(progressCb).then(function(tf){
+    if (progressCb) progressCb('⏳ Florence-2 wird geladen (~250 MB beim ersten Mal)…');
+    // WebGPU wenn verfügbar, sonst WASM
+    var device = (typeof navigator !== 'undefined' && navigator.gpu) ? 'webgpu' : 'wasm';
+    return tf.pipeline('image-to-text', 'onnx-community/Florence-2-base-ft', {
+      device: device,
+      dtype: 'fp32',
+      progress_callback: function(info) {
+        if (!progressCb) return;
+        if (info.status === 'progress' && info.progress != null) {
+          var pct = Math.round(info.progress);
+          var file = info.file ? ' (' + info.file + ')' : '';
+          progressCb('⏳ Florence-2 lädt… ' + pct + '%' + file);
+        } else if (info.status === 'done') {
+          progressCb('⏳ Florence-2 bereit');
+        } else if (info.status === 'ready') {
+          progressCb('⏳ Florence-2 bereit');
+        }
+      }
+    });
+  }).then(function(pipe){
+    FLORENCE_PIPE = pipe;
+    FLORENCE_LOADING = false;
+    return pipe;
+  }).catch(function(err){
+    FLORENCE_LOADING = false;
+    throw err;
+  });
+}
+function florenceOcr(source, progressCb) {
+  return loadFlorencePipeline(progressCb).then(function(pipe){
+    if (progressCb) progressCb('⏳ KI-OCR läuft…');
+    var input;
+    if (source instanceof HTMLCanvasElement) {
+      input = source.toDataURL('image/png');
+    } else if (typeof Blob !== 'undefined' && source instanceof Blob) {
+      input = URL.createObjectURL(source);
+    } else {
+      input = source;
+    }
+    // Florence-2 erwartet einen Task-Prompt; <OCR> = reine Texterkennung
+    return pipe(input, { task: '<OCR>' });
+  }).then(function(result){
+    if (Array.isArray(result)) {
+      return result.map(function(r){ return (r && r.generated_text) || ''; }).join('\n');
+    }
+    if (result && typeof result === 'object') {
+      // Florence-2 Output kann {'<OCR>': 'text'} sein
+      if (result['<OCR>']) return String(result['<OCR>']);
+      if (result.generated_text) return result.generated_text;
+    }
+    return String(result || '');
+  });
+}
+window.loadTransformersJs = loadTransformersJs;
+window.loadFlorencePipeline = loadFlorencePipeline;
+window.florenceOcr = florenceOcr;
+
 // Expandiert eine Liste von Files zu OCR-Quellen:
 //   - PDFs: versuche erst eingebetteten Text (KIS-Exporte!) — wenn >50 Zeichen,
 //     direkt als { text } zurück; sonst Canvas-Rendering + OCR-Fallback
@@ -3087,6 +3186,8 @@ window.ckdLabOcrHandle = function(fileOrList) {
     if (!sources.length) { setStatus('error', '⚠️ Keine lesbaren Quellen gefunden.'); return null; }
     var texts = [];
     var chain = Promise.resolve();
+    var _aiToggle = document.getElementById('lab-ocr-ai-toggle');
+    var _useAi = !!(_aiToggle && _aiToggle.checked);
     sources.forEach(function(src, idx){
       chain = chain.then(function(){
         var prefix = '⏳ ' + src.label + ' (' + (idx+1) + '/' + sources.length + ') — ';
@@ -3095,6 +3196,23 @@ window.ckdLabOcrHandle = function(fileOrList) {
           setStatus('loading', prefix + 'Text-Layer gelesen');
           if (src.text.trim()) texts.push(src.text);
           return null;
+        }
+        if (_useAi && typeof window.florenceOcr === 'function') {
+          setStatus('loading', prefix + 'KI-OCR (Florence-2)…');
+          return window.florenceOcr(src.source, function(msg){
+            setStatus('loading', prefix + msg.replace(/^⏳\s*/, ''));
+          }).then(function(text){
+            if (text && text.trim()) texts.push(text);
+          }).catch(function(err){
+            console.error('Florence-2 Error, Fallback zu Tesseract:', err);
+            setStatus('loading', prefix + 'KI-OCR fehlgeschlagen, nutze Tesseract…');
+            return Tesseract.recognize(src.source, 'deu', {
+              logger: function(m){ if (m.status==='recognizing text'){ setStatus('loading', prefix + Math.round((m.progress||0)*100)+'%'); } }
+            }).then(function(result){
+              var text = (result && result.data && result.data.text) || '';
+              if (text.trim()) texts.push(text);
+            });
+          });
         }
         setStatus('loading', prefix + 'OCR läuft…');
         return Tesseract.recognize(src.source, 'deu', {
