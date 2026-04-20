@@ -1685,7 +1685,7 @@ window.goHome = function(e){
           <div class="lab-ocr-icon">📷</div>
           <div class="lab-ocr-text">
             <div class="lab-ocr-title">Laborbefund einlesen — Bild/PDF (OCR)</div>
-            <div class="lab-ocr-sub"><strong>1.</strong> Klick hier (aktiviert Strg+V) · <strong>2.</strong> Strg+V drücken — Bild aus Zwischenablage wird erkannt · <strong>oder:</strong> Drag-and-Drop <em>(Bilder JPG/PNG/HEIC UND PDFs, auch mehrere gleichzeitig)</em> / Datei-Knopf unten. Erkennt Krea, eGFR, uACR, Hb, Ferritin, K⁺, HCO₃, PTH, Phosphat, Ca, HbA1c, LDL, Harnsäure u.a.</div>
+            <div class="lab-ocr-sub"><strong>1.</strong> Klick hier (aktiviert Strg+V) · <strong>2.</strong> Strg+V drücken — Bild aus Zwischenablage wird erkannt · <strong>oder:</strong> Drag-and-Drop <em>(Bilder JPG/PNG/HEIC UND PDFs, auch mehrere gleichzeitig)</em> / Datei-Knopf unten. Erkennt Krea, eGFR, uACR, Hb, Ferritin, K⁺, HCO₃, PTH, Phosphat, Ca, HbA1c, LDL, Harnsäure u.a.<br><strong style="color:#2e7d32;">💡 Beste Erkennung: Labor aus KIS als PDF exportieren</strong> — Text wird direkt gelesen, OCR entfällt.</div>
             <div class="lab-ocr-privacy">🔒 100 % lokal — Bild verlässt diesen Browser nicht. Personenbezogene Daten trotzdem vorher überdecken.</div>
           </div>
         </div>
@@ -2252,6 +2252,54 @@ function pdfToCanvases(file, progressCb) {
   });
 }
 
+// Extrahiert eingebetteten Text aus PDF (KIS-Exporte haben typischerweise
+// eine Textschicht — damit umgehen wir OCR komplett und bekommen perfekte
+// Erkennung). Gibt pro Seite einen String zurück. Seiten mit items werden
+// mit Y-/X-Koordinaten sortiert, damit Tabellenspalten in der Reihenfolge
+// links→rechts, oben→unten rekonstruiert werden. Zeilenumbruch bei Y-Wechsel.
+function pdfToText(file, progressCb) {
+  return loadPdfJs(progressCb).then(function(){
+    return file.arrayBuffer();
+  }).then(function(buf){
+    return window.pdfjsLib.getDocument({data: buf}).promise;
+  }).then(function(pdf){
+    var numPages = pdf.numPages;
+    var pages = [];
+    var chain = Promise.resolve();
+    for (var i = 1; i <= numPages; i++) {
+      (function(pageNum){
+        chain = chain.then(function(){
+          if (progressCb) progressCb('⏳ PDF-Seite ' + pageNum + '/' + numPages + ' wird gelesen (Text-Layer)…');
+          return pdf.getPage(pageNum).then(function(page){
+            return page.getTextContent();
+          }).then(function(content){
+            if (!content.items || !content.items.length) { pages.push(''); return; }
+            // Items haben transform[5] = Y, transform[4] = X in PDF-Koordinaten.
+            // PDF-Y wächst nach oben — wir negieren für intuitive oben→unten-Sortierung.
+            var items = content.items.slice().sort(function(a, b){
+              var ya = -a.transform[5], yb = -b.transform[5];
+              if (Math.abs(ya - yb) > 2) return ya - yb;  // unterschiedliche Zeilen
+              return a.transform[4] - b.transform[4];      // gleiche Zeile → nach X
+            });
+            var out = '';
+            var prevY = null;
+            for (var k = 0; k < items.length; k++) {
+              var it = items[k];
+              var y = -it.transform[5];
+              if (prevY !== null && Math.abs(y - prevY) > 2) out += '\n';
+              else if (prevY !== null) out += ' ';
+              out += (it.str || '');
+              prevY = y;
+            }
+            pages.push(out);
+          });
+        });
+      })(i);
+    }
+    return chain.then(function(){ return pages; });
+  });
+}
+
 // ── HEIC-Support (iPhone-Fotos) ─────────────────────────────────
 // Chrome/Firefox können HEIC nicht nativ dekodieren. heic2any konvertiert
 // clientseitig zu JPEG, bevor Tesseract das Bild bekommt.
@@ -2404,9 +2452,13 @@ function prepareOcrSource(file, progressCb) {
 window.imageToOcrCanvas = imageToOcrCanvas;
 window.prepareOcrSource = prepareOcrSource;
 
-// Expandiert eine Liste von Files zu OCR-Quellen (PDFs seitenweise →
-// Canvas, Bilder → upscaled Canvas, HEIC → JPEG → upscaled Canvas).
-// Rückgabe: Array von { source, label } Promise.
+// Expandiert eine Liste von Files zu OCR-Quellen:
+//   - PDFs: versuche erst eingebetteten Text (KIS-Exporte!) — wenn >50 Zeichen,
+//     direkt als { text } zurück; sonst Canvas-Rendering + OCR-Fallback
+//   - Bilder: upscaled Canvas über prepareOcrSource
+//   - HEIC: JPEG → upscaled Canvas
+// Rückgabe: Array von { source | text, label }. Konsumenten müssen beide
+// Formate handhaben (OCR für source, direkt parsen für text).
 function expandFilesToSources(files, progressCb) {
   var out = [];
   var chain = Promise.resolve();
@@ -2414,9 +2466,21 @@ function expandFilesToSources(files, progressCb) {
     chain = chain.then(function(){
       var isPdf = (file.type === 'application/pdf') || /\.pdf$/i.test(file.name || '');
       if (isPdf) {
-        return pdfToCanvases(file, progressCb).then(function(canvases){
-          canvases.forEach(function(c, pi){
-            out.push({ source: c, label: (file.name || 'PDF') + ' S.' + (pi+1) });
+        return pdfToText(file, progressCb).then(function(pageTexts){
+          var joined = pageTexts.join('');
+          var meaningfulChars = joined.replace(/[\s\n]/g, '').length;
+          if (meaningfulChars > 50) {
+            // Embedded Text-Layer vorhanden — perfekte Lösung, kein OCR
+            pageTexts.forEach(function(txt, pi){
+              out.push({ text: txt, label: (file.name || 'PDF') + ' S.' + (pi+1) + ' (Text)' });
+            });
+            return null;
+          }
+          // Scan-PDF ohne Text-Layer → Canvas + OCR
+          return pdfToCanvases(file, progressCb).then(function(canvases){
+            canvases.forEach(function(c, pi){
+              out.push({ source: c, label: (file.name || 'PDF') + ' S.' + (pi+1) });
+            });
           });
         });
       }
@@ -3026,6 +3090,12 @@ window.ckdLabOcrHandle = function(fileOrList) {
     sources.forEach(function(src, idx){
       chain = chain.then(function(){
         var prefix = '⏳ ' + src.label + ' (' + (idx+1) + '/' + sources.length + ') — ';
+        // PDF-Text-Layer: direkt verwenden, kein OCR nötig
+        if (typeof src.text === 'string') {
+          setStatus('loading', prefix + 'Text-Layer gelesen');
+          if (src.text.trim()) texts.push(src.text);
+          return null;
+        }
         setStatus('loading', prefix + 'OCR läuft…');
         return Tesseract.recognize(src.source, 'deu', {
           logger: function(m) {
@@ -9784,6 +9854,11 @@ window.gichtAutoImport = function() {
         sources.forEach(function(src, idx){
           chain = chain.then(function(){
             var prefix = '⏳ ' + src.label + ' (' + (idx+1) + '/' + sources.length + ') — ';
+            if (typeof src.text === 'string') {
+              setS('loading', prefix + 'Text-Layer gelesen');
+              if (src.text.trim()) texts.push(src.text);
+              return null;
+            }
             setS('loading', prefix + 'OCR läuft…');
             return Tesseract.recognize(src.source, 'deu', {
               logger: function(m){
