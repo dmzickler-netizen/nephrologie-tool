@@ -2720,6 +2720,45 @@ function parseLabText(text) {
   ], urineText);
   if (v.urin_harnsaure !== null && (v.urin_harnsaure < 1 || v.urin_harnsaure > 200)) v.urin_harnsaure = null;
 
+  // ═══ BGA-MODUS (Radiometer ABL, Siemens) ═════════════════════════
+  // Blutgas-Ausdrucke haben Geräte-Präfixe (c, ct, ot, p, s) vor den
+  // Analytnamen — 'cK*', 'cHCO;(P)c', 'otHb', 'ctBil', 'cBase(Ecf)c'.
+  // Der normale \b-basierte Parser scheitert daran. Zusätzlich verschluckt
+  // OCR bei schlechter Bildqualität Dezimalpunkte ('276 nmel' = 27.6,
+  // '26 mel' = 2.6), und Einheiten sind häufig verstümmelt ('mmovyL',
+  // 'nmel', 'mmbg'). BGA-Modus wird über typische Marker (RADIOMETER /
+  // ABL-Gerät / Säure-Basen-Status) aktiviert und ergänzt nur die Werte,
+  // die der Standard-Parser noch nicht hat.
+  var _isBga = /RADIOMETER|\bABL\d|Blutgas|S[äa]ure[\s\-]?Basen/i.test(t);
+  if (_isBga) {
+    // gap = max. Anzahl Nicht-Digit-Zeichen zwischen Analyt-Key und Wert.
+    // HCO3 braucht 15 (Radiometer schreibt 'cHCO;(P)c 276' mit eingefügtem
+    // Subscript+Superscript-Müll). Andere Analyten kurz halten (3-4), um
+    // False Positives zu vermeiden (z.B. dass 'cH' in 'cHCO' fälschlich
+    // als Cl-Match greift und den HCO3-Wert zieht).
+    var _bga = function(keyRe, lo, hi, gap, recoverDecimal) {
+      var re = new RegExp('\\b' + keyRe + '[^\\d\\n]{0,' + gap + '}?(-?\\d+\\.?\\d*)', 'i');
+      var m = t.match(re);
+      if (!m) return null;
+      var vv = parseFloat(m[1]);
+      if (!isFinite(vv)) return null;
+      if (recoverDecimal && (vv > hi || vv < lo)) {
+        if (vv / 10 >= lo && vv / 10 <= hi) vv = vv / 10;
+      }
+      if (vv >= lo && vv <= hi) return vv;
+      return null;
+    };
+    if (v.bicarb    === null) v.bicarb    = _bga('c?HC[O0]',                      5, 50,  15, true);
+    if (v.kalium    === null) v.kalium    = _bga('c?K[\\*\\+]',                 1.5,  9,   4, true);
+    if (v.na        === null) v.na        = _bga('c?Na[t\\+]?',                  100, 180,  4, false);
+    if (v.cl        === null) v.cl        = _bga('c?C[lh][\\-\\*]?',              70, 130,  3, false);
+    if (v.glucose   === null) v.glucose   = _bga('c?Gl[uc][uc]?',                 20, 1500, 4, false);
+    if (v.bilirubin === null) v.bilirubin = _bga('c?t?Bili?',                      0,  30,  4, false);
+    if (v.bex       === null) v.bex       = _bga('c?Base\\s*\\([^)]{1,10}\\)c?', -20, 20,   4, true);
+    if (v.laktat    === null) v.laktat    = _bga('c?Lac',                        0.2,  30,  4, false);
+    if (v.hb        === null) v.hb        = _bga('(?:ot|ct|t)Hb',                  3,  25,  4, false);
+  }
+
   return v;
 }
 
