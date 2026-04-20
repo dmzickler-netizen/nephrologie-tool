@@ -2311,8 +2311,58 @@ function heicToJpeg(file, progressCb) {
 window.isHeicFile = isHeicFile;
 window.heicToJpeg = heicToJpeg;
 
-// Expandiert eine Liste von Files zu OCR-Quellen (Bilder bleiben, PDFs werden
-// seitenweise zu Canvas gerendert, HEIC wird vorher zu JPEG konvertiert).
+// ── OCR-Upscaling ──────────────────────────────────────────────
+// KIS-Screenshots (Swisslab, Lauris, OPUS) sind oft nur 700-1000 px
+// breit. Tesseract scheitert an solchen Bildern, weil die Zeichenhöhe
+// unter ~20 px fällt und das Deutsch-Modell nicht genügend Pixel hat.
+// Wir rendern jedes Bild in ein Canvas mit mindestens 1800 px Breite
+// (bis zu 3× Skalierung) und high-quality Bilinear-Resampling, bevor
+// es an Tesseract geht. Große Bilder (Handy-Fotos, HEIC) bleiben
+// unverändert — keine Verschlechterung durch Überblendung.
+function imageToOcrCanvas(fileOrBlob, targetMinWidth) {
+  targetMinWidth = targetMinWidth || 1800;
+  return new Promise(function(resolve, reject) {
+    var img = new Image();
+    var url = URL.createObjectURL(fileOrBlob);
+    img.onload = function() {
+      var natW = img.naturalWidth || img.width || 0;
+      var natH = img.naturalHeight || img.height || 0;
+      if (!natW || !natH) { URL.revokeObjectURL(url); reject(new Error('Bildmaße unbekannt.')); return; }
+      var scale = Math.max(1, targetMinWidth / natW);
+      scale = Math.min(scale, 3);
+      var canvas = document.createElement('canvas');
+      canvas.width  = Math.round(natW * scale);
+      canvas.height = Math.round(natH * scale);
+      var ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      if ('imageSmoothingQuality' in ctx) ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      resolve(canvas);
+    };
+    img.onerror = function() {
+      URL.revokeObjectURL(url);
+      reject(new Error('Bild konnte nicht geladen werden.'));
+    };
+    img.src = url;
+  });
+}
+
+// Einheitlicher OCR-Vorbereitungspfad: HEIC → JPEG (falls nötig),
+// dann Upscaling → Canvas. Wird von allen OCR-Zonen (Labor, Med,
+// Diagnosen, Medicheck, Elektrolyte) genutzt.
+function prepareOcrSource(file, progressCb) {
+  var p = isHeicFile(file) ? heicToJpeg(file, progressCb) : Promise.resolve(file);
+  return p.then(function(imgFile) {
+    if (progressCb) progressCb('⏳ Bild wird für OCR hochskaliert…');
+    return imageToOcrCanvas(imgFile, 1800);
+  });
+}
+window.imageToOcrCanvas = imageToOcrCanvas;
+window.prepareOcrSource = prepareOcrSource;
+
+// Expandiert eine Liste von Files zu OCR-Quellen (PDFs seitenweise →
+// Canvas, Bilder → upscaled Canvas, HEIC → JPEG → upscaled Canvas).
 // Rückgabe: Array von { source, label } Promise.
 function expandFilesToSources(files, progressCb) {
   var out = [];
@@ -2327,13 +2377,9 @@ function expandFilesToSources(files, progressCb) {
           });
         });
       }
-      if (isHeicFile(file)) {
-        return heicToJpeg(file, progressCb).then(function(converted){
-          out.push({ source: converted, label: file.name || ('Bild '+(idx+1)) });
-        });
-      }
-      out.push({ source: file, label: file.name || ('Bild '+(idx+1)) });
-      return null;
+      return prepareOcrSource(file, progressCb).then(function(canvas){
+        out.push({ source: canvas, label: file.name || ('Bild '+(idx+1)) });
+      });
     });
   });
   return chain.then(function(){ return out; });
@@ -3531,9 +3577,11 @@ window.ckdMedOcrFromCkd = function(file) {
     return;
   }
 
-  var _prepare = _isHeic && window.heicToJpeg
-    ? window.heicToJpeg(file, function(msg){ ckdSetMedOcrStatus('loading', msg); })
-    : Promise.resolve(file);
+  var _prepare = window.prepareOcrSource
+    ? window.prepareOcrSource(file, function(msg){ ckdSetMedOcrStatus('loading', msg); })
+    : (_isHeic && window.heicToJpeg
+        ? window.heicToJpeg(file, function(msg){ ckdSetMedOcrStatus('loading', msg); })
+        : Promise.resolve(file));
 
   _prepare.then(function(_f){
   // Eigene OCR direkt — Ergebnis in CKD-Textarea einsetzen, dann ckdMedTextChange triggern
@@ -3870,9 +3918,11 @@ window.vdOcrHandle = function(file) {
     vdSetOcrStatus('error', '❌ OCR-Engine nicht verfügbar. Seite neu laden.');
     return;
   }
-  var _prepare = _isHeic && window.heicToJpeg
-    ? window.heicToJpeg(file, function(msg){ vdSetOcrStatus('loading', msg); })
-    : Promise.resolve(file);
+  var _prepare = window.prepareOcrSource
+    ? window.prepareOcrSource(file, function(msg){ vdSetOcrStatus('loading', msg); })
+    : (_isHeic && window.heicToJpeg
+        ? window.heicToJpeg(file, function(msg){ vdSetOcrStatus('loading', msg); })
+        : Promise.resolve(file));
   _prepare.then(function(_f){
   return window.ocrLoadTesseract(function(msg){ vdSetOcrStatus('loading', msg); }).then(function(){
     vdSetOcrStatus('loading', '⏳ Bild wird gelesen — kann 5–15 Sekunden dauern…');
@@ -14591,9 +14641,11 @@ window.mcMedOcrHandle = function(file) {
     return;
   }
 
-  var _prepare = _isHeic && window.heicToJpeg
-    ? window.heicToJpeg(file, function(msg){ mcSetOcrStatus('loading', msg); })
-    : Promise.resolve(file);
+  var _prepare = window.prepareOcrSource
+    ? window.prepareOcrSource(file, function(msg){ mcSetOcrStatus('loading', msg); })
+    : (_isHeic && window.heicToJpeg
+        ? window.heicToJpeg(file, function(msg){ mcSetOcrStatus('loading', msg); })
+        : Promise.resolve(file));
   _prepare.then(function(_f){
   return window.ocrLoadTesseract(function(msg){ mcSetOcrStatus('loading', msg); }).then(function(){
     mcSetOcrStatus('loading', '⏳ Bild wird gelesen — kann 5–15 Sekunden dauern…');
