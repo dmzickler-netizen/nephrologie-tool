@@ -1685,14 +1685,14 @@ window.goHome = function(e){
           <div class="lab-ocr-icon">📷</div>
           <div class="lab-ocr-text">
             <div class="lab-ocr-title">Laborbefund einlesen — Bild/PDF (OCR)</div>
-            <div class="lab-ocr-sub"><strong>1.</strong> Klick hier (aktiviert Strg+V) · <strong>2.</strong> Strg+V drücken — Bild aus Zwischenablage wird erkannt · <strong>oder:</strong> Drag-and-Drop <em>(Bilder UND PDFs, auch mehrere gleichzeitig)</em> / Datei-Knopf unten. Erkennt Krea, eGFR, uACR, Hb, Ferritin, K⁺, HCO₃, PTH, Phosphat, Ca, HbA1c, LDL, Harnsäure u.a.</div>
+            <div class="lab-ocr-sub"><strong>1.</strong> Klick hier (aktiviert Strg+V) · <strong>2.</strong> Strg+V drücken — Bild aus Zwischenablage wird erkannt · <strong>oder:</strong> Drag-and-Drop <em>(Bilder JPG/PNG/HEIC UND PDFs, auch mehrere gleichzeitig)</em> / Datei-Knopf unten. Erkennt Krea, eGFR, uACR, Hb, Ferritin, K⁺, HCO₃, PTH, Phosphat, Ca, HbA1c, LDL, Harnsäure u.a.</div>
             <div class="lab-ocr-privacy">🔒 100 % lokal — Bild verlässt diesen Browser nicht. Personenbezogene Daten trotzdem vorher überdecken.</div>
           </div>
         </div>
         <div style="margin-top:10px;">
           <button onclick="event.stopPropagation(); document.getElementById('lab-ocr-file').click();" style="padding:6px 14px; background:#1565c0; color:#fff; border:none; border-radius:8px; font-size:.78rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">📁 Datei(en) wählen</button>
         </div>
-        <input type="file" id="lab-ocr-file" accept="image/*,application/pdf,.pdf" multiple style="display:none;" onchange="window.ckdLabOcrHandle&&window.ckdLabOcrHandle(this.files);">
+        <input type="file" id="lab-ocr-file" accept="image/*,application/pdf,.pdf,.heic,.heif" multiple style="display:none;" onchange="window.ckdLabOcrHandle&&window.ckdLabOcrHandle(this.files);">
         <div id="lab-ocr-status"></div>
         <div id="lab-ocr-results"></div>
       </div>
@@ -1829,7 +1829,7 @@ window.goHome = function(e){
           <button onclick="event.stopPropagation(); document.getElementById('ckd-med-ocr-file').click();" style="padding:6px 14px; background:#2e7d32; color:#fff; border:none; border-radius:8px; font-size:.78rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">📁 Bild / Foto wählen</button>
           <button onclick="event.stopPropagation(); window.ckdMedTextClear&&window.ckdMedTextClear();" style="padding:6px 14px; background:#fff; color:#c62828; border:1.5px solid #ef9a9a; border-radius:8px; font-size:.78rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">🗑️ Text leeren</button>
         </div>
-        <input type="file" id="ckd-med-ocr-file" accept="image/*" style="display:none;" onchange="window.ckdMedOcrFromCkd&&window.ckdMedOcrFromCkd(this.files[0]);">
+        <input type="file" id="ckd-med-ocr-file" accept="image/*,.heic,.heif" style="display:none;" onchange="window.ckdMedOcrFromCkd&&window.ckdMedOcrFromCkd(this.files[0]);">
         <div id="ckd-med-ocr-status"></div>
       </div>
 
@@ -1931,7 +1931,7 @@ window.goHome = function(e){
             </div>
             <button onclick="event.stopPropagation(); document.getElementById('vd-ocr-file').click();" style="padding:6px 12px; background:#6a1b9a; color:#fff; border:none; border-radius:8px; font-size:.75rem; font-weight:600; cursor:pointer; white-space:nowrap;">📁 Bild</button>
           </div>
-          <input type="file" id="vd-ocr-file" accept="image/*" style="display:none;" onchange="window.vdOcrHandle&&window.vdOcrHandle(this.files[0]);">
+          <input type="file" id="vd-ocr-file" accept="image/*,.heic,.heif" style="display:none;" onchange="window.vdOcrHandle&&window.vdOcrHandle(this.files[0]);">
         </div>
 
         <textarea id="vordiagnosen" rows="4" oninput="window.vdTextChange&&window.vdTextChange(this.value)" style="width:100%;padding:9px 12px;border:1.5px solid #cfd8dc;border-radius:8px;font-size:0.88rem;font-family:inherit;resize:vertical;background:#fafafa;" placeholder="z.B.&#10;Arterielle Hypertonie&#10;Diabetes mellitus Typ 2&#10;KHK, Z.n. PCI 2021&#10;Adipositas Grad II"></textarea>
@@ -2252,8 +2252,68 @@ function pdfToCanvases(file, progressCb) {
   });
 }
 
+// ── HEIC-Support (iPhone-Fotos) ─────────────────────────────────
+// Chrome/Firefox können HEIC nicht nativ dekodieren. heic2any konvertiert
+// clientseitig zu JPEG, bevor Tesseract das Bild bekommt.
+var HEIC2ANY_LOADED = false;
+var HEIC2ANY_LOADING = false;
+function loadHeic2any(progressCb) {
+  return new Promise(function(resolve, reject){
+    if (HEIC2ANY_LOADED) return resolve();
+    if (HEIC2ANY_LOADING) {
+      var iv = setInterval(function(){
+        if (HEIC2ANY_LOADED) { clearInterval(iv); resolve(); }
+      }, 200);
+      return;
+    }
+    HEIC2ANY_LOADING = true;
+    if (progressCb) progressCb('⏳ HEIC-Dekoder wird geladen (~200 KB, einmalig)…');
+    var s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/heic2any/0.0.4/heic2any.min.js';
+    s.onload = function(){
+      if (typeof window.heic2any === 'function') {
+        HEIC2ANY_LOADED = true;
+        HEIC2ANY_LOADING = false;
+        resolve();
+      } else {
+        HEIC2ANY_LOADING = false;
+        reject(new Error('heic2any konnte nicht initialisiert werden.'));
+      }
+    };
+    s.onerror = function(){
+      HEIC2ANY_LOADING = false;
+      reject(new Error('heic2any konnte nicht geladen werden — Internetverbindung prüfen.'));
+    };
+    document.head.appendChild(s);
+  });
+}
+function isHeicFile(file) {
+  if (!file) return false;
+  if (file.type && /image\/hei[cf]/i.test(file.type)) return true;
+  if (file.name && /\.(heic|heif)$/i.test(file.name)) return true;
+  return false;
+}
+function heicToJpeg(file, progressCb) {
+  return loadHeic2any(progressCb).then(function(){
+    if (progressCb) progressCb('⏳ HEIC → JPEG Konvertierung…');
+    return window.heic2any({ blob: file, toType: 'image/jpeg', quality: 0.92 });
+  }).then(function(result){
+    var blob = Array.isArray(result) ? result[0] : result;
+    var newName = (file.name || 'heic').replace(/\.(heic|heif)$/i, '.jpg');
+    try {
+      return new File([blob], newName, { type: 'image/jpeg' });
+    } catch(e) {
+      // Ältere Safari: File-Constructor evtl. nicht verfügbar → Blob direkt
+      return blob;
+    }
+  });
+}
+window.isHeicFile = isHeicFile;
+window.heicToJpeg = heicToJpeg;
+
 // Expandiert eine Liste von Files zu OCR-Quellen (Bilder bleiben, PDFs werden
-// seitenweise zu Canvas gerendert). Rückgabe: Array von { source, label } Promise.
+// seitenweise zu Canvas gerendert, HEIC wird vorher zu JPEG konvertiert).
+// Rückgabe: Array von { source, label } Promise.
 function expandFilesToSources(files, progressCb) {
   var out = [];
   var chain = Promise.resolve();
@@ -2265,6 +2325,11 @@ function expandFilesToSources(files, progressCb) {
           canvases.forEach(function(c, pi){
             out.push({ source: c, label: (file.name || 'PDF') + ' S.' + (pi+1) });
           });
+        });
+      }
+      if (isHeicFile(file)) {
+        return heicToJpeg(file, progressCb).then(function(converted){
+          out.push({ source: converted, label: file.name || ('Bild '+(idx+1)) });
         });
       }
       out.push({ source: file, label: file.name || ('Bild '+(idx+1)) });
@@ -2289,6 +2354,56 @@ function parseLabText(text) {
   // Normalisierung
   var t = text.replace(/[\u00A0\u2007\u202F]/g, ' ');
   t = t.replace(/,/g, '.');  // dt. Komma → Punkt
+
+  // === TABELLEN-ZEILEN → "Analyt: Wert" ===========================
+  // Spaltenorientierte Laborausdrucke ("Analyt | Einheit | Referenz |
+  // Wert") werden von Tesseract pro Zeile als
+  // "Kreatinin enzymati... mg/dl 0.67 - 1.17 1.20" geflacht. Die
+  // bestehenden Regex erwarten den Wert direkt nach dem Analytnamen
+  // und würden sonst die Referenz-Untergrenze (0.67) greifen. Wir
+  // synthetisieren für jede Zeile mit erkennbarem Referenzbereich
+  // eine zusätzliche Zeile "Analyt: Messwert" und hängen sie an — so
+  // bleibt das Original für andere Matches unverändert, aber die
+  // Analyt-Regex finden zuverlässig den echten Wert.
+  var _tblRefRe  = /(>\s*\d+\.?\d*|<\s*\d+\.?\d*|\d+\.?\d*\s*[-–]\s*\d+\.?\d*|k\.?\s*A\.?)/i;
+  var _tblValRe  = /\s+(-?\d+\.?\d*)\s*!?\s*$/;
+  var _tblUnitRe = /\s+(?:mg\/d[lL]|mg\/[lL]|µg\/d[lL]|ug\/d[lL]|U\/[lL]|mmol\/[lL]|mmol\/mol|g\/[lL]|g\/d[lL]|ng\/m[lL]|pg\/m[lL]|\/µ[lL]|\/u[lL]|\/n[lL]|sec\.?|ml\/m(?:in)?\/[^\s]*|mosm\/kg|%)\s*$/i;
+  var _synthLines = [];
+  t.split('\n').forEach(function(line){
+    var refM = line.match(_tblRefRe);
+    if (!refM) return;
+    var afterRef = line.slice(refM.index + refM[0].length);
+    var valM = afterRef.match(_tblValRe);
+    if (!valM) return;
+    var name = line.slice(0, refM.index);
+    name = name.replace(_tblUnitRe, '');
+    name = name.replace(/[\.…]{2,}\s*$/, '').trim();
+    name = name.replace(/\s*\([^)]*\)?\s*$/, '').trim();          // (HPLC) oder (Tina-q...
+    name = name.replace(/[\.…]{2,}\s*$/, '').trim();
+    // OCR-Truncation: "Albumin-k..." → nach Ellipsis-Strip bleibt "Albumin-k".
+    // Lowercase-Suffix (1-3 Zeichen) nach Bindestrich abschneiden, damit
+    // nicht später `\bK` fälschlich Kalium-Werte matcht. "CKD-EPI" bleibt
+    // (EPI ist uppercase, 3 Zeichen).
+    name = name.replace(/-[a-zäöüß]{1,3}\s*$/, '').trim();
+    // Nur Tokens behalten, die mit Großbuchstabe/Ziffer anfangen —
+    // Descriptor wie "enzymatisch", "abgeleitet", "anorganisch"
+    // werden hinten abgeschnitten, damit "Kreatinin enzymati..." zu
+    // "Kreatinin" wird. "GFR CKD-EPI" bleibt erhalten (beide Tokens groß).
+    var tokens = name.split(/\s+/).filter(Boolean);
+    var kept = [];
+    for (var i = 0; i < tokens.length; i++) {
+      if (/^[A-ZÄÖÜ]/.test(tokens[i]) || /^\d/.test(tokens[i])) kept.push(tokens[i]);
+      else break;
+    }
+    var cleanName = kept.join(' ');
+    if (!cleanName) return;
+    _synthLines.push(cleanName + ': ' + valM[1]);
+  });
+  // Synth VORAN stellen, damit "INR: 1.00" vor der Original-Zeile
+  // "INR 0.7 - 1.3 1.00" gefunden wird (sonst gewinnt die Referenz-
+  // Untergrenze 0.7).
+  if (_synthLines.length) t = _synthLines.join('\n') + '\n' + t;
+
   t = t.replace(/\s+/g, ' ');
 
   // Helper: erste Zahl nach Begriff finden (innerhalb von 0–25 Zeichen)
@@ -2479,6 +2594,7 @@ function parseLabText(text) {
   // === ELEKTROLYTE & SÄURE-BASEN ================================
   // Serum- vs Urin-Zeilen trennen, damit z.B. Urin-Na nicht in Serum-Na landet.
   var rawNorm = text.replace(/[\u00A0\u2007\u202F]/g, ' ').replace(/,/g, '.');
+  if (_synthLines.length) rawNorm = _synthLines.join('\n') + '\n' + rawNorm;
   var linesRaw = rawNorm.split(/\n/);
   var isUrineLine = function(l){ return /urin|sammelurin|\bu[-\s]?(?:na|k|osm|chlorid|kalium|natrium|harns|kreat)/i.test(l); };
   var serumText = linesRaw.filter(function(l){ return !isUrineLine(l); }).join(' ').replace(/\s+/g,' ');
@@ -2754,15 +2870,17 @@ window.ckdLabOcrHandle = function(fileOrList) {
   } else {
     files = [fileOrList];
   }
-  // Bilder ODER PDFs akzeptieren
+  // Bilder ODER PDFs akzeptieren (inkl. HEIC — Extension-Fallback, weil
+  // Chrome/Firefox für HEIC oft keinen MIME-Type setzen)
   files = files.filter(function(f){
     if (!f) return false;
     if (f.type && f.type.indexOf('image') === 0) return true;
     if (f.type === 'application/pdf' || /\.pdf$/i.test(f.name || '')) return true;
+    if (/\.(heic|heif)$/i.test(f.name || '')) return true;
     return false;
   });
   if (!files.length) {
-    setStatus('error', '❌ Bitte mindestens ein Bild (PNG, JPG) oder PDF hochladen.');
+    setStatus('error', '❌ Bitte mindestens ein Bild (PNG, JPG, HEIC) oder PDF hochladen.');
     return;
   }
 
@@ -3364,8 +3482,9 @@ function ckdSetMedOcrStatus(cls, msg) {
 
 window.ckdMedOcrFromCkd = function(file) {
   if (!file) return;
-  if (!file.type || file.type.indexOf('image') !== 0) {
-    ckdSetMedOcrStatus('error', '❌ Bitte ein Bild (PNG, JPG, etc.) hochladen.');
+  var _isHeic = window.isHeicFile && window.isHeicFile(file);
+  if (!_isHeic && (!file.type || file.type.indexOf('image') !== 0)) {
+    ckdSetMedOcrStatus('error', '❌ Bitte ein Bild (PNG, JPG, HEIC) hochladen.');
     return;
   }
   if (typeof window.ocrLoadTesseract !== 'function') {
@@ -3373,10 +3492,15 @@ window.ckdMedOcrFromCkd = function(file) {
     return;
   }
 
+  var _prepare = _isHeic && window.heicToJpeg
+    ? window.heicToJpeg(file, function(msg){ ckdSetMedOcrStatus('loading', msg); })
+    : Promise.resolve(file);
+
+  _prepare.then(function(_f){
   // Eigene OCR direkt — Ergebnis in CKD-Textarea einsetzen, dann ckdMedTextChange triggern
-  window.ocrLoadTesseract(function(msg){ ckdSetMedOcrStatus('loading', msg); }).then(function(){
+  return window.ocrLoadTesseract(function(msg){ ckdSetMedOcrStatus('loading', msg); }).then(function(){
     ckdSetMedOcrStatus('loading', '⏳ Bild wird gelesen — kann 5–15 Sekunden dauern…');
-    return Tesseract.recognize(file, 'deu', {
+    return Tesseract.recognize(_f, 'deu', {
       logger: function(m){
         if (m.status === 'recognizing text') {
           var pct = Math.round((m.progress||0) * 100);
@@ -3401,6 +3525,7 @@ window.ckdMedOcrFromCkd = function(file) {
     setTimeout(function(){ var s=document.getElementById('ckd-med-ocr-status'); if (s && s.className.indexOf('success')>=0) { s.style.display='none'; s.innerHTML=''; } }, 4000);
     var fi = document.getElementById('ckd-med-ocr-file');
     if (fi) fi.value = '';
+  });
   }).catch(function(err){
     ckdSetMedOcrStatus('error', '❌ Fehler: ' + (err && err.message ? err.message : 'OCR fehlgeschlagen.'));
     console.error('CKD-Med-OCR Error:', err);
@@ -3697,17 +3822,22 @@ window.vdTextChange = function(text) {
 
 window.vdOcrHandle = function(file) {
   if (!file) return;
-  if (!file.type || file.type.indexOf('image') !== 0) {
-    vdSetOcrStatus('error', '❌ Bitte ein Bild (PNG, JPG, etc.) hochladen.');
+  var _isHeic = window.isHeicFile && window.isHeicFile(file);
+  if (!_isHeic && (!file.type || file.type.indexOf('image') !== 0)) {
+    vdSetOcrStatus('error', '❌ Bitte ein Bild (PNG, JPG, HEIC) hochladen.');
     return;
   }
   if (typeof window.ocrLoadTesseract !== 'function') {
     vdSetOcrStatus('error', '❌ OCR-Engine nicht verfügbar. Seite neu laden.');
     return;
   }
-  window.ocrLoadTesseract(function(msg){ vdSetOcrStatus('loading', msg); }).then(function(){
+  var _prepare = _isHeic && window.heicToJpeg
+    ? window.heicToJpeg(file, function(msg){ vdSetOcrStatus('loading', msg); })
+    : Promise.resolve(file);
+  _prepare.then(function(_f){
+  return window.ocrLoadTesseract(function(msg){ vdSetOcrStatus('loading', msg); }).then(function(){
     vdSetOcrStatus('loading', '⏳ Bild wird gelesen — kann 5–15 Sekunden dauern…');
-    return Tesseract.recognize(file, 'deu', {
+    return Tesseract.recognize(_f, 'deu', {
       logger: function(m){
         if (m.status === 'recognizing text') {
           var pct = Math.round((m.progress||0) * 100);
@@ -3731,6 +3861,7 @@ window.vdOcrHandle = function(file) {
     setTimeout(function(){ var s=document.getElementById('vd-ocr-status'); if (s && s.className.indexOf('success')>=0) { s.style.display='none'; s.innerHTML=''; } }, 4000);
     var fi = document.getElementById('vd-ocr-file');
     if (fi) fi.value = '';
+  });
   }).catch(function(err){
     vdSetOcrStatus('error', '❌ Fehler: ' + (err && err.message ? err.message : 'OCR fehlgeschlagen.'));
     console.error('VD-OCR Error:', err);
@@ -7281,7 +7412,7 @@ window.gichtAutoImport = function() {
       <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
         <button onclick="event.stopPropagation(); document.getElementById('tma-lab-ocr-file').click();" style="padding:6px 14px; background:#c62828; color:#fff; border:none; border-radius:8px; font-size:.78rem; font-weight:600; cursor:pointer;">📁 Bild / PDF wählen</button>
       </div>
-      <input type="file" id="tma-lab-ocr-file" accept="image/*,application/pdf,.pdf" multiple style="display:none;" onchange="if(window.ckdLabOcrHandle) window.ckdLabOcrHandle(this.files);">
+      <input type="file" id="tma-lab-ocr-file" accept="image/*,application/pdf,.pdf,.heic,.heif" multiple style="display:none;" onchange="if(window.ckdLabOcrHandle) window.ckdLabOcrHandle(this.files);">
     </div>
 
     <div class="tma-card">
@@ -9470,7 +9601,7 @@ window.gichtAutoImport = function() {
       </div>
       <button type="button" onclick="document.getElementById('elek-ocr-file').click()" style="padding:6px 14px; background:#1565c0; color:#fff; border:none; border-radius:8px; font-size:.78rem; font-weight:600; cursor:pointer; white-space:nowrap;">📁 Datei(en) wählen</button>
     </div>
-    <input type="file" id="elek-ocr-file" accept="image/*,application/pdf,.pdf" multiple style="display:none;" onchange="window.elekLabOcrHandle&&window.elekLabOcrHandle(this.files);">
+    <input type="file" id="elek-ocr-file" accept="image/*,application/pdf,.pdf,.heic,.heif" multiple style="display:none;" onchange="window.elekLabOcrHandle&&window.elekLabOcrHandle(this.files);">
     <div id="elek-ocr-status"></div>
     <div id="elek-ocr-results"></div>
   </div>
@@ -9491,11 +9622,12 @@ window.gichtAutoImport = function() {
       } else {
         files = [fileOrList];
       }
-      // Bilder ODER PDFs akzeptieren
+      // Bilder ODER PDFs akzeptieren (inkl. HEIC)
       files = files.filter(function(f){
         if (!f) return false;
         if (f.type && f.type.indexOf('image') === 0) return true;
         if (f.type === 'application/pdf' || /\.pdf$/i.test(f.name || '')) return true;
+        if (/\.(heic|heif)$/i.test(f.name || '')) return true;
         return false;
       });
       if (!files.length){ setS('error', '❌ Bitte mindestens ein Bild oder PDF hochladen.'); return; }
@@ -12988,7 +13120,7 @@ window.hwiUpdate = function() {
       <div style="margin-top:10px;">
         <button onclick="document.getElementById('mc-ocr-file').click();" style="padding:6px 14px; background:#2e7d32; color:#fff; border:none; border-radius:8px; font-size:.78rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">📁 Datei wählen</button>
       </div>
-      <input type="file" id="mc-ocr-file" accept="image/*" style="display:none;" onchange="window.mcMedOcrHandle&&window.mcMedOcrHandle(this.files[0]);">
+      <input type="file" id="mc-ocr-file" accept="image/*,.heic,.heif" style="display:none;" onchange="window.mcMedOcrHandle&&window.mcMedOcrHandle(this.files[0]);">
       <div id="mc-ocr-status"></div>
     </div>
 
@@ -14410,8 +14542,9 @@ function mcSetOcrStatus(cls, msg) {
 
 window.mcMedOcrHandle = function(file) {
   if (!file) return;
-  if (!file.type || file.type.indexOf('image') !== 0) {
-    mcSetOcrStatus('error', '❌ Bitte ein Bild (PNG, JPG, etc.) hochladen.');
+  var _isHeic = window.isHeicFile && window.isHeicFile(file);
+  if (!_isHeic && (!file.type || file.type.indexOf('image') !== 0)) {
+    mcSetOcrStatus('error', '❌ Bitte ein Bild (PNG, JPG, HEIC) hochladen.');
     return;
   }
   if (typeof window.ocrLoadTesseract !== 'function') {
@@ -14419,9 +14552,13 @@ window.mcMedOcrHandle = function(file) {
     return;
   }
 
-  window.ocrLoadTesseract(function(msg){ mcSetOcrStatus('loading', msg); }).then(function(){
+  var _prepare = _isHeic && window.heicToJpeg
+    ? window.heicToJpeg(file, function(msg){ mcSetOcrStatus('loading', msg); })
+    : Promise.resolve(file);
+  _prepare.then(function(_f){
+  return window.ocrLoadTesseract(function(msg){ mcSetOcrStatus('loading', msg); }).then(function(){
     mcSetOcrStatus('loading', '⏳ Bild wird gelesen — kann 5–15 Sekunden dauern…');
-    return Tesseract.recognize(file, 'deu', {
+    return Tesseract.recognize(_f, 'deu', {
       logger: function(m){
         if (m.status === 'recognizing text') {
           var pct = Math.round((m.progress||0) * 100);
@@ -14473,6 +14610,7 @@ window.mcMedOcrHandle = function(file) {
     // File-Input zurücksetzen
     var fi = document.getElementById('mc-ocr-file');
     if (fi) fi.value = '';
+  });
   }).catch(function(err){
     mcSetOcrStatus('error', '❌ Fehler: ' + (err && err.message ? err.message : 'OCR fehlgeschlagen.'));
     console.error('Med-OCR Error:', err);
