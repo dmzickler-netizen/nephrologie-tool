@@ -15866,7 +15866,10 @@ function generateTexts(age, sex, scr, cys, uacr, bpSys, bpDia, extraInfo,
     const beiStr = diseases.length > 0
       ? ' bei ' + diseases.map(diseaseLabelDativ).join(', ')
       : '';
-    ckdLine = `Chronische Nierenerkrankung (CKD), Stadium ${stadiumStr} nach KDIGO 2024${beiStr}`;
+    const egfrStr = (primaryEGFR !== null && primaryEGFR !== undefined && !isNaN(primaryEGFR))
+      ? ` (eGFR ${primaryEGFR} ml/min/1,73 m²)`
+      : '';
+    ckdLine = `Chronische Nierenerkrankung (CKD), Stadium ${stadiumStr}${egfrStr} nach KDIGO 2024${beiStr}`;
     nephroLines.push(ckdLine);
 
     if (albStage && albStage.stage !== 'A1') {
@@ -15991,16 +15994,16 @@ function generateTexts(age, sex, scr, cys, uacr, bpSys, bpDia, extraInfo,
   const smoker = smokerSel ? smokerSel.value : '';
 
   const recGroups = [
-    { key:'medikation',     title:'💊 MEDIKATION (nephroprotektiv)',         items:[] },
-    { key:'blutdruck',      title:'🩺 BLUTDRUCK',                            items:[] },
-    { key:'elektrolyte',    title:'⚡ ELEKTROLYTE / SÄURE-BASEN',            items:[] },
-    { key:'lifestyle',      title:'🏃 LIFESTYLE',                            items:[] },
-    { key:'ernaehrung',     title:'🍽️ ERNÄHRUNG',                            items:[] },
-    { key:'labor',          title:'🔬 LABOR / MONITORING',                   items:[] },
-    { key:'mbd',            title:'🦴 KOMPLIKATIONEN (CKD-MBD, Anämie)',     items:[] },
-    { key:'krankheit',      title:'🎯 KRANKHEITSSPEZIFISCHE THERAPIE',       items:[] },
-    { key:'ersatz',         title:'⚠️ NIERENERSATZTHERAPIE',                 items:[] },
-    { key:'allgemein',      title:'📋 ALLGEMEIN / VORSORGE',                 items:[] }
+    { key:'medikation',     title:'MEDIKATION (nephroprotektiv)',           items:[] },
+    { key:'blutdruck',      title:'BLUTDRUCK',                              items:[] },
+    { key:'elektrolyte',    title:'ELEKTROLYTE / SÄURE-BASEN',              items:[] },
+    { key:'lifestyle',      title:'LIFESTYLE',                              items:[] },
+    { key:'ernaehrung',     title:'ERNÄHRUNG',                              items:[] },
+    { key:'labor',          title:'LABOR / MONITORING',                     items:[] },
+    { key:'mbd',            title:'KOMPLIKATIONEN (CKD-MBD, Anämie)',       items:[] },
+    { key:'krankheit',      title:'KRANKHEITSSPEZIFISCHE THERAPIE',         items:[] },
+    { key:'ersatz',         title:'NIERENERSATZTHERAPIE',                   items:[] },
+    { key:'allgemein',      title:'ALLGEMEIN / VORSORGE',                   items:[] }
   ];
   const recAdd = (key, item) => { const g = recGroups.find(g => g.key === key); if (g) g.items.push(item); };
 
@@ -16034,7 +16037,7 @@ function generateTexts(age, sex, scr, cys, uacr, bpSys, bpDia, extraInfo,
     // Finerenon (kombinierte Bedingung diab. NP + ACR + eGFR + K⁺)
     if (diseases.includes('diabetisch') && uacr && uacr >= 30 && primaryEGFR >= 25) {
       if (kalium !== null && kalium >= 5.0) {
-        recAdd('medikation', `⚠️ Finerenon (Kerendia®): Indikation gegeben (diab. NP + ACR ≥ 30 + eGFR ≥ 25), aber AKTUELL KONTRAINDIZIERT — K⁺ ${kalium} mmol/l ≥ 5,0! Erst Kalium senken, dann re-evaluieren.`);
+        recAdd('medikation', `ACHTUNG Finerenon (Kerendia®): Indikation gegeben (diab. NP + ACR ≥ 30 + eGFR ≥ 25), aber AKTUELL KONTRAINDIZIERT — K⁺ ${kalium} mmol/l ≥ 5,0! Erst Kalium senken, dann re-evaluieren.`);
       } else {
         const kNote = kalium !== null ? ` Kalium ${kalium} mmol/l erfüllt Bedingung (< 5,0).` : ' Kalium prüfen (Bedingung: < 5,0 mmol/l).';
         recAdd('medikation', `Finerenon (Kerendia® 10 mg/d, ggf. 20 mg): Indiziert bei diab. NP + ACR ≥ 30 + eGFR ≥ 25.${kNote} Additiver nephro-/kardiovask. Schutz (FIDELIO/FIGARO). K⁺-Kontrolle nach 4 Wochen.`);
@@ -16044,13 +16047,13 @@ function generateTexts(age, sex, scr, cys, uacr, bpSys, bpDia, extraInfo,
     // ── ELEKTROLYTE / SÄURE-BASEN ───────────────────────────────────────
     if (kalium !== null) {
       if (kalium >= 6.0) {
-        recAdd('elektrolyte', `🚨 Hyperkaliämie (K⁺ ${kalium} mmol/l): EKG sofort! Kalziumglukonat i.v. → Insulin/Glukose → Patiromer (Veltassa®) oder Natriumzirkoniumcyclosilicat (Lokelma®) 10 g 3×/d × 2d → RAAS-I pausieren bis K⁺ < 5,5`);
+        recAdd('elektrolyte', `NOTFALL Hyperkaliämie (K⁺ ${kalium} mmol/l): EKG sofort! Kalziumglukonat i.v. → Insulin/Glukose → Patiromer (Veltassa®) oder Natriumzirkoniumcyclosilicat (Lokelma®) 10 g 3×/d × 2d → RAAS-I pausieren bis K⁺ < 5,5`);
       } else if (kalium >= 5.5) {
-        recAdd('elektrolyte', `⚠️ Hyperkaliämie (K⁺ ${kalium} mmol/l): RAAS-Inhibitor Dosis prüfen/reduzieren; kaliumarme Diät; Kalium-Binder erwägen (Patiromer/SZC); Finerenon/Spironolacton pausieren/KI`);
+        recAdd('elektrolyte', `ACHTUNG Hyperkaliämie (K⁺ ${kalium} mmol/l): RAAS-Inhibitor Dosis prüfen/reduzieren; kaliumarme Diät; Kalium-Binder erwägen (Patiromer/SZC); Finerenon/Spironolacton pausieren/KI`);
       } else if (kalium >= 5.0) {
         recAdd('elektrolyte', `K⁺ ${kalium} mmol/l: grenzwertig erhöht — engmaschige Kontrolle; kaliumarme Diät; RAAS-I mit Vorsicht; Finerenon/Spironolacton KI bis K⁺ < 5,0`);
       } else if (kalium < 3.5) {
-        recAdd('elektrolyte', `⚠️ Hypokaliämie (K⁺ ${kalium} mmol/l): Kaliumsubstitution oral/i.v.; Ursache klären (Diuretika, GI-Verlust); Thiazid-/Schleifendiuretikum-Dosis prüfen`);
+        recAdd('elektrolyte', `Hypokaliämie (K⁺ ${kalium} mmol/l): Kaliumsubstitution oral/i.v.; Ursache klären (Diuretika, GI-Verlust); Thiazid-/Schleifendiuretikum-Dosis prüfen`);
       }
     }
     if (ph !== null && ph < 7.35) {
@@ -16063,15 +16066,15 @@ function generateTexts(age, sex, scr, cys, uacr, bpSys, bpDia, extraInfo,
 
     // ── LIFESTYLE ───────────────────────────────────────────────────────
     recAdd('lifestyle', 'Bewegung: ≥ 150 min/Woche moderate Aktivität (Gehen, Radfahren, Schwimmen) oder ≥ 75 min intensiv — KDIGO 2024; reduziert KV-Risiko und CKD-Progression');
-    recAdd('lifestyle', 'Körpergewicht: BMI-Ziel 20–25 kg/m² — Adipositas ↑ intraglomerulären Druck (Hyperfiltration) und Proteinurie');
+    recAdd('lifestyle', 'Körpergewicht: BMI-Ziel 20–25 kg/m² — Adipositas erhöht intraglomerulären Druck (Hyperfiltration) und Proteinurie');
     if (smoker === 'current') {
-      recAdd('lifestyle', '🚬 RAUCHENTWÖHNUNG (Aktiv-Raucher!): Strukturierte Beratung anbieten — Nikotinersatz, Vareniclin/Bupropion, Verhaltenstherapie. Rauchen beschleunigt CKD-Progression und ↑ KV-Mortalität erheblich.');
+      recAdd('lifestyle', 'RAUCHENTWÖHNUNG (Aktiv-Raucher!): Strukturierte Beratung anbieten — Nikotinersatz, Vareniclin/Bupropion, Verhaltenstherapie. Rauchen beschleunigt CKD-Progression und erhöht die KV-Mortalität erheblich.');
     } else if (smoker === 'former') {
       recAdd('lifestyle', 'Nikotinkarenz beibehalten (Ex-Raucher) — konsequenten Verzicht weiter fortsetzen');
     } else if (smoker === 'never') {
       recAdd('lifestyle', 'Nichtraucher — keine Nikotinintervention erforderlich');
     } else {
-      recAdd('lifestyle', 'Raucherstatus erheben; bei aktivem Konsum strukturierte Raucherentwöhnung — Rauchen beschleunigt CKD-Progression und ↑ KV-Mortalität');
+      recAdd('lifestyle', 'Raucherstatus erheben; bei aktivem Konsum strukturierte Raucherentwöhnung — Rauchen beschleunigt CKD-Progression und erhöht die KV-Mortalität');
     }
 
     // ── ERNÄHRUNG ───────────────────────────────────────────────────────
@@ -16110,7 +16113,7 @@ function generateTexts(age, sex, scr, cys, uacr, bpSys, bpDia, extraInfo,
       recAdd('ersatz', 'Impfstatus komplettieren: Hepatitis B, Pneumokokken, Influenza, COVID-19');
     }
     if (stage === 'G5') {
-      recAdd('ersatz', '⚠️ Dialyseeinleitung evaluieren / vorbereiten; Notfalldialyse bei klinischer Dekompensation');
+      recAdd('ersatz', 'Dialyseeinleitung evaluieren / vorbereiten; Notfalldialyse bei klinischer Dekompensation');
     }
   }
 
@@ -16169,23 +16172,26 @@ function generateTexts(age, sex, scr, cys, uacr, bpSys, bpDia, extraInfo,
   recAdd('allgemein', 'Impfstatus prüfen: Pneumokokken, Influenza jährlich, Hepatitis B, COVID-19');
   recAdd('allgemein', 'Wirkstoff-Dosierung renal eliminierter Medikamente: Medikationscheck-Tab nutzen');
 
-  // ── Output: gruppiert mit Sektionen ───────────────────────────────────
-  let empfText = `--- THERAPEUTISCHE EMPFEHLUNGEN ---\n\n`;
+  // ── Output: gruppiert mit Sektionen, Word-freundlich ──────────────────
+  let empfText = 'THERAPEUTISCHE EMPFEHLUNGEN\n';
   if (gfrStage) {
-    empfText += `Stadium ${gfrStage.stage}${albStage ? albStage.stage : ''}`;
-    if (diseases.length) empfText += ` bei ${diseases.map(diseaseLabel).join(', ')}`;
-    empfText += `\n${'─'.repeat(60)}\n`;
+    let header = `Stadium ${gfrStage.stage}${albStage ? albStage.stage : ''}`;
+    if (primaryEGFR !== null && primaryEGFR !== undefined && !isNaN(primaryEGFR)) header += ` (eGFR ${primaryEGFR} ml/min/1,73 m²)`;
+    if (diseases.length) header += ` bei ${diseases.map(diseaseLabel).join(', ')}`;
+    empfText += header + '\n';
   }
+  empfText += '\n';
 
   recGroups.forEach(g => {
     if (g.items.length === 0) return;
-    empfText += `\n▸ ${g.title}\n`;
-    g.items.forEach((item, i) => {
-      empfText += `   ${i + 1}. ${item}\n`;
+    empfText += g.title + '\n';
+    g.items.forEach(item => {
+      empfText += '• ' + item + '\n';
     });
+    empfText += '\n';
   });
 
-  empfText += `\n${'─'.repeat(60)}\n💊 Wirkstoff-Dosierung bei eingeschränkter eGFR + Kontraindikations-Check: siehe Medikationscheck-Tab.\n`;
+  empfText += 'Wirkstoff-Dosierung bei eingeschränkter eGFR und Kontraindikations-Check: siehe Medikationscheck-Tab.\n';
 
   document.getElementById('text-empfehlung').value = empfText;
 
