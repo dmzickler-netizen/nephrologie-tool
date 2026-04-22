@@ -7870,6 +7870,21 @@ window.gichtAutoImport = function() {
     <span style="font-size:1.1rem;">📥</span><span id="sd-import-text"></span>
   </div>
 
+  <style>
+    .sd-subnav { display:flex; gap:6px; margin:0 0 14px; flex-wrap:wrap; border-bottom:2px solid #e8eaf6; }
+    .sd-subnav-btn { padding:8px 14px; background:none; border:none; border-bottom:3px solid transparent; cursor:pointer; font-size:.88rem; font-weight:600; color:#607d8b; transition:all .15s; margin-bottom:-2px; }
+    .sd-subnav-btn:hover { color:#3949ab; background:#f5f7fa; }
+    .sd-subnav-btn.active { color:#3949ab; border-bottom-color:#3949ab; background:#e8eaf6; }
+  </style>
+
+  <div class="sd-subnav">
+    <button class="sd-subnav-btn active" data-sub="hypo" onclick="sdShowSub('hypo')">⬇️ Hypothyreose</button>
+    <button class="sd-subnav-btn" data-sub="hyper" onclick="sdShowSub('hyper')">⬆️ Hyperthyreose</button>
+    <button class="sd-subnav-btn" data-sub="amio" onclick="sdShowSub('amio')">💊 Amiodaron-induziert</button>
+  </div>
+
+  <!-- ═══════════════ SUB-TAB: HYPOTHYREOSE ═══════════════ -->
+  <div class="sd-sub" id="sd-sub-hypo">
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
 
     <!-- ===== INPUT CARD ===== -->
@@ -7944,9 +7959,183 @@ window.gichtAutoImport = function() {
     </div>
 
   </div>
+  </div><!-- end sd-sub-hypo -->
+
+  <!-- ═══════════════ SUB-TAB: HYPERTHYREOSE ═══════════════ -->
+  <div class="sd-sub" id="sd-sub-hyper" style="display:none;">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+    <div class="diab-card">
+      <h2>🦋 Schilddrüse — Hyperthyreose</h2>
+      <p style="font-size:.8rem;color:#607d8b;margin:-4px 0 14px;">Diagnostik &amp; Therapie nach ATA 2016 / ETA 2018</p>
+
+      <!-- Patient -->
+      <div class="diab-row">
+        <div class="diab-field">
+          <label>Alter <span style="font-weight:400;color:#607d8b;">(auto)</span></label>
+          <input type="number" id="sdy-age" placeholder="z.B. 55" oninput="sdyCalc()">
+          <span class="diab-unit">Jahre</span>
+        </div>
+        <div class="diab-field">
+          <label>Schwangerschaft</label>
+          <div style="display:flex;gap:14px;align-items:center;font-size:.9rem;color:#37474f;padding-top:6px;">
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="checkbox" id="sdy-pregnancy" onchange="sdyCalc()"> ja</label>
+            <select id="sdy-trim" onchange="sdyCalc()" style="padding:4px 6px;border:1.3px solid #cfd8dc;border-radius:6px;font-size:.85rem;background:#fff;">
+              <option value="">Trim. …</option>
+              <option value="1">1. Trim.</option>
+              <option value="2">2. Trim.</option>
+              <option value="3">3. Trim.</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Labor -->
+      <div class="diab-row">
+        <div class="diab-field">
+          <label>TSH</label>
+          <input type="number" id="sdy-tsh" step="0.001" placeholder="z.B. 0.05" oninput="sdyCalc()">
+          <span class="diab-unit">mU/l (supprimiert &lt; 0,4)</span>
+        </div>
+        <div class="diab-field">
+          <label>fT4</label>
+          <input type="number" id="sdy-ft4" step="0.1" placeholder="z.B. 28" oninput="sdyCalc()">
+          <span class="diab-unit">pmol/l (Norm 12–22)</span>
+        </div>
+      </div>
+      <div class="diab-row">
+        <div class="diab-field">
+          <label>fT3</label>
+          <input type="number" id="sdy-ft3" step="0.1" placeholder="z.B. 8" oninput="sdyCalc()">
+          <span class="diab-unit">pmol/l (Norm 3,5–6,5)</span>
+        </div>
+        <div class="diab-field">
+          <label>TRAK</label>
+          <select id="sdy-trak" onchange="sdyCalc()">
+            <option value="">unbekannt</option>
+            <option value="pos">positiv</option>
+            <option value="neg">negativ</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid #e8eaf6;margin:14px 0 10px;"></div>
+
+      <!-- Ätiologie -->
+      <div style="margin:0 0 6px;font-size:.78rem;font-weight:700;color:#455a64;text-transform:uppercase;letter-spacing:.4px;">Vermutete Ätiologie</div>
+      <select id="sdy-etio" onchange="sdyCalc()" style="width:100%;padding:7px 10px;border:1.3px solid #cfd8dc;border-radius:6px;font-size:.88rem;background:#fff;">
+        <option value="">— bitte wählen —</option>
+        <option value="basedow">M. Basedow (TRAK pos, diffuses Sono, ggf. Augenbeteiligung)</option>
+        <option value="adenom">Toxisches Adenom (solitärer „heißer" Knoten)</option>
+        <option value="mns">Multinodale toxische Struma</option>
+        <option value="thyreoiditis">Thyreoiditis (subakut/postpartum/silent — passager!)</option>
+        <option value="iod">Iod-induziert (Jod-Basedow, KM-Exposition)</option>
+        <option value="amio">Amiodaron-induziert → Sub-Tab „Amiodaron"</option>
+        <option value="iatrogen">Iatrogen (L-Thyroxin-Übermedikation)</option>
+      </select>
+
+      <div style="border-top:1px solid #e8eaf6;margin:14px 0 10px;"></div>
+
+      <!-- Klinik -->
+      <div style="margin:0 0 6px;font-size:.78rem;font-weight:700;color:#455a64;text-transform:uppercase;letter-spacing:.4px;">Klinik / Komorbiditäten</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:.85rem;color:#37474f;">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="sdy-eye" onchange="sdyCalc()"> Endokrine Orbitopathie</label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="sdy-vhf" onchange="sdyCalc()"> Vorhofflimmern</label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="sdy-khk" onchange="sdyCalc()"> KHK</label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="sdy-tachy" onchange="sdyCalc()"> Tachykardie / Symptomatik</label>
+      </div>
+
+      <button class="diab-calc-btn" onclick="sdyCalc()" style="margin-top:14px;background:linear-gradient(135deg,#c2185b,#d81b60);box-shadow:0 3px 10px rgba(194,24,91,.3);">⬆️ Empfehlung berechnen</button>
+    </div>
+
+    <div class="diab-card">
+      <h2>📋 Empfehlung</h2>
+      <div id="sdy-result">
+        <p style="color:#90a4ae;font-size:.85rem;font-style:italic;">TSH/fT4 + Ätiologie eingeben — Empfehlung erscheint hier.</p>
+      </div>
+    </div>
+
+  </div>
+  </div><!-- end sd-sub-hyper -->
+
+  <!-- ═══════════════ SUB-TAB: AMIODARON-INDUZIERT ═══════════════ -->
+  <div class="sd-sub" id="sd-sub-amio" style="display:none;">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+    <div class="diab-card">
+      <h2>💊 Amiodaron-induzierte SD-Dysfunktion</h2>
+      <p style="font-size:.8rem;color:#607d8b;margin:-4px 0 14px;">AIH / AIT Typ 1 vs. Typ 2 nach ETA 2018 (Bartalena)</p>
+
+      <!-- Labor -->
+      <div class="diab-row">
+        <div class="diab-field">
+          <label>TSH</label>
+          <input type="number" id="sda-tsh" step="0.001" placeholder="z.B. 0.05" oninput="sdaCalc()">
+          <span class="diab-unit">mU/l</span>
+        </div>
+        <div class="diab-field">
+          <label>fT4</label>
+          <input type="number" id="sda-ft4" step="0.1" placeholder="z.B. 28" oninput="sdaCalc()">
+          <span class="diab-unit">pmol/l (Norm 12–22)</span>
+        </div>
+      </div>
+      <div class="diab-row">
+        <div class="diab-field">
+          <label>fT3</label>
+          <input type="number" id="sda-ft3" step="0.1" placeholder="z.B. 8" oninput="sdaCalc()">
+          <span class="diab-unit">pmol/l (Norm 3,5–6,5)</span>
+        </div>
+        <div class="diab-field">
+          <label>Amiodaron-Dauer</label>
+          <input type="number" id="sda-duration" placeholder="z.B. 6" oninput="sdaCalc()">
+          <span class="diab-unit">Monate</span>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid #e8eaf6;margin:14px 0 10px;"></div>
+
+      <!-- Sono / vorbestehende SD -->
+      <div style="margin:0 0 6px;font-size:.78rem;font-weight:700;color:#455a64;text-transform:uppercase;letter-spacing:.4px;">Sonografie / Vorgeschichte</div>
+      <div class="diab-row">
+        <div class="diab-field">
+          <label>SD-Sono CDS-Vaskularisation</label>
+          <select id="sda-cds" onchange="sdaCalc()">
+            <option value="">unbekannt / noch nicht erfolgt</option>
+            <option value="high">erhöht (CDS-Pattern I–III) → Typ 1</option>
+            <option value="low">vermindert / fehlend → Typ 2</option>
+          </select>
+        </div>
+        <div class="diab-field" style="align-self:end;">
+          <div style="display:flex;flex-direction:column;gap:4px;font-size:.85rem;color:#37474f;">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="sda-prior" onchange="sdaCalc()"> Vorbest. SD-Pathologie (Knoten, AK, Struma)</label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="sda-trak" onchange="sdaCalc()"> TRAK positiv</label>
+          </div>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid #e8eaf6;margin:14px 0 10px;"></div>
+
+      <!-- Kardial -->
+      <div style="margin:0 0 6px;font-size:.78rem;font-weight:700;color:#455a64;text-transform:uppercase;letter-spacing:.4px;">Kardiale Situation</div>
+      <label style="display:flex;align-items:center;gap:6px;font-size:.85rem;color:#37474f;cursor:pointer;">
+        <input type="checkbox" id="sda-essential" onchange="sdaCalc()"> Amiodaron klinisch unverzichtbar (z.B. lebensbedrohliche VT, kein Alternativ-AAD)
+      </label>
+
+      <button class="diab-calc-btn" onclick="sdaCalc()" style="margin-top:14px;background:linear-gradient(135deg,#00838f,#0097a7);box-shadow:0 3px 10px rgba(0,131,143,.3);">💊 Empfehlung berechnen</button>
+    </div>
+
+    <div class="diab-card">
+      <h2>📋 Empfehlung</h2>
+      <div id="sda-result">
+        <p style="color:#90a4ae;font-size:.85rem;font-style:italic;">Laborwerte und Sono-Befund eingeben.</p>
+      </div>
+    </div>
+
+  </div>
+  </div><!-- end sd-sub-amio -->
 
   <div style="margin-top:14px;padding:8px 12px;background:#fff3e0;border:1px solid #ffcc80;border-left:4px solid #ef6c00;border-radius:8px;font-size:.78rem;color:#5d4037;line-height:1.6;">
-    <strong>Quellen:</strong> Hypothyroidism. JAMA 2025 (3. September) · ATA Clinical Practice Guidelines for Hypothyroidism · Endocrine Society. Volle Ersatzdosis 1,6 µg/kg/d (Range 1,5–1,8). Werte ohne Gewähr — kein Ersatz für klinisches Urteil.
+    <strong>Quellen:</strong> Hypothyroidism. JAMA 2025 (3. September) · ATA Clinical Practice Guidelines for Hypothyroidism &amp; Hyperthyroidism (2014/2016) · ETA 2018 Guideline for Graves' Hyperthyroidism (Kahaly et al.) · ETA 2018 Statement on Amiodarone-associated Thyroid Dysfunction (Bartalena et al., Eur Thyroid J). Volle L-Thyroxin-Ersatzdosis 1,6 µg/kg/d. Werte ohne Gewähr — kein Ersatz für klinisches Urteil.
   </div>
 
 </div><!-- end diab-container -->
@@ -7955,6 +8144,16 @@ window.gichtAutoImport = function() {
   'use strict';
 
   function sdRound(d) { return Math.round(d / 12.5) * 12.5; }
+
+  window.sdShowSub = function(sub) {
+    ['hypo','hyper','amio'].forEach(function(s){
+      var el = document.getElementById('sd-sub-'+s);
+      if (el) el.style.display = (s === sub) ? 'block' : 'none';
+    });
+    document.querySelectorAll('.sd-subnav-btn').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-sub') === sub);
+    });
+  };
 
   window.sdToggleDose = function() {
     var on = document.getElementById('sd-on-therapy').checked;
@@ -7966,9 +8165,13 @@ window.gichtAutoImport = function() {
     var ckdAge = document.getElementById('age');
     var sdW = document.getElementById('sd-weight');
     var sdA = document.getElementById('sd-age');
+    var sdyA = document.getElementById('sdy-age');
     var imported = [];
     if (ckdW && ckdW.value && !sdW.value) { sdW.value = ckdW.value; imported.push('Gewicht'); }
-    if (ckdAge && ckdAge.value && !sdA.value) { sdA.value = ckdAge.value; imported.push('Alter'); }
+    if (ckdAge && ckdAge.value) {
+      if (!sdA.value) { sdA.value = ckdAge.value; if (imported.indexOf('Alter')===-1) imported.push('Alter'); }
+      if (sdyA && !sdyA.value) { sdyA.value = ckdAge.value; }
+    }
     if (imported.length) {
       var b = document.getElementById('sd-import-banner');
       var t = document.getElementById('sd-import-text');
@@ -8192,6 +8395,270 @@ window.gichtAutoImport = function() {
     ziele.push('Vermeidung von Über- und Unterbehandlung — beide mit kardiovaskulärem Risiko assoziiert');
     ziele.push('Keine routinemäßige T3-Kombination — Leitlinien empfehlen Monotherapie');
     html += sdSection('Therapieziel', ziele);
+
+    resEl.innerHTML = html;
+  };
+
+  // ═══════════════════════════════════════════════════════════════
+  // HYPERTHYREOSE
+  // ═══════════════════════════════════════════════════════════════
+  function sdyBox(color, header, body) {
+    var bg = {green:'#e8f5e9',red:'#ffebee',orange:'#fff3e0',yellow:'#fff8e1',blue:'#e3f2fd',pink:'#fce4ec'}[color] || '#f5f7fa';
+    var bd = {green:'#66bb6a',red:'#ef5350',orange:'#ff9800',yellow:'#f9a825',blue:'#42a5f5',pink:'#ec407a'}[color] || '#cfd8dc';
+    var hc = {green:'#2e7d32',red:'#c62828',orange:'#e65100',yellow:'#e65100',blue:'#1565c0',pink:'#c2185b'}[color] || '#37474f';
+    var bc = {green:'#1b5e20',red:'#b71c1c',orange:'#bf360c',yellow:'#5d4037',blue:'#0d47a1',pink:'#880e4f'}[color] || '#37474f';
+    return '<div style="background:'+bg+';border:2px solid '+bd+';border-radius:8px;padding:12px 14px;margin-bottom:10px;">'+
+      '<div style="font-size:.74rem;font-weight:700;color:'+hc+';text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">'+header+'</div>'+
+      '<div style="font-size:.88rem;color:'+bc+';line-height:1.55;">'+body+'</div></div>';
+  }
+  function sdySectionList(title, items) {
+    var s = '<div style="background:#f5f7fa;border:1px solid #cfd8dc;border-radius:8px;padding:10px 12px;margin-bottom:10px;">';
+    s += '<div style="font-size:.74rem;font-weight:700;color:#37474f;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">'+title+'</div>';
+    s += '<ul style="margin:0;padding-left:18px;font-size:.83rem;line-height:1.6;color:#37474f;">';
+    items.forEach(function(i){ s += '<li>'+i+'</li>'; });
+    return s + '</ul></div>';
+  }
+
+  window.sdyCalc = function() {
+    var age = parseInt(document.getElementById('sdy-age').value, 10);
+    var tsh = parseFloat(document.getElementById('sdy-tsh').value);
+    var ft4 = parseFloat(document.getElementById('sdy-ft4').value);
+    var ft3 = parseFloat(document.getElementById('sdy-ft3').value);
+    var trak = document.getElementById('sdy-trak').value;
+    var etio = document.getElementById('sdy-etio').value;
+    var preg = document.getElementById('sdy-pregnancy').checked;
+    var trim = document.getElementById('sdy-trim').value;
+    var eye  = document.getElementById('sdy-eye').checked;
+    var vhf  = document.getElementById('sdy-vhf').checked;
+    var khk  = document.getElementById('sdy-khk').checked;
+    var tachy = document.getElementById('sdy-tachy').checked;
+
+    var resEl = document.getElementById('sdy-result');
+    if (isNaN(tsh) && isNaN(ft4)) {
+      resEl.innerHTML = '<p style="color:#90a4ae;font-size:.85rem;font-style:italic;">Mindestens TSH oder fT4 angeben.</p>';
+      return;
+    }
+
+    var html = '';
+
+    // ── Klassifikation
+    var ft4High = !isNaN(ft4) && ft4 > 22;
+    var ft3High = !isNaN(ft3) && ft3 > 6.5;
+    var ft4Norm = !isNaN(ft4) && ft4 >= 12 && ft4 <= 22;
+    var tshSupp = !isNaN(tsh) && tsh < 0.4;
+    var tshNorm = !isNaN(tsh) && tsh >= 0.4 && tsh <= 4.0;
+    var tshHigh = !isNaN(tsh) && tsh > 4.0;
+
+    if (tshSupp && (ft4High || ft3High)) {
+      html += sdyBox('red', 'Manifeste Hyperthyreose / Thyreotoxikose',
+        'TSH '+tsh+' mU/l supprimiert + fT4 '+(ft4 || '?')+' / fT3 '+(ft3 || '?')+' erhöht.');
+    } else if (tshSupp && !ft4High && !ft3High) {
+      html += sdyBox('yellow', 'Subklinische Hyperthyreose',
+        'TSH '+tsh+' mU/l supprimiert, fT4/fT3 normal. Therapie bei Alter ≥ 65, KHK, VHF, Osteoporose oder Symptomen indiziert; sonst Verlauf.');
+    } else if (tshHigh && ft4High) {
+      html += sdyBox('blue', 'Atypische Konstellation: TSH ↑ + fT4 ↑',
+        'V.a. TSH-produzierendes Hypophysenadenom oder SD-Hormonresistenz — endokrinologische Abklärung erforderlich.');
+    } else if (tshNorm && !ft4High) {
+      html += sdyBox('green', 'Schilddrüsenfunktion euthyreot',
+        'TSH '+tsh+' mU/l und fT4 im Normbereich — keine manifeste Hyperthyreose.');
+      resEl.innerHTML = html;
+      return;
+    }
+
+    // ── Therapie nach Ätiologie
+    if (etio === 'basedow') {
+      var basedowItems = [];
+      if (preg && trim === '1') {
+        basedowItems.push('<strong>Schwangerschaft 1. Trim.: Propylthiouracil (PTU)</strong> 50–150 mg 3×/d (Carbimazol/Methimazol → Aplasia cutis-Risiko)');
+        basedowItems.push('Ab 2. Trim.: Wechsel auf Carbimazol/Methimazol (PTU-Hepatotoxizität)');
+        basedowItems.push('Ziel: fT4 im oberen Normbereich, niedrigste effektive Dosis (TRAK transplazentar!)');
+      } else {
+        basedowItems.push('<strong>Carbimazol</strong> 20–40 mg/d (Erstwahl außer 1. Trim. SS); Reduktion nach 4–6 Wochen je nach fT4');
+        basedowItems.push('Therapiedauer 12–18 Monate; Remissionsrate ~50 %');
+        basedowItems.push('Bei Rezidiv oder Therapieversagen: <strong>definitive Therapie</strong> (Radiojod oder Thyreoidektomie)');
+      }
+      basedowItems.push('Vor Therapie: <strong>BB + LFP</strong> (Carbimazol-Agranulozytose 0,2–0,5 %, Hepatotoxizität)');
+      basedowItems.push('Patientenaufklärung: Bei Halsschmerzen + Fieber → sofort BB-Kontrolle, Thionamid pausieren');
+      basedowItems.push('Kontrolle BB + LFP nach 2–4 Wochen, dann je nach Klinik');
+      html += sdySectionList('Therapie M. Basedow', basedowItems);
+    } else if (etio === 'adenom' || etio === 'mns') {
+      var nodItems = [];
+      nodItems.push('<strong>Definitive Therapie bevorzugt:</strong> Radiojod (RJT) oder Thyreoidektomie');
+      nodItems.push('Tox. Adenom → RJT effektiv (autonomer Knoten konzentriert Iod)');
+      nodItems.push('Multinodal mit Kompressionssymptomen / Größe → OP bevorzugen');
+      nodItems.push('Thyreostatika nur als Vorbehandlung (Euthyreose vor RJT/OP) — Carbimazol 10–30 mg/d');
+      nodItems.push('Schwangerschaft: Thionamide bevorzugt (RJT kontraindiziert)');
+      html += sdySectionList(etio === 'adenom' ? 'Therapie tox. Adenom' : 'Therapie tox. multinodale Struma', nodItems);
+    } else if (etio === 'thyreoiditis') {
+      html += sdySectionList('Therapie Thyreoiditis (passager)', [
+        '<strong>Keine Thyreostatika!</strong> — passagere Hormon-Freisetzung aus zerstörtem Gewebe',
+        'Symptomatisch: <strong>Betablocker</strong> (Propranolol 20–40 mg 3–4×/d, alternativ Metoprolol)',
+        'Bei subakuter Thyreoiditis (de Quervain): NSAR; bei schwerem Verlauf Glukokortikoide (Prednison 30–40 mg/d)',
+        'Verlauf: Hyperthyreose (Wochen) → Hypothyreose (Wochen–Monate) → meist Erholung. TSH-Verlaufskontrollen alle 4–6 Wochen'
+      ]);
+    } else if (etio === 'iod') {
+      html += sdySectionList('Therapie iod-induziert', [
+        'Iod-Karenz (KM, Amiodaron-Stop wenn möglich, iodhaltige Medis prüfen)',
+        'Symptomatisch Betablocker (Propranolol 20–40 mg 3–4×/d)',
+        'Bei manifester / persistierender Hyperthyreose: Thionamide (Carbimazol 20–40 mg/d) ± Perchlorat (verhindert weitere Iod-Aufnahme)',
+        'Verlauf je nach Iod-Last und Ätiologie variabel — endokrinologische Mitbetreuung'
+      ]);
+    } else if (etio === 'amio') {
+      html += sdyBox('blue', 'Amiodaron-induziert',
+        '→ Wechsel auf Sub-Tab <strong>„Amiodaron-induziert"</strong> für AIT Typ 1/2-Differenzierung und spezifische Therapie.');
+    } else if (etio === 'iatrogen') {
+      html += sdySectionList('Therapie iatrogen', [
+        'L-Thyroxin-Dosis reduzieren (12,5–25 µg-Schritte)',
+        'TSH-Kontrolle nach 6–8 Wochen',
+        'Adhärenz/Einnahmezeitpunkt prüfen'
+      ]);
+    } else {
+      html += sdyBox('blue', 'Ätiologie unklar — weitere Diagnostik',
+        '<strong>Diagnostik:</strong> TRAK (Basedow), TPO-AK, Schilddrüsen-Sonografie + Doppler, ggf. Szintigraphie (heißer Knoten vs. diffuse Mehranreicherung vs. low-uptake bei Thyreoiditis).');
+    }
+
+    // ── Symptomatische Therapie (BB) bei Tachy/VHF/KHK
+    if (vhf || tachy || khk) {
+      html += sdySectionList('Symptomatische Therapie', [
+        '<strong>Betablocker</strong> immer bei Symptomatik / VHF / KHK: Propranolol 20–40 mg 3–4×/d (zusätzlich periphere T4→T3-Konversion ↓)',
+        'Bei Asthma/COPD-Risiko: Metoprolol 50–100 mg 1–2×/d statt Propranolol',
+        vhf ? '<strong>VHF-Management:</strong> Antikoagulation nach CHA₂DS₂-VASc (Hyperthyreose erhöht Thromboembolie-Risiko unabhängig vom Score)' : 'Bei neu aufgetretenem VHF: nach Euthyreose oft spontane Konversion'
+      ]);
+    }
+
+    // ── Endokrine Orbitopathie
+    if (eye) {
+      html += sdySectionList('Endokrine Orbitopathie (Graves\' Orbitopathie)', [
+        'Konsil <strong>Augenklinik</strong> — Aktivitäts-/Schweregrad (CAS, EUGOGO)',
+        'Aktive moderate-schwere EO: <strong>iv-Methylprednisolon</strong> 4,5 g (kumulative Dosis über 12 Wochen, EUGOGO-Schema)',
+        '<strong>Teprotumumab</strong> (IGF-1R-Antagonist): bei aktiver EO mit Proptosis (USA-Zulassung)',
+        '<strong>RJT KONTRAINDIZIERT</strong> bei aktiver EO oder mit Steroid-Schutz (Risiko Verschlechterung)',
+        'Selen 200 µg/d × 6 Monate bei milder EO (MaRGo-Studie)',
+        'Rauchstopp obligat — Rauchen verschlechtert EO erheblich'
+      ]);
+    }
+
+    // ── Monitoring
+    var monItems = [
+      'TSH/fT4-Kontrolle nach 4–6 Wochen unter Thionamiden',
+      'Bei Carbimazol/PTU: BB + LFP vor Therapie und nach 2–4 Wochen, dann je nach Klinik',
+      'Aufklärung: Halsschmerzen + Fieber sofort BB-Kontrolle (Agranulozytose)'
+    ];
+    html += sdySectionList('Monitoring', monItems);
+
+    resEl.innerHTML = html;
+  };
+
+  // ═══════════════════════════════════════════════════════════════
+  // AMIODARON-INDUZIERTE SD-DYSFUNKTION
+  // ═══════════════════════════════════════════════════════════════
+  window.sdaCalc = function() {
+    var tsh = parseFloat(document.getElementById('sda-tsh').value);
+    var ft4 = parseFloat(document.getElementById('sda-ft4').value);
+    var ft3 = parseFloat(document.getElementById('sda-ft3').value);
+    var dur = parseFloat(document.getElementById('sda-duration').value);
+    var cds = document.getElementById('sda-cds').value;
+    var prior = document.getElementById('sda-prior').checked;
+    var trak = document.getElementById('sda-trak').checked;
+    var ess = document.getElementById('sda-essential').checked;
+
+    var resEl = document.getElementById('sda-result');
+    if (isNaN(tsh) && isNaN(ft4)) {
+      resEl.innerHTML = '<p style="color:#90a4ae;font-size:.85rem;font-style:italic;">Mindestens TSH oder fT4 angeben.</p>';
+      return;
+    }
+
+    var html = '';
+
+    // Klassifikation
+    var hyper = !isNaN(tsh) && tsh < 0.4 && (((!isNaN(ft4)) && ft4 > 22) || ((!isNaN(ft3)) && ft3 > 6.5));
+    var hypo  = !isNaN(tsh) && tsh > 4.0;
+    var subHyper = !isNaN(tsh) && tsh < 0.4 && !hyper;
+    var subHypo  = !isNaN(tsh) && tsh > 4.0 && tsh < 10 && !isNaN(ft4) && ft4 >= 12;
+
+    // ── AIH ──────────────────────────────────────────
+    if (hypo) {
+      html += sdyBox('blue', 'Amiodaron-induzierte Hypothyreose (AIH)',
+        'TSH '+tsh+' mU/l erhöht, fT4 '+(ft4 || '?')+'. AIH ist häufiger als AIT (5–25 %), tritt meist in den ersten Monaten auf, häufiger bei Frauen + TPO-AK-positiven Patienten.');
+      html += sdySectionList('Therapie AIH', [
+        '<strong>L-Thyroxin-Substitution</strong> — oft höhere Dosen nötig als bei klassischer Hypothyreose (Iod-Last unter Amiodaron)',
+        'Initialdosis 25–50 µg/d (häufig kardiale Komorbidität!), in 12,5–25 µg-Schritten alle 4–6 Wochen titrieren',
+        '<strong>Amiodaron meist weiter möglich</strong> (kein Absetzen erforderlich)',
+        'Ziel: TSH im Normbereich; fT4 im oberen Normbereich; Aktivkontrolle alle 6–8 Wochen bis stabil'
+      ]);
+    }
+
+    // ── AIT ──────────────────────────────────────────
+    if (hyper || subHyper) {
+      // Differenzierung Typ 1 vs Typ 2
+      var typ;
+      var typReason = '';
+      if (cds === 'high' || (cds === '' && (prior || trak))) {
+        typ = 1;
+        typReason = (cds === 'high' ? 'CDS-Vaskularisation erhöht' : '') +
+                    ((cds === '' && (prior || trak)) ? (typReason ? ' + ' : '') + 'vorbestehende SD-Pathologie/TRAK' : '');
+      } else if (cds === 'low') {
+        typ = 2;
+        typReason = 'CDS-Vaskularisation vermindert (destruktiv-thyreoiditisch)';
+      } else if (!prior && !trak && cds === '') {
+        typ = 'unbekannt';
+      } else {
+        typ = 2;
+      }
+
+      var titel = 'Amiodaron-induzierte Thyreotoxikose (AIT)';
+      if (subHyper) titel += ' — subklinisch (TSH supprimiert, fT4/fT3 noch normal)';
+
+      html += sdyBox('red', titel,
+        'TSH '+tsh+' mU/l supprimiert' + ((!isNaN(ft4)) ? ', fT4 '+ft4 : '') + ((!isNaN(ft3)) ? ', fT3 '+ft3 : '') + '. ' +
+        (typ === 'unbekannt' ? 'Typ-Differenzierung erforderlich: <strong>SD-Sono mit Doppler (CDS)</strong> + TRAK + TPO-AK; ggf. 24-h-Iod-Uptake (meist niedrig bei beiden Typen wegen Iod-Last).' :
+         '<strong>Wahrscheinlich AIT Typ '+typ+'</strong> ('+typReason+').'));
+
+      if (typ === 1 || typ === 'unbekannt') {
+        html += sdySectionList('Therapie AIT Typ 1 (Iod-induziert, vorbestehende SD-Path.)', [
+          '<strong>Thionamide hochdosiert:</strong> Carbimazol 40–60 mg/d oder Methimazol äquivalent (höher als bei klassischer Hyperthyreose, Iod-blockiert SD)',
+          '+ <strong>Perchlorat (Irenat®)</strong> 250–500 mg 4×/d für 4–6 Wochen — verhindert weitere Iod-Aufnahme (cave Knochenmark-Toxizität)',
+          ess ? '<strong>Amiodaron weiterführen</strong> (lebensbedrohliche Indikation) — engmaschiges Monitoring' : '<strong>Amiodaron möglichst absetzen</strong> in Absprache mit Kardiologie (T1/2 ~50 d, Effekt verzögert)',
+          'Nach Euthyreose: definitive Therapie erwägen (RJT — wenn Iod-Uptake ausreichend; oder Thyreoidektomie)',
+          'Therapiedauer Thionamide: bis Euthyreose (oft 6–12 Wochen) plus weiter bis definitive Lösung'
+        ]);
+      }
+      if (typ === 2 || typ === 'unbekannt') {
+        html += sdySectionList('Therapie AIT Typ 2 (destruktiv-thyreoiditisch)', [
+          '<strong>Glukokortikoide:</strong> Prednison/Prednisolon 30–40 mg/d (alternativ 0,5–0,7 mg/kg/d) für 1–3 Monate, dann Reduktion',
+          '<strong>Amiodaron kann meist fortgeführt werden</strong> (Typ 2 = passagere Destruktion, Iod-Toxizität nicht ursächlich)',
+          'Klinische Besserung typisch innerhalb 1–2 Wochen unter Steroid; bei Steroid-Resistenz nach 4 Wochen → Mischtyp annehmen, Thionamide hinzu',
+          'Verlauf häufig in Hypothyreose übergehend → L-Thyroxin-Substitution erwägen'
+        ]);
+      }
+      if (typ === 'unbekannt') {
+        html += sdyBox('yellow', 'Mischtyp / Differenzierung unsicher',
+          'Bei klinischer Unsicherheit oder rasch progredient: <strong>Kombination Thionamide + Glukokortikoide</strong> (Prednison 30–40 mg/d + Carbimazol 40 mg/d) — Bartalena 2018, ETA-Empfehlung.');
+      }
+
+      html += sdySectionList('Therapieversagen / Eskalation', [
+        '<strong>Notfall-Thyreoidektomie</strong> bei: Therapieversagen unter med. Therapie + kardialer Verschlechterung (rasche Lösung der Thyreotoxikose, KH-Mortalität ~9 % aber oft einzige Option)',
+        'Plasmapherese als Bridge zur OP in Einzelfällen',
+        'Frühe Endokrinologie- und Kardiologie-Konsultation — interdisziplinäre Entscheidung Amiodaron-Stop'
+      ]);
+    }
+
+    // ── Subklinische Hypothyreose unter Amiodaron
+    if (subHypo) {
+      html += sdyBox('yellow', 'Subklinische Hypothyreose unter Amiodaron',
+        'TSH '+tsh+' mU/l, fT4 '+ft4+' pmol/l. Engmaschige Verlaufskontrolle alle 6–8 Wochen; Therapie bei Symptomen, TSH > 10, oder kardiovaskulärem Risiko.');
+    }
+
+    // ── Pre-Therapie / Monitoring
+    html += sdySectionList('Vor Amiodaron-Beginn (falls anwendbar)', [
+      'Baseline: <strong>TSH, fT4, TPO-AK</strong> + SD-Sonografie',
+      'Bei vorbestehender SD-Pathologie (Knoten, AK-positiv) → Risikoaufklärung'
+    ]);
+    html += sdySectionList('Monitoring unter Amiodaron', [
+      '<strong>TSH alle 6 Monate</strong> (auch nach Absetzen weitere 12 Monate, da T1/2 ~50 Tage)',
+      'Bei Symptomen oder TSH-Auffälligkeit: fT4 + fT3 ergänzen',
+      'Bei AIT: Ergänzung SD-Sono mit Doppler (CDS) zur Typ-Differenzierung'
+    ]);
 
     resEl.innerHTML = html;
   };
