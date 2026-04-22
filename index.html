@@ -1554,6 +1554,7 @@ window.goHome = function(e){
   <button class="nav-tab-btn" data-tab="mbd" onclick="switchToolTab('mbd')">🩸 Anämie / Ca-Phosphat</button>
   <button class="nav-tab-btn" data-tab="lipid" onclick="switchToolTab('lipid')">💊 Lipidtherapie</button>
   <button class="nav-tab-btn" data-tab="diabetes" onclick="switchToolTab('diabetes')">🩺 Diabetes</button>
+  <button class="nav-tab-btn" data-tab="sd" onclick="switchToolTab('sd')">🦋 Schilddrüse</button>
   <button class="nav-tab-btn" data-tab="htn" onclick="switchToolTab('htn')">❤️‍🩹 Hypertonie</button>
   <button class="nav-tab-btn" data-tab="hi" onclick="switchToolTab('hi')">💔 Herzinsuffizienz</button>
   <button class="nav-tab-btn" data-tab="vhf" onclick="switchToolTab('vhf')">💜 Vorhofflimmern</button>
@@ -7858,6 +7859,288 @@ window.gichtAutoImport = function() {
 </script>
 
 </div><!-- end tab-gicht -->
+
+<!-- ============================================================
+     SCHILDDRÜSE — Hypothyreose / Levothyroxin
+     ============================================================ -->
+<div id="tab-sd" style="display:none;">
+<div class="diab-container">
+
+  <div id="sd-import-banner" class="diab-import-banner" style="display:none;">
+    <span style="font-size:1.1rem;">📥</span><span id="sd-import-text"></span>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+    <!-- ===== INPUT CARD ===== -->
+    <div class="diab-card">
+      <h2>🦋 Schilddrüse — Hypothyreose</h2>
+      <p style="font-size:.8rem;color:#607d8b;margin:-4px 0 14px;">Levothyroxin-Dosierung &amp; Monitoring nach JAMA 2025 / ATA Guidelines</p>
+
+      <!-- Patient -->
+      <div class="diab-row">
+        <div class="diab-field">
+          <label>Gewicht <span style="font-weight:400;color:#607d8b;">(auto)</span></label>
+          <input type="number" id="sd-weight" step="0.1" placeholder="z.B. 75" oninput="sdCalc()">
+          <span class="diab-unit">kg</span>
+        </div>
+        <div class="diab-field">
+          <label>Alter <span style="font-weight:400;color:#607d8b;">(auto)</span></label>
+          <input type="number" id="sd-age" placeholder="z.B. 65" oninput="sdCalc()">
+          <span class="diab-unit">Jahre</span>
+        </div>
+      </div>
+
+      <!-- Labor -->
+      <div class="diab-row">
+        <div class="diab-field">
+          <label>TSH</label>
+          <input type="number" id="sd-tsh" step="0.01" placeholder="z.B. 8.5" oninput="sdCalc()">
+          <span class="diab-unit">mU/l (Norm 0,4–4,0)</span>
+        </div>
+        <div class="diab-field">
+          <label>fT4 <span style="font-weight:400;color:#607d8b;">(optional)</span></label>
+          <input type="number" id="sd-ft4" step="0.01" placeholder="z.B. 10" oninput="sdCalc()">
+          <span class="diab-unit">pmol/l (Norm 12–22)</span>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid #e8eaf6;margin:14px 0 10px;"></div>
+
+      <!-- Komorbiditäten -->
+      <div style="margin:0 0 6px;font-size:.78rem;font-weight:700;color:#455a64;text-transform:uppercase;letter-spacing:.4px;">Komorbiditäten / Spezialsituation</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:.85rem;color:#37474f;">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="sd-khk" onchange="sdCalc()"> KHK</label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="sd-vhf" onchange="sdCalc()"> Vorhofflimmern</label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="sd-pregnancy" onchange="sdCalc()"> Schwangerschaft</label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="sd-secondary" onchange="sdCalc()"> Sek./tert. Hypothyreose</label>
+      </div>
+
+      <div style="border-top:1px solid #e8eaf6;margin:14px 0 10px;"></div>
+
+      <!-- Aktuelle Therapie -->
+      <div style="margin:0 0 6px;font-size:.78rem;font-weight:700;color:#455a64;text-transform:uppercase;letter-spacing:.4px;">Aktuelle Therapie</div>
+      <label style="display:flex;align-items:center;gap:6px;font-size:.85rem;color:#37474f;cursor:pointer;">
+        <input type="checkbox" id="sd-on-therapy" onchange="sdToggleDose(); sdCalc();"> Patient bereits unter L-Thyroxin
+      </label>
+      <div class="diab-row" id="sd-current-dose-row" style="display:none;margin-top:8px;">
+        <div class="diab-field">
+          <label>Aktuelle Tagesdosis</label>
+          <input type="number" id="sd-current-dose" step="12.5" placeholder="z.B. 75" oninput="sdCalc()">
+          <span class="diab-unit">µg/d</span>
+        </div>
+        <div class="diab-field"></div>
+      </div>
+
+      <button class="diab-calc-btn" onclick="sdCalc()" style="margin-top:14px;background:linear-gradient(135deg,#5e35b1,#3949ab);box-shadow:0 3px 10px rgba(94,53,177,.3);">🦋 Empfehlung berechnen</button>
+    </div>
+
+    <!-- ===== RESULT CARD ===== -->
+    <div class="diab-card">
+      <h2>📋 Empfehlung</h2>
+      <div id="sd-result">
+        <p style="color:#90a4ae;font-size:.85rem;font-style:italic;">Daten links eingeben — Empfehlung erscheint hier automatisch.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="margin-top:14px;padding:8px 12px;background:#fff3e0;border:1px solid #ffcc80;border-left:4px solid #ef6c00;border-radius:8px;font-size:.78rem;color:#5d4037;line-height:1.6;">
+    <strong>Quellen:</strong> Hypothyroidism. JAMA 2025 (3. September) · ATA Clinical Practice Guidelines for Hypothyroidism · Endocrine Society. Volle Ersatzdosis 1,6 µg/kg/d (Range 1,5–1,8). Werte ohne Gewähr — kein Ersatz für klinisches Urteil.
+  </div>
+
+</div><!-- end diab-container -->
+
+<script>(function(){
+  'use strict';
+
+  function sdRound(d) { return Math.round(d / 12.5) * 12.5; }
+
+  window.sdToggleDose = function() {
+    var on = document.getElementById('sd-on-therapy').checked;
+    document.getElementById('sd-current-dose-row').style.display = on ? 'flex' : 'none';
+  };
+
+  window.sdAutoImport = function() {
+    var ckdW = document.getElementById('weight');
+    var ckdAge = document.getElementById('age');
+    var sdW = document.getElementById('sd-weight');
+    var sdA = document.getElementById('sd-age');
+    var imported = [];
+    if (ckdW && ckdW.value && !sdW.value) { sdW.value = ckdW.value; imported.push('Gewicht'); }
+    if (ckdAge && ckdAge.value && !sdA.value) { sdA.value = ckdAge.value; imported.push('Alter'); }
+    if (imported.length) {
+      var b = document.getElementById('sd-import-banner');
+      var t = document.getElementById('sd-import-text');
+      if (b && t) {
+        t.textContent = 'Aus CKD-Tab übernommen: ' + imported.join(', ');
+        b.style.display = 'flex';
+        setTimeout(function(){ b.style.display = 'none'; }, 3500);
+      }
+    }
+    sdCalc();
+  };
+
+  window.sdCalc = function() {
+    var w    = parseFloat(document.getElementById('sd-weight').value);
+    var age  = parseInt(document.getElementById('sd-age').value, 10);
+    var tsh  = parseFloat(document.getElementById('sd-tsh').value);
+    var ft4  = parseFloat(document.getElementById('sd-ft4').value);
+    var onTh = document.getElementById('sd-on-therapy').checked;
+    var curD = parseFloat(document.getElementById('sd-current-dose').value);
+    var khk  = document.getElementById('sd-khk').checked;
+    var vhf  = document.getElementById('sd-vhf').checked;
+    var preg = document.getElementById('sd-pregnancy').checked;
+    var sec  = document.getElementById('sd-secondary').checked;
+
+    var resEl = document.getElementById('sd-result');
+
+    if (!w || !age) {
+      resEl.innerHTML = '<p style="color:#90a4ae;font-size:.85rem;font-style:italic;">Gewicht und Alter eingeben für Therapieempfehlung.</p>';
+      return;
+    }
+
+    var html = '';
+
+    // ── Sekundäre/tertiäre Hypothyreose-Warnung
+    if (sec) {
+      html += '<div style="background:#fff8e1;border-left:4px solid #f9a825;padding:10px 12px;border-radius:6px;margin-bottom:12px;font-size:.85rem;color:#5d4037;line-height:1.55;">'+
+        '<strong>Sek./tert. Hypothyreose:</strong> TSH ist KEIN zuverlässiger Parameter! Therapiesteuerung über <strong>fT4</strong> — Ziel: oberes Drittel des Normbereichs.</div>';
+    }
+
+    // ── Block 1: Initialdosis ODER Anpassung
+    if (!onTh) {
+      // ── NEUEINSTELLUNG ──────────────────────────────────────
+      var fullDose = sdRound(w * 1.6);
+      var startLow = (age >= 65) || khk || vhf;
+      var startDose, startReason;
+
+      if (preg) {
+        startDose = sdRound(w * 2.0);
+        startReason = 'Schwangerschaft — höherer Bedarf von Anfang an';
+      } else if (startLow) {
+        startDose = (age >= 75 || khk) ? 25 : 50;
+        var reasons = [];
+        if (age >= 65) reasons.push('Alter ≥ 65');
+        if (khk) reasons.push('KHK');
+        if (vhf) reasons.push('VHF');
+        startReason = 'niedrige Startdosis wegen ' + reasons.join(' + ') + ' (kardiale Sicherheit)';
+      } else {
+        startDose = fullDose;
+        startReason = 'volle Ersatzdosis (jung, keine kardiale Komorbidität)';
+      }
+
+      html += '<div style="background:#e8f5e9;border:2px solid #66bb6a;border-radius:8px;padding:14px 16px;margin-bottom:12px;">';
+      html += '<div style="font-size:.75rem;font-weight:700;color:#2e7d32;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Startdosis</div>';
+      html += '<div style="font-size:1.5rem;font-weight:700;color:#1b5e20;line-height:1.2;">L-Thyroxin '+startDose+' µg/d</div>';
+      html += '<div style="font-size:.82rem;color:#37474f;margin-top:6px;">'+startReason+'</div>';
+      if (startDose < fullDose) {
+        html += '<div style="font-size:.78rem;color:#5d4037;margin-top:8px;padding-top:6px;border-top:1px dashed #a5d6a7;">Volle Ersatzdosis (1,6 µg/kg) wäre <strong>'+fullDose+' µg/d</strong> — alle 4–6 Wochen in 12,5–25 µg-Schritten steigern bis Ziel erreicht.</div>';
+      }
+      html += '</div>';
+    } else {
+      // ── ANPASSUNG UNTER LAUFENDER THERAPIE ─────────────────
+      if (sec) {
+        // Sekundäre — fT4 steuert
+        html += '<div style="background:#e3f2fd;border:2px solid #42a5f5;border-radius:8px;padding:14px 16px;margin-bottom:12px;">';
+        html += '<div style="font-size:.75rem;font-weight:700;color:#1565c0;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Therapie-Steuerung über fT4</div>';
+        if (!isNaN(ft4)) {
+          var sugg;
+          if (ft4 < 16) {
+            sugg = curD ? sdRound(curD + 12.5) : null;
+            html += '<div style="font-size:1.05rem;color:#0d47a1;font-weight:600;">fT4 '+ft4+' pmol/l zu niedrig — Dosis erhöhen' + (sugg ? ' auf <strong>'+sugg+' µg/d</strong>' : '') + '</div>';
+          } else if (ft4 > 22) {
+            sugg = curD ? sdRound(curD - 12.5) : null;
+            html += '<div style="font-size:1.05rem;color:#0d47a1;font-weight:600;">fT4 '+ft4+' pmol/l hoch — Dosis reduzieren' + (sugg ? ' auf <strong>'+sugg+' µg/d</strong>' : '') + '</div>';
+          } else {
+            html += '<div style="font-size:1.05rem;color:#0d47a1;font-weight:600;">fT4 '+ft4+' pmol/l im Zielbereich — Dosis beibehalten</div>';
+          }
+        } else {
+          html += '<div style="font-size:.9rem;color:#0d47a1;">fT4 angeben — TSH ist hier nicht aussagekräftig.</div>';
+        }
+        html += '</div>';
+      } else if (!isNaN(tsh)) {
+        var tshUpper = preg ? 2.5 : 4.0;
+        var tshLower = 0.4;
+        var tshTargetStr = preg ? '< 2,5' : '0,4–4,0';
+        var sugg;
+
+        if (tsh > tshUpper) {
+          // Unterdosiert
+          sugg = curD ? sdRound(curD + 25) : null;
+          html += '<div style="background:#fff3e0;border:2px solid #ff9800;border-radius:8px;padding:14px 16px;margin-bottom:12px;">';
+          html += '<div style="font-size:.75rem;font-weight:700;color:#e65100;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Unterdosierung — Dosis erhöhen</div>';
+          html += '<div style="font-size:1.1rem;font-weight:600;color:#bf360c;">TSH '+tsh+' mU/l > Ziel ('+tshTargetStr+' mU/l)</div>';
+          if (sugg) html += '<div style="font-size:1.2rem;color:#bf360c;margin-top:6px;">→ Neue Dosis: <strong>'+sugg+' µg/d</strong> <span style="font-size:.85rem;font-weight:400;">(Schritt 25 µg)</span></div>';
+          else html += '<div style="font-size:.85rem;color:#5d4037;margin-top:4px;">Dosis um 12,5–25 µg erhöhen.</div>';
+          html += '<div style="font-size:.78rem;color:#5d4037;margin-top:8px;padding-top:6px;border-top:1px dashed #ffb74d;">TSH-Kontrolle in <strong>6–8 Wochen</strong>; weitere Anpassung in 12,5–25 µg-Schritten alle 4–6 Wochen.</div></div>';
+        } else if (tsh < tshLower) {
+          // Überdosiert
+          sugg = curD ? sdRound(curD - 12.5) : null;
+          html += '<div style="background:#ffebee;border:2px solid #ef5350;border-radius:8px;padding:14px 16px;margin-bottom:12px;">';
+          html += '<div style="font-size:.75rem;font-weight:700;color:#c62828;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Überdosierung — Dosis reduzieren</div>';
+          html += '<div style="font-size:1.1rem;font-weight:600;color:#b71c1c;">TSH '+tsh+' mU/l < 0,4</div>';
+          if (sugg) html += '<div style="font-size:1.2rem;color:#b71c1c;margin-top:6px;">→ Neue Dosis: <strong>'+sugg+' µg/d</strong></div>';
+          else html += '<div style="font-size:.85rem;color:#5d4037;margin-top:4px;">Dosis um 12,5–25 µg reduzieren.</div>';
+          html += '<div style="font-size:.78rem;color:#5d4037;margin-top:8px;padding-top:6px;border-top:1px dashed #ef9a9a;">Über-/Unterbehandlung beide kardiovaskulär riskant — engmaschige Kontrolle.</div></div>';
+        } else {
+          // Im Ziel
+          html += '<div style="background:#e8f5e9;border:2px solid #66bb6a;border-radius:8px;padding:14px 16px;margin-bottom:12px;">';
+          html += '<div style="font-size:.75rem;font-weight:700;color:#2e7d32;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Therapie im Zielbereich</div>';
+          html += '<div style="font-size:1.1rem;font-weight:600;color:#1b5e20;">TSH '+tsh+' mU/l (Ziel '+tshTargetStr+' mU/l) — Dosis beibehalten</div>';
+          html += '<div style="font-size:.78rem;color:#455a64;margin-top:8px;">Jährliche TSH-Kontrolle ausreichend; früher bei Symptomen, Gewichtsänderung ≥ 4,5 kg oder neuen Komedikamenten, die SD-Funktion beeinflussen.</div></div>';
+        }
+      } else {
+        html += '<div style="background:#e3f2fd;border-left:4px solid #42a5f5;padding:10px 12px;border-radius:6px;margin-bottom:12px;font-size:.85rem;color:#0d47a1;">TSH eingeben für Dosisanpassung.</div>';
+      }
+
+      // Schwangerschaft unter Therapie — Zusatzhinweis
+      if (preg && !sec) {
+        var pregDose = curD ? sdRound(curD * 1.3) : null;
+        html += '<div style="background:#fce4ec;border:2px solid #ec407a;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:.88rem;color:#880e4f;line-height:1.5;">';
+        html += '<strong>Schwangerschaft:</strong> Dosis um 30 % erhöhen' + (pregDose ? ' → ca. <strong>'+pregDose+' µg/d</strong>' : '') + '. Praktisch: 1 zusätzliche Tablette 2× pro Woche, sofort nach Bestätigung der Schwangerschaft. Ziel TSH < 2,5 mU/l.';
+        html += '</div>';
+      }
+    }
+
+    // ── Standard-Sektionen ──────────────────────────────────
+    function sdSection(title, items) {
+      var s = '<div style="background:#f5f7fa;border:1px solid #cfd8dc;border-radius:8px;padding:10px 12px;margin-bottom:10px;">';
+      s += '<div style="font-size:.74rem;font-weight:700;color:#37474f;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">' + title + '</div>';
+      s += '<ul style="margin:0;padding-left:18px;font-size:.83rem;line-height:1.6;color:#37474f;">';
+      items.forEach(function(i){ s += '<li>' + i + '</li>'; });
+      s += '</ul></div>';
+      return s;
+    }
+
+    html += sdSection('Einnahme', [
+      'Nüchtern, 30–60 min vor dem Frühstück mit Wasser',
+      'Alternativ abends, mind. 2 h nach der letzten Mahlzeit',
+      'Mind. 4 h Abstand zu Calcium-, Eisenpräparaten, PPI, Phosphatbindern (Absorption verringert)'
+    ]);
+
+    html += sdSection('Monitoring', [
+      'TSH-Kontrolle 6–8 Wochen nach Therapiebeginn oder Dosisänderung',
+      'Dosisanpassung in 12,5–25 µg-Schritten alle 4–6 Wochen bis TSH normal',
+      'Nach Erreichen des Ziels: jährliche TSH-Kontrolle',
+      'Zusätzliche Kontrollen bei Gewichtsänderung ≥ 4,5 kg, neuen Symptomen oder neuen Komedikamenten, die SD-Funktion beeinflussen'
+    ]);
+
+    var ziele = [];
+    if (sec)        ziele.push('fT4 im oberen Drittel des Normbereichs (TSH nicht verwertbar)');
+    else if (preg)  ziele.push('TSH < 2,5 mU/l (1. Trim. < 2,5; 2./3. Trim. < 3,0)');
+    else            ziele.push('TSH im Referenzbereich (0,4–4,0 mU/l)');
+    ziele.push('Beseitigung klinischer Symptome');
+    ziele.push('Vermeidung von Über- und Unterbehandlung — beide mit kardiovaskulärem Risiko assoziiert');
+    ziele.push('Keine routinemäßige T3-Kombination — Leitlinien empfehlen Monotherapie');
+    html += sdSection('Therapieziel', ziele);
+
+    resEl.innerHTML = html;
+  };
+
+})();</script>
+
+</div><!-- end tab-sd -->
 
 <!-- ============================================================
      TMA / TTP / HUS / HELLP / DIC / ITP
@@ -17669,6 +17952,8 @@ function switchToolTab(tabName) {
   if (tabName === 'diabetes' && window.diabAutoImport) {
     window.diabAutoImport();
   }
+  document.getElementById('tab-sd').style.display = tabName === 'sd' ? 'block' : 'none';
+  if (tabName === 'sd' && window.sdAutoImport) { window.sdAutoImport(); }
   if (tabName === 'htn' && window.htnAutoImport) {
     window.htnAutoImport();
   }
