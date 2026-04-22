@@ -8011,33 +8011,91 @@ window.gichtAutoImport = function() {
     // ── Block 1: Initialdosis ODER Anpassung
     if (!onTh) {
       // ── NEUEINSTELLUNG ──────────────────────────────────────
-      var fullDose = sdRound(w * 1.6);
-      var startLow = (age >= 65) || khk || vhf;
-      var startDose, startReason;
+      // TSH-basiertes Gating: nicht jede Konstellation rechtfertigt Substitution
+      var tshUpperNorm = preg ? 2.5 : 4.0;
+      var tshState;
+      if (sec)              tshState = 'sec';                      // sek./tert. — TSH unbrauchbar
+      else if (isNaN(tsh))  tshState = 'unknown';
+      else if (tsh < 0.4)   tshState = 'suppressed';
+      else if (tsh <= tshUpperNorm) tshState = 'normal';
+      else if (tsh <= 10)   tshState = 'subclinical';
+      else                  tshState = 'manifest';
 
-      if (preg) {
-        startDose = sdRound(w * 2.0);
-        startReason = 'Schwangerschaft — höherer Bedarf von Anfang an';
-      } else if (startLow) {
-        startDose = (age >= 75 || khk) ? 25 : 50;
-        var reasons = [];
-        if (age >= 65) reasons.push('Alter ≥ 65');
-        if (khk) reasons.push('KHK');
-        if (vhf) reasons.push('VHF');
-        startReason = 'niedrige Startdosis wegen ' + reasons.join(' + ') + ' (kardiale Sicherheit)';
-      } else {
-        startDose = fullDose;
-        startReason = 'volle Ersatzdosis (jung, keine kardiale Komorbidität)';
+      // Bei sek. Hypothyreose über fT4 entscheiden
+      if (tshState === 'sec') {
+        if (isNaN(ft4)) {
+          html += '<div style="background:#e3f2fd;border-left:4px solid #42a5f5;padding:10px 12px;border-radius:6px;margin-bottom:12px;font-size:.9rem;color:#0d47a1;">Sek./tert. Hypothyreose — bitte fT4 angeben (TSH ist hier unbrauchbar). Therapieentscheidung über fT4 (Indikation: fT4 unterhalb des Normbereichs).</div>';
+          tshState = 'skip-dose';
+        } else if (ft4 >= 12) {
+          html += '<div style="background:#e8f5e9;border:2px solid #66bb6a;border-radius:8px;padding:14px 16px;margin-bottom:12px;">';
+          html += '<div style="font-size:.75rem;font-weight:700;color:#2e7d32;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Keine Substitutionsindikation</div>';
+          html += '<div style="font-size:1.05rem;color:#1b5e20;">fT4 '+ft4+' pmol/l im Normbereich (sek./tert. Hypothyreose ohne fT4-Mangel) — keine L-Thyroxin-Therapie.</div></div>';
+          tshState = 'skip-dose';
+        }
+        // sonst: fT4 erniedrigt → unten Dosis empfehlen
       }
 
-      html += '<div style="background:#e8f5e9;border:2px solid #66bb6a;border-radius:8px;padding:14px 16px;margin-bottom:12px;">';
-      html += '<div style="font-size:.75rem;font-weight:700;color:#2e7d32;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Startdosis</div>';
-      html += '<div style="font-size:1.5rem;font-weight:700;color:#1b5e20;line-height:1.2;">L-Thyroxin '+startDose+' µg/d</div>';
-      html += '<div style="font-size:.82rem;color:#37474f;margin-top:6px;">'+startReason+'</div>';
-      if (startDose < fullDose) {
-        html += '<div style="font-size:.78rem;color:#5d4037;margin-top:8px;padding-top:6px;border-top:1px dashed #a5d6a7;">Volle Ersatzdosis (1,6 µg/kg) wäre <strong>'+fullDose+' µg/d</strong> — alle 4–6 Wochen in 12,5–25 µg-Schritten steigern bis Ziel erreicht.</div>';
+      if (tshState === 'suppressed') {
+        // KEINE Substitution — V.a. Hyperthyreose
+        html += '<div style="background:#ffebee;border:2px solid #ef5350;border-radius:8px;padding:14px 16px;margin-bottom:12px;">';
+        html += '<div style="font-size:.75rem;font-weight:700;color:#c62828;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">TSH supprimiert — KEINE L-Thyroxin-Indikation</div>';
+        html += '<div style="font-size:1.1rem;font-weight:600;color:#b71c1c;">TSH '+tsh+' mU/l < 0,4 → V.a. Thyreotoxikose / Hyperthyreose</div>';
+        html += '<div style="font-size:.85rem;color:#5d4037;margin-top:8px;line-height:1.55;">';
+        html += '<strong>Weitere Diagnostik:</strong> fT4 + fT3 (manifeste vs. subklinische Hyperthyr.), TSH-Rezeptor-AK (M. Basedow), TPO-AK, Schilddrüsen-Sonografie (ggf. Szintigraphie). Substitution mit L-Thyroxin würde Thyreotoxikose verstärken!';
+        html += '</div></div>';
+      } else if (tshState === 'normal') {
+        // TSH normal — keine Substitution
+        html += '<div style="background:#e8f5e9;border:2px solid #66bb6a;border-radius:8px;padding:14px 16px;margin-bottom:12px;">';
+        html += '<div style="font-size:.75rem;font-weight:700;color:#2e7d32;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Schilddrüsenfunktion euthyreot — keine Substitution</div>';
+        html += '<div style="font-size:1.1rem;font-weight:600;color:#1b5e20;">TSH '+tsh+' mU/l im Referenzbereich (Norm '+(preg?'< 2,5':'0,4–4,0')+' mU/l)</div>';
+        html += '<div style="font-size:.82rem;color:#37474f;margin-top:6px;">Keine Indikation für L-Thyroxin. Bei klinisch typischen Hypothyreose-Symptomen: Differenzialdiagnosen prüfen.</div></div>';
+      } else if (tshState === 'subclinical' && !preg) {
+        // Subklinisch — individuelle Entscheidung
+        html += '<div style="background:#fff8e1;border:2px solid #f9a825;border-radius:8px;padding:14px 16px;margin-bottom:12px;">';
+        html += '<div style="font-size:.75rem;font-weight:700;color:#e65100;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Subklinische Hypothyreose</div>';
+        html += '<div style="font-size:1.1rem;font-weight:600;color:#bf360c;">TSH '+tsh+' mU/l (Norm 0,4–4,0; manifest erst > 10)</div>';
+        html += '<div style="font-size:.82rem;color:#5d4037;margin-top:8px;line-height:1.6;">';
+        html += '<strong>Therapie individuell erwägen bei:</strong> Symptomen, Alter < 65, Kinderwunsch, TPO-AK positiv, Struma, kardiovaskulärem Risiko. Bei asymptomatischen älteren Patienten oft Verlaufskontrolle ausreichend.';
+        html += '</div>';
+        // Bei TSH > 7 oder Symptomen Vorschlag, sonst nur Hinweis
+        var subStartDose = age >= 65 ? 25 : 50;
+        html += '<div style="font-size:.85rem;color:#bf360c;margin-top:8px;padding-top:6px;border-top:1px dashed #ffb74d;">Bei Therapieentscheidung: niedriger Start <strong>'+subStartDose+' µg/d</strong>, langsam titrieren bis TSH normal.</div></div>';
+      } else if (tshState !== 'skip-dose') {
+        // manifest, unknown, oder subklinisch+Schwangerschaft → Startdosis
+        var fullDose = sdRound(w * 1.6);
+        var startLow = (age >= 65) || khk || vhf;
+        var startDose, startReason;
+
+        if (preg) {
+          startDose = sdRound(w * 2.0);
+          startReason = 'Schwangerschaft — höherer Bedarf von Anfang an';
+        } else if (startLow) {
+          startDose = (age >= 75 || khk) ? 25 : 50;
+          var reasons = [];
+          if (age >= 65) reasons.push('Alter ≥ 65');
+          if (khk) reasons.push('KHK');
+          if (vhf) reasons.push('VHF');
+          startReason = 'niedrige Startdosis wegen ' + reasons.join(' + ') + ' (kardiale Sicherheit)';
+        } else {
+          startDose = fullDose;
+          startReason = 'volle Ersatzdosis (jung, keine kardiale Komorbidität)';
+        }
+
+        html += '<div style="background:#e8f5e9;border:2px solid #66bb6a;border-radius:8px;padding:14px 16px;margin-bottom:12px;">';
+        var hdr = 'Startdosis';
+        if (tshState === 'manifest')    hdr = 'Manifeste Hypothyreose — Startdosis';
+        else if (tshState === 'subclinical' && preg) hdr = 'Subklin. Hypothyreose in Schwangerschaft — Therapie indiziert';
+        else if (tshState === 'sec')    hdr = 'Sek./tert. Hypothyreose (fT4 erniedrigt) — Startdosis';
+        else if (tshState === 'unknown') hdr = 'Startdosis (TSH nicht angegeben — Hypothyreose-Diagnose vorausgesetzt)';
+        html += '<div style="font-size:.75rem;font-weight:700;color:#2e7d32;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">'+hdr+'</div>';
+        if (tshState === 'manifest' && !isNaN(tsh)) html += '<div style="font-size:.85rem;color:#1b5e20;margin-bottom:6px;">TSH '+tsh+' mU/l > 10 → manifeste Hypothyreose</div>';
+        html += '<div style="font-size:1.5rem;font-weight:700;color:#1b5e20;line-height:1.2;">L-Thyroxin '+startDose+' µg/d</div>';
+        html += '<div style="font-size:.82rem;color:#37474f;margin-top:6px;">'+startReason+'</div>';
+        if (startDose < fullDose) {
+          html += '<div style="font-size:.78rem;color:#5d4037;margin-top:8px;padding-top:6px;border-top:1px dashed #a5d6a7;">Volle Ersatzdosis (1,6 µg/kg) wäre <strong>'+fullDose+' µg/d</strong> — alle 4–6 Wochen in 12,5–25 µg-Schritten steigern bis Ziel erreicht.</div>';
+        }
+        html += '</div>';
       }
-      html += '</div>';
     } else {
       // ── ANPASSUNG UNTER LAUFENDER THERAPIE ─────────────────
       if (sec) {
