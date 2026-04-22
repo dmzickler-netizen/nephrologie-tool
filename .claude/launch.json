@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "nephro-tool",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "python3 -m http.server ${PORT:-8080} -d /Users/danielzickler/Dropbox/Claude"],
+      "autoPort": true
+    },
+    {
+      "name": "casa-baltica",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "python3 -m http.server ${PORT:-8090} -d /Users/danielzickler/Dropbox/Claude/casa-baltica"],
+      "autoPort": true
+    }
+  ]
+}

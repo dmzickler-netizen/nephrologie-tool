@@ -1909,9 +1909,10 @@ window.goHome = function(e){
         .sero-fields .w-70 { width: 70px; }
         .sero-fields .w-80 { width: 80px; }
         .sero-fields .w-100 { width: 100px; }
+        .sero-row > input.sero-date { width: 130px; }
         @media (max-width: 768px) {
           .sero-row { grid-template-columns: 22px 1fr; row-gap: 4px; }
-          .sero-row > input[type="date"] { grid-column: 2; }
+          .sero-row > input[type="date"], .sero-row > input.sero-date { grid-column: 2; }
           .sero-row > .sero-fields { grid-column: 1 / -1; }
         }
       </style>
@@ -1927,16 +1928,18 @@ window.goHome = function(e){
 
         <div style="display:flex; align-items:center; gap:10px; padding:8px 10px; background:#e8eaf6; border:1px solid #c5cae9; border-radius:8px; margin:0 0 10px 0; flex-wrap:wrap;">
           <span style="font-size:.82rem; font-weight:600; color:#1a237e;">📅 Abnahmedatum (alle)</span>
-          <input type="date" id="sero-date-all" onchange="seroApplyDateAll(this.value)" style="padding:5px 8px;border:1.3px solid #9fa8da;border-radius:6px;font-size:.82rem;background:#fff;">
+          <input type="text" id="sero-date-all" placeholder="TT.MM.JJJJ / MM.JJJJ / JJJJ" style="padding:5px 8px;border:1.3px solid #9fa8da;border-radius:6px;font-size:.82rem;background:#fff;width:200px;">
           <button type="button" onclick="seroApplyDateAll(document.getElementById('sero-date-all').value, true)" style="padding:5px 12px;background:#3949ab;color:#fff;border:none;border-radius:6px;font-size:.75rem;font-weight:600;cursor:pointer;">In alle übernehmen</button>
-          <span style="font-size:.72rem; color:#607d8b;">Füllt leere Einzelfelder automatisch (bereits gesetzte Daten bleiben erhalten — Button erzwingt Überschreiben).</span>
+          <span style="width:1px;height:22px;background:#9fa8da;margin:0 4px;"></span>
+          <button type="button" onclick="seroSetAllNormal()" style="padding:5px 12px;background:#2e7d32;color:#fff;border:none;border-radius:6px;font-size:.75rem;font-weight:600;cursor:pointer;" title="ANA/ANCA/Anti-GBM/RF/Immunfix neg · Komplement normal · FLC normwertig">✓ Alle als unauffällig</button>
+          <span style="font-size:.72rem; color:#607d8b;">Datum füllt leere Felder (Button erzwingt Überschreiben). „Unauffällig" hakt alle Tests an + setzt Normwerte.</span>
         </div>
 
         <!-- ANA -->
         <div class="sero-row" data-sero="ana">
           <input type="checkbox" id="sero-ana-on" onchange="seroToggleRow(this)">
           <div class="sero-name">ANA</div>
-          <input type="date" id="sero-ana-date">
+          <input type="text" class="sero-date" id="sero-ana-date" placeholder="TT.MM.JJJJ / MM.JJJJ / JJJJ">
           <div class="sero-fields">
             <label><input type="radio" name="sero-ana-res" value="neg"> neg</label>
             <label><input type="radio" name="sero-ana-res" value="pos"> pos</label>
@@ -1951,7 +1954,7 @@ window.goHome = function(e){
         <div class="sero-row" data-sero="anca">
           <input type="checkbox" id="sero-anca-on" onchange="seroToggleRow(this)">
           <div class="sero-name">ANCA</div>
-          <input type="date" id="sero-anca-date">
+          <input type="text" class="sero-date" id="sero-anca-date" placeholder="TT.MM.JJJJ / MM.JJJJ / JJJJ">
           <div class="sero-fields">
             <label><input type="radio" name="sero-anca-res" value="neg"> neg</label>
             <label><input type="radio" name="sero-anca-res" value="pos"> pos</label>
@@ -1972,7 +1975,7 @@ window.goHome = function(e){
         <div class="sero-row" data-sero="gbm">
           <input type="checkbox" id="sero-gbm-on" onchange="seroToggleRow(this)">
           <div class="sero-name">Anti-GBM</div>
-          <input type="date" id="sero-gbm-date">
+          <input type="text" class="sero-date" id="sero-gbm-date" placeholder="TT.MM.JJJJ / MM.JJJJ / JJJJ">
           <div class="sero-fields">
             <label><input type="radio" name="sero-gbm-res" value="neg"> neg</label>
             <label><input type="radio" name="sero-gbm-res" value="pos"> pos</label>
@@ -1985,7 +1988,7 @@ window.goHome = function(e){
         <div class="sero-row" data-sero="kompl">
           <input type="checkbox" id="sero-kompl-on" onchange="seroToggleRow(this)">
           <div class="sero-name">Komplement (C3/C4)</div>
-          <input type="date" id="sero-kompl-date">
+          <input type="text" class="sero-date" id="sero-kompl-date" placeholder="TT.MM.JJJJ / MM.JJJJ / JJJJ">
           <div class="sero-fields">
             <span>C3</span>
             <select id="sero-c3-stat">
@@ -2010,7 +2013,7 @@ window.goHome = function(e){
         <div class="sero-row" data-sero="ifix">
           <input type="checkbox" id="sero-ifix-on" onchange="seroToggleRow(this)">
           <div class="sero-name">Immunfixation</div>
-          <input type="date" id="sero-ifix-date">
+          <input type="text" class="sero-date" id="sero-ifix-date" placeholder="TT.MM.JJJJ / MM.JJJJ / JJJJ">
           <div class="sero-fields">
             <label><input type="radio" name="sero-ifix-res" value="unauffällig"> unauffällig</label>
             <label><input type="radio" name="sero-ifix-res" value="mgradient"> M-Gradient</label>
@@ -2022,9 +2025,11 @@ window.goHome = function(e){
         <div class="sero-row" data-sero="flc">
           <input type="checkbox" id="sero-flc-on" onchange="seroToggleRow(this)">
           <div class="sero-name">Freie Leichtketten</div>
-          <input type="date" id="sero-flc-date">
+          <input type="text" class="sero-date" id="sero-flc-date" placeholder="TT.MM.JJJJ / MM.JJJJ / JJJJ">
           <div class="sero-fields">
-            <span>κ</span>
+            <label><input type="radio" name="sero-flc-res" value="normal"> normwertig</label>
+            <label><input type="radio" name="sero-flc-res" value="abnorm"> abnorm</label>
+            <span style="margin-left:6px;">κ</span>
             <input type="text" class="w-70" id="sero-flc-k" placeholder="mg/l">
             <span>λ</span>
             <input type="text" class="w-70" id="sero-flc-l" placeholder="mg/l">
@@ -2037,7 +2042,7 @@ window.goHome = function(e){
         <div class="sero-row" data-sero="hba1c">
           <input type="checkbox" id="sero-hba1c-on" onchange="seroToggleRow(this)">
           <div class="sero-name">HbA1c</div>
-          <input type="date" id="sero-hba1c-date">
+          <input type="text" class="sero-date" id="sero-hba1c-date" placeholder="TT.MM.JJJJ / MM.JJJJ / JJJJ">
           <div class="sero-fields">
             <span>Wert</span>
             <input type="text" class="w-70" id="sero-hba1c-val" placeholder="%">
@@ -2049,7 +2054,7 @@ window.goHome = function(e){
         <div class="sero-row" data-sero="rf">
           <input type="checkbox" id="sero-rf-on" onchange="seroToggleRow(this)">
           <div class="sero-name">Rheumafaktoren</div>
-          <input type="date" id="sero-rf-date">
+          <input type="text" class="sero-date" id="sero-rf-date" placeholder="TT.MM.JJJJ / MM.JJJJ / JJJJ">
           <div class="sero-fields">
             <label><input type="radio" name="sero-rf-res" value="neg"> neg</label>
             <label><input type="radio" name="sero-rf-res" value="pos"> pos</label>
@@ -16349,18 +16354,58 @@ function seroToggleRow(cb) {
 
 function seroApplyDateAll(val, force) {
   if (!val) return;
+  const formatted = seroNormalizeDate(val);
   const ids = ['sero-ana-date','sero-anca-date','sero-gbm-date','sero-kompl-date','sero-ifix-date','sero-flc-date','sero-hba1c-date','sero-rf-date'];
   ids.forEach(id => {
     const el = document.getElementById(id);
-    if (el && (force || !el.value)) el.value = val;
+    if (el && (force || !el.value)) el.value = formatted;
   });
 }
 
+function seroNormalizeDate(raw) {
+  if (!raw) return '';
+  raw = String(raw).trim();
+  let m;
+  m = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(raw);
+  if (m) return m[3].padStart(2,'0') + '.' + m[2].padStart(2,'0') + '.' + m[1];
+  m = /^(\d{4})-(\d{1,2})$/.exec(raw);
+  if (m) return m[2].padStart(2,'0') + '.' + m[1];
+  m = /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/.exec(raw);
+  if (m) return m[1].padStart(2,'0') + '.' + m[2].padStart(2,'0') + '.' + m[3];
+  m = /^(\d{1,2})\.(\d{4})$/.exec(raw);
+  if (m) return m[1].padStart(2,'0') + '.' + m[2];
+  m = /^(\d{1,2})\/(\d{4})$/.exec(raw);
+  if (m) return m[1].padStart(2,'0') + '.' + m[2];
+  m = /^(\d{4})$/.exec(raw);
+  if (m) return raw;
+  return raw;
+}
+
+function seroSetAllNormal() {
+  const setups = [
+    { cb: 'sero-ana-on',  radio: 'sero-ana-res',  value: 'neg' },
+    { cb: 'sero-anca-on', radio: 'sero-anca-res', value: 'neg' },
+    { cb: 'sero-gbm-on',  radio: 'sero-gbm-res',  value: 'neg' },
+    { cb: 'sero-ifix-on', radio: 'sero-ifix-res', value: 'unauffällig' },
+    { cb: 'sero-flc-on',  radio: 'sero-flc-res',  value: 'normal' },
+    { cb: 'sero-rf-on',   radio: 'sero-rf-res',   value: 'neg' }
+  ];
+  setups.forEach(s => {
+    const cb = document.getElementById(s.cb);
+    if (cb) { cb.checked = true; seroToggleRow(cb); }
+    const rb = document.querySelector('input[name="' + s.radio + '"][value="' + s.value + '"]');
+    if (rb) rb.checked = true;
+  });
+  const kCb = document.getElementById('sero-kompl-on');
+  if (kCb) { kCb.checked = true; seroToggleRow(kCb); }
+  const c3 = document.getElementById('sero-c3-stat');
+  const c4 = document.getElementById('sero-c4-stat');
+  if (c3) c3.value = 'normal';
+  if (c4) c4.value = 'normal';
+}
+
 function seroFmtDate(val) {
-  if (!val) return '';
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(val);
-  if (!m) return val;
-  return `${m[3]}.${m[2]}.${m[1]}`;
+  return seroNormalizeDate(val);
 }
 
 function seroRadioVal(name) {
@@ -16374,21 +16419,19 @@ function seroGet(id) {
 }
 
 function buildSerologyBullets() {
-  const bullets = [];
   const BULLET = '  • ';
+  const items = [];
 
   // ANA
   if (document.getElementById('sero-ana-on') && document.getElementById('sero-ana-on').checked) {
     const res = seroRadioVal('sero-ana-res');
     const titer = seroGet('sero-ana-titer');
     const pattern = seroGet('sero-ana-pattern');
-    const date = seroFmtDate(seroGet('sero-ana-date'));
     let parts = ['ANA'];
     if (res) parts.push(res === 'pos' ? 'positiv' : 'negativ');
     if (titer) parts.push(`Titer ${titer}`);
     if (pattern) parts.push(`Muster ${pattern}`);
-    if (date) parts.push(`(${date})`);
-    bullets.push(BULLET + parts.join(', ').replace(', (', ' ('));
+    items.push({ body: parts.join(', '), date: seroFmtDate(seroGet('sero-ana-date')) });
   }
 
   // ANCA
@@ -16397,26 +16440,21 @@ function buildSerologyBullets() {
     const type = seroGet('sero-anca-type');
     const pr3 = seroGet('sero-anca-pr3');
     const mpo = seroGet('sero-anca-mpo');
-    const date = seroFmtDate(seroGet('sero-anca-date'));
-    let head = type ? type : 'ANCA';
-    let parts = [head];
+    let parts = [type ? type : 'ANCA'];
     if (res) parts.push(res === 'pos' ? 'positiv' : 'negativ');
     if (pr3) parts.push(`PR3 ${pr3} U/ml`);
     if (mpo) parts.push(`MPO ${mpo} U/ml`);
-    if (date) parts.push(`(${date})`);
-    bullets.push(BULLET + parts.join(', ').replace(', (', ' ('));
+    items.push({ body: parts.join(', '), date: seroFmtDate(seroGet('sero-anca-date')) });
   }
 
   // Anti-GBM
   if (document.getElementById('sero-gbm-on') && document.getElementById('sero-gbm-on').checked) {
     const res = seroRadioVal('sero-gbm-res');
     const val = seroGet('sero-gbm-val');
-    const date = seroFmtDate(seroGet('sero-gbm-date'));
     let parts = ['Anti-GBM'];
     if (res) parts.push(res === 'pos' ? 'positiv' : 'negativ');
     if (val) parts.push(`${val} U/ml`);
-    if (date) parts.push(`(${date})`);
-    bullets.push(BULLET + parts.join(', ').replace(', (', ' ('));
+    items.push({ body: parts.join(', '), date: seroFmtDate(seroGet('sero-gbm-date')) });
   }
 
   // Komplement
@@ -16425,52 +16463,53 @@ function buildSerologyBullets() {
     const c3v = seroGet('sero-c3-val');
     const c4s = seroGet('sero-c4-stat');
     const c4v = seroGet('sero-c4-val');
-    const date = seroFmtDate(seroGet('sero-kompl-date'));
     let c3str = '', c4str = '';
     if (c3s || c3v) c3str = 'C3 ' + [c3s, c3v ? c3v + ' g/l' : ''].filter(Boolean).join(' ');
     if (c4s || c4v) c4str = 'C4 ' + [c4s, c4v ? c4v + ' g/l' : ''].filter(Boolean).join(' ');
-    let parts = ['Komplement'];
+    let body = 'Komplement';
     const cParts = [c3str, c4str].filter(Boolean);
-    if (cParts.length) parts.push(cParts.join(', '));
-    if (date) parts.push(`(${date})`);
-    bullets.push(BULLET + parts.join(': ').replace(': (', ' ('));
+    if (cParts.length) body += ': ' + cParts.join(', ');
+    items.push({ body, date: seroFmtDate(seroGet('sero-kompl-date')) });
   }
 
   // Immunfixation
   if (document.getElementById('sero-ifix-on') && document.getElementById('sero-ifix-on').checked) {
     const res = seroRadioVal('sero-ifix-res');
     const note = seroGet('sero-ifix-note');
-    const date = seroFmtDate(seroGet('sero-ifix-date'));
     let parts = ['Immunfixation'];
     if (res === 'unauffällig') parts.push('unauffällig');
     else if (res === 'mgradient') parts.push('M-Gradient nachweisbar');
     if (note) parts.push(note);
-    if (date) parts.push(`(${date})`);
-    bullets.push(BULLET + parts.join(', ').replace(', (', ' ('));
+    items.push({ body: parts.join(', '), date: seroFmtDate(seroGet('sero-ifix-date')) });
   }
 
   // Freie Leichtketten
   if (document.getElementById('sero-flc-on') && document.getElementById('sero-flc-on').checked) {
+    const res = seroRadioVal('sero-flc-res');
     const k = seroGet('sero-flc-k');
     const l = seroGet('sero-flc-l');
     const r = seroGet('sero-flc-r');
-    const date = seroFmtDate(seroGet('sero-flc-date'));
     let sub = [];
     if (k) sub.push(`κ ${k} mg/l`);
     if (l) sub.push(`λ ${l} mg/l`);
     if (r) sub.push(`κ/λ-Ratio ${r}`);
-    let line = 'Freie Leichtketten' + (sub.length ? ': ' + sub.join(', ') : '');
-    if (date) line += ` (${date})`;
-    bullets.push(BULLET + line);
+    let body;
+    if (res === 'normal' && sub.length === 0) {
+      body = 'Freie Leichtketten κ/λ-Ratio normwertig';
+    } else if (res === 'abnorm' && sub.length === 0) {
+      body = 'Freie Leichtketten abnorm';
+    } else {
+      body = 'Freie Leichtketten' + (sub.length ? ': ' + sub.join(', ') : '');
+      if (res === 'normal') body += ' (normwertig)';
+      else if (res === 'abnorm') body += ' (abnorm)';
+    }
+    items.push({ body, date: seroFmtDate(seroGet('sero-flc-date')) });
   }
 
   // HbA1c
   if (document.getElementById('sero-hba1c-on') && document.getElementById('sero-hba1c-on').checked) {
     const val = seroGet('sero-hba1c-val');
-    const date = seroFmtDate(seroGet('sero-hba1c-date'));
-    let line = 'HbA1c' + (val ? ` ${val} %` : '');
-    if (date) line += ` (${date})`;
-    bullets.push(BULLET + line);
+    items.push({ body: 'HbA1c' + (val ? ` ${val} %` : ''), date: seroFmtDate(seroGet('sero-hba1c-date')) });
   }
 
   // Rheumafaktoren
@@ -16478,15 +16517,28 @@ function buildSerologyBullets() {
     const res = seroRadioVal('sero-rf-res');
     const val = seroGet('sero-rf-val');
     const ccp = seroGet('sero-rf-ccp');
-    const date = seroFmtDate(seroGet('sero-rf-date'));
     let parts = ['Rheumafaktoren'];
     if (res) parts.push(res === 'pos' ? 'positiv' : 'negativ');
     if (val) parts.push(`${val} IU/ml`);
     if (ccp) parts.push(`Anti-CCP ${ccp} U/ml`);
-    if (date) parts.push(`(${date})`);
-    bullets.push(BULLET + parts.join(', ').replace(', (', ' ('));
+    items.push({ body: parts.join(', '), date: seroFmtDate(seroGet('sero-rf-date')) });
   }
 
+  // Konsolidiertes Datum: nur wenn ≥2 Items UND alle haben das exakt gleiche Datum
+  const allDates = items.map(i => i.date).filter(Boolean);
+  const uniqueDates = [...new Set(allDates)];
+  const consolidate = items.length >= 2
+    && allDates.length === items.length
+    && uniqueDates.length === 1;
+
+  const bullets = [];
+  if (consolidate) {
+    bullets.push(BULLET + 'Abnahme: ' + uniqueDates[0]);
+  }
+  items.forEach(i => {
+    const suffix = (consolidate || !i.date) ? '' : ' (' + i.date + ')';
+    bullets.push(BULLET + i.body + suffix);
+  });
   return bullets;
 }
 
