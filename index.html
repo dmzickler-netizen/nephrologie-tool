@@ -1842,6 +1842,26 @@ window.goHome = function(e){
         </div>
       </div>
 
+      <!-- Raucherstatus — beeinflusst Lifestyle-Empfehlungen -->
+      <div style="display:flex; align-items:center; gap:10px; padding:8px 12px; background:#fff3e0; border:1px solid #ffcc80; border-left:4px solid #ef6c00; border-radius:8px; margin:0 0 14px; flex-wrap:wrap;">
+        <span style="font-size:.82rem; font-weight:700; color:#bf360c;">🚬 Raucherstatus</span>
+        <div style="display:inline-flex; gap:14px; font-size:.82rem; color:#5d4037;">
+          <label style="display:inline-flex; align-items:center; gap:5px; cursor:pointer;">
+            <input type="radio" name="ckd-smoke" value="never"> Nie-Raucher
+          </label>
+          <label style="display:inline-flex; align-items:center; gap:5px; cursor:pointer;">
+            <input type="radio" name="ckd-smoke" value="former"> Ex-Raucher
+          </label>
+          <label style="display:inline-flex; align-items:center; gap:5px; cursor:pointer;">
+            <input type="radio" name="ckd-smoke" value="current"> Aktiv-Raucher
+          </label>
+          <label style="display:inline-flex; align-items:center; gap:5px; cursor:pointer; color:#90a4ae;">
+            <input type="radio" name="ckd-smoke" value=""> k.A.
+          </label>
+        </div>
+        <span style="font-size:.7rem; color:#90a4ae;">→ steuert Nikotinkarenz-Empfehlung</span>
+      </div>
+
       <div style="margin-bottom:12px;">
         <div class="checkbox-grid" id="disease-checkboxes">
           <label class="checkbox-item" onclick="toggleCheck(this)">
@@ -15967,171 +15987,205 @@ function generateTexts(age, sex, scr, cys, uacr, bpSys, bpDia, extraInfo,
   document.getElementById('text-befund').value = befundText;
 
   // ===== EMPFEHLUNG =====
-  let empfText = `--- THERAPEUTISCHE EMPFEHLUNGEN ---\n\n`;
-  let recList = [];
+  const smokerSel = document.querySelector('input[name="ckd-smoke"]:checked');
+  const smoker = smokerSel ? smokerSel.value : '';
 
-  // General by stage
+  const recGroups = [
+    { key:'medikation',     title:'💊 MEDIKATION (nephroprotektiv)',         items:[] },
+    { key:'blutdruck',      title:'🩺 BLUTDRUCK',                            items:[] },
+    { key:'elektrolyte',    title:'⚡ ELEKTROLYTE / SÄURE-BASEN',            items:[] },
+    { key:'lifestyle',      title:'🏃 LIFESTYLE',                            items:[] },
+    { key:'ernaehrung',     title:'🍽️ ERNÄHRUNG',                            items:[] },
+    { key:'labor',          title:'🔬 LABOR / MONITORING',                   items:[] },
+    { key:'mbd',            title:'🦴 KOMPLIKATIONEN (CKD-MBD, Anämie)',     items:[] },
+    { key:'krankheit',      title:'🎯 KRANKHEITSSPEZIFISCHE THERAPIE',       items:[] },
+    { key:'ersatz',         title:'⚠️ NIERENERSATZTHERAPIE',                 items:[] },
+    { key:'allgemein',      title:'📋 ALLGEMEIN / VORSORGE',                 items:[] }
+  ];
+  const recAdd = (key, item) => { const g = recGroups.find(g => g.key === key); if (g) g.items.push(item); };
+
+  // ── BLUTDRUCK ─────────────────────────────────────────────────────────
   if (gfrStage) {
     const stage = gfrStage.stage;
-
-    // BP target context-specific (KDIGO 2021 BP Guideline)
     const isTransplantRec = diseases.includes('transplantat');
     const isADPKDRec      = diseases.includes('adpkd');
     let bpTargetRec;
-    if (isADPKDRec)      bpTargetRec = '< 110/75 mmHg (ADPKD, HALT-PKD); ACE-Hemmer/ARB bevorzugen';
-    else if (isTransplantRec) bpTargetRec = '< 130/80 mmHg (Nierentransplantat, KDIGO 2021); CCB oder ARB Erstlinie (Grad 1C)';
-    else                  bpTargetRec = '< 130/80 mmHg (CKD, ESC 2024 / KDIGO 2021); ACE-Hemmer oder ARB bevorzugen';
-    recList.push(`Blutdruckziel: ${bpTargetRec}`);
+    if (isADPKDRec)            bpTargetRec = '< 110/75 mmHg (ADPKD, HALT-PKD); ACE-Hemmer/ARB bevorzugen';
+    else if (isTransplantRec)  bpTargetRec = '< 130/80 mmHg (Nierentransplantat, KDIGO 2021); CCB oder ARB Erstlinie (Grad 1C)';
+    else                       bpTargetRec = '< 130/80 mmHg (CKD, ESC 2024 / KDIGO 2021); ACE-Hemmer oder ARB bevorzugen';
+    recAdd('blutdruck', `Blutdruckziel: ${bpTargetRec}`);
+    recAdd('blutdruck', 'Heimblutdruckmessung empfohlen (Mittelung über 7 Tage); ggf. 24h-RR-Messung bei V.a. White-Coat oder maskierte Hypertonie');
 
+    // ── MEDIKATION (nephroprotektiv) ────────────────────────────────────
     if (uacr && uacr >= 30) {
-      recList.push('RAS-Blockade: ACE-Hemmer oder AT1-Antagonist in maximal tolerierter Dosis (Ziel-ACR-Reduktion ≥ 30%)');
+      recAdd('medikation', 'RAS-Blockade: ACE-Hemmer oder AT1-Antagonist in maximal tolerierter Dosis (Ziel-ACR-Reduktion ≥ 30%) — Kontrolle Krea/K⁺ nach 1–2 Wochen');
     } else if (diseases.includes('diabetisch') || diseases.includes('hypertensiv')) {
-      recList.push('RAS-Blockade erwägen (ACE-Hemmer oder AT1-Antagonist) bei Hypertonie / Diabetes');
+      recAdd('medikation', 'RAS-Blockade erwägen (ACE-Hemmer oder AT1-Antagonist) bei Hypertonie / Diabetes — Kontrolle Krea/K⁺ nach 1–2 Wochen');
     }
 
     if (primaryEGFR >= 20) {
       if (diseases.includes('diabetisch')) {
-        recList.push('SGLT2-Inhibitor: Dapagliflozin (Forxiga®) 10 mg/d oder Empagliflozin (Jardiance®) 10 mg/d — nephroprotektiv + BZ-senkend; BZ-Wirkung ab eGFR < 45 reduziert, nephroprotektiver Effekt bis Dialyse (DAPA-CKD, EMPA-KIDNEY)');
+        recAdd('medikation', 'SGLT2-Inhibitor: Dapagliflozin (Forxiga®) 10 mg/d oder Empagliflozin (Jardiance®) 10 mg/d — nephroprotektiv + BZ-senkend; weiter bis Dialyse (DAPA-CKD, EMPA-KIDNEY); cave Euglykämische DKA');
       } else {
-        recList.push('SGLT2-Inhibitor: Dapagliflozin (Forxiga®) 10 mg/d — nephroprotektiv auch ohne Diabetes (DAPA-CKD 2020, EMPA-KIDNEY 2022); ab eGFR ≥ 20 ml/min; BZ-Wirkung ab eGFR < 45 gering, nephroprotektiver Effekt erhalten');
+        recAdd('medikation', 'SGLT2-Inhibitor: Dapagliflozin (Forxiga®) 10 mg/d — nephroprotektiv auch ohne Diabetes (DAPA-CKD 2020, EMPA-KIDNEY 2022); ab eGFR ≥ 20 ml/min');
       }
     }
 
-    // Lebensstil — immer empfohlen
-    recList.push('Lebensstil: ≥ 150 min/Woche moderate körperliche Aktivität (Ausdauersport: Gehen, Radfahren, Schwimmen) — KDIGO 2024; reduziert kardiovaskuläres Risiko und CKD-Progressionsrate');
-    recList.push('Lebensstil: Nikotinkarenz — Rauchen beschleunigt CKD-Progression und erhöht kardiovaskuläre Mortalität erheblich');
-    recList.push('Lebensstil: Normgewicht anstreben (BMI-Ziel 20–25 kg/m²) — Adipositas erhöht intraglomerulären Druck (Hyperfiltration) und Proteinurie');
-    if (['G3a','G3b','G4','G5'].includes(stage)) {
-      recList.push('Ernährung: Proteinrestriktion 0,6–0,8 g/kg KG/d (ab Stadium G3, KDIGO 2024) — reduziert Harnstoffbelastung und Progression; unter Kontrolle des Ernährungsstatus');
-    } else {
-      recList.push('Ernährung: Proteinzufuhr ≤ 0,8 g/kg KG/d; Kochsalzrestriktion < 5 g NaCl/d (< 2 g Natrium/d)');
-    }
-
-    // Finerenon — K⁺ and eGFR dependent (K⁺ < 5, eGFR > 25, diabetische NP CKD 3-4 + Albuminurie)
+    // Finerenon (kombinierte Bedingung diab. NP + ACR + eGFR + K⁺)
     if (diseases.includes('diabetisch') && uacr && uacr >= 30 && primaryEGFR >= 25) {
       if (kalium !== null && kalium >= 5.0) {
-        recList.push(`⚠️ Finerenon (Kerendia® 10 mg): Indikation gegeben (diab. NP + Albuminurie + eGFR ≥ 25), aber AKTUELL KONTRAINDIZIERT — Kalium ${kalium} mmol/l ≥ 5,0 mmol/l! Erst Kalium senken, dann re-evaluieren.`);
+        recAdd('medikation', `⚠️ Finerenon (Kerendia®): Indikation gegeben (diab. NP + ACR ≥ 30 + eGFR ≥ 25), aber AKTUELL KONTRAINDIZIERT — K⁺ ${kalium} mmol/l ≥ 5,0! Erst Kalium senken, dann re-evaluieren.`);
       } else {
-        const kNote = kalium !== null ? ` Kalium ${kalium} mmol/l — Bedingung erfüllt (< 5,0).` : ' Kalium bitte prüfen (Bedingung: < 5,0 mmol/l).';
-        recList.push(`Finerenon (Kerendia® 10 mg/d): Indiziert bei diab. NP + Albuminurie + eGFR ≥ 25 ml/min.${kNote} Additiver nephro- und kardiovaskulärer Schutz (FIDELIO/FIGARO). Kaliumkontrolle nach 4 Wochen.`);
+        const kNote = kalium !== null ? ` Kalium ${kalium} mmol/l erfüllt Bedingung (< 5,0).` : ' Kalium prüfen (Bedingung: < 5,0 mmol/l).';
+        recAdd('medikation', `Finerenon (Kerendia® 10 mg/d, ggf. 20 mg): Indiziert bei diab. NP + ACR ≥ 30 + eGFR ≥ 25.${kNote} Additiver nephro-/kardiovask. Schutz (FIDELIO/FIGARO). K⁺-Kontrolle nach 4 Wochen.`);
       }
     }
 
-    // Kalium-spezifische Empfehlungen
+    // ── ELEKTROLYTE / SÄURE-BASEN ───────────────────────────────────────
     if (kalium !== null) {
       if (kalium >= 6.0) {
-        recList.push(`🚨 Hyperkaliämie (K⁺ ${kalium} mmol/l): EKG sofort! Kalziumglukonat i.v. → Insulin/Glukose → Patiromer (Veltassa®) oder Natriumzirkoniumcyclosilicat (Lokelma®) 10 g 3×/d × 2d → RAAS-I pausieren bis K⁺ < 5,5`);
+        recAdd('elektrolyte', `🚨 Hyperkaliämie (K⁺ ${kalium} mmol/l): EKG sofort! Kalziumglukonat i.v. → Insulin/Glukose → Patiromer (Veltassa®) oder Natriumzirkoniumcyclosilicat (Lokelma®) 10 g 3×/d × 2d → RAAS-I pausieren bis K⁺ < 5,5`);
       } else if (kalium >= 5.5) {
-        recList.push(`⚠️ Hyperkaliämie (K⁺ ${kalium} mmol/l): RAAS-Inhibitor Dosis prüfen/reduzieren; Kaliumarme Diät; Kalium-Binder erwägen (Patiromer/SZC); Finerenon/Spironolacton pausieren/KI`);
+        recAdd('elektrolyte', `⚠️ Hyperkaliämie (K⁺ ${kalium} mmol/l): RAAS-Inhibitor Dosis prüfen/reduzieren; kaliumarme Diät; Kalium-Binder erwägen (Patiromer/SZC); Finerenon/Spironolacton pausieren/KI`);
       } else if (kalium >= 5.0) {
-        recList.push(`K⁺ ${kalium} mmol/l: Grenzwertig erhöht — engmaschige Kontrolle; kaliumarme Diät; RAAS-I mit Vorsicht; Finerenon/Spironolacton KI bis K⁺ < 5,0`);
+        recAdd('elektrolyte', `K⁺ ${kalium} mmol/l: grenzwertig erhöht — engmaschige Kontrolle; kaliumarme Diät; RAAS-I mit Vorsicht; Finerenon/Spironolacton KI bis K⁺ < 5,0`);
       } else if (kalium < 3.5) {
-        recList.push(`⚠️ Hypokaliämie (K⁺ ${kalium} mmol/l): Kaliumsubstitution oral/i.v.; Ursache klären (Diuretika, GI-Verlust); Thiazid/Schleifendiuretikum-Dosis prüfen`);
+        recAdd('elektrolyte', `⚠️ Hypokaliämie (K⁺ ${kalium} mmol/l): Kaliumsubstitution oral/i.v.; Ursache klären (Diuretika, GI-Verlust); Thiazid-/Schleifendiuretikum-Dosis prüfen`);
       }
     }
-
-    // pH / Azidose
     if (ph !== null && ph < 7.35) {
-      recList.push(`Metabolische Azidose (pH ${ph}): Bikarbonat-Therapie — Bicanorm® 1 g / Nephrotrans® 840 mg, 3–6 Kps./d; Ziel HCO₃⁻ > 22 mmol/l (Therapiestart hausintern: HCO₃⁻ < 19 mmol/l)`);
+      recAdd('elektrolyte', `Metabolische Azidose (pH ${ph}): Bikarbonat-Therapie — Bicanorm® 1 g / Nephrotrans® 840 mg, 3–6 Kps./d; Ziel HCO₃⁻ > 22 mmol/l (Therapiestart hausintern: HCO₃⁻ < 19)`);
     } else if (bicarb !== null && bicarb < 19) {
-      recList.push(`Renale Azidose (HCO₃⁻ ${bicarb} mmol/l): Bicanorm® 1 g / Nephrotrans® 840 mg 3× 1–2 Kps./d; Ziel HCO₃⁻ > 22 mmol/l`);
+      recAdd('elektrolyte', `Renale Azidose (HCO₃⁻ ${bicarb} mmol/l): Bicanorm® 1 g / Nephrotrans® 840 mg 3× 1–2 Kps./d; Ziel HCO₃⁻ > 22 mmol/l`);
     } else if (bicarb !== null && bicarb < 22) {
-      recList.push(`HCO₃⁻ ${bicarb} mmol/l: unter Ziel (> 22), aber > 19 — Verlaufskontrolle; diätetisch mehr Obst/Gemüse, NaHCO₃ erst bei < 19 mmol/l starten`);
+      recAdd('elektrolyte', `HCO₃⁻ ${bicarb} mmol/l: unter Ziel (> 22), aber > 19 — Verlaufskontrolle; diätetisch mehr Obst/Gemüse, NaHCO₃ erst bei < 19 mmol/l starten`);
     }
 
+    // ── LIFESTYLE ───────────────────────────────────────────────────────
+    recAdd('lifestyle', 'Bewegung: ≥ 150 min/Woche moderate Aktivität (Gehen, Radfahren, Schwimmen) oder ≥ 75 min intensiv — KDIGO 2024; reduziert KV-Risiko und CKD-Progression');
+    recAdd('lifestyle', 'Körpergewicht: BMI-Ziel 20–25 kg/m² — Adipositas ↑ intraglomerulären Druck (Hyperfiltration) und Proteinurie');
+    if (smoker === 'current') {
+      recAdd('lifestyle', '🚬 RAUCHENTWÖHNUNG (Aktiv-Raucher!): Strukturierte Beratung anbieten — Nikotinersatz, Vareniclin/Bupropion, Verhaltenstherapie. Rauchen beschleunigt CKD-Progression und ↑ KV-Mortalität erheblich.');
+    } else if (smoker === 'former') {
+      recAdd('lifestyle', 'Nikotinkarenz beibehalten (Ex-Raucher) — konsequenten Verzicht weiter fortsetzen');
+    } else if (smoker === 'never') {
+      recAdd('lifestyle', 'Nichtraucher — keine Nikotinintervention erforderlich');
+    } else {
+      recAdd('lifestyle', 'Raucherstatus erheben; bei aktivem Konsum strukturierte Raucherentwöhnung — Rauchen beschleunigt CKD-Progression und ↑ KV-Mortalität');
+    }
+
+    // ── ERNÄHRUNG ───────────────────────────────────────────────────────
+    if (['G3a','G3b','G4','G5'].includes(stage)) {
+      recAdd('ernaehrung', 'Eiweißrestriktion 0,6–0,8 g/kg KG/d (ab Stadium G3, KDIGO 2024) — verlangsamt Progression; Kontrolle Ernährungsstatus');
+    } else {
+      recAdd('ernaehrung', 'Eiweißzufuhr ≤ 0,8 g/kg KG/d — Übermaß vermeiden (fördert Hyperfiltration)');
+    }
+    recAdd('ernaehrung', 'Kochsalz < 5 g NaCl/d (< 2 g Natrium/d)');
     if (stage === 'G3a' || stage === 'G3b') {
-      recList.push('Laborkontrollen: BB, Elektrolyte (inkl. Kalium!), Kreatinin, Phosphat, PTH, 25-OH-Vit D, Harnsäure — alle 3–6 Monate');
-      recList.push('Ernährung zusätzlich: Phosphat < 1.000 mg/d; Kaliumrestriktion ab K⁺ > 5,0 mmol/l');
+      recAdd('ernaehrung', 'Phosphat < 1.000 mg/d; Kaliumrestriktion erst ab K⁺ > 5,0 mmol/l');
     }
-
-    if (stage === 'G3b' || stage === 'G4') {
-      recList.push('CKD-MBD: Phosphatarme Diät (< 1.000 mg/d); Phosphatbinder bei dauerhafter Erhöhung (> 1,45 mmol/l); Dekristol® 20.000 IE/Woche (ab GFR < 60 immer!)');
-      recList.push(`Renale Anämie: Eisenstatus prüfen (Ferritin, TSAT); Ziel Ferritin 100–500, TSAT > 20%; Ferinject® i.v. bei Mangel; ESA (Darbepoetin alfa) bei Hb < 10 g/dl nach Eisenoptimierung — Ziel Hb 10–11 g/dl`);
-    }
-
-    if (stage === 'G4') {
-      recList.push('⚠️ Vorbereitung Nierenersatztherapie: Aufklärung über Hämodialyse, Peritonealdialyse, präemptive Transplantation');
-      recList.push('Shuntanlage/PD-Katheter-Planung: ab eGFR < 20 ml/min in Kooperation mit Gefäßchirurgie/Chirurgie');
-      recList.push('Anmeldung Transplantationsambulanz: Vorbereitung Listung ab eGFR < 20 ml/min (präemptive Transplantation bevorzugt)');
-      recList.push('Hepatitis B-Impfung sicherstellen, pneumokokken- und Influenza-Impfung');
-    }
-
     if (stage === 'G5') {
-      recList.push('⚠️ Dialyseeinleitung vorbereiten / evaluieren; Notfalldialyse bei klinischer Dekompensation');
-      recList.push('Diät: strenge Protein-, Kalium- und Phosphatrestriktion; Flüssigkeitsrestriktion je nach Diurese');
+      recAdd('ernaehrung', 'Strenge Protein-, Kalium- und Phosphatrestriktion; Flüssigkeitsrestriktion je nach Restdiurese');
+    }
+
+    // ── LABOR / MONITORING ──────────────────────────────────────────────
+    if (stage === 'G3a' || stage === 'G3b') {
+      recAdd('labor', 'BB, Elektrolyte (inkl. K⁺!), Kreatinin, Phosphat, Ca²⁺, PTH, 25-OH-Vit-D, Harnsäure — alle 3–6 Monate');
+    }
+    const interval = primaryEGFR >= 60 ? 'jährlich' : primaryEGFR >= 30 ? 'alle 3–6 Monate' : primaryEGFR >= 15 ? 'alle 1–3 Monate' : 'monatlich';
+    recAdd('labor', `Nephrologische Kontrollintervalle: ${interval}`);
+    if (uacr && uacr >= 30) recAdd('labor', 'ACR-Verlauf alle 3–6 Monate (Therapie-Erfolgskontrolle RAS-Blockade/SGLT2i — Ziel: ACR-Reduktion ≥ 30%)');
+
+    // ── KOMPLIKATIONEN (CKD-MBD, Anämie) ────────────────────────────────
+    if (stage === 'G3b' || stage === 'G4' || stage === 'G5') {
+      recAdd('mbd', 'CKD-MBD: phosphatarme Diät (< 1.000 mg/d); Phosphatbinder bei dauerhafter Erhöhung (> 1,45 mmol/l); Dekristol® 20.000 IE/Woche (ab GFR < 60 immer!)');
+      recAdd('mbd', 'Renale Anämie: Eisenstatus (Ferritin, TSAT) prüfen; Ziel Ferritin 100–500, TSAT > 20%; Ferinject® i.v. bei Mangel; ESA (Darbepoetin alfa) bei Hb < 10 g/dl nach Eisenoptimierung — Ziel Hb 10–11 g/dl');
+    }
+
+    // ── NIERENERSATZTHERAPIE ────────────────────────────────────────────
+    if (stage === 'G4') {
+      recAdd('ersatz', 'Aufklärung über Hämodialyse, Peritonealdialyse, präemptive Transplantation');
+      recAdd('ersatz', 'Shuntanlage / PD-Katheter-Planung ab eGFR < 20 ml/min in Kooperation mit Gefäßchirurgie');
+      recAdd('ersatz', 'Anmeldung Transplantationsambulanz: Listung ab eGFR < 20 ml/min (präemptive Tx bevorzugt)');
+      recAdd('ersatz', 'Impfstatus komplettieren: Hepatitis B, Pneumokokken, Influenza, COVID-19');
+    }
+    if (stage === 'G5') {
+      recAdd('ersatz', '⚠️ Dialyseeinleitung evaluieren / vorbereiten; Notfalldialyse bei klinischer Dekompensation');
     }
   }
 
-  // Disease-specific
+  // ── KRANKHEITSSPEZIFISCHE THERAPIE ────────────────────────────────────
   if (diseases.includes('diabetisch')) {
-    recList.push('[Diabetes] HbA1c-Ziel: 7–7,5% (individualisiert); cave Hypoglykämie bei eingeschränkter eGFR');
-    if (!(uacr && uacr >= 30 && primaryEGFR >= 25)) { // only if not already in general section
-      recList.push('[Diabetes] Finerenon (Kerendia® 10 mg/d): bei eGFR ≥ 25 + ACR ≥ 30 mg/g + K⁺ < 5,0 mmol/l — nephro- und kardiovaskulärer Schutz (FIDELIO/FIGARO)');
+    recAdd('krankheit', '[Diabetes] HbA1c-Ziel 7–7,5 % (individualisiert); cave Hypoglykämie bei eingeschränkter eGFR');
+    if (!(uacr && uacr >= 30 && primaryEGFR >= 25)) {
+      recAdd('krankheit', '[Diabetes] Finerenon (Kerendia® 10 mg/d): bei eGFR ≥ 25 + ACR ≥ 30 mg/g + K⁺ < 5,0 mmol/l (FIDELIO/FIGARO)');
     }
-    recList.push('[Diabetes] GLP-1-Rezeptoragonist (Semaglutid) erwägen: kardiovaskulärer Nutzen, Gewichtsreduktion, möglicher nephroprotektiver Effekt (FLOW-Studie)');
-    recList.push('[Diabetes] Metformin: Dosisreduktion ab eGFR < 45; Absetzen bei eGFR < 30');
+    recAdd('krankheit', '[Diabetes] GLP-1-RA (Semaglutid) erwägen: kardiovaskulärer Nutzen, Gewichtsreduktion, nephroprotektiver Effekt (FLOW-Studie 2024)');
+    recAdd('krankheit', '[Diabetes] Metformin: Dosisreduktion ab eGFR < 45; Absetzen ab eGFR < 30');
   }
-
   if (diseases.includes('igan')) {
-    recList.push('[IgA-N] Sparsentan (PROTECT-Studie): dualer AT1/Endothelin-A-Antagonist, Zulassung bei proteinurischer IgA-N');
-    recList.push('[IgA-N] Budesonid (Nefecon/Kinpeygo): zielgerichtete Freisetzung im terminalen Ileum; bei ACR ≥ 300 mg/g + eGFR ≥ 30 ml/min');
-    recList.push('[IgA-N] SGLT2-Inhibitor als Add-on (Dapagliflozin: DAPA-CKD subgruppe)');
-    recList.push('[IgA-N] Systemische Immunsuppression (Kortikosteroide) nur bei Rapid-Progressive IgA-N nach individueller Nutzen-Risiko-Abwägung');
+    recAdd('krankheit', '[IgA-N] Sparsentan (PROTECT): dualer AT1/Endothelin-A-Antagonist bei proteinurischer IgA-N');
+    recAdd('krankheit', '[IgA-N] Budesonid (Nefecon/Kinpeygo): bei ACR ≥ 300 mg/g + eGFR ≥ 30 ml/min');
+    recAdd('krankheit', '[IgA-N] SGLT2-Inhibitor als Add-on (DAPA-CKD-Subgruppe)');
+    recAdd('krankheit', '[IgA-N] Systemische Steroide nur bei Rapid-Progressive IgA-N nach Nutzen-Risiko-Abwägung');
   }
-
   if (diseases.includes('fsgs')) {
-    recList.push('[FSGS] Sparsentan: bei primärer FSGS mit Proteinurie (DUPLEX-Studie)');
-    recList.push('[FSGS] Differenzierung primär vs. sekundär/genetisch entscheidend für Therapiestrategie');
-    recList.push('[FSGS] Primäre FSGS: Kortikosteroide (Prednisolon 1 mg/kg/d für 4–16 Wochen), ggf. Calcineurininhibitoren (Tacrolimus/Cyclosporin) bei Steroidresistenz');
+    recAdd('krankheit', '[FSGS] Sparsentan: bei primärer FSGS mit Proteinurie (DUPLEX-Studie)');
+    recAdd('krankheit', '[FSGS] Differenzierung primär vs. sekundär/genetisch entscheidend für Therapiestrategie');
+    recAdd('krankheit', '[FSGS] Primäre FSGS: Prednisolon 1 mg/kg/d × 4–16 Wochen, ggf. CNI (Tacrolimus/Cyclosporin) bei Steroidresistenz');
   }
-
   if (diseases.includes('mgn')) {
-    recList.push('[MGN] Anti-PLA2R-Antikörper-Verlauf als Therapiemonitor; spontane Remission möglich');
-    recList.push('[MGN] Immunsuppression bei persistierendem nephrotischem Syndrom > 6 Monate: Rituximab (bevorzugt, MENTOR-Studie)');
-    recList.push('[MGN] Antikoagulation bei schwerem nephrotischen Syndrom (Albumin < 25 g/l) nach individueller Abwägung');
+    recAdd('krankheit', '[MGN] Anti-PLA2R-AK-Verlauf als Therapiemonitor; spontane Remission möglich');
+    recAdd('krankheit', '[MGN] Immunsuppression bei persistierendem nephrotischem Syndrom > 6 Monate: Rituximab (MENTOR)');
+    recAdd('krankheit', '[MGN] Antikoagulation bei Albumin < 25 g/l erwägen');
   }
-
   if (diseases.includes('adpkd')) {
-    recList.push('[ADPKD] Tolvaptan (Jinarc): bei Erwachsenen mit gesicherter ADPKD und raschem Progress (Mayo-Klasse 1C–1E); LFP-Monitoring obligat');
-    recList.push('[ADPKD] Strenge Blutdruckkontrolle < 110/75 mmHg (HALT-PKD); ACE-Hemmer/ARB bevorzugt');
-    recList.push('[ADPKD] Ausreichend Flüssigkeit (> 3 l/d) bei Tolvaptan; Kochsalz- und Proteinrestriktion');
+    recAdd('krankheit', '[ADPKD] Tolvaptan (Jinarc): bei raschem Progress (Mayo 1C–1E); LFP-Monitoring obligat');
+    recAdd('krankheit', '[ADPKD] Strenge BP-Kontrolle < 110/75 mmHg (HALT-PKD); ACE-Hemmer/ARB bevorzugen');
+    recAdd('krankheit', '[ADPKD] Flüssigkeit > 3 l/d unter Tolvaptan; Kochsalz- und Proteinrestriktion');
   }
-
   if (diseases.includes('lupus')) {
-    recList.push('[Lupus] Hydroxychloroquin: 200–400 mg/d dauerhaft (Basistherapie, OD-Monitoring)');
-    recList.push('[Lupus] Induktionstherapie: Mycophenolat Mofetil 2–3 g/d oder Cyclophosphamid (NIH/Euro-Lupus)');
-    recList.push('[Lupus] Voclosporin (Lupkynis) + MMF: bei aktiver LN Klasse III–IV (AURORA-Studie)');
-    recList.push('[Lupus] Belimumab: als Add-on zur Standardtherapie (BLISS-LN-Studie)');
-    recList.push('[Lupus] Remissionsziel: uPCR < 500 mg/g nach 12 Monaten; Steroid-Tapering anstreben');
+    recAdd('krankheit', '[Lupus] Hydroxychloroquin 200–400 mg/d dauerhaft (Basistherapie, OD-Monitoring)');
+    recAdd('krankheit', '[Lupus] Induktion: MMF 2–3 g/d oder Cyclophosphamid (NIH/Euro-Lupus)');
+    recAdd('krankheit', '[Lupus] Voclosporin (Lupkynis) + MMF: bei aktiver LN Klasse III–IV (AURORA)');
+    recAdd('krankheit', '[Lupus] Belimumab als Add-on (BLISS-LN); Remissionsziel uPCR < 500 mg/g nach 12 Mo, Steroid-Tapering');
   }
-
   if (diseases.includes('vaskulitis')) {
-    recList.push('[ANCA-Vaskulitis] Induktion: Rituximab (375 mg/m² × 4 oder 1000 mg × 2) oder Cyclophosphamid + Kortikosteroide');
-    recList.push('[ANCA-Vaskulitis] Erhaltung: Rituximab 500 mg alle 6 Monate für 24 Monate (MAINRITSAN)');
-    recList.push('[ANCA-Vaskulitis] Avacopan (Tavneos): C5a-Antagonist, Steroid-sparend (ADVOCATE-Studie)');
-    recList.push('[ANCA-Vaskulitis] ANCA-Titer-Verlauf; Pneumocystis-Prophylaxe (Cotrimoxazol)');
+    recAdd('krankheit', '[ANCA-Vaskulitis] Induktion: Rituximab (375 mg/m² × 4 oder 1.000 mg × 2) oder Cyclophosphamid + Steroide');
+    recAdd('krankheit', '[ANCA-Vaskulitis] Erhaltung: Rituximab 500 mg alle 6 Mo × 24 Mo (MAINRITSAN)');
+    recAdd('krankheit', '[ANCA-Vaskulitis] Avacopan (Tavneos): C5a-Antagonist, Steroid-sparend (ADVOCATE)');
+    recAdd('krankheit', '[ANCA-Vaskulitis] ANCA-Titer-Verlauf; Pneumocystis-Prophylaxe (Cotrimoxazol)');
   }
-
   if (diseases.includes('transplantat')) {
-    recList.push('[Transplantat] Immunsuppression-Optimierung: Tacrolimus-Spiegel, MMF-Dosis, Steroidreduktion nach Schema');
-    recList.push('[Transplantat] SGLT2-Inhibitoren: zunehmende Evidenz auch post-Transplant (eGFR ≥ 30)');
-    recList.push('[Transplantat] CMV-, BKV-Monitoring; Infektionsprophylaxe individuell');
-    recList.push('[Transplantat] Transplantat-Biopsie bei ungeklärtem eGFR-Abfall > 25% erwägen');
+    recAdd('krankheit', '[Transplantat] Immunsuppression-Optimierung (Tacrolimus-Spiegel, MMF-Dosis, Steroidreduktion nach Schema)');
+    recAdd('krankheit', '[Transplantat] SGLT2i: zunehmende Evidenz auch post-Transplant (eGFR ≥ 30; off-label)');
+    recAdd('krankheit', '[Transplantat] CMV-, BKV-Monitoring; Infektionsprophylaxe individuell');
+    recAdd('krankheit', '[Transplantat] Biopsie bei ungeklärtem eGFR-Abfall > 25 % erwägen');
   }
 
-  // General always
-  recList.push('Nephrotoxika meiden: NSAR, Aminoglykoside; Kontrastmittel bei Indikation mit Hydrierung (NaCl 0,9%) und Krea-Kontrolle nach 48\u202Fh; Dosisanpassung aller renal eliminierten Medikamente');
-  recList.push('Lebensstiländerung: Gewichtsreduktion, Rauchen stoppen, körperliche Aktivität 150 min/Woche');
-  recList.push('Statintherapie: bei CKD + kardiovaskulärem Risiko empfohlen (SHARP-Studie)');
-  recList.push(`Nephrologische Kontrollintervalle: ${primaryEGFR >= 60 ? 'jährlich' : primaryEGFR >= 30 ? 'alle 3–6 Monate' : 'alle 1–3 Monate'}`);
+  // ── ALLGEMEIN / VORSORGE ──────────────────────────────────────────────
+  recAdd('allgemein', 'Nephrotoxika meiden: NSAR (KI ab G3+), Aminoglykoside, Kontrastmittel nur bei strenger Indikation mit Hydrierung (NaCl 0,9 %) + Krea-Kontrolle nach 48 h');
+  recAdd('allgemein', 'Statintherapie bei CKD + kardiovaskulärem Risiko (SHARP-Studie); Lipidziel nach individuellem KV-Risiko');
+  recAdd('allgemein', 'Impfstatus prüfen: Pneumokokken, Influenza jährlich, Hepatitis B, COVID-19');
+  recAdd('allgemein', 'Wirkstoff-Dosierung renal eliminierter Medikamente: Medikationscheck-Tab nutzen');
 
-  recList.forEach((r, i) => {
-    empfText += `${i + 1}. ${r}\n`;
+  // ── Output: gruppiert mit Sektionen ───────────────────────────────────
+  let empfText = `--- THERAPEUTISCHE EMPFEHLUNGEN ---\n\n`;
+  if (gfrStage) {
+    empfText += `Stadium ${gfrStage.stage}${albStage ? albStage.stage : ''}`;
+    if (diseases.length) empfText += ` bei ${diseases.map(diseaseLabel).join(', ')}`;
+    empfText += `\n${'─'.repeat(60)}\n`;
+  }
+
+  recGroups.forEach(g => {
+    if (g.items.length === 0) return;
+    empfText += `\n▸ ${g.title}\n`;
+    g.items.forEach((item, i) => {
+      empfText += `   ${i + 1}. ${item}\n`;
+    });
   });
 
-  // Verweis auf den Medikationscheck-Tab — dort liegt der eGFR-adaptierte
-  // Wirkstoff-Dosisrechner inkl. Kontraindikations-Check.
-  empfText += '\n💊 Für Wirkstoff-spezifische Dosierung bei eingeschränkter eGFR sowie Kontraindikations-Check: siehe Medikationscheck-Tab.\n';
+  empfText += `\n${'─'.repeat(60)}\n💊 Wirkstoff-Dosierung bei eingeschränkter eGFR + Kontraindikations-Check: siehe Medikationscheck-Tab.\n`;
 
   document.getElementById('text-empfehlung').value = empfText;
 
