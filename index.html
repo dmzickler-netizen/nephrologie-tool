@@ -16472,20 +16472,28 @@ function seroGet(id) {
   return el ? (el.value || '').trim() : '';
 }
 
+function seroFmtLine(label, result, extras) {
+  let line = label;
+  if (result) line += ' ' + result;
+  const ex = (extras || []).filter(Boolean);
+  if (ex.length) line += ' (' + ex.join(', ') + ')';
+  return line;
+}
+
 function buildSerologyBullets() {
   const BULLET = '  • ';
   const items = [];
+  const resWord = r => r === 'pos' ? 'positiv' : r === 'neg' ? 'negativ' : '';
 
   // ANA
   if (document.getElementById('sero-ana-on') && document.getElementById('sero-ana-on').checked) {
     const res = seroRadioVal('sero-ana-res');
     const titer = seroGet('sero-ana-titer');
     const pattern = seroGet('sero-ana-pattern');
-    let parts = ['ANA'];
-    if (res) parts.push(res === 'pos' ? 'positiv' : 'negativ');
-    if (titer) parts.push(`Titer ${titer}`);
-    if (pattern) parts.push(`Muster ${pattern}`);
-    items.push({ body: parts.join(', '), date: seroFmtDate(seroGet('sero-ana-date')) });
+    items.push({
+      body: seroFmtLine('ANA', resWord(res), [titer && `Titer ${titer}`, pattern && `Muster ${pattern}`]),
+      date: seroFmtDate(seroGet('sero-ana-date'))
+    });
   }
 
   // ANCA
@@ -16494,21 +16502,20 @@ function buildSerologyBullets() {
     const type = seroGet('sero-anca-type');
     const pr3 = seroGet('sero-anca-pr3');
     const mpo = seroGet('sero-anca-mpo');
-    let parts = [type ? type : 'ANCA'];
-    if (res) parts.push(res === 'pos' ? 'positiv' : 'negativ');
-    if (pr3) parts.push(`PR3 ${pr3} U/ml`);
-    if (mpo) parts.push(`MPO ${mpo} U/ml`);
-    items.push({ body: parts.join(', '), date: seroFmtDate(seroGet('sero-anca-date')) });
+    items.push({
+      body: seroFmtLine(type || 'ANCA', resWord(res), [pr3 && `PR3 ${pr3} U/ml`, mpo && `MPO ${mpo} U/ml`]),
+      date: seroFmtDate(seroGet('sero-anca-date'))
+    });
   }
 
   // Anti-GBM
   if (document.getElementById('sero-gbm-on') && document.getElementById('sero-gbm-on').checked) {
     const res = seroRadioVal('sero-gbm-res');
     const val = seroGet('sero-gbm-val');
-    let parts = ['Anti-GBM'];
-    if (res) parts.push(res === 'pos' ? 'positiv' : 'negativ');
-    if (val) parts.push(`${val} U/ml`);
-    items.push({ body: parts.join(', '), date: seroFmtDate(seroGet('sero-gbm-date')) });
+    items.push({
+      body: seroFmtLine('Anti-GBM', resWord(res), [val && `${val} U/ml`]),
+      date: seroFmtDate(seroGet('sero-gbm-date'))
+    });
   }
 
   // Komplement
@@ -16517,12 +16524,16 @@ function buildSerologyBullets() {
     const c3v = seroGet('sero-c3-val');
     const c4s = seroGet('sero-c4-stat');
     const c4v = seroGet('sero-c4-val');
-    let c3str = '', c4str = '';
-    if (c3s || c3v) c3str = 'C3 ' + [c3s, c3v ? c3v + ' g/l' : ''].filter(Boolean).join(' ');
-    if (c4s || c4v) c4str = 'C4 ' + [c4s, c4v ? c4v + ' g/l' : ''].filter(Boolean).join(' ');
-    let body = 'Komplement';
-    const cParts = [c3str, c4str].filter(Boolean);
-    if (cParts.length) body += ': ' + cParts.join(', ');
+    let body;
+    if (c3s === 'normal' && c4s === 'normal' && !c3v && !c4v) {
+      body = 'Komplement C3/C4 im Normbereich';
+    } else {
+      let c3str = '', c4str = '';
+      if (c3s || c3v) c3str = 'C3 ' + [c3s, c3v ? c3v + ' g/l' : ''].filter(Boolean).join(' ');
+      if (c4s || c4v) c4str = 'C4 ' + [c4s, c4v ? c4v + ' g/l' : ''].filter(Boolean).join(' ');
+      const cParts = [c3str, c4str].filter(Boolean);
+      body = cParts.length ? 'Komplement: ' + cParts.join(', ') : 'Komplement';
+    }
     items.push({ body, date: seroFmtDate(seroGet('sero-kompl-date')) });
   }
 
@@ -16530,11 +16541,11 @@ function buildSerologyBullets() {
   if (document.getElementById('sero-ifix-on') && document.getElementById('sero-ifix-on').checked) {
     const res = seroRadioVal('sero-ifix-res');
     const note = seroGet('sero-ifix-note');
-    let parts = ['Immunfixation'];
-    if (res === 'unauffällig') parts.push('unauffällig');
-    else if (res === 'mgradient') parts.push('M-Gradient nachweisbar');
-    if (note) parts.push(note);
-    items.push({ body: parts.join(', '), date: seroFmtDate(seroGet('sero-ifix-date')) });
+    const resTxt = res === 'unauffällig' ? 'unauffällig' : res === 'mgradient' ? 'M-Gradient nachweisbar' : '';
+    items.push({
+      body: seroFmtLine('Immunfixation', resTxt, [note]),
+      date: seroFmtDate(seroGet('sero-ifix-date'))
+    });
   }
 
   // Freie Leichtketten
@@ -16571,11 +16582,10 @@ function buildSerologyBullets() {
     const res = seroRadioVal('sero-rf-res');
     const val = seroGet('sero-rf-val');
     const ccp = seroGet('sero-rf-ccp');
-    let parts = ['Rheumafaktoren'];
-    if (res) parts.push(res === 'pos' ? 'positiv' : 'negativ');
-    if (val) parts.push(`${val} IU/ml`);
-    if (ccp) parts.push(`Anti-CCP ${ccp} U/ml`);
-    items.push({ body: parts.join(', '), date: seroFmtDate(seroGet('sero-rf-date')) });
+    items.push({
+      body: seroFmtLine('Rheumafaktoren', resWord(res), [val && `${val} IU/ml`, ccp && `Anti-CCP ${ccp} U/ml`]),
+      date: seroFmtDate(seroGet('sero-rf-date'))
+    });
   }
 
   // Konsolidiertes Datum: nur wenn ≥2 Items UND alle haben das exakt gleiche Datum
