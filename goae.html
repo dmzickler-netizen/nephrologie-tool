@@ -548,6 +548,12 @@ var goaeBegGeneric = {
 
 var goaeSelected = new Set();
 var goaeDetailOpen = new Set();
+var goaeFactorOverride = {};   // {nr: factor} — überschreibt globalen Default
+
+function goaeGetFactor(pos, fP, fT) {
+  if (goaeFactorOverride[pos.nr] != null) return goaeFactorOverride[pos.nr];
+  return pos.typ === 'P' ? fP : fT;
+}
 
 window.goaeToggleDetail = function(nr) {
   if (goaeDetailOpen.has(nr)) goaeDetailOpen.delete(nr);
@@ -631,7 +637,7 @@ function goaeBegHtml(pos) {
 }
 
 function goaeFee(pos, fP, fT) {
-  return pos.p * PKTW * (pos.typ === 'P' ? fP : fT);
+  return pos.p * PKTW * goaeGetFactor(pos, fP, fT);
 }
 
 function goaeGetConflicts() {
@@ -646,15 +652,29 @@ function goaeGetConflicts() {
 function goaeToggle(nr) {
   if (goaeSelected.has(nr)) {
     goaeSelected.delete(nr);
+    delete goaeFactorOverride[nr];
   } else {
     // Letzter Klick gewinnt: Konflikte automatisch entfernen
     var pos = goaeDB.find(function(p){ return p.nr===nr; });
-    if (pos && pos.excl) pos.excl.forEach(function(x){ goaeSelected.delete(x); });
-    goaeDB.forEach(function(p){ if (p.excl && p.excl.indexOf(nr)!==-1) goaeSelected.delete(p.nr); });
+    if (pos && pos.excl) pos.excl.forEach(function(x){ goaeSelected.delete(x); delete goaeFactorOverride[x]; });
+    goaeDB.forEach(function(p){ if (p.excl && p.excl.indexOf(nr)!==-1) { goaeSelected.delete(p.nr); delete goaeFactorOverride[p.nr]; } });
     goaeSelected.add(nr);
   }
   goaeRender();
 }
+
+window.goaeSetFactor = function(nr, val) {
+  var n = parseFloat(val);
+  if (isNaN(n) || n < 1.0) n = 1.0;
+  if (n > 3.5) n = 3.5;
+  // Runden auf 0,1
+  n = Math.round(n * 10) / 10;
+  var pos = goaeDB.find(function(p){ return p.nr===nr; });
+  var defF = parseFloat(document.getElementById(pos && pos.typ === 'P' ? 'goae-fP' : 'goae-fT').value) || (pos && pos.typ === 'P' ? 2.3 : 1.8);
+  if (Math.abs(n - defF) < 0.01) delete goaeFactorOverride[nr];   // identisch zu Default → kein Override
+  else goaeFactorOverride[nr] = n;
+  goaeRender();
+};
 
 function goaeOptAdd(nr, remove) {
   if (remove) goaeSelected.delete(remove);
@@ -830,8 +850,10 @@ function goaeRender() {
         var cw = pos.excl.filter(function(x){ return goaeSelected.has(x); });
         leftHtml += '<span class="goae-conflict-tag">⊘ excl. Nr. ' + cw.join('/') + '</span>';
       } else {
-        var fLabel = (pos.typ==='P'?fP:fT).toFixed(1).replace('.', ',');
-        leftHtml += '<span class="goae-pos-fee" title="' + pos.p + ' P × ' + fLabel + '">' + fee.toFixed(2).replace('.', ',') + ' € <small style="font-size:.65rem;color:#90a4ae;font-weight:400;">×' + fLabel + '</small></span>';
+        var fEff = goaeGetFactor(pos, fP, fT);
+        var fLabel = fEff.toFixed(1).replace('.', ',');
+        var isOver = goaeFactorOverride[pos.nr] != null;
+        leftHtml += '<span class="goae-pos-fee" title="' + pos.p + ' P × ' + fLabel + (isOver?' (Override)':'') + '">' + fee.toFixed(2).replace('.', ',') + ' € <small style="font-size:.65rem;color:' + (isOver?'#e65100':'#90a4ae') + ';font-weight:' + (isOver?'700':'400') + ';">×' + fLabel + '</small></span>';
       }
       leftHtml += '</div>';
       if (isOpen) {
@@ -856,9 +878,19 @@ function goaeRender() {
     if (!pos) return;
     var fee = goaeFee(pos, fP, fT);
     total += fee;
-    var fStr = (pos.typ==='P'?fP:fT).toFixed(1).replace('.', ',');
+    var fEff = goaeGetFactor(pos, fP, fT);
+    var defF = pos.typ === 'P' ? fP : fT;
+    var maxNoBeg = pos.typ === 'P' ? 2.3 : 1.8;
+    var isOver = goaeFactorOverride[pos.nr] != null;
+    var needsBeg = fEff > maxNoBeg + 0.001;
+    var inpBorder = needsBeg ? '#e65100' : (isOver ? '#3949ab' : '#cfd8dc');
+    var inpBg = needsBeg ? '#fff3e0' : (isOver ? '#e8eaf6' : '#fff');
     var hf = pos.haeufig || pos.freq;
-    itemsHtml += '<div class="goae-res-row"><span class="goae-res-label">Nr. ' + (pos.display||pos.nr) + ' ' + pos.short + '<small>×' + fStr + ' (' + pos.p + 'P)</small></span><span class="goae-res-amt">' + fee.toFixed(2).replace('.', ',') + ' €</span></div>';
+    itemsHtml += '<div class="goae-res-row" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">';
+    itemsHtml += '<span class="goae-res-label" style="flex:1;min-width:140px;">Nr. ' + (pos.display||pos.nr) + ' ' + pos.short + ' <small>(' + pos.p + 'P)</small></span>';
+    itemsHtml += '<span style="display:inline-flex;align-items:center;gap:3px;font-size:.72rem;color:#37474f;">×<input type="number" min="1.0" max="3.5" step="0.1" value="' + fEff.toFixed(1) + '" onchange="goaeSetFactor(' + pos.nr + ',this.value)" onclick="event.stopPropagation()" style="width:48px;padding:2px 4px;border:1.5px solid ' + inpBorder + ';background:' + inpBg + ';border-radius:5px;font-size:.78rem;font-weight:' + (isOver?'700':'500') + ';text-align:center;color:#263238;" title="Steigerungssatz (Default ' + defF.toFixed(1).replace('.', ',') + '× · ohne Begründung bis ' + maxNoBeg.toFixed(1).replace('.', ',') + '×)">' + (needsBeg?' <small style="color:#e65100;font-weight:700;" title="Begründung erforderlich">⚠</small>':'') + '</span>';
+    itemsHtml += '<span class="goae-res-amt">' + fee.toFixed(2).replace('.', ',') + ' €</span>';
+    itemsHtml += '</div>';
     itemsHtml += '<div class="goae-res-req">';
     itemsHtml += '<div class="goae-res-req-row"><span class="goae-res-req-lbl voraus">Voraus.</span><span class="goae-res-req-val">' + goaeEsc(pos.voraus || '—') + '</span></div>';
     itemsHtml += '<div class="goae-res-req-row"><span class="goae-res-req-lbl doku">Doku</span><span class="goae-res-req-val">' + goaeEsc(pos.doku || '—') + '</span></div>';
@@ -896,7 +928,7 @@ window.goaeBuildAuftrag = function() {
   var total = 0;
   goaeDB.forEach(function(pos) {
     if (!goaeSelected.has(pos.nr) || conflicts.has(pos.nr)) return;
-    var f = pos.typ === 'P' ? fP : fT;
+    var f = goaeGetFactor(pos, fP, fT);
     var fee = pos.p * PKTW * f;
     total += fee;
     rows.push({ nr: pos.display || pos.nr, name: pos.name, typ: pos.typ, p: pos.p, f: f, fee: fee, voraus: pos.voraus, doku: pos.doku });
