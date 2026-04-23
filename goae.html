@@ -118,6 +118,16 @@ body { background: #f4f6f8; font-family: -apple-system, BlinkMacSystemFont, "Seg
 .goae-beg-chip.copied { background:#c8e6c9; border-color:#388e3c; color:#1b5e20; }
 .goae-beg-chip.copied::after { content:' ✓'; font-weight:800; }
 .goae-beg-hint { font-size:.7rem; color:#888; font-style:italic; margin-top:3px; }
+
+/* Befund-Templates */
+.goae-bef-sec { margin-top:7px; padding-top:7px; border-top:1px dashed #c5cae9; grid-column:1 / -1; }
+.goae-bef-title { font-size:.66rem; font-weight:800; color:#00695c; text-transform:uppercase; letter-spacing:.03em; margin-bottom:5px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.goae-bef-title small { font-weight:500; color:#888; font-size:.68rem; text-transform:none; letter-spacing:0; }
+.goae-bef-copy { margin-left:auto; background:#e0f2f1; color:#00695c; border:1px solid #80cbc4; border-radius:6px; padding:2px 10px; font-size:.7rem; font-weight:700; cursor:pointer; text-transform:none; letter-spacing:0; }
+.goae-bef-copy:hover { background:#b2dfdb; border-color:#00695c; }
+.goae-bef-copy.copied { background:#c8e6c9; color:#1b5e20; border-color:#388e3c; }
+.goae-bef-text { background:#fff; border:1px solid #b2dfdb; border-left:3px solid #00897b; border-radius:6px; padding:8px 11px; font-size:.74rem; color:#263238; white-space:pre-wrap; font-family:ui-monospace,Menlo,Consolas,monospace; line-height:1.5; max-height:260px; overflow-y:auto; }
+.goae-bef-warn { font-size:.7rem; color:#c62828; font-weight:600; margin-top:4px; padding:4px 8px; background:#ffebee; border-left:3px solid #c62828; border-radius:4px; }
 </style>
 </head>
 <body>
@@ -281,6 +291,141 @@ var goaeOptRules = [
     text: 'Nr. 6 statt Nr. 5 wenn vollst. Organsystem untersucht', nr: 6, remove: 5 },
 ];
 
+// Befund-Templates — Fließtext mit [Platzhaltern] für häufige Ziffern
+var goaeBefundTpl = {
+  6: 'Vollständige Untersuchung Organsystem [kardiovaskulär / nephrologisch / …]:\n' +
+     '- Inspektion: [Allg.zustand, Haut/Schleimhäute, Ödeme]\n' +
+     '- Palpation: [Pulsstatus, Lymphknoten, ggf. Nierenlager]\n' +
+     '- Perkussion: [Herzgrenzen / Nierenlager]\n' +
+     '- Auskultation: [Herztöne rein, rhythmisch, HF …/min; Strömungsgeräusche]\n' +
+     '- Funktionsprüfung: [RR …/… mmHg bds., Orthostase, …]\n' +
+     'Beurteilung: [regelrecht / pathologische Befunde: …]\n' +
+     'Weitere Organsysteme klinisch nicht untersucht.',
+  7: 'Untersuchung mehrerer Organsysteme (vollständig):\n' +
+     '1) Kardiovaskulär: Inspektion, Palpation, Auskultation — Herztöne rein, HF …/min, rhythmisch, keine Ödeme, Pulsstatus allseits tastbar. RR …/… mmHg bds.\n' +
+     '2) Respiratorisch: Thorax symmetrisch, sonorer KS, vesikuläres AG bds., keine RG, SpO2 … %.\n' +
+     '3) Abdominell: weich, indolent, DG regelrecht, Leber am RB, Milz nicht tastbar, Nierenlager frei.\n' +
+     'Beurteilung: [regelrecht / Auffälligkeiten: …]\n' +
+     'Beide Organsysteme vollständig dokumentiert.',
+  8: 'Eingehende ganzkörperliche Untersuchung:\n' +
+     '- Allg.zustand: [gut / reduziert], EZ [normal], BMI […]\n' +
+     '- Haut/Schleimhäute: [rosig, keine Zyanose, kein Ikterus, keine Exantheme]\n' +
+     '- Lymphknoten: cervikal/supraklavikulär/axillär/inguinal frei\n' +
+     '- Kopf/Hals: Pupillen isokor, lichtreagibel; Schilddrüse schlank; JVP nicht gestaut\n' +
+     '- Herz/Kreislauf: HT rein, rhythmisch, HF …/min; keine Geräusche; RR …/… mmHg; Pulse allseits tastbar\n' +
+     '- Lunge: sonorer KS bds., vesikuläres AG bds., keine RG\n' +
+     '- Abdomen: weich, indolent, DG regelrecht, Leber am RB, Milz o.B., Nierenlager frei, Lymphknoten o.B.\n' +
+     '- Extremitäten: keine Ödeme, trophisch o.B.; Pulsstatus: A. femoralis/poplitea/tibialis post./dorsalis pedis bds. tastbar\n' +
+     '- Neurologisch orientierend: wach, orientiert ×4; Hirnnerven o.B.; Motorik/Sensibilität seitengleich, keine Ausfälle\n' +
+     'Anamnese: [Eigenanamnese: …; Familien-/Sozial-/Medikamentenanamnese erhoben]\n' +
+     'Beurteilung: [Gesamteindruck, Arbeitsdiagnose]',
+  34: 'Ausführliches Gespräch am [DATUM], [UHRZEIT BEGINN] – [UHRZEIT ENDE] (Dauer ca. [X] min) mit [Patient / ggf. Angehörigen: Name, Verhältnis].\n' +
+      'Thema: Erörterung der Auswirkungen der Erkrankung ([Grunderkrankung, Stadium]) auf die Lebensgestaltung.\n' +
+      'Inhalte:\n' +
+      '- Aktuelle Krankheitssituation, Prognose und Verlauf\n' +
+      '- Therapieoptionen ([konservativ / HD / PD / Tx]) mit Chancen und Risiken\n' +
+      '- Auswirkungen auf Beruf, Alltag, Familie, psychosoziale Aspekte\n' +
+      '- Vorsorge- und Patientenverfügung / ggf. palliative Perspektive\n' +
+      '- Einbeziehung von Angehörigen [Name]\n' +
+      '- Gemeinsame Entscheidungsfindung / Therapieziel\n' +
+      'Fragen des Patienten wurden geklärt. Dokumentation im Krankenblatt.',
+  76: 'Sehr geehrte(r) Frau/Herr Kollege/Kollegin,\n\n' +
+      'wir berichten über unsere(n) Pat. [Name, geb. …], den/die wir am [Datum] in unserer [Privatambulanz / Station] betreut haben.\n\n' +
+      'Anamnese: […]\n' +
+      'Klinischer Befund: […]\n' +
+      'Relevante Vorerkrankungen/Medikation: […]\n' +
+      'Labor/Diagnostik: […]\n' +
+      'Beurteilung/Diagnosen:\n  1) […]\n  2) […]\n' +
+      'Therapie/Empfehlung:\n  - […]\n  - Laborkontrolle in [X Wochen]\n  - Wiedervorstellung [Datum/bei Bedarf]\n\n' +
+      'Mit freundlichen kollegialen Grüßen\n[Name, Funktion]',
+  315: 'Perkutane US-gezielte Nierenbiopsie:\n' +
+       'Indikation: [Unklare Proteinurie / akutes Nierenversagen / V.a. GN …]\n' +
+       'Aufklärung: mündlich + schriftlich ≥24h präinterventionell; Einwilligung liegt vor.\n' +
+       'Labor präinterventionell: Krea …, Quick/INR …, PTT …, Thrombozyten …, Hb …, RR …/… mmHg.\n' +
+       'Position: Bauchlage; Lokalanästhesie [z.B. Mepivacain 1%] … ml s.c.; Punktion der [linken/rechten] Niere, Unterpol, USS-gesteuert (Sono-Gerät […]).\n' +
+       'Punktionsnadel: [z.B. 16G Semiautomat]; Anzahl Zylinder: … (Länge ≥ … mm).\n' +
+       'Einsendung: Licht-/Immunfluoreszenz-/Elektronenmikroskopie ([Pathologie]).\n' +
+       'Komplikationen: [keine / perirenales Hämatom … mm / makrohämaturie].\n' +
+       'Postinterventionell: Bettruhe 24h, Überwachung RR/Hb/Urin, Sono-Kontrolle nach 4–6h.',
+  410: 'Nierensonographie beidseits:\n' +
+       'Rechte Niere: Länge [X] cm, Parenchymsaum [Y] mm, Echogenität [normal], Mark-Rinden-Differenzierung [erhalten], keine Raumforderung, kein Aufstau, keine Konkremente.\n' +
+       'Linke Niere: Länge [X] cm, Parenchymsaum [Y] mm, Echogenität […], Mark-Rinden-Differenzierung […], [keine RF / Zyste Bosniak I …].\n' +
+       'Harnblase: [gefüllt, wandglatt / Restharn … ml].\n' +
+       'Beurteilung: [regelrechter sonographischer Nierenbefund / CKD-typisch verkleinert bds. / Aufstau re. …].\n' +
+       'Bildarchivierung erfolgt.',
+  413: 'Sonographie Abdomen (≥3 Organe/Regionen):\n' +
+       '- Leber: homogene Echotextur, keine fokalen Läsionen, Lebervenen/Pfortader regelrecht\n' +
+       '- Gallenblase: schlank, wandzart, kein Konkrement; DHC … mm\n' +
+       '- Pankreas: soweit darstellbar homogen, kein Tumor, kein Aufstau\n' +
+       '- Milz: orthotop, Länge [X] cm, homogen\n' +
+       '- Nieren bds.: [s. separater Befund / Länge … cm, Parenchym … mm, keine Auffälligkeiten]\n' +
+       '- Aorta abdominalis: Durchmesser … mm, kein Aneurysma\n' +
+       '- Harnblase: [gefüllt/leer]\n' +
+       'Keine freie intraabdominelle Flüssigkeit. Bildarchivierung erfolgt.\n' +
+       'Beurteilung: [regelrecht / pathologisch: …]',
+  420: 'Farbkodierte Duplexsonographie Nierenarterien:\n' +
+       'Aorta abdominalis: Vmax [X] cm/s, Durchmesser … mm.\n' +
+       'Rechte A. renalis: Abgang darstellbar, Vmax abgangsnah [X] cm/s, Vmax intraparench. [Y] cm/s, RI [0,XX]; aorto-renale Ratio [Z].\n' +
+       'Linke A. renalis: Abgang darstellbar, Vmax abgangsnah [X] cm/s, Vmax intraparench. [Y] cm/s, RI [0,XX].\n' +
+       'Akzessorische Gefäße: [keine / rechts/links nachgewiesen].\n' +
+       'Beurteilung: [Kein Hinweis auf hämodynamisch relevante NAST / Stenose …% …].\n' +
+       'Bildarchivierung erfolgt.',
+  4201: 'Shuntsonographie AV-Fistel ([Typ: Cimino / Brescia-Cimino / Graft / Unterarm-Loop]):\n' +
+        'Anastomose: unauffällig, kein Aneurysma, kein Pseudoaneurysma.\n' +
+        'A. brachialis vor Anastomose: Vmax [X] cm/s, RI [Y]; Lumen frei.\n' +
+        'Shuntfluss (proximale Shuntvene, geräteeigene Software): [Z] ml/min.\n' +
+        'Shunt-Verlauf: keine relevante Stenose, Gefäßverlauf regelrecht, Lumen frei.\n' +
+        'Punktionsstellen: keine Hämatome, keine Pseudoaneurysmen.\n' +
+        'Venöser Rückfluss bis zentral: frei.\n' +
+        'Beurteilung: [funktionsfähig, keine Intervention erforderlich / Stenose …% → Empfehlung …].\n' +
+        'Bildarchivierung erfolgt.',
+  424: 'Transthorakale Echokardiographie (B-Mode):\n' +
+       'LV: enddiast. [X] mm, endsyst. [Y] mm, IVS [Z] mm, HW [Z] mm; LV-EF (Simpson biplan) [XX] %; Wandbewegungsstörungen [keine / …].\n' +
+       'LA: [X] mm, LA-Volumen indiziert [Y] ml/m².\n' +
+       'RV: Basisdurchmesser [X] mm, TAPSE [Y] mm; sPAP ca. [Z] mmHg.\n' +
+       'Klappen: Mitral [o.B. / MI °…], Aorta [o.B. / AS …], Trikuspidal [TI °…], Pulmonal [o.B.].\n' +
+       'Perikarderguss: [keiner / zirkumferent … mm].\n' +
+       'VCI: [normal atemvariabel / dilatiert, reduziert variabel].\n' +
+       'Beurteilung: [Normalbefund / LV-Hypertrophie / HFpEF / HFrEF / kardiorenales Syndrom].\n' +
+       'Bildarchivierung erfolgt.',
+  626: 'Beurteilung der Dialysepflichtigkeit:\n' +
+       'Aktuelle Laborwerte: eGFR [X] ml/min/1,73m² (CKD-EPI 2021), Krea [Y] mg/dl, Harnstoff [Z] mg/dl, K [A] mmol/l, Bicarbonat [B] mmol/l, Hb [C] g/dl, Phosphat [D] mg/dl, iPTH [E] pg/ml.\n' +
+       'Klinik: Urämiesymptome [keine / Übelkeit, Juckreiz, Foetor], Volumenstatus [euvoläm / hypervoläm], Appetit [X], Leistungsfähigkeit [Y].\n' +
+       'Vorhandene Komplikationen: [keine / therapierefraktäre Hyperkaliämie / metabolische Azidose / Perikarderguss].\n' +
+       'Indikation Nierenersatz:\n' +
+       '  - Absolut: [keine / zutreffend: …]\n' +
+       '  - Relativ: [progrediente eGFR-Verschlechterung, Malnutrition, …]\n' +
+       'Empfehlung: [Aktuell keine Dialyseindikation / Vorbereitung Gefäßzugang / Start innerhalb … Wochen / sofort dialysepflichtig].\n' +
+       'Geplantes Verfahren: [HD / PD / konservativ (palliativ)]; Tx-Eignung geprüft: [ja/nein].\n' +
+       'Nächste Kontrolle: [TERMIN].',
+  789: 'Hämodialyse-Sitzung:\n' +
+       'Zugang: [AV-Fistel li/re / Shaldon / permanenter HD-Katheter], Funktion [o.B. / …].\n' +
+       'Dauer: [X] h; Blutfluss [Y] ml/min; Dialysatfluss [Z] ml/min.\n' +
+       'Ultrafiltration: [A] l (Zielgewicht [B] kg erreicht: ja/nein).\n' +
+       'Antikoagulation: [Heparin … IE Bolus + … IE/h / Argatroban / citratbasiert].\n' +
+       'RR vor/während/nach: […/…] – [Min. …/…] – [Ende …/…] mmHg; Herzfrequenz […].\n' +
+       'Komplikationen: [keine / Hypotonie bei UF → NaCl-Bolus / Krämpfe / Blutung / Dysäquilibrium].\n' +
+       'Verlauf: [stabil / vorzeitiger Abschluss wegen …].\n' +
+       'Nachsorge: Punktionsstellen reizlos, nachblutungsfrei; Gewicht postdialytisch [X] kg.',
+  792: 'Therapeutischer Plasmaaustausch (TPE):\n' +
+       'Indikation: [iTTP / anti-GBM / ANCA-Vaskulitis mit Hämoptoe / Cryoglobulinämie / …].\n' +
+       'Zugang: [Shaldon / Dialysekatheter / periphere Zugänge].\n' +
+       'Plasmavolumen: [X] l (ca. 1,0–1,5× PV), Ersatzlösung [FFP / 5% Humanalbumin].\n' +
+       'Antikoagulation: [Citrat (ACD-A) … ml/h; Ca-Substitution parallel / Heparin].\n' +
+       'Dauer: [X] h; Blutfluss [Y] ml/min.\n' +
+       'RR/Verlauf: [stabil / Hypotonie bei Substitution / allergische Reaktion auf FFP →].\n' +
+       'Komplikationen: [keine / …].\n' +
+       'Labor vor/nach: ADAMTS13 […], Thrombozyten [… → …], LDH […], Haptoglobin […].',
+  3531: 'Urinsediment (manuelle Mikroskopie, Phasenkontrast):\n' +
+        '- Erythrozyten: [X]/Gesichtsfeld, dysmorph [Y] %, Akanthozyten [Z] %\n' +
+        '- Leukozyten: [X]/GF\n' +
+        '- Zylinder: [hyalin/granuliert/Erythrozyten-/Leukozyten-/Wachszylinder] [X]/GF\n' +
+        '- Epithelzellen: [Plattenepithel vereinzelt / Tubulusepithel vermehrt]\n' +
+        '- Kristalle: [keine / Urat / Oxalat / Tripel]\n' +
+        '- Bakterien: [keine / vereinzelt / reichlich]\n' +
+        'Beurteilung: [unauffälliges Sediment / aktives Sediment mit V.a. GN / Harnwegsinfekt].'
+};
+
 // Begründungs-Bausteine: Ziffer-spezifisch (A) — für häufige Ziffern
 var goaeBegSpezifisch = {
   3: [
@@ -403,6 +548,31 @@ function goaeFallbackCopy(text) {
   document.body.appendChild(ta); ta.select();
   try { document.execCommand('copy'); } catch(e) {}
   document.body.removeChild(ta);
+}
+
+window.goaeCopyBefund = function(ev, nr, btn) {
+  if (ev) { ev.stopPropagation(); ev.preventDefault(); }
+  var text = goaeBefundTpl[nr];
+  if (!text) return;
+  var done = function(){
+    if (btn) { var old = btn.textContent; btn.classList.add('copied'); btn.textContent = '✓ kopiert'; setTimeout(function(){ btn.classList.remove('copied'); btn.textContent = old; }, 1500); }
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done, function(){ goaeFallbackCopy(text); done(); });
+  } else { goaeFallbackCopy(text); done(); }
+};
+
+function goaeBefundSection(pos) {
+  var tpl = goaeBefundTpl[pos.nr];
+  if (!tpl) return '';
+  var html = '<div class="goae-bef-sec">';
+  html += '<div class="goae-bef-title">📋 Befund-Template <small>· Platzhalter […] individuell ausfüllen</small>';
+  html += '<button class="goae-bef-copy" onclick="goaeCopyBefund(event,' + pos.nr + ',this)">📋 kopieren</button>';
+  html += '</div>';
+  html += '<pre class="goae-bef-text">' + goaeEsc(tpl) + '</pre>';
+  html += '<div class="goae-bef-warn">⚠ Template ist eine Orientierungshilfe — GOÄ setzt eigenständige ärztliche Leistung voraus. Eigenbefund anpassen, Boilerplate ohne Individualisierung ist regressfähig.</div>';
+  html += '</div>';
+  return html;
 }
 
 function goaeBegHtml(pos) {
@@ -635,6 +805,7 @@ function goaeRender() {
         leftHtml += '<div class="goae-drow"><span class="goae-dlbl doku">Dokumentation</span><span class="goae-dval">' + goaeEsc(pos.doku || '—') + '</span></div>';
         leftHtml += '<div class="goae-drow"><span class="goae-dlbl haeufig">Häufigkeit</span><span class="goae-dval">' + goaeEsc(hf || '—') + '</span></div>';
         if (pos.tip) leftHtml += '<div class="goae-dtip">' + goaeEsc(pos.tip.replace('⭐ ','')) + '</div>';
+        leftHtml += goaeBefundSection(pos);
         leftHtml += goaeBegHtml(pos);
         leftHtml += '</div>';
       }
