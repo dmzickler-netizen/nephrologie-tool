@@ -204,8 +204,8 @@ body { background: #f4f6f8; font-family: -apple-system, BlinkMacSystemFont, "Seg
 var PKTW = 0.058287;
 
 var goaeDB = [
-  { nr:1,   name:'Beratung',                              short:'Beratung (kurz)',               kat:'Beratung & Untersuchung', typ:'P', p:80,   excl:[3],      voraus:'Kurze Beratung oder Information (auch telefonisch).', doku:'Beratungsinhalt stichpunktartig.', haeufig:'1× je Arzt-Patient-Kontakt', tip:'Auch telefonisch. Bei Gespräch >10 min besser Nr. 3.' },
-  { nr:3,   name:'Eingehende Beratung >10 min',           short:'Eingehende Beratung',           kat:'Beratung & Untersuchung', typ:'P', p:150,  excl:[1],      voraus:'Mind. 10 min Gesprächsdauer.', doku:'Uhrzeit + Dauer + Gesprächsinhalt.', haeufig:'1× je Sitzung (nicht neben Nr. 1)', tip:'Mind. 10 min Gesprächsdauer; bei nephrologischen Patienten fast immer zutreffend.' },
+  { nr:1,   name:'Beratung (auch telefonisch)',           short:'Beratung kurz / telefonisch',   kat:'Beratung & Untersuchung', typ:'P', p:80,   excl:[3],      voraus:'Kurze Beratung oder Information — persönlich oder telefonisch.', doku:'Bei Telefon: Uhrzeit + Anrufer + Inhalt. Sonst Beratungsinhalt stichpunktartig.', haeufig:'1× je Arzt-Patient-Kontakt', tip:'Auch telefonisch voll ansetzbar. Bei Gespräch >10 min besser Nr. 3.' },
+  { nr:3,   name:'Eingehende Beratung >10 min (auch telefonisch)', short:'Eingehende Beratung',   kat:'Beratung & Untersuchung', typ:'P', p:150,  excl:[1],      voraus:'Mind. 10 min Gesprächsdauer — persönlich oder telefonisch.', doku:'Uhrzeit Beginn/Ende + Dauer + Inhalt; bei Telefon zusätzlich: Anrufer.', haeufig:'1× je Sitzung (nicht neben Nr. 1)', tip:'Mind. 10 min Gesprächsdauer; auch als Telefonberatung voll ansetzbar. Uhrzeit + Dauer zwingend dokumentieren.' },
   { nr:4,   name:'Fremdanamnese (Bezugsperson)',          short:'Fremdanamnese',                 kat:'Beratung & Untersuchung', typ:'P', p:150,  excl:[],       voraus:'Patient nicht ausreichend auskunftsfähig (z.B. Demenz, Verwirrtheit).', doku:'Bezugsperson + Anamnese getrennt von Nr. 3.', haeufig:'1× je Behandlungsfall', tip:'Anamnese bei Bezugsperson, wenn Patient nicht ausreichend auskunftsfähig (z.B. dement, verwirrt). Neben Nr. 3 ansetzbar — separat dokumentieren.' },
   { nr:5,   name:'Symptombezogene Untersuchung',          short:'US symptombezogen',             kat:'Beratung & Untersuchung', typ:'P', p:164,  excl:[6,7,8],  voraus:'Untersuchung ein Symptom oder ein Organ.', doku:'Symptom + Befund.', haeufig:'1×/Tag', tip:'Beschränkt auf ein Symptom oder ein Organ.' },
   { nr:6,   name:'Vollst. Untersuchung Organsystem',      short:'Organsystem vollst.',           kat:'Beratung & Untersuchung', typ:'P', p:260,  excl:[5,7,8],  voraus:'Vollständige Untersuchung eines Organsystems.', doku:'Vollst. Organbefund.', haeufig:'1×/Tag', tip:'Vollst. Untersuchung z.B. kardiovaskuläres System oder Niere.' },
@@ -293,6 +293,21 @@ var goaeOptRules = [
 
 // Befund-Templates — Fließtext mit [Platzhaltern] für häufige Ziffern
 var goaeBefundTpl = {
+  1: 'Telefonische Beratung am [DATUM], [UHRZEIT] (Dauer < 10 min).\n' +
+     'Anrufer: [Patient / Angehörige: Name, Verhältnis / zuweisender Arzt].\n' +
+     'Anlass: [Symptom / Laborwert / Medikamentenfrage …]\n' +
+     'Inhalt: [Kurzanamnese, Empfehlung]\n' +
+     'Ergebnis: [Wiedervorstellung / Laborkontrolle / Medikamentenanpassung / Abwarten].',
+  3: 'Eingehende Beratung am [DATUM], [UHRZEIT BEGINN] – [UHRZEIT ENDE] (Dauer ca. [X] min, ≥10 min).\n' +
+     'Modus: [persönlich / telefonisch].\n' +
+     'Gesprächspartner: [Patient / Angehörige: Name, Verhältnis].\n' +
+     'Anlass: [Befundbesprechung / Therapieentscheidung / neue Diagnose …]\n' +
+     'Inhalte:\n' +
+     '- Anamnese/aktuelles Beschwerdebild\n' +
+     '- Befundbesprechung (Labor/Bildgebung): […]\n' +
+     '- Therapieoptionen und Empfehlung: […]\n' +
+     '- Rückfragen geklärt\n' +
+     'Ergebnis: [Therapieänderung / Wiedervorstellung / weiterführende Diagnostik].',
   6: 'Vollständige Untersuchung Organsystem [kardiovaskulär / nephrologisch / …]:\n' +
      '- Inspektion: [Allg.zustand, Haut/Schleimhäute, Ödeme]\n' +
      '- Palpation: [Pulsstatus, Lymphknoten, ggf. Nierenlager]\n' +
@@ -428,10 +443,15 @@ var goaeBefundTpl = {
 
 // Begründungs-Bausteine: Ziffer-spezifisch (A) — für häufige Ziffern
 var goaeBegSpezifisch = {
+  1: [
+    'Beratung telefonisch außerhalb der regulären Sprechzeit',
+    'Erhöhter Aufwand durch Einholung von Vorbefunden während des Gesprächs'
+  ],
   3: [
     'Erhöhter Zeitaufwand (>15 min) wegen Komplexität der Grunderkrankung (CKD + Multimorbidität)',
     'Erschwerte Gesprächsführung bei sprachlicher / kognitiver Einschränkung',
-    'Erörterung komplexer Therapieoptionen (konservativ vs. Nierenersatz)'
+    'Erörterung komplexer Therapieoptionen (konservativ vs. Nierenersatz)',
+    'Telefonische Beratung mit mehrfacher Rücksprache (Angehörige + Hausarzt)'
   ],
   6: [
     'Erschwerte Untersuchungsbedingungen bei Adipositas / Aszites / ausgeprägten Ödemen',
@@ -662,6 +682,8 @@ var goaeCtxPresets = {
     {key:'dialyse',     label:'🫘 Dialyse-Aufklärung'},
     {key:'wundErst',    label:'🩹 Wund-Erstvorstellung'},
     {key:'wundFolge',   label:'🩹 Wund-Folge'},
+    {key:'telKurz',     label:'📞 Telefon kurz (<10 min)'},
+    {key:'telLang',     label:'📞 Telefon ausführlich'},
     {key:'konsil',      label:'📞 Konsil'}
   ],
   station: [
@@ -730,6 +752,8 @@ function goaePreset(type, btn) {
     dialyse:    [3,34,626,76],
     wundErst:   [3,5,2000,200,76],
     wundFolge:  [1,200,204,76],
+    telKurz:    [1],
+    telLang:    [3,76],
     konsil:     [60,76],
     // Stationär + ITS
     aufnahme:     [8,34,410,76],
