@@ -193,16 +193,22 @@ body { background: #f4f6f8; font-family: -apple-system, BlinkMacSystemFont, "Seg
         <div id="goae-opt-list"></div>
       </div>
 
-      <!-- ABRECHNUNGSAUFTRAG für Sekretariat -->
+      <!-- Abrechnungsauftrag-Trigger im rechten Panel — Ergebnis erscheint unten in voller Breite -->
       <div style="margin-top:14px;padding-top:10px;border-top:1.5px dashed #c5cae9;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
-          <button id="goae-auftrag-btn" onclick="goaeBuildAuftrag()" style="padding:6px 14px;background:#3949ab;color:#fff;border:none;border-radius:6px;font-size:.78rem;font-weight:700;cursor:pointer;">📋 Abrechnungsauftrag erzeugen</button>
-          <button id="goae-auftrag-copy" onclick="goaeCopyAuftrag(this)" style="padding:6px 12px;background:#00897b;color:#fff;border:none;border-radius:6px;font-size:.75rem;font-weight:700;cursor:pointer;display:none;">📋 In Zwischenablage</button>
-          <input type="text" id="goae-pat-name" placeholder="Patient (optional)" style="flex:1;min-width:120px;padding:5px 8px;border:1.3px solid #cfd8dc;border-radius:6px;font-size:.78rem;">
-        </div>
-        <textarea id="goae-auftrag-text" readonly style="width:100%;min-height:0;padding:0;border:none;background:transparent;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.74rem;color:#263238;line-height:1.55;resize:vertical;display:none;box-sizing:border-box;" placeholder=""></textarea>
+        <button id="goae-auftrag-btn" onclick="goaeBuildAuftrag()" style="width:100%;padding:8px 14px;background:#3949ab;color:#fff;border:none;border-radius:6px;font-size:.82rem;font-weight:700;cursor:pointer;">📋 Abrechnungsauftrag erzeugen</button>
       </div>
     </div>
+  </div>
+
+  <!-- ABRECHNUNGSAUFTRAG — volle Breite, unter dem Layout -->
+  <div id="goae-auftrag-panel" style="display:none;margin-top:16px;background:#fff;border:2px solid #3949ab;border-radius:12px;padding:14px 16px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
+      <span style="font-size:1rem;font-weight:700;color:#1a237e;">📋 Abrechnungsauftrag (Sekretariat)</span>
+      <input type="text" id="goae-pat-name" placeholder="Patient (optional, z.B. Mustermann, Max — geb. 01.01.1960)" style="flex:1;min-width:240px;padding:6px 10px;border:1.3px solid #cfd8dc;border-radius:6px;font-size:.85rem;" oninput="goaeBuildAuftrag()">
+      <button id="goae-auftrag-copy" onclick="goaeCopyAuftrag(this)" style="padding:7px 14px;background:#00897b;color:#fff;border:none;border-radius:6px;font-size:.8rem;font-weight:700;cursor:pointer;">📋 In Zwischenablage</button>
+      <button onclick="document.getElementById('goae-auftrag-panel').style.display='none';document.getElementById('goae-auftrag-btn').textContent='📋 Abrechnungsauftrag erzeugen';" style="padding:7px 12px;background:#eceff1;color:#37474f;border:1px solid #cfd8dc;border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer;">✕ Schließen</button>
+    </div>
+    <textarea id="goae-auftrag-text" readonly style="width:100%;min-height:240px;padding:12px 14px;border:1.3px solid #c5cae9;background:#fafbff;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.82rem;color:#263238;line-height:1.6;resize:vertical;box-sizing:border-box;border-radius:8px;white-space:pre;overflow-x:auto;"></textarea>
   </div>
 
   <div class="goae-disc">
@@ -934,10 +940,10 @@ window.goaeBuildAuftrag = function() {
     rows.push({ nr: pos.display || pos.nr, name: pos.name, typ: pos.typ, p: pos.p, f: f, fee: fee, voraus: pos.voraus, doku: pos.doku });
   });
 
+  var panel = document.getElementById('goae-auftrag-panel');
   if (rows.length === 0) {
     ta.value = '';
-    ta.style.display = 'none';
-    copyBtn.style.display = 'none';
+    panel.style.display = 'none';
     document.getElementById('goae-auftrag-btn').textContent = '📋 Abrechnungsauftrag erzeugen';
     alert('Keine Leistungen ausgewählt.');
     return;
@@ -996,14 +1002,13 @@ window.goaeBuildAuftrag = function() {
   txt += '\nDokumentation siehe Patientenakte. Bitte Liquidation gemäß o.g. Positionen erstellen.\n';
 
   ta.value = txt;
+  panel.style.display = 'block';
+  // Höhe an Inhalt anpassen
   ta.style.height = 'auto';
-  ta.style.height = (ta.scrollHeight + 4) + 'px';
-  ta.style.display = 'block';
-  ta.style.padding = '10px 12px';
-  ta.style.border = '1.3px solid #c5cae9';
-  ta.style.background = '#fafbff';
-  copyBtn.style.display = 'inline-block';
+  ta.style.height = Math.max(240, ta.scrollHeight + 4) + 'px';
   document.getElementById('goae-auftrag-btn').textContent = '🔄 Abrechnungsauftrag aktualisieren';
+  // Sanftes Scrollen zum Panel
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 };
 
 window.goaeCopyAuftrag = function(btn) {
