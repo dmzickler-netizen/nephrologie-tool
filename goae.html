@@ -165,7 +165,7 @@ body { background: #f4f6f8; font-family: -apple-system, BlinkMacSystemFont, "Seg
     </div>
     <div style="display:flex;align-items:center;gap:8px;">
       <label>Faktor technisch</label>
-      <input type="number" id="goae-fT" class="goae-factor-input" value="1.8" min="1.0" max="3.5" step="0.1" oninput="goaeRender()">
+      <input type="number" id="goae-fT" class="goae-factor-input" value="1.8" min="1.0" max="2.5" step="0.1" oninput="goaeRender()">
       <span class="goae-factor-note" id="goae-fT-note">≤1,8× ohne Begründung</span>
     </div>
     <div style="font-size:.75rem;color:#3949ab;margin-left:auto;">Punktwert: 5,8287 ct/P</div>
@@ -208,11 +208,12 @@ body { background: #f4f6f8; font-family: -apple-system, BlinkMacSystemFont, "Seg
       <button id="goae-auftrag-copy" onclick="goaeCopyAuftrag(this)" style="padding:7px 14px;background:#00897b;color:#fff;border:none;border-radius:6px;font-size:.8rem;font-weight:700;cursor:pointer;">📋 In Zwischenablage</button>
       <button onclick="document.getElementById('goae-auftrag-panel').style.display='none';document.getElementById('goae-auftrag-btn').textContent='📋 Abrechnungsauftrag erzeugen';" style="padding:7px 12px;background:#eceff1;color:#37474f;border:1px solid #cfd8dc;border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer;">✕ Schließen</button>
     </div>
+    <div id="goae-auftrag-warn" style="display:none;margin-bottom:10px;padding:10px 14px;background:#ffebee;border:1.5px solid #c62828;border-radius:8px;color:#b71c1c;font-size:.82rem;font-weight:600;"></div>
     <textarea id="goae-auftrag-text" readonly style="width:100%;min-height:240px;padding:12px 14px;border:1.3px solid #c5cae9;background:#fafbff;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.82rem;color:#263238;line-height:1.6;resize:vertical;box-sizing:border-box;border-radius:8px;white-space:pre;overflow-x:auto;"></textarea>
   </div>
 
   <div class="goae-disc">
-    ⚠️ <strong>Hinweis:</strong> Punktzahlen nach GOÄ 1996 (Anlage zur GOÄ). Steigerungsfaktoren: persönliche Leistungen bis 2,3× ohne Begründung (max 3,5×); technische Leistungen bis 1,8× ohne Begründung (max 3,5×). Kein Ersatz für rechtliche Abrechnungsberatung. Kombinations- und Ausschlussregeln gemäß GOÄ und BÄK-Empfehlungen. Voraussetzungen / Dokumentation / Häufigkeit sind Orientierungshilfen — GOÄ im Zweifel prüfen. Punktzahlen Wundversorgung bitte vor produktiver Nutzung abgleichen.
+    ⚠️ <strong>Hinweis:</strong> Punktzahlen nach GOÄ 1996 (Anlage zur GOÄ). Steigerungsfaktoren nach § 5 GOÄ pro Leistung individuell: persönlich bis 2,3× (max 3,5×), technisch bis 1,8× (max 2,5×), Labor M II bis 1,15× (max 1,3×) — darüber schriftliche, leistungsbezogene Begründung nach § 12 Abs. 3 GOÄ verpflichtend. Kein Ersatz für rechtliche Abrechnungsberatung. Kombinations- und Ausschlussregeln gemäß GOÄ und BÄK-Empfehlungen. Voraussetzungen / Dokumentation / Häufigkeit sind Orientierungshilfen — GOÄ im Zweifel prüfen. Punktzahlen Wundversorgung bitte vor produktiver Nutzung abgleichen.
   </div>
 </div>
 
@@ -270,6 +271,11 @@ var goaeDB = [
   { nr:790, name:'Peritonealdialyse (PD)',                short:'Peritonealdialyse',             kat:'Dialyse / Nierenersatz',  typ:'T', p:1200, excl:[],       voraus:'PD-Sitzung inkl. Überwachung + Bilanzierung.', doku:'Bilanz, Austauschprotokoll, Komplikationen.', haeufig:'je Sitzung', tip:'GOÄ Nr. 790: PD-Sitzung inkl. Überwachung, Bilanzierung, Austauschbilanz. APD/CAPD. Bei ambulanter PD-Schulung höherer Faktor begründbar.' },
   { nr:7890,display:'789a', name:'CRRT (Hämofiltration kontinuierlich, analog 789)', short:'CRRT kontinuierlich',   kat:'Dialyse / Nierenersatz',  typ:'T', p:2500, excl:[],       voraus:'Kontinuierliche Hämofiltration (CVVH/CVVHDF), analog § 6 Abs. 2.', doku:'Maschinen-Parameter + Überwachungsintervalle.', haeufig:'je 24h / je Schicht', tip:'§ 6 Abs. 2 GOÄ analog Nr. 789. Kontinuierliche Hämofiltration (CVVH/CVVHDF) auf ITS. Höherer Aufwand als intermittierende HD begründbar. Dokumentation Maschinen-Parameter + ärztliche Überwachungsintervalle.' },
   { nr:792, name:'Therapeutischer Plasmaaustausch (TPE)', short:'Plasmapherese / TPE',           kat:'Dialyse / Nierenersatz',  typ:'T', p:2500, excl:[],       voraus:'Plasmapherese-Sitzung.', doku:'Plasma-Menge, Ersatzlösung, Komplikationen.', haeufig:'je Sitzung', tip:'GOÄ Nr. 792: Plasmapherese. Kerntherapie bei iTTP, anti-GBM, ANCA-Vaskulitis (Hämoptoe), Krioglobulinämie. Plasma-Menge und Ersatzlösung dokumentieren.' },
+  { nr:791, name:'Hämoperfusion / extrakorp. Elimination', short:'Hämoperfusion (Intox)',        kat:'Dialyse / Nierenersatz',  typ:'T', p:1800, excl:[],       voraus:'Extrakorporale Elimination (Hämoperfusion) — analog § 6 Abs. 2 GOÄ zu Nr. 789.', doku:'Adsorber-Typ, Laufzeit, Laborverlauf (Eliminat), Komplikationen.', haeufig:'je Sitzung', tip:'Analogziffer § 6 Abs. 2 GOÄ. Intoxikation (Theophyllin, Carbamazepin, Valproat, Paracetamol-Spät), Leberversagen (CytoSorb/MARS). Adsorber + Ziellaborwert dokumentieren.' },
+  { nr:793, name:'Immunadsorption / spezif. Plasmaelimination', short:'Immunadsorption',         kat:'Dialyse / Nierenersatz',  typ:'T', p:2500, excl:[],       voraus:'Immunadsorption (z.B. IgG, anti-HLA) — analog § 6 Abs. 2 GOÄ zu Nr. 792.', doku:'Adsorber-Typ, behandeltes Plasmavolumen, Ziellabor (IgG, DSA).', haeufig:'je Sitzung', tip:'Analogziffer § 6 Abs. 2 GOÄ. ANCA-Vaskulitis refraktär, anti-GBM, AK-vermittelte Tx-Abstoßung (AMR), Desensibilisierung prä-Tx. Unterschied zu TPE: keine Substitution nötig.' },
+  { nr:2770,display:'2770 analog', name:'Dialyse-Katheter-Anlage (Shaldon/Demers/PD-Katheter)', short:'Dialyse-Katheter',    kat:'Dialyse / Nierenersatz',  typ:'T', p:1400, excl:[],       voraus:'Perkutane Anlage eines Dialyse-Katheters (Shaldon akut, Demers getunnelt, PD-Katheter) — analog § 6 Abs. 2 GOÄ.', doku:'Aufklärung, Punktionsort, Sono-Kontrolle, Lagekontrolle (Röntgen), Komplikationen.', haeufig:'je Anlage', tip:'Analogziffer. Shaldon: akut V. jugularis/femoralis. Demers: getunnelt, chronisch. PD-Katheter: meist chirurgisch implantiert. Nr. 410 (Sono) + Röntgen-Thorax zusätzlich ansetzbar.' },
+  { nr:2890,name:'Shuntanlage (AV-Fistel, chirurgisch)',  short:'AV-Shunt-Anlage',               kat:'Dialyse / Nierenersatz',  typ:'T', p:1400, excl:[],       voraus:'Chirurgische Anlage einer arteriovenösen Gefäßverbindung (AV-Fistel oder Graft).', doku:'OP-Bericht: Gefäße, Anastomosetyp, Shunt-Thrill, Sono-Kontrolle.', haeufig:'je OP', tip:'GOÄ Nr. 2890: Herstellung einer arteriovenösen Gefäßverbindung. Meist durch Gefäßchirurgie — nephrologisch nur bei Mitausführung ansetzbar. Unterarm-Cimino / Loop-Graft / Basilic-Transposition.' },
+  { nr:4016,display:'401+406', name:'Shuntsonographie (B-Mode + Farbduplex)', short:'Shunt-Duplex',    kat:'Echo / Gefäß-Duplex',     typ:'T', p:500,  excl:[],       voraus:'B-Mode-Sonographie der Shuntregion + farbkodierter Duplex (Flussmessung, Stenose-Screening).', doku:'Shunttyp, Shuntfluss [ml/min], Aneurysmen, Stenosen, Rezirkulation.', haeufig:'alle 3–6 Monate + bei Problemen', tip:'Kombination Nr. 401 (Sono Gefäßregion 200 P) + Nr. 406 (Farbduplex-Zusatz 300 P). Shuntkontrolle: Fluss <500 ml/min = Stenose-Verdacht. Proximaler Armvenenfluss aussagekräftiger als distaler.' },
   { nr:75,  name:'Kurze Bescheinigung / Attest',          short:'Attest kurz',                  kat:'Dokumentation',           typ:'P', p:60,   excl:[76,80],  voraus:'Einfaches Attest oder Kurzbescheinigung.', doku:'Attestinhalt + Empfänger.', haeufig:'je Attest', tip:'Einfaches Attest oder Kurzbescheinigung.' },
   { nr:76,  name:'Ausführlicher Arztbericht',             short:'Arztbrief / Befundbericht',    kat:'Dokumentation',           typ:'P', p:480,  excl:[75,80],  voraus:'Ausführlicher schriftlicher Befundbericht / Arztbrief.', doku:'Anamnese, Befund, Therapie, Empfehlung.', haeufig:'je Bericht', tip:'⭐ Wird sehr häufig vergessen! Nach jeder nephrol. Konsultation mit Arztbrief ansetzbar.' },
   { nr:80,  name:'Gutachten / schriftl. Äußerung',        short:'Gutachten (umfangreich)',      kat:'Dokumentation',           typ:'P', p:800,  excl:[75,76],  voraus:'Umfangreiche gutachterliche Stellungnahme.', doku:'Fragestellung, Befundbewertung, Beantwortung.', haeufig:'je Gutachten', tip:'Umfangreiche gutachterliche Stellungnahme.' },
@@ -555,10 +561,22 @@ var goaeBegGeneric = {
 var goaeSelected = new Set();
 var goaeDetailOpen = new Set();
 var goaeFactorOverride = {};   // {nr: factor} — überschreibt globalen Default
+var goaeBegruendung = {};      // {nr: string} — Pflicht-Begründung pro Position bei Faktor > Schwelle
+var GOAE_BEG_MIN = 20;         // Mindestlänge Begründung in Zeichen
+
+// Kategorie-Config nach § 5 GOÄ: min/max/Schwellenwert je Leistungstyp
+var GOAE_CAT = {
+  P: { label:'persönlich',   thr:2.3,  min:1.0, max:3.5, step:0.1,  dflt:2.3  },
+  T: { label:'technisch',    thr:1.8,  min:1.0, max:2.5, step:0.1,  dflt:1.8  },
+  L: { label:'Labor M II',   thr:1.15, min:1.0, max:1.3, step:0.05, dflt:1.15 }
+};
+function goaeCat(pos) { return GOAE_CAT[pos.typ] || GOAE_CAT.T; }
 
 function goaeGetFactor(pos, fP, fT) {
   if (goaeFactorOverride[pos.nr] != null) return goaeFactorOverride[pos.nr];
-  return pos.typ === 'P' ? fP : fT;
+  if (pos.typ === 'P') return fP;
+  if (pos.typ === 'T') return fT;
+  return goaeCat(pos).dflt;   // Labor M II (und zukünftige): Kategorie-Default
 }
 
 window.goaeToggleDetail = function(nr) {
@@ -659,28 +677,98 @@ function goaeToggle(nr) {
   if (goaeSelected.has(nr)) {
     goaeSelected.delete(nr);
     delete goaeFactorOverride[nr];
+    delete goaeBegruendung[nr];
   } else {
     // Letzter Klick gewinnt: Konflikte automatisch entfernen
     var pos = goaeDB.find(function(p){ return p.nr===nr; });
-    if (pos && pos.excl) pos.excl.forEach(function(x){ goaeSelected.delete(x); delete goaeFactorOverride[x]; });
-    goaeDB.forEach(function(p){ if (p.excl && p.excl.indexOf(nr)!==-1) { goaeSelected.delete(p.nr); delete goaeFactorOverride[p.nr]; } });
+    if (pos && pos.excl) pos.excl.forEach(function(x){ goaeSelected.delete(x); delete goaeFactorOverride[x]; delete goaeBegruendung[x]; });
+    goaeDB.forEach(function(p){ if (p.excl && p.excl.indexOf(nr)!==-1) { goaeSelected.delete(p.nr); delete goaeFactorOverride[p.nr]; delete goaeBegruendung[p.nr]; } });
     goaeSelected.add(nr);
   }
   goaeRender();
 }
 
 window.goaeSetFactor = function(nr, val) {
-  var n = parseFloat(val);
-  if (isNaN(n) || n < 1.0) n = 1.0;
-  if (n > 3.5) n = 3.5;
-  // Runden auf 0,1
-  n = Math.round(n * 10) / 10;
   var pos = goaeDB.find(function(p){ return p.nr===nr; });
-  var defF = parseFloat(document.getElementById(pos && pos.typ === 'P' ? 'goae-fP' : 'goae-fT').value) || (pos && pos.typ === 'P' ? 2.3 : 1.8);
-  if (Math.abs(n - defF) < 0.01) delete goaeFactorOverride[nr];   // identisch zu Default → kein Override
+  if (!pos) return;
+  var cat = goaeCat(pos);
+  var n = parseFloat(val);
+  if (isNaN(n) || n < cat.min) n = cat.min;
+  if (n > cat.max) n = cat.max;
+  // Runden auf step
+  n = Math.round(n / cat.step) * cat.step;
+  n = Math.round(n * 100) / 100;   // numerisches Rauschen
+  var defF = (pos.typ === 'P')
+    ? (parseFloat(document.getElementById('goae-fP').value) || cat.dflt)
+    : (pos.typ === 'T' ? (parseFloat(document.getElementById('goae-fT').value) || cat.dflt) : cat.dflt);
+  if (Math.abs(n - defF) < 0.001) delete goaeFactorOverride[nr];   // identisch zu Default → kein Override
   else goaeFactorOverride[nr] = n;
+  // Begründung löschen wenn Faktor ≤ Schwelle (nicht mehr nötig)
+  if (n <= cat.thr + 0.001) delete goaeBegruendung[nr];
   goaeRender();
 };
+
+window.goaeSetBegruendung = function(nr, text) {
+  var t = String(text || '').trim();
+  if (t.length === 0) delete goaeBegruendung[nr];
+  else goaeBegruendung[nr] = t;
+  goaeValidateAuftrag();
+};
+
+// Prüft ob alle Positionen mit Faktor > Schwelle eine gültige Begründung haben
+function goaeMissingBegruendungen() {
+  var fP = parseFloat(document.getElementById('goae-fP').value) || 2.3;
+  var fT = parseFloat(document.getElementById('goae-fT').value) || 1.8;
+  var missing = [];
+  var conflicts = goaeGetConflicts();
+  goaeSelected.forEach(function(nr) {
+    if (conflicts.has(nr)) return;
+    var pos = goaeDB.find(function(p){ return p.nr===nr; });
+    if (!pos) return;
+    var f = goaeGetFactor(pos, fP, fT);
+    var cat = goaeCat(pos);
+    if (f > cat.thr + 0.001) {
+      var txt = (goaeBegruendung[nr] || '').trim();
+      if (txt.length < GOAE_BEG_MIN) missing.push({ nr:pos.nr, name:pos.name, len:txt.length });
+    }
+  });
+  return missing;
+}
+
+function goaeValidateAuftrag() {
+  var btn = document.getElementById('goae-auftrag-btn');
+  var copyBtn = document.getElementById('goae-auftrag-copy');
+  var warnEl = document.getElementById('goae-auftrag-warn');
+  if (!btn) return;
+  var missing = goaeMissingBegruendungen();
+  if (missing.length === 0) {
+    btn.disabled = false;
+    btn.title = '';
+    if (copyBtn) {
+      copyBtn.disabled = false;
+      copyBtn.title = '';
+      copyBtn.style.background = '#00897b';
+      copyBtn.style.cursor = 'pointer';
+      copyBtn.style.opacity = '1';
+    }
+    if (warnEl) warnEl.style.display = 'none';
+  } else {
+    btn.disabled = false;   // Button bleibt klickbar — erzeugt Vorschau mit Platzhaltern
+    btn.title = missing.length + ' Begründung(en) fehlen';
+    if (copyBtn) {
+      copyBtn.disabled = true;
+      copyBtn.title = 'Kopieren gesperrt: ' + missing.length + ' Begründung(en) fehlen';
+      copyBtn.style.background = '#b0bec5';
+      copyBtn.style.cursor = 'not-allowed';
+      copyBtn.style.opacity = '0.75';
+    }
+    if (warnEl) {
+      warnEl.style.display = 'block';
+      warnEl.innerHTML = '⚠ <strong>Nicht versandfähig:</strong> ' + missing.length + ' Begründung(en) fehlen oder sind zu kurz (min. ' + GOAE_BEG_MIN + ' Zeichen): ' +
+        missing.map(function(m){ return 'Nr. ' + m.nr; }).join(', ');
+    }
+  }
+}
 
 function goaeOptAdd(nr, remove) {
   if (remove) goaeSelected.delete(remove);
@@ -811,8 +899,8 @@ function goaePreset(type, btn) {
 }
 
 function goaeRender() {
-  var fP = Math.max(1.0, Math.min(3.5, parseFloat(document.getElementById('goae-fP').value)||2.3));
-  var fT = Math.max(1.0, Math.min(3.5, parseFloat(document.getElementById('goae-fT').value)||1.8));
+  var fP = Math.max(GOAE_CAT.P.min, Math.min(GOAE_CAT.P.max, parseFloat(document.getElementById('goae-fP').value)||GOAE_CAT.P.dflt));
+  var fT = Math.max(GOAE_CAT.T.min, Math.min(GOAE_CAT.T.max, parseFloat(document.getElementById('goae-fT').value)||GOAE_CAT.T.dflt));
 
   var fpInp = document.getElementById('goae-fP'), ftInp = document.getElementById('goae-fT');
   var fpNote = document.getElementById('goae-fP-note'), ftNote = document.getElementById('goae-fT-note');
@@ -857,7 +945,9 @@ function goaeRender() {
         leftHtml += '<span class="goae-conflict-tag">⊘ excl. Nr. ' + cw.join('/') + '</span>';
       } else {
         var fEff = goaeGetFactor(pos, fP, fT);
-        var fLabel = fEff.toFixed(1).replace('.', ',');
+        var _cat = goaeCat(pos);
+        var _decs = _cat.step < 0.1 ? 2 : 1;
+        var fLabel = fEff.toFixed(_decs).replace('.', ',');
         var isOver = goaeFactorOverride[pos.nr] != null;
         leftHtml += '<span class="goae-pos-fee" title="' + pos.p + ' P × ' + fLabel + (isOver?' (Override)':'') + '">' + fee.toFixed(2).replace('.', ',') + ' € <small style="font-size:.65rem;color:' + (isOver?'#e65100':'#90a4ae') + ';font-weight:' + (isOver?'700':'400') + ';">×' + fLabel + '</small></span>';
       }
@@ -885,18 +975,32 @@ function goaeRender() {
     var fee = goaeFee(pos, fP, fT);
     total += fee;
     var fEff = goaeGetFactor(pos, fP, fT);
-    var defF = pos.typ === 'P' ? fP : fT;
-    var maxNoBeg = pos.typ === 'P' ? 2.3 : 1.8;
+    var cat = goaeCat(pos);
+    var defF = pos.typ === 'P' ? fP : (pos.typ === 'T' ? fT : cat.dflt);
+    var maxNoBeg = cat.thr;
     var isOver = goaeFactorOverride[pos.nr] != null;
     var needsBeg = fEff > maxNoBeg + 0.001;
-    var inpBorder = needsBeg ? '#e65100' : (isOver ? '#3949ab' : '#cfd8dc');
-    var inpBg = needsBeg ? '#fff3e0' : (isOver ? '#e8eaf6' : '#fff');
+    var begText = goaeBegruendung[pos.nr] || '';
+    var begLen = begText.trim().length;
+    var begMissing = needsBeg && begLen < GOAE_BEG_MIN;
+    var inpBorder = begMissing ? '#c62828' : (needsBeg ? '#e65100' : (isOver ? '#3949ab' : '#cfd8dc'));
+    var inpBg = begMissing ? '#ffebee' : (needsBeg ? '#fff3e0' : (isOver ? '#e8eaf6' : '#fff'));
+    var step = cat.step;
+    var decs = step < 0.1 ? 2 : 1;
     var hf = pos.haeufig || pos.freq;
     itemsHtml += '<div class="goae-res-row" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">';
-    itemsHtml += '<span class="goae-res-label" style="flex:1;min-width:140px;">Nr. ' + (pos.display||pos.nr) + ' ' + pos.short + ' <small>(' + pos.p + 'P)</small></span>';
-    itemsHtml += '<span style="display:inline-flex;align-items:center;gap:3px;font-size:.72rem;color:#37474f;">×<input type="number" min="1.0" max="3.5" step="0.1" value="' + fEff.toFixed(1) + '" onchange="goaeSetFactor(' + pos.nr + ',this.value)" onclick="event.stopPropagation()" style="width:48px;padding:2px 4px;border:1.5px solid ' + inpBorder + ';background:' + inpBg + ';border-radius:5px;font-size:.78rem;font-weight:' + (isOver?'700':'500') + ';text-align:center;color:#263238;" title="Steigerungssatz (Default ' + defF.toFixed(1).replace('.', ',') + '× · ohne Begründung bis ' + maxNoBeg.toFixed(1).replace('.', ',') + '×)">' + (needsBeg?' <small style="color:#e65100;font-weight:700;" title="Begründung erforderlich">⚠</small>':'') + '</span>';
+    itemsHtml += '<span class="goae-res-label" style="flex:1;min-width:140px;">Nr. ' + (pos.display||pos.nr) + ' ' + pos.short + ' <small>(' + pos.p + 'P · ' + cat.label + ')</small></span>';
+    itemsHtml += '<span style="display:inline-flex;align-items:center;gap:4px;font-size:.72rem;color:#37474f;">×<input type="number" min="' + cat.min + '" max="' + cat.max + '" step="' + step + '" value="' + fEff.toFixed(decs) + '" onchange="goaeSetFactor(' + pos.nr + ',this.value)" onclick="event.stopPropagation()" style="width:52px;padding:2px 4px;border:1.5px solid ' + inpBorder + ';background:' + inpBg + ';border-radius:5px;font-size:.78rem;font-weight:' + (isOver?'700':'500') + ';text-align:center;color:#263238;" title="Rahmen ' + cat.min.toFixed(decs).replace('.', ',') + '–' + cat.max.toFixed(decs).replace('.', ',') + '× · ohne Begründung bis ' + maxNoBeg.toFixed(decs).replace('.', ',') + '×"><small style="color:#78909c;font-size:.65rem;">Schwelle ' + maxNoBeg.toFixed(decs).replace('.', ',') + '×</small>' + (needsBeg?' <small style="color:' + (begMissing?'#c62828':'#e65100') + ';font-weight:700;" title="Begründung erforderlich">⚠</small>':'') + '</span>';
     itemsHtml += '<span class="goae-res-amt">' + fee.toFixed(2).replace('.', ',') + ' €</span>';
     itemsHtml += '</div>';
+    if (needsBeg) {
+      var hint = begMissing ? (begLen === 0 ? 'Begründung erforderlich (min. ' + GOAE_BEG_MIN + ' Zeichen)' : 'Noch ' + (GOAE_BEG_MIN - begLen) + ' Zeichen — min. ' + GOAE_BEG_MIN) : '✓ Begründung erfasst (' + begLen + ' Zeichen)';
+      var hintColor = begMissing ? '#c62828' : '#2e7d32';
+      itemsHtml += '<div style="margin:4px 0 6px 0;">' +
+        '<textarea placeholder="Pflicht-Begründung nach § 12 Abs. 3 GOÄ — leistungsbezogen (z.B. erhöhter Schwierigkeitsgrad/Zeitaufwand/Komplexität). Min. ' + GOAE_BEG_MIN + ' Zeichen." oninput="goaeSetBegruendung(' + pos.nr + ',this.value)" onclick="event.stopPropagation()" style="width:100%;min-height:48px;padding:5px 7px;border:1.5px solid ' + (begMissing?'#c62828':'#66bb6a') + ';background:' + (begMissing?'#ffebee':'#f1f8e9') + ';border-radius:5px;font-size:.75rem;font-family:inherit;color:#263238;resize:vertical;box-sizing:border-box;">' + goaeEsc(begText) + '</textarea>' +
+        '<div style="font-size:.68rem;color:' + hintColor + ';margin-top:2px;">' + hint + '</div>' +
+        '</div>';
+    }
     itemsHtml += '<div class="goae-res-req">';
     itemsHtml += '<div class="goae-res-req-row"><span class="goae-res-req-lbl voraus">Voraus.</span><span class="goae-res-req-val">' + goaeEsc(pos.voraus || '—') + '</span></div>';
     itemsHtml += '<div class="goae-res-req-row"><span class="goae-res-req-lbl doku">Doku</span><span class="goae-res-req-val">' + goaeEsc(pos.doku || '—') + '</span></div>';
@@ -917,6 +1021,8 @@ function goaeRender() {
   });
   document.getElementById('goae-opt-list').innerHTML = optList;
   document.getElementById('goae-opt').style.display = optList ? 'block' : 'none';
+
+  goaeValidateAuftrag();
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -937,7 +1043,9 @@ window.goaeBuildAuftrag = function() {
     var f = goaeGetFactor(pos, fP, fT);
     var fee = pos.p * PKTW * f;
     total += fee;
-    rows.push({ nr: pos.display || pos.nr, name: pos.name, typ: pos.typ, p: pos.p, f: f, fee: fee, voraus: pos.voraus, doku: pos.doku });
+    var cat = goaeCat(pos);
+    var beg = (goaeBegruendung[pos.nr] || '').trim();
+    rows.push({ nr: pos.display || pos.nr, name: pos.name, typ: pos.typ, cat: cat, p: pos.p, f: f, fee: fee, voraus: pos.voraus, doku: pos.doku, beg: beg, overThr: f > cat.thr + 0.001 });
   });
 
   var panel = document.getElementById('goae-auftrag-panel');
@@ -977,26 +1085,41 @@ window.goaeBuildAuftrag = function() {
   txt += '─'.repeat(nrCol + nameCol + pCol + fCol + 12) + '\n';
 
   rows.forEach(function(r) {
+    var decs = r.cat.step < 0.1 ? 2 : 1;
     var line = pad('Nr. ' + r.nr, nrCol) + '  ' +
                pad(r.name.length > nameCol ? r.name.slice(0, nameCol-1) + '…' : r.name, nameCol) + '  ' +
                padL(r.p + ' P', pCol) + '  ' +
-               padL('×' + r.f.toFixed(1).replace('.', ','), fCol) + '  ' +
+               padL('×' + r.f.toFixed(decs).replace('.', ','), fCol) + '  ' +
                padL(r.fee.toFixed(2).replace('.', ',') + ' €', 9);
     txt += line + '\n';
+    // Begründung direkt unter der betroffenen Position
+    if (r.overThr) {
+      var indent = '    ';
+      if (r.beg && r.beg.length >= GOAE_BEG_MIN) {
+        // Umbruch bei langen Begründungen
+        var wrapWidth = Math.max(40, nrCol + nameCol + pCol + fCol);
+        var words = r.beg.split(/\s+/);
+        var buf = '';
+        var lines = [];
+        words.forEach(function(w){
+          if ((buf + ' ' + w).trim().length > wrapWidth) { lines.push(buf); buf = w; }
+          else { buf = (buf ? buf + ' ' : '') + w; }
+        });
+        if (buf) lines.push(buf);
+        txt += indent + '↳ Begründung (>' + r.cat.thr.toFixed(decs).replace('.', ',') + '× ' + r.cat.label + '): ' + lines[0] + '\n';
+        for (var i = 1; i < lines.length; i++) txt += indent + '  ' + lines[i] + '\n';
+      } else {
+        txt += indent + '↳ ⚠ BEGRÜNDUNG FEHLT (>' + r.cat.thr.toFixed(decs).replace('.', ',') + '× ' + r.cat.label + ') — bitte ergänzen (min. ' + GOAE_BEG_MIN + ' Zeichen)\n';
+      }
+    }
   });
 
   txt += '─'.repeat(nrCol + nameCol + pCol + fCol + 12) + '\n';
   txt += pad('GESAMT', nrCol + nameCol + pCol + fCol + 4) + '  ' + padL(total.toFixed(2).replace('.', ',') + ' €', 9) + '\n';
 
-  // Begründungen wenn Faktor > Standard
-  var begRows = rows.filter(function(r) {
-    return (r.typ === 'P' && r.f > 2.3) || (r.typ === 'T' && r.f > 1.8);
-  });
-  if (begRows.length > 0) {
-    txt += '\nBEGRÜNDUNG für Steigerungssatz > 2,3 (P) bzw. > 1,8 (T):\n';
-    begRows.forEach(function(r) {
-      txt += '  • Nr. ' + r.nr + ' (' + r.name + '): [BITTE BEGRÜNDUNG ERGÄNZEN — z.B. erhöhter Schwierigkeitsgrad / Zeitaufwand / Komplexität]\n';
-    });
+  var missingCount = rows.filter(function(r){ return r.overThr && (!r.beg || r.beg.length < GOAE_BEG_MIN); }).length;
+  if (missingCount > 0) {
+    txt += '\n⚠ NICHT VERSANDFÄHIG: ' + missingCount + ' Begründung(en) fehlen oder sind zu kurz (min. ' + GOAE_BEG_MIN + ' Zeichen).\n';
   }
 
   txt += '\nDokumentation siehe Patientenakte. Bitte Liquidation gemäß o.g. Positionen erstellen.\n';
@@ -1014,6 +1137,12 @@ window.goaeBuildAuftrag = function() {
 window.goaeCopyAuftrag = function(btn) {
   var ta = document.getElementById('goae-auftrag-text');
   if (!ta.value) return;
+  if (btn.disabled) return;
+  var missing = goaeMissingBegruendungen();
+  if (missing.length > 0) {
+    alert('Nicht versandfähig: ' + missing.length + ' Begründung(en) fehlen (min. ' + GOAE_BEG_MIN + ' Zeichen pro Ziffer > Schwelle).\n\nFehlend: ' + missing.map(function(m){ return 'Nr. ' + m.nr; }).join(', '));
+    return;
+  }
   ta.removeAttribute('readonly');
   ta.select();
   try { document.execCommand('copy'); } catch(_) {}
