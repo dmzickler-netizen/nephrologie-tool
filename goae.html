@@ -148,6 +148,7 @@ body { background: #f4f6f8; font-family: -apple-system, BlinkMacSystemFont, "Seg
   <div class="goae-ctx">
     <span class="goae-ctx-lbl">Bereich:</span>
     <button class="goae-ctx-btn active" data-ctx="ambulanz" onclick="goaeSetCtx('ambulanz',this)">🏥 Privatambulanz</button>
+    <button class="goae-ctx-btn" data-ctx="teilstat" onclick="goaeSetCtx('teilstat',this)">💧 Teilstationär (Dialyse-Tagesklinik)</button>
     <button class="goae-ctx-btn" data-ctx="station" onclick="goaeSetCtx('station',this)">🛏️ Stationär Nephrologie</button>
     <button class="goae-ctx-btn" data-ctx="its" onclick="goaeSetCtx('its',this)">🚨 Intensivmedizin</button>
   </div>
@@ -244,6 +245,8 @@ var goaeDB = [
   { nr:430, name:'Duplex periphere Gefäße',               short:'Periph. Gefäß-Duplex',         kat:'Echo / Gefäß-Duplex',     typ:'T', p:900,  excl:[],       voraus:'Farbkodierte Duplex peripherer Gefäße.', doku:'Stenosen, ABI, Bildarchiv.', haeufig:'1×/Jahr', tip:'pAVK-Screening bei CKD G3+. Ergänzt klinische ABI-Messung. Hohe Prävalenz bei Diabetiker + CKD.' },
   { nr:250, name:'Blutentnahme (venös)',                  short:'Blutentnahme',                 kat:'Diagnostik & Therapie',   typ:'T', p:60,   excl:[],       voraus:'Venöse Blutentnahme.', doku:'Entnahmestelle + Material.', haeufig:'1× je Sitzung', tip:'Einfachsatz üblich. Fast immer ansetzbar bei Laborkontrollen.' },
   { nr:252, name:'Injektion (i.m. / s.c.)',               short:'Injektion i.m./s.c.',          kat:'Diagnostik & Therapie',   typ:'T', p:70,   excl:[],       voraus:'Intramuskuläre oder subkutane Injektion.', doku:'Substanz, Menge, Lokalisation.', haeufig:'je Injektion', tip:'z.B. EPO s.c., Vitamins B12 i.m. Bei i.v.-Infusion besser Nr. 270.' },
+  { nr:254, name:'Injektion intravenös',                  short:'Injektion i.v.',               kat:'Diagnostik & Therapie',   typ:'T', p:100,  excl:[],       voraus:'Intravenöse Injektion einer Substanz.', doku:'Substanz, Menge, Applikationsweg.', haeufig:'je Injektion', tip:'z.B. Eisen i.v. (Ferrocarboxymaltose/Eisengluconat), Mircera i.v. während Dialyse, Kortison-Bolus. Für Infusionen über 10 min eher Nr. 270.' },
+  { nr:45,  name:'Visite stationär/teilstationär',        short:'Visite',                       kat:'Beratung & Untersuchung', typ:'P', p:170,  excl:[],       voraus:'Ärztliche Visite des stationären/teilstationären Patienten (nicht reine Maschinen-Überwachung während HD).', doku:'Uhrzeit, Befund, Anordnungen.', haeufig:'je Visite', tip:'Visitenziffer bei teilstationärer Dialyse: zusätzlich zu Nr. 789 ansetzbar, WENN eigenständige Visite (Anamnese, Untersuchung, Anordnung). Nicht bei reiner Überwachung der Dialyse. Bis zu 2×/Tag begründbar bei Problemen.' },
   { nr:270, name:'Infusionstherapie (≤30 min)',           short:'Infusion ≤30 min',             kat:'Diagnostik & Therapie',   typ:'T', p:240,  excl:[],       voraus:'Intravenöse Infusion ≤30 min.', doku:'Substanz, Menge, Dauer.', haeufig:'je Infusion', tip:'Eisencarboxymaltose (Ferinject), Pamidronate, Ibandronsäure. Ab 30 min Nr. 271 ansetzbar.' },
   { nr:375, name:'Schutzimpfung',                         short:'Impfung',                      kat:'Diagnostik & Therapie',   typ:'T', p:148,  excl:[],       voraus:'Schutzimpfung (i.m./s.c.).', doku:'Impfstoff, Chargen-Nr., Aufklärung, Impfpass.', haeufig:'je Impfung', tip:'Hepatitis B (obligat bei CKD G4/G5/HD), Pneumokokken, Influenza, COVID. KDIGO-Empfehlung. Impfstoff separat berechnen.' },
   { nr:3531,name:'Urinsediment (Mikroskopie)',             short:'Urinsediment mikrosk.',        kat:'Diagnostik & Therapie',   typ:'T', p:200,  excl:[],       voraus:'Manuelle Urinsediment-Mikroskopie.', doku:'Zellen, Zylinder, Kristalle.', haeufig:'je Probe', tip:'Manuelle Auswertung mit Mikroskop. Diagnostisch wertvoll bei Hämaturie, Zylinder (AKI, GN). Höherer Steigerungsfaktor begründbar.' },
@@ -252,10 +255,12 @@ var goaeDB = [
   { nr:715, name:'Urin-Teststreifen',                     short:'Urin-Stix',                    kat:'Diagnostik & Therapie',   typ:'T', p:40,   excl:[],       voraus:'Urin-Streifentest.', doku:'Parameter (Eiweiß, Nitrit, Blut, pH, Glu).', haeufig:'je Probe', tip:'Basis-Urindiagnostik bei jedem nephrologischen Besuch. GOÄ-Nr. prüfen (je nach Ausgabe 3511/715).' },
   { nr:659, name:'Langzeit-EKG 24h (Holter)',             short:'Holter-EKG 24h',               kat:'Diagnostik & Therapie',   typ:'T', p:750,  excl:[],       voraus:'24h-EKG-Aufzeichnung + Auswertung.', doku:'Anlagezeit, Ereignisprotokoll, Auswertung.', haeufig:'1–2×/Jahr', tip:'VHF-Screening bei CKD — AF-Prävalenz erhöht. Synkopen, Palpitationen. Anlegen + Auswertung = eine Position. GOÄ-Nr. prüfen (ggf. 653+654 getrennt).' },
   { nr:3710,name:'Blutgasanalyse (pH, pO₂, pCO₂, HCO₃)',short:'BGA komplett',                 kat:'BGA / Labor',             typ:'T', p:250,  excl:[],       voraus:'Vollständige BGA inkl. Elektrolyte.', doku:'Alle Parameter + Abnahmezeit.', haeufig:'unbegrenzt / je Messung', tip:'GOÄ Nr. 3710: vollständige Blutgasanalyse inkl. Elektrolyte. Auf ITS mehrfach täglich ansetzbar und begründbar. POCT-Gerät = technische Leistung. Auch arterielle BGA = gleiche Position.' },
+  { nr:3500,name:'Bakteriologische Kultur + Differenzierung', short:'Bakt.-Kultur',            kat:'BGA / Labor',             typ:'L', p:150,  excl:[],       voraus:'Aerobe/anaerobe Kultur + Keimdifferenzierung (Labor M II).', doku:'Material, Entnahmestelle, Fragestellung, Ergebnis (Keim + Antibiogramm).', haeufig:'je Kultur', tip:'Labor M II — Schwelle 1,15× (max 1,3×). Wichtig bei PD-Peritonitis (Dialysat-Kultur), Shunt-/Katheter-Infektion, Blutkultur-Verdacht. Analog-Ziffer umfasst Anlage + Auswertung.' },
   { nr:3714,name:'pO₂ oder pCO₂ (Einzelparameter)',      short:'BGA Einzelmessung',            kat:'BGA / Labor',             typ:'T', p:80,   excl:[3710],   voraus:'Einzelparameter (pO2 oder pCO2), nicht neben Nr. 3710.', doku:'Parameter + Abnahmezeit.', haeufig:'unbegrenzt / je Messung', tip:'Nur wenn nicht als vollständige BGA (Nr. 3710) — z.B. reine Oxygenierungskontrolle.' },
   { nr:261, name:'Venenpunktion mit Katheteranlage (ZVK)', short:'ZVK-Anlage',                  kat:'Invasive Eingriffe',      typ:'T', p:300,  excl:[],       voraus:'Anlage zentraler Venenverweilkatheter.', doku:'Lage, Sono-Führung, Komplikationen, Röntgen-Kontrolle.', haeufig:'je Anlage', tip:'GOÄ Nr. 261; bei Subclavia/Jugularis-ZVK ggf. als § 6-Analogabrechnung. Sono-Führung dokumentieren. Auch: Shaldon-Katheter für Dialyse.' },
   { nr:284, name:'Arterienverweilkatheter (A-line)',      short:'Arterienkatheter',              kat:'Invasive Eingriffe',      typ:'T', p:370,  excl:[],       voraus:'Intraarterieller Verweilkatheter (invasives Monitoring).', doku:'Lokalisation + Kontrolle.', haeufig:'je Anlage', tip:'GOÄ Nr. 284: intraarterieller Verweilkatheter für invasives Monitoring. Neben Nr. 3710 (BGA) ansetzbar.' },
   { nr:307, name:'Pleurapunktion (therapeutisch)',        short:'Pleurapunktion',                kat:'Invasive Eingriffe',      typ:'T', p:250,  excl:[],       voraus:'Therapeutische Pleurapunktion.', doku:'Sono-Markierung, Menge, Makroskopie, Labor.', haeufig:'je Punktion', tip:'GOÄ Nr. 307. Nephrotisches Syndrom, Herzinsuffizienz, Parapneumonisch. Sono-Steuerung (Nr. 410) zusätzlich ansetzbar.' },
+  { nr:2270,name:'Perkutane Thrombektomie (Shunt)',       short:'Shunt-Thrombektomie',           kat:'Invasive Eingriffe',      typ:'T', p:1500, excl:[],       voraus:'Perkutane mechanische/thrombolytische Shuntdeklottierung.', doku:'Methode (mechanisch/lytisch), Punktionsort, Flow-Wiederherstellung, Komplikationen.', haeufig:'je Eingriff', tip:'GOÄ Nr. 2270: perkutane Thrombektomie eines arteriovenösen Shunts. Duplex-Sonographie (Nr. 4016) zusätzlich ansetzbar. Bei Versagen interventionell/chirurgisch eskalieren.' },
   { nr:320, name:'Aszitespunktion / Parazentese',         short:'Aszitespunktion',               kat:'Invasive Eingriffe',      typ:'T', p:250,  excl:[],       voraus:'Abdominelle Parazentese.', doku:'Sono-Markierung, Menge, Labor.', haeufig:'je Punktion', tip:'GOÄ Nr. 320. Hepatorenales Syndrom, dekompensierte Zirrhose, nephrotisches Syndrom. Nr. 410 für Sono-Steuerung zusätzlich.' },
   { nr:429, name:'Kardiopulmonale Reanimation',           short:'Reanimation CPR',               kat:'ITS-Notfall',             typ:'P', p:1500, excl:[],       voraus:'Vollständige Reanimationsleistung.', doku:'Ablauf, Dauer, Medikation, Defibrillationen.', haeufig:'je Ereignis', tip:'GOÄ Nr. 429: vollständige Reanimationsleistung (HDM + Beatmung + Defibrillation). Dokumentation Ablauf + Dauer obligat.' },
   { nr:427, name:'Endotracheale Intubation',              short:'Intubation (ETI)',               kat:'ITS-Notfall',             typ:'P', p:600,  excl:[],       voraus:'Eigenständige endotracheale Intubation.', doku:'Laryngoskopie, Tubusgröße, Lagekontrolle.', haeufig:'je Einleitung', tip:'Selbstständige Intubationsleistung. Neben Nr. 429 ansetzbar. Laryngoskopie + Lagekontrolle dokumentieren.' },
@@ -779,23 +784,33 @@ function goaeOptAdd(nr, remove) {
 var goaeCurrentCtx = 'ambulanz';
 
 var goaeCatCtx = {
-  'Beratung & Untersuchung':  ['ambulanz','station','its'],
-  'Klinische Untersuchung':   ['ambulanz','station','its'],
-  'Nephrologie spezifisch':   ['ambulanz','station','its'],
-  'Sonographie':              ['ambulanz','station','its'],
-  'Echo / Gefäß-Duplex':      ['ambulanz','station','its'],
-  'Blutdruck / ABPM':         ['ambulanz','station'],
-  'Diagnostik & Therapie':    ['ambulanz','station','its'],
-  'Wundversorgung':           ['ambulanz','station'],
-  'BGA / Labor':              ['ambulanz','station','its'],
-  'Dokumentation':            ['ambulanz','station','its'],
-  'Konsil':                   ['ambulanz','station','its'],
-  'Invasive Eingriffe':       ['station','its'],
+  'Beratung & Untersuchung':  ['ambulanz','teilstat','station','its'],
+  'Klinische Untersuchung':   ['ambulanz','teilstat','station','its'],
+  'Nephrologie spezifisch':   ['ambulanz','teilstat','station','its'],
+  'Sonographie':              ['ambulanz','teilstat','station','its'],
+  'Echo / Gefäß-Duplex':      ['ambulanz','teilstat','station','its'],
+  'Blutdruck / ABPM':         ['ambulanz','teilstat','station'],
+  'Diagnostik & Therapie':    ['ambulanz','teilstat','station','its'],
+  'Wundversorgung':           ['ambulanz','teilstat','station'],
+  'BGA / Labor':              ['ambulanz','teilstat','station','its'],
+  'Dokumentation':            ['ambulanz','teilstat','station','its'],
+  'Konsil':                   ['ambulanz','teilstat','station','its'],
+  'Invasive Eingriffe':       ['teilstat','station','its'],
   'ITS-Notfall':              ['its'],
-  'Dialyse / Nierenersatz':   ['station','its']
+  'Dialyse / Nierenersatz':   ['teilstat','station','its']
 };
 
 var goaeCtxPresets = {
+  teilstat: [
+    {key:'hd_routine',     label:'💧 HD-Routine-Sitzung'},
+    {key:'hd_quartal',     label:'📊 HD-Quartals-Check'},
+    {key:'hd_einleitung',  label:'🆕 Dialyseeinleitung'},
+    {key:'shunt_problem',  label:'🩸 Shunt-Problem akut'},
+    {key:'pd_peritonitis', label:'🦠 PD-Peritonitis-Abklärung'},
+    {key:'epo_eisen',      label:'💊 EPO/Eisen-Gabe'},
+    {key:'kath_infekt',    label:'🔥 Katheter-Infekt'},
+    {key:'konsil',         label:'📞 Konsil'}
+  ],
   ambulanz: [
     {key:'folge',       label:'📋 Folgebesuch'},
     {key:'erst',        label:'🆕 Erstvorstellung'},
@@ -835,6 +850,7 @@ var goaeCtxPresets = {
 };
 var goaeCtxNotes = {
   ambulanz: 'Privatambulanz · volle GOÄ-Abrechnung · Steigerung pers. bis 2,3× ohne Begründung',
+  teilstat: 'Teilstationäre Dialyse (§ 115a SGB V) · Privatliquidation · HD 3×/Woche, Visiten/Injektionen/Shuntkontrolle zusätzlich zu Nr. 789 ansetzbar',
   station:  'Stationär Wahlleistung · §17 KHEntgG · Liquidation auf Patientenwunsch · gleiche GOÄ-Faktoren',
   its:      'Intensivmedizin · Wahlleistungsarzt · ggf. Analogabrechnung bei ITS-spezifischen Leistungen'
 };
@@ -892,7 +908,15 @@ function goaePreset(type, btn) {
     its_zvk:      [3,261,284,3710,410],
     its_pleura:   [3,307,410,3710],
     crrt_sitzung: [3,7890,3710,76],
-    its_ecu:      [3,34,420,4201,76]
+    its_ecu:      [3,34,420,4201,76],
+    // Teilstationär (Dialyse-Tagesklinik)
+    hd_routine:    [789,45,250],
+    hd_quartal:    [789,45,4016,5,76],
+    hd_einleitung: [789,34,4016,76,250],
+    shunt_problem: [4016,826,45],
+    pd_peritonitis:[320,3500,250,826,76],
+    epo_eisen:     [789,254,252],
+    kath_infekt:   [200,250,3500,45,76]
   };
   (map[type]||[]).forEach(function(n){ goaeSelected.add(n); });
   goaeRender();
