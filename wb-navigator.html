@@ -109,7 +109,7 @@ section.wb-phase {
 .wb-timeline-list { margin: 0; padding: 0; list-style: none; }
 .wb-stint {
   display: grid;
-  grid-template-columns: 110px 110px 1fr 1fr 70px 32px;
+  grid-template-columns: 130px 130px 1fr 1fr 70px 32px;
   gap: 8px; align-items: center;
   padding: 8px 0; border-bottom: 1px solid #f3f4f6;
 }
@@ -127,7 +127,7 @@ section.wb-phase {
 .wb-stint .wb-del-btn:hover { background: #fee2e2; }
 .wb-stint-header {
   display: grid;
-  grid-template-columns: 110px 110px 1fr 1fr 70px 32px;
+  grid-template-columns: 130px 130px 1fr 1fr 70px 32px;
   gap: 8px;
   font-size: 11px; color: var(--wb-muted); text-transform: uppercase; letter-spacing: 0.04em;
   padding: 4px 0; border-bottom: 1px solid var(--wb-border);
@@ -374,6 +374,24 @@ section.wb-phase {
   .wb-anr-flow { grid-template-columns: 1fr; }
   .wb-anr-arrow { transform: rotate(90deg); margin: 4px 0; }
 }
+
+/* Footer + Sprachhinweis */
+.wb-footer {
+  margin-top: 24px; padding: 16px 20px;
+  font-size: 12px; color: var(--wb-muted);
+  border-top: 1px solid var(--wb-border);
+}
+.wb-footer p { margin: 0 0 10px; line-height: 1.5; }
+
+/* Stint-Inputs: zwei Selects pro Datum (Jahr/Monat) statt fragilem type=month */
+.wb-stint-date {
+  display: grid; grid-template-columns: 60px 1fr; gap: 4px;
+}
+.wb-stint-date select {
+  padding: 5px 4px; font-size: 12px; border: 1px solid var(--wb-border);
+  border-radius: 4px; background: white; font-family: inherit;
+  min-width: 0;
+}
 </style>
 </head>
 <body>
@@ -391,87 +409,31 @@ section.wb-phase {
   bitte immer die <a href="https://www.aekb.de/aerzt-innen/weiterbildung" target="_blank" rel="noopener">Ärztekammer Berlin</a> direkt kontaktieren.
 </div>
 
-<!-- ============== EDUKATIV 1: BAUSTEINE ============== -->
-<section class="wb-phase">
-  <h2>1. Aus welchen Bausteinen besteht die Weiterbildung?</h2>
-  <p class="wb-section-intro">
-    Jede Facharzt-Weiterbildung in der Inneren Medizin ist ein 60-/72-monatiges Curriculum aus
-    Pflichtbausteinen unter Befugnis. Die Reihenfolge mancher Bausteine ist vorgeschrieben
-    (z.B. Notaufnahme erst nach 12 Mo Gesamt-WB, Intensivmedizin erst nach 24 Mo).
-  </p>
-  <div class="wb-overview-grid" id="wb-overview-grid"></div>
-  <p class="wb-legend-rule" style="margin-top: 12px;">
-    Hinweis: Die Bausteinsummen einzelner Wege addieren sich rechnerisch über die Mindestdauer hinaus —
-    in der Praxis überlappen sich Inhalte (eine Station Nephrologie kann gleichzeitig Notaufnahmen-Dienste enthalten).
-    Die jeweils maßgebliche Mindestdauer steht in der Karte.
-  </p>
-</section>
-
-<!-- ============== EDUKATIV 2: ANRECHNUNG ============== -->
-<section class="wb-phase">
-  <h2>2. Was wird angerechnet, wenn du schon FA Innere bist?</h2>
-  <p class="wb-section-intro">
-    Rechtsgrundlage: <b>§ 4 Abs. 9 WBO Berlin 2021</b> — beim Erwerb einer weiteren Facharztbezeichnung
-    kann die Weiterbildungszeit „im Einzelfall um höchstens die Hälfte der Mindestdauer" verkürzt werden.
-    Die ÄK Berlin entscheidet auf Antrag (Logbuch + Bescheid).
-  </p>
-
-  <h3 style="font-size:15px;color:var(--wb-primary);margin:18px 0 8px;">FA Innere → FA Innere und Nephrologie</h3>
-  <div id="wb-anr-nephro"></div>
-
-  <h3 style="font-size:15px;color:var(--wb-primary);margin:22px 0 8px;">FA Innere → Zusatz-Weiterbildung Internistische Intensivmedizin</h3>
-  <div id="wb-anr-intensiv"></div>
-
-  <details class="wb-collapsible">
-    <summary>Übergangsregelungen § 21 WBO 2021 (klick für Details)</summary>
-    <div class="wb-info-block">
-      <ul style="margin:0;padding-left:20px;font-size:13px;">
-        <li><b>Abs. 4 (laufende FA-WB):</b> Wer am 30.11.2022 in laufender FA-WB war, darf nach alter WBO 2004 bis <b>30.11.2029</b> abschließen.</li>
-        <li><b>Abs. 5 (laufende Schwerpunkt-WB):</b> Frist <b>30.11.2025</b>, Voraussetzung „in laufender WB am 30.11.2022".</li>
-        <li><b>Abs. 6 (laufende Zusatz-WB):</b> Frist <b>30.11.2025</b>.</li>
-        <li><b>Schwerpunkt Nephrologie alt:</b> Bezeichnung in Berlin schon mit 11. Nachtrag (2019) durch „FA Innere und Nephrologie" ersetzt — Altinhaber dürfen die neue Bezeichnung automatisch führen.</li>
-      </ul>
-    </div>
-  </details>
-</section>
-
-<!-- ============== EDUKATIV 3: RICHTZAHLEN ============== -->
-<section class="wb-phase">
-  <h2>3. Logbuch-Richtzahlen Nephrologie (WBO 2021 B 13.9)</h2>
-  <p class="wb-section-intro">
-    Mindestmengen aus dem eLogbuch der ÄK Berlin (B 13.9, S. 181–185). Alle Untersuchungen / Eingriffe
-    müssen unter Befugnis Nephrologie selbst durchgeführt und im eLogbuch dokumentiert werden —
-    Übernahme aus FA Innere ist nur möglich, soweit dort schon nephrologie-relevante Inhalte unter passender
-    Befugnis erbracht wurden.
-  </p>
-  <div class="wb-richt-grid" id="wb-richt-grid"></div>
-  <p class="wb-legend-rule" style="margin-top: 12px;">
-    Quelle: WBO Berlin 2021 (mit 2. Änderung, in Kraft 01.04.2025), Abschn. B 13.9 „Innere Medizin und Nephrologie", Spalte „Richtzahl" S. 181–185.
-  </p>
-</section>
-
-<!-- ============== PHASE 1: WIZARD ============== -->
+<!-- ============== 1. WIZARD ============== -->
 <section class="wb-phase" id="wb-phase-wizard">
-  <h2>4. Dein individueller Plan</h2>
+  <h2>1. Dein Pfad</h2>
+  <p class="wb-section-intro">
+    Wähle deinen aktuellen Status und dein Ziel — die für dich passende Übersicht erscheint darunter.
+  </p>
 
   <!-- Schritt 0: WBO -->
   <div class="wb-wizard-step" id="wb-step-wbo">
-    <div class="wb-step-label">Schritt 0 — Nach welcher Weiterbildungsordnung machst du deine WB?</div>
+    <div class="wb-step-label">Weiterbildungsordnung</div>
     <div class="wb-cards" id="wb-wbo-cards">
       <button type="button" class="wb-card-btn" data-wbo="wbo2021">
         <span class="wb-card-title">Neue WBO (2021)</span>
-        <span class="wb-card-sub">In Kraft seit 30.11.2022 — Standard für neu begonnene WB</span>
+        <span class="wb-card-sub">In Kraft seit 30.11.2022 — Standard</span>
       </button>
       <button type="button" class="wb-card-btn" data-wbo="wbo2004">
         <span class="wb-card-title">Alte WBO (2004)</span>
-        <span class="wb-card-sub">Übergang nach § 21 WBO 2021 — FA-Abschluss bis 30.11.2029 möglich</span>
+        <span class="wb-card-sub">Übergang § 21 — Abschluss bis 30.11.2029</span>
       </button>
     </div>
   </div>
 
   <!-- Schritt 1: Status -->
   <div class="wb-wizard-step" id="wb-step-status" hidden>
-    <div class="wb-step-label">Schritt 1 — Was ist dein aktueller Status?</div>
+    <div class="wb-step-label">Aktueller Status</div>
     <div class="wb-cards" id="wb-status-cards">
       <button type="button" class="wb-card-btn" data-status="kein_fa">
         <span class="wb-card-title">Noch kein Facharzt</span>
@@ -486,9 +448,49 @@ section.wb-phase {
 
   <!-- Schritt 2: Ziel -->
   <div class="wb-wizard-step" id="wb-step-ziel" hidden>
-    <div class="wb-step-label">Schritt 2 — Was möchtest du erreichen?</div>
+    <div class="wb-step-label">Ziel</div>
     <div class="wb-cards" id="wb-ziel-cards"></div>
   </div>
+</section>
+
+<!-- ============== 2. BAUSTEINE (kontextuell) ============== -->
+<section class="wb-phase" id="wb-phase-bausteine" hidden>
+  <h2>2. Bausteine deines Wegs</h2>
+  <p class="wb-section-intro" id="wb-bausteine-intro"></p>
+  <div class="wb-overview-grid" id="wb-overview-grid"></div>
+</section>
+
+<!-- ============== 3. ANRECHNUNG (kontextuell) ============== -->
+<section class="wb-phase" id="wb-phase-anrechnung" hidden>
+  <h2>3. Was wird angerechnet?</h2>
+  <p class="wb-section-intro">
+    Rechtsgrundlage: <b>§ 4 Abs. 9 WBO Berlin 2021</b> — beim Erwerb einer weiteren Facharztbezeichnung
+    kann die Weiterbildungszeit „im Einzelfall um höchstens die Hälfte der Mindestdauer" verkürzt werden.
+    Die ÄK Berlin entscheidet auf Antrag (Logbuch + Bescheid).
+  </p>
+  <div id="wb-anr-content"></div>
+
+  <details class="wb-collapsible">
+    <summary>Übergangsregelungen § 21 WBO 2021 (klick für Details)</summary>
+    <div class="wb-info-block">
+      <ul style="margin:0;padding-left:20px;font-size:13px;">
+        <li><b>Abs. 4 (laufende FA-WB):</b> Wer am 30.11.2022 in laufender FA-WB war, darf nach alter WBO 2004 bis <b>30.11.2029</b> abschließen.</li>
+        <li><b>Abs. 5 (laufende Schwerpunkt-WB):</b> Frist <b>30.11.2025</b>, Voraussetzung „in laufender WB am 30.11.2022".</li>
+        <li><b>Abs. 6 (laufende Zusatz-WB):</b> Frist <b>30.11.2025</b>.</li>
+        <li><b>Schwerpunkt Nephrologie alt:</b> Bezeichnung in Berlin schon mit 11. Nachtrag (2019) durch „FA Innere und Nephrologie" ersetzt — Altinhaber dürfen die neue Bezeichnung automatisch führen.</li>
+      </ul>
+    </div>
+  </details>
+</section>
+
+<!-- ============== 4. RICHTZAHLEN (kontextuell) ============== -->
+<section class="wb-phase" id="wb-phase-richtzahlen" hidden>
+  <h2>4. Logbuch-Richtzahlen Nephrologie</h2>
+  <p class="wb-section-intro">
+    Mindestmengen aus dem eLogbuch der ÄK Berlin (B 13.9, S. 181–185). Alle Untersuchungen / Eingriffe
+    müssen unter Befugnis Nephrologie selbst durchgeführt und im eLogbuch dokumentiert werden.
+  </p>
+  <div class="wb-richt-grid" id="wb-richt-grid"></div>
 </section>
 
 <!-- ============== PHASE 2: TIMELINE ============== -->
@@ -552,14 +554,22 @@ section.wb-phase {
   </p>
 </section>
 
-<details class="wb-source-list wb-no-print">
-  <summary>Regulatorische Quellen (klick für Details)</summary>
-  <ul>
-    <li>WBO Berlin 2021 (mit 2. Änderung, in Kraft 01.04.2025) — Abschn. B 13.1 (S. 122), 13.9 (S. 179); Abschn. C 17 (S. 364); § 21 (S. 18–19)</li>
-    <li>WBO Berlin 2004 (konsolidierte Fassung mit 11. Nachtrag) — 13.1 (S. 63), 13.8 (S. 73); ZWB Intensivmedizin C-14 (S. 134, im Tool nur als Hinweis)</li>
-    <li>Übergangsregelung § 21 WBO 2021: FA-WB nach alter WBO bis 30.11.2029, Schwerpunkt/ZWB bis 30.11.2025</li>
-  </ul>
-</details>
+<footer class="wb-footer wb-no-print">
+  <p>
+    <b>Sprachhinweis:</b> Aus Lesbarkeitsgründen werden in diesem Tool die Begriffe „Facharzt", „Assistenzarzt"
+    etc. ohne Genderform verwendet — gemeint sind Personen aller Geschlechter. Die WBO der Ärztekammer Berlin
+    schreibt die Bezeichnung „Facharzt/Fachärztin", die hier zur besseren Lesbarkeit verkürzt wiedergegeben wird.
+  </p>
+  <details class="wb-source-list">
+    <summary>Regulatorische Quellen</summary>
+    <ul>
+      <li>WBO Berlin 2021 (mit 2. Änderung, in Kraft 01.04.2025) — Abschn. B 13.1 (S. 122), 13.9 (S. 179); Abschn. C 17 (S. 364); §§ 4, 21 (S. 9, 18–19)</li>
+      <li>WBO Berlin 2004 (konsolidierte Fassung mit 11. Nachtrag, in Kraft 27.07.2019) — 13.1 (S. 63), 13.8 (S. 73)</li>
+      <li>Anrechnung weitere FA: § 4 Abs. 9 WBO 2021 — max. 50 % der Mindestdauer</li>
+      <li>Übergangsregelung § 21 WBO 2021: FA-WB nach alter WBO bis 30.11.2029, Schwerpunkt/ZWB bis 30.11.2025</li>
+    </ul>
+  </details>
+</footer>
 
 </div><!-- /.wb-app -->
 
@@ -580,9 +590,9 @@ const PFADE = {
     label: "WBO Berlin 2021",
     sub: "in Kraft seit 30.11.2022",
     pfade: {
-      // Quelle: WBO 2021, Abschn. B 13.1 „Facharzt/Fachärztin für Innere Medizin", S. 122
+      // Quelle: WBO 2021, Abschn. B 13.1 „Facharzt für Innere Medizin", S. 122
       fa_innere: {
-        label: "Facharzt/Fachärztin für Innere Medizin",
+        label: "Facharzt für Innere Medizin",
         kurz: "FA Innere Medizin",
         kategorie: "facharzt",
         quelle: "WBO Berlin 2021, Abschn. B 13.1, S. 122",
@@ -601,9 +611,9 @@ const PFADE = {
           {type:"hinweis", text:"Max. 36 Mo in derselben FA-Kompetenz; min. 3 verschiedene FA-Kompetenzen des Gebiets."}
         ]
       },
-      // Quelle: WBO 2021, Abschn. B 13.9 „Facharzt/Fachärztin für Innere Medizin und Nephrologie", S. 179
+      // Quelle: WBO 2021, Abschn. B 13.9 „Facharzt für Innere Medizin und Nephrologie", S. 179
       fa_innere_nephro: {
-        label: "Facharzt/Fachärztin für Innere Medizin und Nephrologie",
+        label: "Facharzt für Innere Medizin und Nephrologie",
         kurz: "FA Innere und Nephrologie",
         kategorie: "facharzt",
         quelle: "WBO Berlin 2021, Abschn. B 13.9, S. 179",
@@ -667,9 +677,9 @@ const PFADE = {
       zusatz: "ZWB-Abschluss bis 30.11.2025 (§ 21 Abs. 6)"
     },
     pfade: {
-      // Quelle: WBO 2004 (konsolidierte Fassung, 11. Nachtrag), 13.1 „Facharzt/Fachärztin für Innere Medizin", S. 63
+      // Quelle: WBO 2004 (konsolidierte Fassung, 11. Nachtrag), 13.1 „Facharzt für Innere Medizin", S. 63
       fa_innere: {
-        label: "Facharzt/Fachärztin für Innere Medizin (alte WBO)",
+        label: "Facharzt für Innere Medizin (alte WBO)",
         kurz: "FA Innere Medizin (2004)",
         kategorie: "facharzt",
         quelle: "WBO Berlin 2004, 13.1, S. 63",
@@ -685,9 +695,9 @@ const PFADE = {
           {type:"hinweis", text:"Bei den 24 Mo „2 versch. FA-Kompetenzen“ können max. 12 Mo einer in der Basis bereits abgeleisteten Kompetenz entsprechen."}
         ]
       },
-      // Quelle: WBO 2004, 13.8 „Facharzt/Fachärztin für Innere Medizin und Nephrologie", S. 73
+      // Quelle: WBO 2004, 13.8 „Facharzt für Innere Medizin und Nephrologie", S. 73
       fa_innere_nephro: {
-        label: "Facharzt/Fachärztin für Innere Medizin und Nephrologie (alte WBO)",
+        label: "Facharzt für Innere Medizin und Nephrologie (alte WBO)",
         kurz: "FA Innere und Nephrologie (2004)",
         kategorie: "facharzt",
         quelle: "WBO Berlin 2004, 13.8, S. 73",
@@ -862,7 +872,26 @@ function renderWizard() {
 
 function afterWizardChange() {
   renderWizard();
-  if (state.wbo && state.status && state.ziel) {
+  const haveZiel = !!(state.wbo && state.status && state.ziel);
+
+  // 2. Bausteine — nur die für den gewählten Pfad relevanten Karten
+  const bs = document.getElementById('wb-phase-bausteine');
+  bs.hidden = !haveZiel;
+  if (haveZiel) renderOverviewKontextuell();
+
+  // 3. Anrechnung — nur sinnvoll wenn schon FA Innere + Aufbau/ZWB-Ziel
+  const showAnr = state.status === 'fa_innere' &&
+    ['fa_innere_nephro_aufbau', 'zwb_intensivmedizin'].includes(state.ziel);
+  document.getElementById('wb-phase-anrechnung').hidden = !showAnr;
+  if (showAnr) renderAnrechnungKontextuell();
+
+  // 4. Richtzahlen — nur wenn Nephro-Pfad
+  const showRicht = ['fa_innere_nephro', 'fa_innere_nephro_aufbau'].includes(state.ziel);
+  document.getElementById('wb-phase-richtzahlen').hidden = !showRicht;
+  if (showRicht) renderRichtzahlen();
+
+  // 5./6. Timeline & Eval — wie bisher
+  if (haveZiel) {
     showTimelineAndEval();
   } else {
     document.getElementById('wb-phase-timeline').hidden = true;
@@ -966,12 +995,32 @@ function renderStints() {
     `<option value="${escapeAttr(b.key)}">${escapeHtml(b.label)}</option>`
   ).join("");
 
+  // Datums-Selects (Jahr + Monat) statt fragilem type=month-Input
+  const thisYear = new Date().getFullYear();
+  const yearOpts = [];
+  for (let y = thisYear + 5; y >= 1990; y--) yearOpts.push(`<option value="${y}">${y}</option>`);
+  const yearOptsStr = yearOpts.join("");
+  const monthLabels = ["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"];
+  const monthOptsStr = monthLabels.map((m, i) =>
+    `<option value="${String(i+1).padStart(2,'0')}">${m}</option>`
+  ).join("");
+  function dateSelectHtml(field, id, value) {
+    // value im Format "YYYY-MM" oder ""
+    const [y, m] = (value && /^\d{4}-\d{2}$/.test(value)) ? value.split("-") : ["",""];
+    const ySel = yearOptsStr.replace(`value="${y}"`, `value="${y}" selected`);
+    const mSel = monthOptsStr.replace(`value="${m}"`, `value="${m}" selected`);
+    return `<div class="wb-stint-date">
+      <select data-field="${field}-mo" data-id="${id}" aria-label="Monat ${field}"><option value="">Mon.</option>${mSel}</select>
+      <select data-field="${field}-yr" data-id="${id}" aria-label="Jahr ${field}"><option value="">Jahr</option>${ySel}</select>
+    </div>`;
+  }
+
   state.stints.forEach((s, i) => {
     const li = document.createElement('li');
     li.className = "wb-stint";
     li.innerHTML = `
-      <input type="month" value="${escapeAttr(s.beginn)}" data-field="beginn" data-id="${s.id}" />
-      <input type="month" value="${escapeAttr(s.ende)}"  data-field="ende"   data-id="${s.id}" />
+      ${dateSelectHtml('beginn', s.id, s.beginn)}
+      ${dateSelectHtml('ende',   s.id, s.ende)}
       <input type="text"  value="${escapeAttr(s.klinik)}" data-field="klinik" data-id="${s.id}" placeholder="z.B. Charité CCM, Nephrologie" />
       <select data-field="bereich" data-id="${s.id}">
         <option value="">— wählen —</option>
@@ -1008,7 +1057,21 @@ function onStintChange(e) {
   const field = e.target.dataset.field;
   const stint = state.stints.find(s => s.id === id);
   if (!stint) return;
-  stint[field] = e.target.value;
+  // Datums-Felder kommen als field="beginn-yr"/"beginn-mo"/"ende-yr"/"ende-mo"
+  // — wir setzen jeweils Jahr/Monat in den Stint und reassemblieren "YYYY-MM"
+  const dm = field.match(/^(beginn|ende)-(yr|mo)$/);
+  if (dm) {
+    const which = dm[1]; // beginn|ende
+    const part  = dm[2]; // yr|mo
+    const cur = stint[which] || "";
+    let y = "", m = "";
+    if (/^\d{4}-\d{2}$/.test(cur)) { y = cur.slice(0,4); m = cur.slice(5,7); }
+    if (part === 'yr') y = e.target.value;
+    if (part === 'mo') m = e.target.value;
+    stint[which] = (y && m) ? `${y}-${m}` : "";
+  } else {
+    stint[field] = e.target.value;
+  }
   saveState();
   // Monate-Anzeige live updaten — minimal: nur die Mo-Zelle dieser Zeile aktualisieren
   const row = e.target.closest('.wb-stint');
@@ -1218,16 +1281,38 @@ const RICHTZAHLEN_NEPHRO = [
   ]}
 ];
 
-// --- Bausteine-Übersicht: drei Wege als Stacked Bars ---
-function renderOverview() {
+// --- Bausteine-Übersicht: kontextuell — zeigt nur die für den gewählten Pfad relevanten Karten ---
+function renderOverviewKontextuell() {
   const host = document.getElementById('wb-overview-grid');
-  if (!host) return;
-  const wege = [
-    PFADE.wbo2021.pfade.fa_innere,
-    PFADE.wbo2021.pfade.fa_innere_nephro,
-    PFADE.wbo2021.pfade.zwb_intensivmedizin
-  ];
-  host.innerHTML = wege.map(renderBausteinCard).join("");
+  const intro = document.getElementById('wb-bausteine-intro');
+  if (!host || !state.wbo) return;
+  const wbo = PFADE[state.wbo];
+  const z = state.ziel;
+
+  let kartenKeys = [];
+  let introText = "";
+
+  if (state.status === 'fa_innere' && z === 'fa_innere_nephro_aufbau') {
+    kartenKeys = ['fa_innere', 'fa_innere_nephro'];
+    introText = "Links: das Curriculum, das du mit dem FA Innere bereits absolviert hast. Rechts: das Ziel-Curriculum „FA Innere und Nephrologie“. Was anrechenbar ist, zeigt der nächste Abschnitt.";
+  } else if (state.status === 'fa_innere' && z === 'zwb_intensivmedizin') {
+    kartenKeys = ['fa_innere', 'zwb_intensivmedizin'];
+    introText = "Links: dein abgeschlossener FA Innere. Rechts: die Zusatz-Weiterbildung Intensivmedizin als zusätzliche Qualifikation (18 Mo, davon ggf. 6 Mo aus FA-Zeit anrechenbar).";
+  } else if (z === 'fa_innere') {
+    kartenKeys = ['fa_innere'];
+    introText = "Aufbau der 60-monatigen Facharzt-Weiterbildung Innere Medizin (WBO Berlin 2021).";
+  } else if (z === 'fa_innere_nephro') {
+    kartenKeys = ['fa_innere_nephro'];
+    introText = "Aufbau der 72-monatigen Facharzt-Weiterbildung Innere Medizin und Nephrologie (WBO Berlin 2021).";
+  } else {
+    kartenKeys = [z];
+  }
+
+  if (intro) intro.textContent = introText;
+  host.innerHTML = kartenKeys.map(k => {
+    const p = wbo.pfade[k] || PFADE.wbo2021.pfade[k] || PFADE.wbo2004.pfade[k];
+    return p ? renderBausteinCard(p) : "";
+  }).join("");
 }
 
 function renderBausteinCard(pfad) {
@@ -1291,10 +1376,20 @@ function renderBausteinCard(pfad) {
     </div>`;
 }
 
-// --- Anrechnungs-Diagramm: FA Innere → FA Innere und Nephrologie ---
-function renderAnrechnungNephro() {
-  const host = document.getElementById('wb-anr-nephro');
+// --- Anrechnungs-Diagramm: kontextuelle Auswahl Nephro vs. ZWB Intensiv ---
+function renderAnrechnungKontextuell() {
+  const host = document.getElementById('wb-anr-content');
   if (!host) return;
+  if (state.ziel === 'fa_innere_nephro_aufbau') {
+    host.innerHTML = anrechnungNephroHtml();
+  } else if (state.ziel === 'zwb_intensivmedizin') {
+    host.innerHTML = anrechnungIntensivHtml();
+  } else {
+    host.innerHTML = "";
+  }
+}
+
+function anrechnungNephroHtml() {
   // Bausteine im 72-Mo-Pfad und ihre Anrechenbarkeit aus FA Innere
   const rows = [
     { label: "Stationäre Patientenversorgung",                pflicht: 24, an: 24, status: 'yes', erlaeuterung: "FA Innere fordert sogar 30 Mo stationär — vollständig anrechenbar." },
@@ -1307,7 +1402,7 @@ function renderAnrechnungNephro() {
   const sumAn      = rows.reduce((s, r) => s + r.an, 0);
   const sumNoch    = sumPflicht - sumAn;
 
-  host.innerHTML = `
+  return `
     <div class="wb-anr-flow">
       <div class="wb-anr-box wb-anr-have">
         <div class="wb-anr-box-label">Du hast</div>
@@ -1352,10 +1447,8 @@ function renderAnrechnungNephro() {
 }
 
 // --- Anrechnungs-Diagramm: FA Innere → ZWB Intensivmedizin ---
-function renderAnrechnungIntensiv() {
-  const host = document.getElementById('wb-anr-intensiv');
-  if (!host) return;
-  host.innerHTML = `
+function anrechnungIntensivHtml() {
+  return `
     <div class="wb-anr-flow">
       <div class="wb-anr-box wb-anr-have">
         <div class="wb-anr-box-label">Du hast</div>
@@ -1431,13 +1524,9 @@ function escapeAttr(s) { return escapeHtml(s); }
 //  INIT
 // =========================================================================
 loadState();
-renderWizard();
-if (state.wbo && state.status && state.ziel) showTimelineAndEval();
 renderBefugte();
-renderOverview();
-renderAnrechnungNephro();
-renderAnrechnungIntensiv();
-renderRichtzahlen();
+// Wizard + alle kontextuellen Sektionen einmal durchlaufen lassen
+afterWizardChange();
 </script>
 </body>
 </html>
