@@ -925,6 +925,9 @@ document.getElementById('wb-back-to-wizard').addEventListener('click', () => {
   document.getElementById('wb-phase-wizard').scrollIntoView({behavior: 'smooth', block: 'start'});
 });
 
+// FIX: Add-Stint-Button-Listener immer attachen (Button existiert bereits im Initial-HTML)
+document.getElementById('wb-add-stint').addEventListener('click', addStint);
+
 // =========================================================================
 //  HELPERS
 // =========================================================================
