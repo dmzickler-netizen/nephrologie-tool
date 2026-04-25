@@ -1231,21 +1231,28 @@ function renderOverview() {
 }
 
 function renderBausteinCard(pfad) {
-  // Top-Level-Blöcke (ohne parent-Sub-Items wie "dialyse")
-  const topBlocks = pfad.blocks.filter(b => !b.parent);
+  // Top-Level-Blöcke mit echtem Mindestwert (ohne parent-Sub-Items wie "dialyse" und ohne mo_min===0)
+  const topBlocks = pfad.blocks.filter(b => !b.parent && (b.mo_min || 0) > 0);
   const subBlocks = pfad.blocks.filter(b => b.parent);
   const sumMo = topBlocks.reduce((s, b) => s + (b.mo_min || 0), 0);
+  // Filler: wenn Pflichtblöcke < Gesamtdauer, fülle die Differenz visuell als "frei wählbar"
+  const filler = pfad.monate_total && pfad.monate_total > sumMo ? (pfad.monate_total - sumMo) : 0;
+  const denom = sumMo + filler;
 
-  // Stacked Bar: jede Top-Komponente proportional zu mo_min
-  const segments = topBlocks.map(b => {
-    const pct = sumMo ? (b.mo_min / sumMo * 100) : (100 / topBlocks.length);
+  // Stacked Bar: jede Top-Komponente proportional zu mo_min, ggf. mit Filler
+  let segments = topBlocks.map(b => {
+    const pct = denom ? (b.mo_min / denom * 100) : (100 / topBlocks.length);
     const cls = BLOCK_COLORS[b.key] || 'wb-c-sonstige';
     const lbl = b.mo_min >= 6 ? `${b.mo_min}` : '';
     return `<div class="wb-stack-seg ${cls}" style="width:${pct.toFixed(2)}%" title="${escapeAttr(b.label)} — ${b.mo_min} Mo">${lbl}</div>`;
   }).join("");
+  if (filler > 0) {
+    const fpct = (filler / denom * 100).toFixed(2);
+    segments += `<div class="wb-stack-seg wb-c-sonstige" style="width:${fpct}%" title="Frei wählbar (Innere-Inhalte) — ${filler} Mo">${filler}</div>`;
+  }
 
   // Legende: jeder Block mit Mo + Reihenfolge-Hinweis
-  const legend = topBlocks.map(b => {
+  let legend = topBlocks.map(b => {
     const cls = BLOCK_COLORS[b.key] || 'wb-c-sonstige';
     const subForBlock = subBlocks.filter(s => s.parent === b.key);
     const subLine = subForBlock.length ?
@@ -1258,6 +1265,13 @@ function renderBausteinCard(pfad) {
               <span class="wb-legend-mo">— ${b.mo_min} Mo</span>
             </div>${subLine}${ruleLine}`;
   }).join("");
+  if (filler > 0) {
+    legend += `<div class="wb-stack-legend-item">
+                 <span class="wb-legend-dot wb-c-sonstige"></span>
+                 <span class="wb-legend-text">Frei wählbar (weitere Innere-Inhalte)</span>
+                 <span class="wb-legend-mo">— ${filler} Mo</span>
+               </div>`;
+  }
 
   const constraintsHtml = (pfad.constraints || []).length ? `
     <div class="wb-baustein-hinweise">
