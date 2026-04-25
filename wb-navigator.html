@@ -409,7 +409,26 @@ const PFADE = {
           {type:"hinweis", text:"Übergangsbestimmung: Wer den alten „Schwerpunkt Nephrologie“ oder „FA Innere und Schwerpunkt Nephrologie“ besitzt, darf statt dessen die Bezeichnung „FA Innere und Nephrologie“ führen (WBO 2021 B 13.9)."}
         ]
       },
-      // Quelle: WBO 2021, Abschn. C 17 „Zusatz-Weiterbildung Intensivmedizin", S. 364
+      // Aufbau-WB Nephrologie nach FA Innere (Nutzer hat schon FA Innere und sattelt Nephrologie drauf)
+      // Quelle: WBO Berlin 2021, Abschn. B 13.9 (S. 179) — bei vorhandenem FA Innere zählen die Innere-Anteile,
+      // erforderlich sind effektiv die 36 Mo Nephrologie-spezifische WB inkl. 6 Mo Dialyse.
+      fa_innere_nephro_aufbau: {
+        label: "Nephrologie aufbauend auf FA Innere",
+        kurz: "Aufbau Nephrologie",
+        kategorie: "facharzt_aufbau",
+        quelle: "WBO Berlin 2021, Abschn. B 13.9, S. 179 (Aufbau bei vorhandenem FA Innere)",
+        monate_total: 36,
+        voraussetzung: "Anerkennung als FA Innere Medizin",
+        blocks: [
+          {key:"innere_nephro", label:"Innere Medizin und Nephrologie", mo_min:36},
+          {key:"dialyse",       label:"… davon Dialyse",                mo_min:6, parent:"innere_nephro"}
+        ],
+        constraints: [
+          {type:"hinweis", text:"Bei vorhandenem FA Innere Medizin werden die bereits absolvierten Innere-Anteile angerechnet — zusätzlich erforderlich sind 36 Mo Nephrologie inkl. 6 Mo Dialyse, um die Bezeichnung „FA Innere und Nephrologie“ zu erlangen."},
+          {type:"hinweis", text:"Anerkennung erfolgt formal als „FA Innere und Nephrologie“ (B 13.9). Wer den alten Schwerpunkt Nephrologie hat, kann ohne Aufbau-WB die neue Bezeichnung führen."}
+        ]
+      },
+      // Quelle: WBO 2021, Abschn. C 17 „Zusatz-Weiterbildung Intensivmedizin“, S. 364
       zwb_intensivmedizin: {
         label: "Zusatz-Weiterbildung Intensivmedizin (Internistisch)",
         kurz: "ZWB Intensivmedizin",
@@ -474,6 +493,24 @@ const PFADE = {
           {type:"hinweis", text:"Übergangsbestimmung WBO 2021 B 13.9: Schwerpunkt Nephrologie kann automatisch in „FA Innere und Nephrologie“ (neue Bezeichnung) umgewandelt werden."}
         ]
       },
+      // Schwerpunkt Nephrologie nach FA Innere (alte WBO 2004) — klassischer Aufbaupfad
+      // Quelle: WBO Berlin 2004, 13.8 Schwerpunkt Nephrologie, S. 73 — 36 Mo Nephrologie nach FA Innere
+      fa_innere_nephro_aufbau: {
+        label: "Schwerpunkt Nephrologie (alte WBO)",
+        kurz: "Schwerpunkt Nephrologie",
+        kategorie: "facharzt_aufbau",
+        quelle: "WBO Berlin 2004, 13.8, S. 73 (Schwerpunkt nach FA Innere)",
+        monate_total: 36,
+        voraussetzung: "Anerkennung als FA Innere Medizin (alte WBO)",
+        blocks: [
+          {key:"nephro",  label:"Nephrologie",         mo_min:36},
+          {key:"dialyse", label:"… davon Dialyse",     mo_min:6, parent:"nephro"}
+        ],
+        constraints: [
+          {type:"hinweis", text:"Bis zu 18 Mo der Nephrologie-Zeit können im ambulanten Bereich abgeleistet werden."},
+          {type:"hinweis", text:"Übergangsfrist § 21 Abs. 5 WBO 2021: Schwerpunkt-Abschluss nach alter WBO bis 30.11.2025 möglich. Nach Anerkennung darf die neue Bezeichnung „FA Innere und Nephrologie“ geführt werden."}
+        ]
+      },
       // Quelle: WBO 2004, C-14 Intensivmedizin, S. 134 — Detail nicht modelliert, nur Hinweis
       zwb_intensivmedizin: {
         label: "Zusatz-Weiterbildung Intensivmedizin (alte WBO)",
@@ -491,10 +528,11 @@ const PFADE = {
 };
 
 // Welche Ziele sind nach Status verfügbar?
-// (nicht auf "kein_fa" beschränkt, weil "fa_innere bereits anerkannt" → fa_innere_nephro über Anrechnung möglich)
+// kein_fa     → komplette FA-Wege (60/72 Mo)
+// fa_innere   → Aufbau-Pfade (Nephrologie 36 Mo Aufbau, ZWB Intensivmedizin 18 Mo)
 const ZIELE_NACH_STATUS = {
   kein_fa: ["fa_innere", "fa_innere_nephro"],
-  fa_innere: ["fa_innere_nephro", "zwb_intensivmedizin"]
+  fa_innere: ["fa_innere_nephro_aufbau", "zwb_intensivmedizin"]
 };
 
 // Stub für Befugten-DB — wird manuell gepflegt
@@ -600,7 +638,9 @@ function renderWizard() {
       btn.dataset.ziel = zk;
       const total = p.monate_total ? `${p.monate_total} Mo` : "";
       const sub = p.nur_hinweis ? "Nur Übergangs-Hinweis (Detail nicht modelliert)" :
-                  (p.kategorie === "zusatz_weiterbildung" ? `Zusatz-WB · ${total}` : `Facharzt-WB · ${total}`);
+                  (p.kategorie === "zusatz_weiterbildung" ? `Zusatz-WB · ${total}` :
+                   p.kategorie === "facharzt_aufbau"      ? `Aufbau-WB · ${total}` :
+                                                            `Facharzt-WB · ${total}`);
       btn.innerHTML = `<span class="wb-card-title">${escapeHtml(p.label)}</span>
                        <span class="wb-card-sub">${escapeHtml(sub)} — ${escapeHtml(p.quelle)}</span>`;
       btn.addEventListener('click', () => { state.ziel = zk; saveState(); afterWizardChange(); });
