@@ -265,6 +265,44 @@ section.wb-phase {
 .wb-stack-legend-item {
   display: inline-flex; align-items: center; gap: 6px;
 }
+
+/* Vertikale Block-Liste — klare Hierarchie pro Baustein */
+.wb-block-list {
+  display: flex; flex-direction: column; gap: 8px;
+  margin-top: 4px;
+}
+.wb-block-row {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 8px 10px;
+  border-radius: 5px;
+  background: rgba(0,0,0,0.025);
+}
+.wb-block-row .wb-legend-dot {
+  width: 14px; height: 14px; border-radius: 3px;
+  flex-shrink: 0; margin-top: 3px;
+}
+.wb-block-info { flex: 1; min-width: 0; }
+.wb-block-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: 13px; gap: 8px;
+}
+.wb-block-label { font-weight: 600; color: var(--wb-fg); }
+.wb-block-mo {
+  color: var(--wb-primary); font-weight: 700;
+  font-variant-numeric: tabular-nums; flex-shrink: 0;
+}
+.wb-block-rule {
+  font-size: 11px; color: var(--wb-warn); font-style: italic; margin-top: 3px;
+}
+.wb-block-details {
+  font-size: 12px; color: var(--wb-muted); line-height: 1.45; margin-top: 4px;
+}
+.wb-block-row.wb-block-sub {
+  margin-top: 6px; margin-left: 14px;
+  padding: 6px 10px;
+  background: rgba(0,0,0,0.04);
+  border-left: 2px solid var(--wb-border);
+}
 .wb-legend-dot {
   width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0;
   display: inline-block;
@@ -601,14 +639,15 @@ const PFADE = {
         // 'frueheste_wb_monate' = Reihenfolge-Bedingung: dieser Block kann erst angerechnet
         // werden, wenn vorher mind. X Monate Gesamt-WB absolviert sind.
         blocks: [
-          {key:"stationaer", label:"Stationäre Patientenversorgung", mo_min:30},
-          {key:"notfall",    label:"Notfallaufnahme",                mo_min:6, frueheste_wb_monate:12},
-          {key:"intensiv",   label:"Intensivmedizin",                mo_min:6, frueheste_wb_monate:24},
-          {key:"sonstige",   label:"Übrige Innere-Inhalte",          mo_min:0}
+          {key:"stationaer", label:"Stationäre Patientenversorgung", mo_min:30,
+           details: "Auf internistischen Stationen in mindestens 3 verschiedenen FA-Kompetenzen — typischerweise eine Kombination aus Kardiologie, Gastroenterologie, Pneumologie, Hämatologie/Onkologie, Endokrinologie/Diabetologie, Nephrologie, Rheumatologie, Infektiologie oder Geriatrie. Inhalte: Diagnostik und Therapie internistischer Krankheitsbilder, multimorbide und geriatrische Patienten, Ernährungs- und Schmerzmanagement, Hygiene und Antibiotic Stewardship. Max. 36 Mo in derselben FA-Kompetenz."},
+          {key:"notfall",    label:"Notfallaufnahme",                mo_min:6, frueheste_wb_monate:12,
+           details: "Zentrale interdisziplinäre Notaufnahme: Triage, Erstdiagnostik (EKG, Labor, Sonographie, Bildgebung), Akutbehandlung internistischer Notfälle, Übergabe an Stationen oder Intensivmedizin."},
+          {key:"intensiv",   label:"Intensivmedizin",                mo_min:6, frueheste_wb_monate:24,
+           details: "Internistische oder interdisziplinäre Intensivstation: Beatmungs- und Kreislaufmanagement, Sepsis, Schock, Reanimation, Indikationsstellung Nierenersatzverfahren, Pharmakotherapie kritisch Kranker."}
         ],
         constraints: [
-          // Quelle: WBO 2021 B 13.1: „können maximal 36 Monate in derselben Facharztkompetenz abgeleistet werden"
-          {type:"hinweis", text:"Max. 36 Mo in derselben FA-Kompetenz; min. 3 verschiedene FA-Kompetenzen des Gebiets."}
+          {type:"hinweis", text:"Insgesamt müssen mind. 3 verschiedene FA-Kompetenzen des Gebiets Innere abgeleistet werden — die übrigen 18 Mo („frei wählbar“) dienen typischerweise der Vertiefung in einer angestrebten Schwerpunkt-Kompetenz (z.B. Kardiologie, Gastro)."}
         ]
       },
       // Quelle: WBO 2021, Abschn. B 13.9 „Facharzt für Innere Medizin und Nephrologie", S. 179
@@ -619,12 +658,18 @@ const PFADE = {
         quelle: "WBO Berlin 2021, Abschn. B 13.9, S. 179",
         monate_total: 72,
         blocks: [
-          {key:"stationaer",   label:"Stationäre Patientenversorgung",                       mo_min:24},
-          {key:"innere_nephro",label:"Innere Medizin und Nephrologie (inkl. 6 Mo Dialyse)",  mo_min:36},
-          {key:"dialyse",      label:"… davon Dialyse",                                      mo_min:6, parent:"innere_nephro"},
-          {key:"andere_komp",  label:"≥2 andere FA-Kompetenzen des Gebiets Innere",          mo_min:24},
-          {key:"notfall",      label:"Notfallaufnahme",                                      mo_min:6, frueheste_wb_monate:12},
-          {key:"intensiv",     label:"Intensivmedizin",                                      mo_min:6, frueheste_wb_monate:24}
+          {key:"stationaer",   label:"Stationäre Patientenversorgung",                       mo_min:24,
+           details: "Auf internistischen Stationen — Grundversorgung wie im FA Innere."},
+          {key:"innere_nephro",label:"Innere Medizin und Nephrologie",                       mo_min:36,
+           details: "Auf nephrologischer Station und im Dialyse-Zentrum unter Befugnis Nephrologie: akute und chronische Nierenerkrankungen, Glomerulonephritiden, Vaskulitiden, Hypertensiologie, Wasser-/Elektrolyt-/Säure-Basen-Haushalt, Transplantationsmedizin (prä- und post-NTX), Schwangerschaftsnephrologie."},
+          {key:"dialyse",      label:"… davon Dialyse",                                      mo_min:6, parent:"innere_nephro",
+           details: "Hämodialyse, Hämofiltration, Hämodiafiltration, Peritonealdialyse (intermittierend und kontinuierlich), therapeutische Apherese (Plasmapherese, Lipidapherese, Immunadsorption), Anlage von Dialyse-Kathetern, Shunt-Versorgung."},
+          {key:"andere_komp",  label:"≥ 2 andere FA-Kompetenzen Innere",                     mo_min:24,
+           details: "In mindestens 2 weiteren FA-Kompetenzen des Gebiets Innere — typisch je 12 Mo (z.B. Kardiologie + Gastroenterologie, oder Pneumologie + Hämato-Onkologie). Wichtig für die Breite der internistischen Ausbildung."},
+          {key:"notfall",      label:"Notfallaufnahme",                                      mo_min:6, frueheste_wb_monate:12,
+           details: "Wie FA Innere — zentrale Notaufnahme, internistische Akutmedizin."},
+          {key:"intensiv",     label:"Intensivmedizin",                                      mo_min:6, frueheste_wb_monate:24,
+           details: "Wie FA Innere — internistische / interdisziplinäre Intensivstation."}
         ],
         constraints: [
           {type:"hinweis", text:"Übergangsbestimmung: Wer den alten „Schwerpunkt Nephrologie“ oder „FA Innere und Schwerpunkt Nephrologie“ besitzt, darf statt dessen die Bezeichnung „FA Innere und Nephrologie“ führen (WBO 2021 B 13.9)."}
@@ -658,7 +703,8 @@ const PFADE = {
         monate_total: 18,
         voraussetzung: "FA-Anerkennung (u.a. Innere Medizin, Anästhesiologie, Chirurgie, Kinder-/Jugendmedizin, Neurochirurgie, Neurologie)",
         blocks: [
-          {key:"intensiv_zwb", label:"Intensivmedizin unter Befugnis", mo_min:18}
+          {key:"intensiv_zwb", label:"Intensivmedizin unter Befugnis", mo_min:18,
+           details: "Internistische Intensivmedizin unter Befugnis ZWB: Beatmungsstrategien (NIV/HFNC/invasiv), hämodynamisches Monitoring, Sepsis-Bundle, Volumenmanagement, ECMO-/CRRT-Indikation, Detoxikation, Delir, Frührehabilitation, Hirntoddiagnostik. Richtzahlen: 10 perkutane Tracheotomien, 3 transvenöse Schrittmacher (WBO C 17 S. 367–368)."}
         ],
         constraints: [
           {type:"hinweis", text:"Bis zu 6 Mo der ZWB können aus der FA-Weiterbildung angerechnet werden, wenn dort bereits ≥12 Mo Intensivmedizin unter Befugnis absolviert wurden."},
@@ -1338,26 +1384,45 @@ function renderBausteinCard(pfad) {
     segments += `<div class="wb-stack-seg wb-c-sonstige" style="width:${fpct}%" title="Frei wählbar (Innere-Inhalte) — ${filler} Mo">${filler}</div>`;
   }
 
-  // Legende: jeder Block mit Mo + Reihenfolge-Hinweis
-  let legend = topBlocks.map(b => {
+  // Block-Liste: vertikal, jeder Block als eigene Karte mit Hinweis + Inhaltsbeschreibung
+  function blockRowHtml(b, isSub) {
     const cls = BLOCK_COLORS[b.key] || 'wb-c-sonstige';
-    const subForBlock = subBlocks.filter(s => s.parent === b.key);
-    const subLine = subForBlock.length ?
-      `<div class="wb-legend-rule" style="margin-left:18px;">↳ inkl. ${subForBlock.map(s => `${s.mo_min} Mo ${s.label.replace(/^…\s*davon\s*/i,"")}`).join(", ")}</div>` : "";
     const ruleLine = b.frueheste_wb_monate != null ?
-      `<div class="wb-legend-rule" style="margin-left:18px;">⏱ frühestens nach ${b.frueheste_wb_monate} Mo Gesamt-WB</div>` : "";
-    return `<div class="wb-stack-legend-item">
-              <span class="wb-legend-dot ${cls}"></span>
-              <span class="wb-legend-text">${escapeHtml(b.label)}</span>
-              <span class="wb-legend-mo">— ${b.mo_min} Mo</span>
-            </div>${subLine}${ruleLine}`;
-  }).join("");
+      `<div class="wb-block-rule">⏱ frühestens nach ${b.frueheste_wb_monate} Mo Gesamt-WB</div>` : "";
+    const detailsLine = b.details ?
+      `<div class="wb-block-details">${escapeHtml(b.details)}</div>` : "";
+    const subForBlock = subBlocks.filter(s => s.parent === b.key);
+    const subRows = subForBlock.map(s => blockRowHtml(s, true)).join("");
+    const labelText = isSub ? `↳ davon ${escapeHtml(s_strip(b.label))}` : escapeHtml(b.label);
+    return `
+      <div class="wb-block-row${isSub ? ' wb-block-sub' : ''}">
+        <span class="wb-legend-dot ${cls}"></span>
+        <div class="wb-block-info">
+          <div class="wb-block-head">
+            <span class="wb-block-label">${labelText}</span>
+            <span class="wb-block-mo">${b.mo_min} Mo</span>
+          </div>
+          ${ruleLine}
+          ${detailsLine}
+          ${subRows}
+        </div>
+      </div>`;
+  }
+  function s_strip(label) { return label.replace(/^…\s*davon\s*/i, ""); }
+
+  let blockList = topBlocks.map(b => blockRowHtml(b, false)).join("");
   if (filler > 0) {
-    legend += `<div class="wb-stack-legend-item">
-                 <span class="wb-legend-dot wb-c-sonstige"></span>
-                 <span class="wb-legend-text">Frei wählbar (weitere Innere-Inhalte)</span>
-                 <span class="wb-legend-mo">— ${filler} Mo</span>
-               </div>`;
+    blockList += `
+      <div class="wb-block-row">
+        <span class="wb-legend-dot wb-c-sonstige"></span>
+        <div class="wb-block-info">
+          <div class="wb-block-head">
+            <span class="wb-block-label">Frei wählbar (weitere Innere-Inhalte)</span>
+            <span class="wb-block-mo">${filler} Mo</span>
+          </div>
+          <div class="wb-block-details">Vertiefung in einer FA-Kompetenz oder Rotation in weitere Bereiche — keine spezifische WBO-Vorgabe, füllt die Mindestdauer von ${pfad.monate_total} Mo auf.</div>
+        </div>
+      </div>`;
   }
 
   const constraintsHtml = (pfad.constraints || []).length ? `
@@ -1372,7 +1437,7 @@ function renderBausteinCard(pfad) {
         Mindestdauer: <b>${pfad.monate_total} Monate</b>${pfad.voraussetzung ? ` · Voraussetzung: ${escapeHtml(pfad.voraussetzung)}` : ""}
       </div>
       <div class="wb-stack-bar">${segments}</div>
-      <div class="wb-stack-legend">${legend}</div>
+      <div class="wb-block-list">${blockList}</div>
       ${constraintsHtml}
       <div class="wb-baustein-quelle">${escapeHtml(pfad.quelle)}</div>
     </div>`;
