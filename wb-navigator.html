@@ -303,6 +303,43 @@ section.wb-phase {
   background: rgba(0,0,0,0.04);
   border-left: 2px solid var(--wb-border);
 }
+
+/* Setting-Pill — wo darf der Baustein stattfinden? */
+.wb-block-setting {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 500;
+  padding: 2px 8px; border-radius: 10px;
+  margin-top: 4px; margin-right: 6px;
+  white-space: nowrap;
+}
+.wb-setting-stat { background: #dbeafe; color: #1e3a5f; border: 1px solid #93c5fd; }
+.wb-setting-amb  { background: #fef3c7; color: #78350f; border: 1px solid #fbbf24; }
+.wb-setting-not  { background: #fef9c3; color: #713f12; border: 1px solid #facc15; }
+.wb-setting-int  { background: #fee2e2; color: #7f1d1d; border: 1px solid #fca5a5; }
+.wb-setting-dial { background: #d1fae5; color: #064e3b; border: 1px solid #6ee7b7; }
+
+/* Rotations-Banner — Highlight für die WBO-2021-Rotationspflicht */
+.wb-rotation-box {
+  background: linear-gradient(180deg, #fff7ed 0%, #ffedd5 100%);
+  border: 1px solid #fdba74;
+  border-left: 4px solid #ea580c;
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin: 12px 0;
+  font-size: 12px; line-height: 1.5;
+}
+.wb-rotation-head {
+  font-weight: 700; color: #9a3412; font-size: 13px;
+  margin-bottom: 6px;
+}
+.wb-rotation-list {
+  margin: 0; padding-left: 20px; color: #7c2d12;
+}
+.wb-rotation-list li { margin-bottom: 3px; }
+.wb-rotation-list li:last-child { margin-bottom: 0; }
+.wb-rotation-foot {
+  margin-top: 6px; font-size: 11px; color: #9a3412; font-style: italic;
+}
 .wb-legend-dot {
   width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0;
   display: inline-block;
@@ -638,16 +675,20 @@ const PFADE = {
         // Block-Liste: pro Block ein Soll-Minimum.
         // 'frueheste_wb_monate' = Reihenfolge-Bedingung: dieser Block kann erst angerechnet
         // werden, wenn vorher mind. X Monate Gesamt-WB absolviert sind.
+        rotation_pflicht: true,
         blocks: [
           {key:"stationaer", label:"Stationäre Patientenversorgung", mo_min:30,
-           details: "Auf internistischen Stationen in mindestens 3 verschiedenen FA-Kompetenzen — typischerweise eine Kombination aus Kardiologie, Gastroenterologie, Pneumologie, Hämatologie/Onkologie, Endokrinologie/Diabetologie, Nephrologie, Rheumatologie, Infektiologie oder Geriatrie. Inhalte: Diagnostik und Therapie internistischer Krankheitsbilder, multimorbide und geriatrische Patienten, Ernährungs- und Schmerzmanagement, Hygiene und Antibiotic Stewardship. Max. 36 Mo in derselben FA-Kompetenz."},
+           setting: "stationaer",
+           details: "Auf internistischen Bettenstationen — d.h. Patienten, die im Krankenhaus aufgenommen sind. NICHT in Sprechstunde / Ambulanz / Praxis. Typische Kompetenzen: Kardiologie, Gastroenterologie, Pneumologie, Hämatologie/Onkologie, Endokrinologie/Diabetologie, Nephrologie, Rheumatologie, Infektiologie oder Geriatrie. Inhalte: Diagnostik und Therapie internistischer Krankheitsbilder, multimorbide und geriatrische Patienten, Ernährungs- und Schmerzmanagement, Hygiene/Antibiotic Stewardship."},
           {key:"notfall",    label:"Notfallaufnahme",                mo_min:6, frueheste_wb_monate:12,
-           details: "Zentrale interdisziplinäre Notaufnahme: Triage, Erstdiagnostik (EKG, Labor, Sonographie, Bildgebung), Akutbehandlung internistischer Notfälle, Übergabe an Stationen oder Intensivmedizin."},
+           setting: "notfall",
+           details: "Zentrale interdisziplinäre Notaufnahme (ZNA): Triage, Erstdiagnostik (EKG, Labor, Sonographie, Bildgebung), Akutbehandlung internistischer Notfälle, Übergabe an Stationen oder Intensivmedizin."},
           {key:"intensiv",   label:"Intensivmedizin",                mo_min:6, frueheste_wb_monate:24,
-           details: "Internistische oder interdisziplinäre Intensivstation: Beatmungs- und Kreislaufmanagement, Sepsis, Schock, Reanimation, Indikationsstellung Nierenersatzverfahren, Pharmakotherapie kritisch Kranker."}
+           setting: "intensiv",
+           details: "Internistische oder interdisziplinäre Intensivstation: Beatmungs- und Kreislaufmanagement, Sepsis, Schock, Reanimation, Indikation Nierenersatzverfahren, Pharmakotherapie kritisch Kranker."}
         ],
         constraints: [
-          {type:"hinweis", text:"Insgesamt müssen mind. 3 verschiedene FA-Kompetenzen des Gebiets Innere abgeleistet werden — die übrigen 18 Mo („frei wählbar“) dienen typischerweise der Vertiefung in einer angestrebten Schwerpunkt-Kompetenz (z.B. Kardiologie, Gastro)."}
+          {type:"hinweis", text:"Die übrigen 18 Mo („frei wählbar“) können stationär oder ambulant abgeleistet werden — typisch für die Vertiefung in einer angestrebten Schwerpunkt-Kompetenz (z.B. Kardiologie, Gastro) oder für eine Praxis-/MVZ-Rotation."}
         ]
       },
       // Quelle: WBO 2021, Abschn. B 13.9 „Facharzt für Innere Medizin und Nephrologie", S. 179
@@ -657,18 +698,25 @@ const PFADE = {
         kategorie: "facharzt",
         quelle: "WBO Berlin 2021, Abschn. B 13.9, S. 179",
         monate_total: 72,
+        rotation_pflicht: true,
         blocks: [
           {key:"stationaer",   label:"Stationäre Patientenversorgung",                       mo_min:24,
-           details: "Auf internistischen Stationen — Grundversorgung wie im FA Innere."},
+           setting: "stationaer",
+           details: "Auf internistischen Bettenstationen (inpatient). NICHT in Sprechstunde / Ambulanz / Praxis."},
           {key:"innere_nephro",label:"Innere Medizin und Nephrologie",                       mo_min:36,
-           details: "Auf nephrologischer Station und im Dialyse-Zentrum unter Befugnis Nephrologie: akute und chronische Nierenerkrankungen, Glomerulonephritiden, Vaskulitiden, Hypertensiologie, Wasser-/Elektrolyt-/Säure-Basen-Haushalt, Transplantationsmedizin (prä- und post-NTX), Schwangerschaftsnephrologie."},
+           setting: "ambulant_moeglich",
+           details: "Stationär ODER ambulant unter Befugnis Nephrologie — d.h. nephrologische Station, Dialyse-Zentrum, nephrologische Sprechstunde, Hypertonie- oder Transplantations-Ambulanz. Inhalte: akute/chronische Nierenerkrankungen, Glomerulonephritiden, Vaskulitiden, Hypertensiologie, Wasser-/Elektrolyt-/Säure-Basen-Haushalt, Transplantationsmedizin (prä- und post-NTX), Schwangerschaftsnephrologie."},
           {key:"dialyse",      label:"… davon Dialyse",                                      mo_min:6, parent:"innere_nephro",
-           details: "Hämodialyse, Hämofiltration, Hämodiafiltration, Peritonealdialyse (intermittierend und kontinuierlich), therapeutische Apherese (Plasmapherese, Lipidapherese, Immunadsorption), Anlage von Dialyse-Kathetern, Shunt-Versorgung."},
+           setting: "dialyse",
+           details: "Hämodialyse, Hämofiltration, Hämodiafiltration, Peritonealdialyse, therapeutische Apherese (Plasma, Lipid, Immunadsorption), Anlage Dialyse-Katheter, Shunt-Versorgung. Typisch im Dialyse-Zentrum (stationär oder ambulant)."},
           {key:"andere_komp",  label:"≥ 2 andere FA-Kompetenzen Innere",                     mo_min:24,
-           details: "In mindestens 2 weiteren FA-Kompetenzen des Gebiets Innere — typisch je 12 Mo (z.B. Kardiologie + Gastroenterologie, oder Pneumologie + Hämato-Onkologie). Wichtig für die Breite der internistischen Ausbildung."},
+           setting: "ambulant_moeglich",
+           details: "In mindestens 2 weiteren FA-Kompetenzen des Gebiets Innere — typisch je 12 Mo (z.B. Kardiologie + Gastroenterologie, oder Pneumologie + Hämato-Onkologie). Kann stationär ODER in Ambulanz/Sprechstunde abgeleistet werden. Pflicht zur Rotation — Breite der internistischen Ausbildung."},
           {key:"notfall",      label:"Notfallaufnahme",                                      mo_min:6, frueheste_wb_monate:12,
+           setting: "notfall",
            details: "Wie FA Innere — zentrale Notaufnahme, internistische Akutmedizin."},
           {key:"intensiv",     label:"Intensivmedizin",                                      mo_min:6, frueheste_wb_monate:24,
+           setting: "intensiv",
            details: "Wie FA Innere — internistische / interdisziplinäre Intensivstation."}
         ],
         constraints: [
@@ -704,7 +752,8 @@ const PFADE = {
         voraussetzung: "FA-Anerkennung (u.a. Innere Medizin, Anästhesiologie, Chirurgie, Kinder-/Jugendmedizin, Neurochirurgie, Neurologie)",
         blocks: [
           {key:"intensiv_zwb", label:"Intensivmedizin unter Befugnis", mo_min:18,
-           details: "Internistische Intensivmedizin unter Befugnis ZWB: Beatmungsstrategien (NIV/HFNC/invasiv), hämodynamisches Monitoring, Sepsis-Bundle, Volumenmanagement, ECMO-/CRRT-Indikation, Detoxikation, Delir, Frührehabilitation, Hirntoddiagnostik. Richtzahlen: 10 perkutane Tracheotomien, 3 transvenöse Schrittmacher (WBO C 17 S. 367–368)."}
+           setting: "intensiv",
+           details: "Internistische Intensivmedizin unter ZWB-Befugnis: Beatmungsstrategien (NIV/HFNC/invasiv), hämodynamisches Monitoring, Sepsis-Bundle, Volumenmanagement, ECMO-/CRRT-Indikation, Detoxikation, Delir, Frührehabilitation, Hirntoddiagnostik. Richtzahlen: 10 perkutane Tracheotomien, 3 transvenöse Schrittmacher (WBO C 17 S. 367–368)."}
         ],
         constraints: [
           {type:"hinweis", text:"Bis zu 6 Mo der ZWB können aus der FA-Weiterbildung angerechnet werden, wenn dort bereits ≥12 Mo Intensivmedizin unter Befugnis absolviert wurden."},
@@ -1294,6 +1343,15 @@ document.getElementById('wb-add-stint').addEventListener('click', addStint);
 //  EDUKATIVE SEKTIONEN: Bausteine-Übersicht, Anrechnung, Richtzahlen
 // =========================================================================
 
+// Setting eines Bausteins — wo darf das stattfinden?
+const SETTING_LABELS = {
+  stationaer:        { icon: '🏥', label: 'Bettenstation (inpatient)',         tone: 'stat' },
+  ambulant_moeglich: { icon: '🚪', label: 'Stationär oder ambulant',           tone: 'amb' },
+  notfall:           { icon: '🚨', label: 'Zentrale Notaufnahme',              tone: 'not' },
+  intensiv:          { icon: '🫁', label: 'Intensivstation',                   tone: 'int' },
+  dialyse:           { icon: '⚕️',  label: 'Dialyse-Zentrum (stat. o. amb.)',   tone: 'dial' }
+};
+
 const BLOCK_COLORS = {
   stationaer:        'wb-c-stationaer',
   basis_stat:        'wb-c-stationaer',
@@ -1387,6 +1445,9 @@ function renderBausteinCard(pfad) {
   // Block-Liste: vertikal, jeder Block als eigene Karte mit Hinweis + Inhaltsbeschreibung
   function blockRowHtml(b, isSub) {
     const cls = BLOCK_COLORS[b.key] || 'wb-c-sonstige';
+    const setting = b.setting && SETTING_LABELS[b.setting] ? SETTING_LABELS[b.setting] : null;
+    const settingPill = setting ?
+      `<span class="wb-block-setting wb-setting-${setting.tone}">${setting.icon} ${escapeHtml(setting.label)}</span>` : "";
     const ruleLine = b.frueheste_wb_monate != null ?
       `<div class="wb-block-rule">⏱ frühestens nach ${b.frueheste_wb_monate} Mo Gesamt-WB</div>` : "";
     const detailsLine = b.details ?
@@ -1402,6 +1463,7 @@ function renderBausteinCard(pfad) {
             <span class="wb-block-label">${labelText}</span>
             <span class="wb-block-mo">${b.mo_min} Mo</span>
           </div>
+          ${settingPill}
           ${ruleLine}
           ${detailsLine}
           ${subRows}
@@ -1430,6 +1492,18 @@ function renderBausteinCard(pfad) {
       <ul>${pfad.constraints.map(c => `<li>${escapeHtml(c.text)}</li>`).join("")}</ul>
     </div>` : "";
 
+  // Rotations-Banner: WBO 2021 erzwingt frühe Rotation und Breite — nicht mehr lange Spezialisierung
+  const rotationBanner = pfad.rotation_pflicht ? `
+    <div class="wb-rotation-box">
+      <div class="wb-rotation-head">🔄 Rotations-Pflicht (WBO 2021)</div>
+      <ul class="wb-rotation-list">
+        <li><b>Mind. 3 verschiedene FA-Kompetenzen</b> Innere müssen rotiert werden — keine reine Mono-Spezialisierung</li>
+        <li><b>Max. 36 Mo in derselben FA-Kompetenz</b> — die Hälfte der WB-Zeit muss anders verbracht werden</li>
+        <li><b>Notfallaufnahme</b> erst ab dem 13. WB-Monat, <b>Intensivmedizin</b> erst ab dem 25. WB-Monat — frühe Stationen sollten daher in der Inneren liegen</li>
+      </ul>
+      <div class="wb-rotation-foot">Anders als die alte WBO 2004 erzwingt die neue WBO Breite vor Tiefe.</div>
+    </div>` : "";
+
   return `
     <div class="wb-baustein-card">
       <h3>${escapeHtml(pfad.label)}</h3>
@@ -1437,6 +1511,7 @@ function renderBausteinCard(pfad) {
         Mindestdauer: <b>${pfad.monate_total} Monate</b>${pfad.voraussetzung ? ` · Voraussetzung: ${escapeHtml(pfad.voraussetzung)}` : ""}
       </div>
       <div class="wb-stack-bar">${segments}</div>
+      ${rotationBanner}
       <div class="wb-block-list">${blockList}</div>
       ${constraintsHtml}
       <div class="wb-baustein-quelle">${escapeHtml(pfad.quelle)}</div>
