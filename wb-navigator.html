@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WB-Navigator Berlin — Weiterbildungs-Orientierung Innere/Nephrologie</title>
+<style>
+:root {
+  --wb-bg: #f4f6fa;
+  --wb-fg: #1f2937;
+  --wb-muted: #6b7280;
+  --wb-primary: #1e3a5f;
+  --wb-primary-soft: #e5edf7;
+  --wb-accent: #2563eb;
+  --wb-good: #16a34a;
+  --wb-warn: #d97706;
+  --wb-bad: #dc2626;
+  --wb-border: #d1d5db;
+  --wb-card-bg: #ffffff;
+  --wb-card-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.06);
+}
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--wb-bg);
+  color: var(--wb-fg);
+  line-height: 1.5;
+  font-size: 15px;
+}
+.wb-app { max-width: 1100px; margin: 0 auto; padding: 16px 20px 80px; }
+.wb-header { padding: 18px 0 4px; }
+.wb-header h1 { margin: 0 0 4px; font-size: 24px; color: var(--wb-primary); }
+.wb-header p { margin: 0; color: var(--wb-muted); font-size: 14px; }
+.wb-header .wb-source-link { font-size: 12px; }
+
+.wb-disclaimer {
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-left: 4px solid #d97706;
+  color: #78350f;
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin: 14px 0 18px;
+  font-size: 14px;
+}
+.wb-disclaimer b { color: #7c2d12; }
+
+section.wb-phase {
+  background: var(--wb-card-bg);
+  border: 1px solid var(--wb-border);
+  border-radius: 8px;
+  padding: 18px 20px;
+  margin-bottom: 16px;
+  box-shadow: var(--wb-card-shadow);
+}
+.wb-phase h2 {
+  margin: 0 0 12px; font-size: 18px; color: var(--wb-primary);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.wb-phase h2 .wb-edit-btn {
+  font-size: 12px; font-weight: normal; cursor: pointer;
+  background: transparent; border: 1px solid var(--wb-border); border-radius: 4px;
+  padding: 3px 8px; color: var(--wb-muted);
+}
+.wb-phase h2 .wb-edit-btn:hover { background: var(--wb-primary-soft); }
+
+/* Wizard */
+.wb-wizard-step { margin-bottom: 16px; }
+.wb-wizard-step:last-child { margin-bottom: 0; }
+.wb-wizard-step .wb-step-label {
+  font-weight: 600; font-size: 14px; color: var(--wb-primary); margin-bottom: 8px;
+}
+.wb-cards { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.wb-card-btn {
+  background: var(--wb-card-bg);
+  border: 2px solid var(--wb-border);
+  border-radius: 6px;
+  padding: 12px 14px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+  font-family: inherit; font-size: 14px; color: var(--wb-fg);
+  line-height: 1.4;
+}
+.wb-card-btn:hover { border-color: var(--wb-accent); background: var(--wb-primary-soft); }
+.wb-card-btn.wb-selected { border-color: var(--wb-primary); background: var(--wb-primary-soft); }
+.wb-card-btn .wb-card-title { font-weight: 600; display: block; }
+.wb-card-btn .wb-card-sub { font-size: 12px; color: var(--wb-muted); display: block; margin-top: 4px; }
+
+.wb-collapsed-summary {
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  font-size: 13px;
+}
+.wb-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: var(--wb-primary-soft); color: var(--wb-primary);
+  border-radius: 12px; padding: 3px 10px; font-size: 12px; font-weight: 500;
+}
+
+/* Pfad-Hinweis (für Pfade ohne Detail-Modellierung wie ZWB-Intensiv 2004) */
+.wb-info-block {
+  background: #eef2ff; border: 1px solid #c7d2fe; color: #3730a3;
+  padding: 12px 14px; border-radius: 6px; font-size: 14px;
+}
+.wb-info-block b { color: #1e1b4b; }
+
+/* Timeline */
+.wb-timeline-list { margin: 0; padding: 0; list-style: none; }
+.wb-stint {
+  display: grid;
+  grid-template-columns: 110px 110px 1fr 1fr 70px 32px;
+  gap: 8px; align-items: center;
+  padding: 8px 0; border-bottom: 1px solid #f3f4f6;
+}
+.wb-stint:last-child { border-bottom: none; }
+.wb-stint input, .wb-stint select {
+  padding: 5px 7px; font-size: 13px; border: 1px solid var(--wb-border); border-radius: 4px;
+  background: white; font-family: inherit;
+}
+.wb-stint input:focus, .wb-stint select:focus { outline: 2px solid var(--wb-accent); outline-offset: -1px; }
+.wb-stint .wb-stint-mo { text-align: right; color: var(--wb-muted); font-variant-numeric: tabular-nums; font-size: 13px; }
+.wb-stint .wb-del-btn {
+  background: transparent; border: 1px solid var(--wb-border); border-radius: 4px;
+  cursor: pointer; color: var(--wb-bad); width: 28px; height: 28px; padding: 0; font-size: 14px;
+}
+.wb-stint .wb-del-btn:hover { background: #fee2e2; }
+.wb-stint-header {
+  display: grid;
+  grid-template-columns: 110px 110px 1fr 1fr 70px 32px;
+  gap: 8px;
+  font-size: 11px; color: var(--wb-muted); text-transform: uppercase; letter-spacing: 0.04em;
+  padding: 4px 0; border-bottom: 1px solid var(--wb-border);
+}
+.wb-add-btn {
+  margin-top: 10px;
+  background: var(--wb-primary); color: white; border: none; border-radius: 4px;
+  padding: 7px 14px; cursor: pointer; font-size: 13px; font-family: inherit;
+}
+.wb-add-btn:hover { background: #142847; }
+
+.wb-totals {
+  display: flex; gap: 16px; flex-wrap: wrap;
+  margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--wb-border);
+  font-size: 13px;
+}
+.wb-totals .wb-totals-num { font-weight: 600; color: var(--wb-primary); }
+
+/* Auswertung */
+.wb-eval-block {
+  margin-bottom: 12px; padding: 10px 12px;
+  background: #fafbfc; border: 1px solid #e5e7eb; border-radius: 6px;
+}
+.wb-eval-block-head {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  font-size: 14px; margin-bottom: 5px;
+}
+.wb-eval-block-label { font-weight: 600; }
+.wb-eval-block-mo { color: var(--wb-muted); font-variant-numeric: tabular-nums; }
+.wb-bar {
+  height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden;
+}
+.wb-bar-fill { height: 100%; transition: width 0.3s ease; }
+.wb-bar-fill.wb-good { background: var(--wb-good); }
+.wb-bar-fill.wb-warn { background: var(--wb-warn); }
+.wb-bar-fill.wb-bad { background: var(--wb-bad); }
+.wb-eval-issues {
+  margin-top: 6px; font-size: 12px; color: var(--wb-bad);
+}
+.wb-eval-issues ul { margin: 4px 0 0 18px; padding: 0; }
+
+.wb-eval-summary {
+  background: var(--wb-primary-soft); padding: 12px 14px; border-radius: 6px;
+  margin-bottom: 14px; font-size: 14px;
+}
+.wb-eval-summary b { color: var(--wb-primary); }
+
+/* Buttons */
+.wb-btn-primary {
+  background: var(--wb-primary); color: white; border: none; border-radius: 4px;
+  padding: 8px 16px; cursor: pointer; font-size: 14px; font-family: inherit; font-weight: 500;
+}
+.wb-btn-primary:hover { background: #142847; }
+.wb-btn-secondary {
+  background: white; color: var(--wb-primary); border: 1px solid var(--wb-primary); border-radius: 4px;
+  padding: 8px 16px; cursor: pointer; font-size: 14px; font-family: inherit;
+}
+.wb-btn-secondary:hover { background: var(--wb-primary-soft); }
+
+/* Befugten-Liste */
+.wb-befugte-list { margin: 0; padding: 0; list-style: none; }
+.wb-befugter {
+  padding: 8px 10px; border-bottom: 1px solid #f3f4f6; font-size: 13px;
+  display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: baseline;
+}
+.wb-befugter .wb-bef-name { font-weight: 500; }
+.wb-befugter .wb-bef-meta { color: var(--wb-muted); font-size: 12px; }
+
+.wb-bef-filter { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.wb-bef-filter select, .wb-bef-filter input {
+  padding: 5px 8px; font-size: 13px; border: 1px solid var(--wb-border); border-radius: 4px;
+  font-family: inherit;
+}
+
+.wb-source-list { font-size: 12px; color: var(--wb-muted); margin-top: 8px; }
+.wb-source-list summary { cursor: pointer; }
+
+@media print {
+  body { background: white; font-size: 11pt; }
+  .wb-app { max-width: none; padding: 0; }
+  .wb-header { border-bottom: 2px solid #1e3a5f; padding-bottom: 8px; }
+  .wb-disclaimer { border: 1px solid #d97706; }
+  section.wb-phase { box-shadow: none; border: 1px solid #999; page-break-inside: avoid; }
+  .wb-add-btn, .wb-del-btn, .wb-edit-btn, .wb-btn-primary, .wb-btn-secondary, #wb-print-row, .wb-no-print { display: none !important; }
+  .wb-stint, .wb-stint-header { grid-template-columns: 90px 90px 1fr 1fr 50px; }
+  .wb-stint .wb-del-btn { display: none; }
+  .wb-card-btn { background: white !important; }
+}
+
+@media (max-width: 700px) {
+  .wb-stint, .wb-stint-header { grid-template-columns: 1fr 1fr; gap: 6px; }
+  .wb-stint-header { display: none; }
+  .wb-stint input, .wb-stint select { width: 100%; }
+}
+</style>
+</head>
+<body>
+<div class="wb-app">
+
+<header class="wb-header">
+  <h1>WB-Navigator Berlin</h1>
+  <p>Orientierungshilfe für die Weiterbildung Innere Medizin / Nephrologie / Intensivmedizin in Berlin</p>
+</header>
+
+<div class="wb-disclaimer" role="alert">
+  <b>⚠ Orientierungshilfe — keine verbindliche Auskunft.</b>
+  Dieses Tool ersetzt keine Beratung der Ärztekammer Berlin. Bei konkreten Fragen zur
+  Anrechenbarkeit von Weiterbildungszeiten, Übergangsregelungen oder Logbuch-Einträgen
+  bitte immer die <a href="https://www.aekb.de/aerzt-innen/weiterbildung" target="_blank" rel="noopener">Ärztekammer Berlin</a> direkt kontaktieren.
+</div>
+
+<!-- ============== PHASE 1: WIZARD ============== -->
+<section class="wb-phase" id="wb-phase-wizard">
+  <h2>1. Dein Pfad</h2>
+
+  <!-- Schritt 0: WBO -->
+  <div class="wb-wizard-step" id="wb-step-wbo">
+    <div class="wb-step-label">Schritt 0 — Nach welcher Weiterbildungsordnung machst du deine WB?</div>
+    <div class="wb-cards" id="wb-wbo-cards">
+      <button type="button" class="wb-card-btn" data-wbo="wbo2021">
+        <span class="wb-card-title">Neue WBO (2021)</span>
+        <span class="wb-card-sub">In Kraft seit 30.11.2022 — Standard für neu begonnene WB</span>
+      </button>
+      <button type="button" class="wb-card-btn" data-wbo="wbo2004">
+        <span class="wb-card-title">Alte WBO (2004)</span>
+        <span class="wb-card-sub">Übergang nach § 21 WBO 2021 — FA-Abschluss bis 30.11.2029 möglich</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Schritt 1: Status -->
+  <div class="wb-wizard-step" id="wb-step-status" hidden>
+    <div class="wb-step-label">Schritt 1 — Was ist dein aktueller Status?</div>
+    <div class="wb-cards" id="wb-status-cards">
+      <button type="button" class="wb-card-btn" data-status="kein_fa">
+        <span class="wb-card-title">Noch kein Facharzt</span>
+        <span class="wb-card-sub">In laufender FA-Weiterbildung oder vor Beginn</span>
+      </button>
+      <button type="button" class="wb-card-btn" data-status="fa_innere">
+        <span class="wb-card-title">FA Innere Medizin (anerkannt)</span>
+        <span class="wb-card-sub">Facharzturkunde Innere Medizin liegt vor</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Schritt 2: Ziel -->
+  <div class="wb-wizard-step" id="wb-step-ziel" hidden>
+    <div class="wb-step-label">Schritt 2 — Was möchtest du erreichen?</div>
+    <div class="wb-cards" id="wb-ziel-cards"></div>
+  </div>
+</section>
+
+<!-- ============== PHASE 2: TIMELINE ============== -->
+<section class="wb-phase" id="wb-phase-timeline" hidden>
+  <h2>
+    2. Bisherige Weiterbildungs-Stationen
+    <button type="button" class="wb-edit-btn" id="wb-back-to-wizard">← Pfad ändern</button>
+  </h2>
+
+  <div id="wb-pfad-info" class="wb-info-block" style="margin-bottom: 12px;"></div>
+
+  <!-- bei rein hinweisbasierten Pfaden (ZWB Intensiv 2004) wird nur ein Info-Block gezeigt -->
+  <div id="wb-timeline-input">
+    <p style="color: var(--wb-muted); font-size: 13px; margin: 0 0 10px;">
+      Trag jede Weiterbildungs-Station chronologisch ein (Beginn → Ende, Klinik, primärer Bereich).
+      Halbe Monate lassen sich über die Datumswahl abbilden — Standard ist „Monat zählt voll".
+    </p>
+    <div class="wb-stint-header" aria-hidden="true">
+      <div>Beginn</div>
+      <div>Ende</div>
+      <div>Klinik / Abteilung</div>
+      <div>Bereich</div>
+      <div style="text-align:right">Monate</div>
+      <div></div>
+    </div>
+    <ul class="wb-timeline-list" id="wb-stints"></ul>
+    <button type="button" class="wb-add-btn" id="wb-add-stint">+ Station hinzufügen</button>
+
+    <div class="wb-totals" id="wb-totals"></div>
+  </div>
+</section>
+
+<!-- ============== PHASE 3: AUSWERTUNG ============== -->
+<section class="wb-phase" id="wb-phase-eval" hidden>
+  <h2>
+    3. Lückenanalyse
+    <span id="wb-print-row">
+      <button type="button" class="wb-btn-secondary" onclick="window.print()">Drucken / PDF</button>
+    </span>
+  </h2>
+  <div id="wb-eval-content"></div>
+</section>
+
+<!-- ============== BEFUGTE ============== -->
+<section class="wb-phase wb-no-print">
+  <h2>Weiterbildungsbefugte in Berlin</h2>
+  <div class="wb-bef-filter">
+    <input type="text" id="wb-bef-search" placeholder="Suchen (Name, Klinik, Bezirk)…" />
+    <select id="wb-bef-pfad">
+      <option value="">Alle Pfade</option>
+      <option value="fa_innere">FA Innere</option>
+      <option value="fa_innere_nephro">FA Innere u. Nephrologie</option>
+      <option value="zwb_intensivmedizin">ZWB Intensivmedizin</option>
+    </select>
+  </div>
+  <ul class="wb-befugte-list" id="wb-bef-list"></ul>
+  <p style="font-size: 12px; color: var(--wb-muted); margin-top: 12px;">
+    Diese Liste wird manuell gepflegt und ist <b>nicht vollständig</b>.
+    Vollständiges Verzeichnis:
+    <a href="https://www.aekb.de/service-kontakt/verzeichnisse/verzeichnis-der-weiterbildungsbefugten" target="_blank" rel="noopener">aekb.de — Verzeichnis der Weiterbildungsbefugten</a>.
+  </p>
+</section>
+
+<details class="wb-source-list wb-no-print">
+  <summary>Regulatorische Quellen (klick für Details)</summary>
+  <ul>
+    <li>WBO Berlin 2021 (mit 2. Änderung, in Kraft 01.04.2025) — Abschn. B 13.1 (S. 122), 13.9 (S. 179); Abschn. C 17 (S. 364); § 21 (S. 18–19)</li>
+    <li>WBO Berlin 2004 (konsolidierte Fassung mit 11. Nachtrag) — 13.1 (S. 63), 13.8 (S. 73); ZWB Intensivmedizin C-14 (S. 134, im Tool nur als Hinweis)</li>
+    <li>Übergangsregelung § 21 WBO 2021: FA-WB nach alter WBO bis 30.11.2029, Schwerpunkt/ZWB bis 30.11.2025</li>
+  </ul>
+</details>
+
+</div><!-- /.wb-app -->
+
+<script>
+'use strict';
+
+// =========================================================================
+//  PFAD-DATEN
+//  Jede regulatorische Aussage hat eine Quellenangabe (Quelle: ...)
+//  Datenbasis:
+//    - WBO Berlin 2021 (mit 2. Änderung, 13.11.2024, In-Kraft 01.04.2025)
+//    - WBO Berlin 2004 (konsolidierte Fassung mit 11. Nachtrag, 10.10.2018)
+//  Beide PDFs liegen in /Users/dzickler/Dropbox/Claude/ÄK/.
+// =========================================================================
+
+const PFADE = {
+  wbo2021: {
+    label: "WBO Berlin 2021",
+    sub: "in Kraft seit 30.11.2022",
+    pfade: {
+      // Quelle: WBO 2021, Abschn. B 13.1 „Facharzt/Fachärztin für Innere Medizin", S. 122
+      fa_innere: {
+        label: "Facharzt/Fachärztin für Innere Medizin",
+        kurz: "FA Innere Medizin",
+        kategorie: "facharzt",
+        quelle: "WBO Berlin 2021, Abschn. B 13.1, S. 122",
+        monate_total: 60,
+        // Block-Liste: pro Block ein Soll-Minimum.
+        // 'frueheste_wb_monate' = Reihenfolge-Bedingung: dieser Block kann erst angerechnet
+        // werden, wenn vorher mind. X Monate Gesamt-WB absolviert sind.
+        blocks: [
+          {key:"stationaer", label:"Stationäre Patientenversorgung", mo_min:30},
+          {key:"notfall",    label:"Notfallaufnahme",                mo_min:6, frueheste_wb_monate:12},
+          {key:"intensiv",   label:"Intensivmedizin",                mo_min:6, frueheste_wb_monate:24},
+          {key:"sonstige",   label:"Übrige Innere-Inhalte",          mo_min:0}
+        ],
+        constraints: [
+          // Quelle: WBO 2021 B 13.1: „können maximal 36 Monate in derselben Facharztkompetenz abgeleistet werden"
+          {type:"hinweis", text:"Max. 36 Mo in derselben FA-Kompetenz; min. 3 verschiedene FA-Kompetenzen des Gebiets."}
+        ]
+      },
+      // Quelle: WBO 2021, Abschn. B 13.9 „Facharzt/Fachärztin für Innere Medizin und Nephrologie", S. 179
+      fa_innere_nephro: {
+        label: "Facharzt/Fachärztin für Innere Medizin und Nephrologie",
+        kurz: "FA Innere und Nephrologie",
+        kategorie: "facharzt",
+        quelle: "WBO Berlin 2021, Abschn. B 13.9, S. 179",
+        monate_total: 72,
+        blocks: [
+          {key:"stationaer",   label:"Stationäre Patientenversorgung",                       mo_min:24},
+          {key:"innere_nephro",label:"Innere Medizin und Nephrologie (inkl. 6 Mo Dialyse)",  mo_min:36},
+          {key:"dialyse",      label:"… davon Dialyse",                                      mo_min:6, parent:"innere_nephro"},
+          {key:"andere_komp",  label:"≥2 andere FA-Kompetenzen des Gebiets Innere",          mo_min:24},
+          {key:"notfall",      label:"Notfallaufnahme",                                      mo_min:6, frueheste_wb_monate:12},
+          {key:"intensiv",     label:"Intensivmedizin",                                      mo_min:6, frueheste_wb_monate:24}
+        ],
+        constraints: [
+          {type:"hinweis", text:"Übergangsbestimmung: Wer den alten „Schwerpunkt Nephrologie" oder „FA Innere und Schwerpunkt Nephrologie" besitzt, darf statt dessen die Bezeichnung „FA Innere und Nephrologie" führen (WBO 2021 B 13.9)."}
+        ]
+      },
+      // Quelle: WBO 2021, Abschn. C 17 „Zusatz-Weiterbildung Intensivmedizin", S. 364
+      zwb_intensivmedizin: {
+        label: "Zusatz-Weiterbildung Intensivmedizin (Internistisch)",
+        kurz: "ZWB Intensivmedizin",
+        kategorie: "zusatz_weiterbildung",
+        quelle: "WBO Berlin 2021, Abschn. C 17, S. 364",
+        monate_total: 18,
+        voraussetzung: "FA-Anerkennung (u.a. Innere Medizin, Anästhesiologie, Chirurgie, Kinder-/Jugendmedizin, Neurochirurgie, Neurologie)",
+        blocks: [
+          {key:"intensiv_zwb", label:"Intensivmedizin unter Befugnis", mo_min:18}
+        ],
+        constraints: [
+          {type:"hinweis", text:"Bis zu 6 Mo der ZWB können aus der FA-Weiterbildung angerechnet werden, wenn dort bereits ≥12 Mo Intensivmedizin unter Befugnis absolviert wurden."},
+          {type:"hinweis", text:"Bezeichnungs-Zusatz „Internistische Intensivmedizin" zulässig (WBO 2021 C 17)."}
+        ]
+      }
+    }
+  },
+
+  wbo2004: {
+    label: "WBO Berlin 2004",
+    sub: "außer Kraft seit 30.11.2022 — Übergang § 21 WBO 2021",
+    uebergang: {
+      facharzt: "FA-Abschluss nach alter WBO bis 30.11.2029 möglich (§ 21 Abs. 4 WBO 2021)",
+      schwerpunkt: "Schwerpunkt-Abschluss bis 30.11.2025 (§ 21 Abs. 5)",
+      zusatz: "ZWB-Abschluss bis 30.11.2025 (§ 21 Abs. 6)"
+    },
+    pfade: {
+      // Quelle: WBO 2004 (konsolidierte Fassung, 11. Nachtrag), 13.1 „Facharzt/Fachärztin für Innere Medizin", S. 63
+      fa_innere: {
+        label: "Facharzt/Fachärztin für Innere Medizin (alte WBO)",
+        kurz: "FA Innere Medizin (2004)",
+        kategorie: "facharzt",
+        quelle: "WBO Berlin 2004, 13.1, S. 63",
+        monate_total: 60,
+        blocks: [
+          {key:"basis_stat",        label:"Stationäre Basis-WB Innere",                              mo_min:24},
+          {key:"basis_unmittelbar", label:"Gebiete unmittelbarer Patientenvers. (auch ambulant, auch Beginn-WB)", mo_min:12},
+          {key:"stat_2_komp",       label:"Stationäre WB Innere in ≥2 verschiedenen FA-Kompetenzen", mo_min:24},
+          {key:"intensiv",          label:"Internistische / interdisz. Intensivstation",             mo_min:6,  frueheste_wb_monate:24}
+        ],
+        constraints: [
+          {type:"hinweis", text:"Stationäre Basis-WB: max. 12 Mo in derselben FA-Kompetenz."},
+          {type:"hinweis", text:"Bei den 24 Mo „2 versch. FA-Kompetenzen" können max. 12 Mo einer in der Basis bereits abgeleisteten Kompetenz entsprechen."}
+        ]
+      },
+      // Quelle: WBO 2004, 13.8 „Facharzt/Fachärztin für Innere Medizin und Nephrologie", S. 73
+      fa_innere_nephro: {
+        label: "Facharzt/Fachärztin für Innere Medizin und Nephrologie (alte WBO)",
+        kurz: "FA Innere und Nephrologie (2004)",
+        kategorie: "facharzt",
+        quelle: "WBO Berlin 2004, 13.8, S. 73",
+        monate_total: 72,
+        blocks: [
+          {key:"basis_stat",        label:"Stationäre Basis-WB Innere",                              mo_min:24},
+          {key:"basis_unmittelbar", label:"Gebiete unmittelbarer Patientenvers.",                    mo_min:12},
+          {key:"nephro",            label:"Nephrologie",                                             mo_min:36},
+          {key:"dialyse",           label:"… davon Dialyse (obligat)",                               mo_min:6,  parent:"nephro"},
+          {key:"intensiv",          label:"Internistische / interdisz. Intensivstation",             mo_min:6,  frueheste_wb_monate:24}
+        ],
+        constraints: [
+          {type:"hinweis", text:"Bis zu 18 Mo der Nephrologie-Zeit können im ambulanten Bereich abgeleistet werden."},
+          {type:"hinweis", text:"Übergangsbestimmung WBO 2021 B 13.9: Schwerpunkt Nephrologie kann automatisch in „FA Innere und Nephrologie" (neue Bezeichnung) umgewandelt werden."}
+        ]
+      },
+      // Quelle: WBO 2004, C-14 Intensivmedizin, S. 134 — Detail nicht modelliert, nur Hinweis
+      zwb_intensivmedizin: {
+        label: "Zusatz-Weiterbildung Intensivmedizin (alte WBO)",
+        kurz: "ZWB Intensivmedizin (2004)",
+        kategorie: "zusatz_weiterbildung",
+        quelle: "WBO Berlin 2004, Abschn. C-14, S. 134",
+        nur_hinweis: true,
+        hinweis_text:
+          "Die Detailregeln der ZWB Intensivmedizin nach alter WBO 2004 sind in diesem Tool nicht modelliert. " +
+          "Übergangsfrist nach § 21 Abs. 6 WBO 2021: Abschluss nach alter WBO bis 30.11.2025 möglich. " +
+          "Bitte zur konkreten Anrechenbarkeit direkt die Ärztekammer Berlin kontaktieren."
+      }
+    }
+  }
+};
+
+// Welche Ziele sind nach Status verfügbar?
+// (nicht auf "kein_fa" beschränkt, weil "fa_innere bereits anerkannt" → fa_innere_nephro über Anrechnung möglich)
+const ZIELE_NACH_STATUS = {
+  kein_fa: ["fa_innere", "fa_innere_nephro"],
+  fa_innere: ["fa_innere_nephro", "zwb_intensivmedizin"]
+};
+
+// Stub für Befugten-DB — wird manuell gepflegt
+const BEFUGTE = [
+  // Beispiel-Eintrag — bitte mit echten Daten aus aekb.de/service-kontakt/verzeichnisse füllen
+  // { name: "Prof. Dr. ...", klinik: "Charité CCM", bezirk: "Mitte", pfad: "fa_innere_nephro", monate: 72, stand: "2025-01", url: "..." }
+];
+
+// =========================================================================
+//  STATE + PERSISTENCE
+// =========================================================================
+
+const LS_KEY = "wb-navigator-state-v1";
+const state = {
+  wbo: null,        // 'wbo2021' | 'wbo2004'
+  status: null,     // 'kein_fa' | 'fa_innere'
+  ziel: null,       // pfad-key
+  stints: []        // [{id, beginn:'YYYY-MM', ende:'YYYY-MM', klinik, bereich}]
+};
+
+function saveState() {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) { /* ignore */ }
+}
+function loadState() {
+  try {
+    const s = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
+    if (s.wbo) state.wbo = s.wbo;
+    if (s.status) state.status = s.status;
+    if (s.ziel) state.ziel = s.ziel;
+    if (Array.isArray(s.stints)) state.stints = s.stints;
+  } catch (e) { /* ignore */ }
+}
+
+// =========================================================================
+//  HELPERS
+// =========================================================================
+
+function getPfad() {
+  if (!state.wbo || !state.ziel) return null;
+  return PFADE[state.wbo].pfade[state.ziel];
+}
+
+// "YYYY-MM" → Datums-Epoche (vereinfacht: Jahre*12 + Monat)
+function ymToIdx(ym) {
+  if (!ym || !/^\d{4}-\d{2}$/.test(ym)) return null;
+  const [y, m] = ym.split("-").map(Number);
+  return y * 12 + (m - 1);
+}
+// Stationsdauer in Monaten (inklusive: Mai bis Mai = 1 Mo? Konvention: ende-beginn+1)
+function stintMonths(stint) {
+  const a = ymToIdx(stint.beginn);
+  const b = ymToIdx(stint.ende);
+  if (a == null || b == null || b < a) return 0;
+  return b - a + 1;
+}
+function totalMonths() {
+  return state.stints.reduce((s, st) => s + stintMonths(st), 0);
+}
+// Cumulative Monate vor einer Position (chronologisch sortiert)
+function cumulativeBeforeStart(stint, sortedStints) {
+  const startIdx = ymToIdx(stint.beginn);
+  if (startIdx == null) return 0;
+  let cum = 0;
+  for (const s of sortedStints) {
+    if (s === stint) continue;
+    const e = ymToIdx(s.ende);
+    if (e != null && e < startIdx) cum += stintMonths(s);
+  }
+  return cum;
+}
+
+// =========================================================================
+//  WIZARD
+// =========================================================================
+
+function renderWizard() {
+  // Schritt 0
+  document.querySelectorAll('#wb-wbo-cards .wb-card-btn').forEach(btn => {
+    btn.classList.toggle('wb-selected', btn.dataset.wbo === state.wbo);
+  });
+
+  // Schritt 1 nur sichtbar wenn WBO gewählt
+  const stepStatus = document.getElementById('wb-step-status');
+  stepStatus.hidden = !state.wbo;
+  document.querySelectorAll('#wb-status-cards .wb-card-btn').forEach(btn => {
+    btn.classList.toggle('wb-selected', btn.dataset.status === state.status);
+  });
+
+  // Schritt 2 nur sichtbar wenn Status gewählt — Optionen abhängig vom Status
+  const stepZiel = document.getElementById('wb-step-ziel');
+  stepZiel.hidden = !state.wbo || !state.status;
+  if (state.wbo && state.status) {
+    const zieleKeys = ZIELE_NACH_STATUS[state.status] || [];
+    const wboPfade = PFADE[state.wbo].pfade;
+    const cardsHost = document.getElementById('wb-ziel-cards');
+    cardsHost.innerHTML = "";
+    zieleKeys.forEach(zk => {
+      const p = wboPfade[zk];
+      if (!p) return;
+      const btn = document.createElement('button');
+      btn.type = "button";
+      btn.className = "wb-card-btn" + (state.ziel === zk ? " wb-selected" : "");
+      btn.dataset.ziel = zk;
+      const total = p.monate_total ? `${p.monate_total} Mo` : "";
+      const sub = p.nur_hinweis ? "Nur Übergangs-Hinweis (Detail nicht modelliert)" :
+                  (p.kategorie === "zusatz_weiterbildung" ? `Zusatz-WB · ${total}` : `Facharzt-WB · ${total}`);
+      btn.innerHTML = `<span class="wb-card-title">${escapeHtml(p.label)}</span>
+                       <span class="wb-card-sub">${escapeHtml(sub)} — ${escapeHtml(p.quelle)}</span>`;
+      btn.addEventListener('click', () => { state.ziel = zk; saveState(); afterWizardChange(); });
+      cardsHost.appendChild(btn);
+    });
+  }
+}
+
+function afterWizardChange() {
+  renderWizard();
+  if (state.wbo && state.status && state.ziel) {
+    showTimelineAndEval();
+  } else {
+    document.getElementById('wb-phase-timeline').hidden = true;
+    document.getElementById('wb-phase-eval').hidden = true;
+  }
+}
+
+document.querySelectorAll('#wb-wbo-cards .wb-card-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    state.wbo = btn.dataset.wbo;
+    // Wenn Status/Ziel mit neuer WBO inkompatibel sind, behalten wir sie und prüfen unten erneut
+    if (state.ziel && !PFADE[state.wbo].pfade[state.ziel]) state.ziel = null;
+    saveState();
+    afterWizardChange();
+  });
+});
+document.querySelectorAll('#wb-status-cards .wb-card-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    state.status = btn.dataset.status;
+    if (state.ziel && !(ZIELE_NACH_STATUS[state.status] || []).includes(state.ziel)) state.ziel = null;
+    saveState();
+    afterWizardChange();
+  });
+});
+
+// =========================================================================
+//  TIMELINE
+// =========================================================================
+
+function showTimelineAndEval() {
+  const pfad = getPfad();
+  if (!pfad) return;
+  document.getElementById('wb-phase-timeline').hidden = false;
+
+  // Pfad-Info-Block
+  const info = document.getElementById('wb-pfad-info');
+  let infoHtml = `<b>${escapeHtml(pfad.label)}</b><br>` +
+                 `<span style="font-size:12px;">${escapeHtml(pfad.quelle)}` +
+                 (pfad.monate_total ? ` · Mindestdauer: ${pfad.monate_total} Monate` : "") +
+                 `</span>`;
+  if (pfad.voraussetzung) {
+    infoHtml += `<br><span style="font-size:12px;">Voraussetzung: ${escapeHtml(pfad.voraussetzung)}</span>`;
+  }
+  info.innerHTML = infoHtml;
+
+  // Bei reinen Hinweis-Pfaden: Timeline-Eingabe ausblenden
+  const timelineInput = document.getElementById('wb-timeline-input');
+  if (pfad.nur_hinweis) {
+    timelineInput.innerHTML = `<div class="wb-info-block"><b>Hinweis:</b> ${escapeHtml(pfad.hinweis_text)}</div>`;
+    document.getElementById('wb-phase-eval').hidden = true;
+    return;
+  }
+
+  // Timeline-Header und Liste neu rendern (falls vorher Hinweis-Pfad gezeigt war)
+  if (!document.getElementById('wb-stints')) {
+    timelineInput.innerHTML = `
+      <p style="color: var(--wb-muted); font-size: 13px; margin: 0 0 10px;">
+        Trag jede Weiterbildungs-Station chronologisch ein (Beginn → Ende, Klinik, primärer Bereich).
+        Halbe Monate lassen sich über die Datumswahl abbilden — Standard ist „Monat zählt voll".
+      </p>
+      <div class="wb-stint-header" aria-hidden="true">
+        <div>Beginn</div><div>Ende</div><div>Klinik / Abteilung</div>
+        <div>Bereich</div><div style="text-align:right">Monate</div><div></div>
+      </div>
+      <ul class="wb-timeline-list" id="wb-stints"></ul>
+      <button type="button" class="wb-add-btn" id="wb-add-stint">+ Station hinzufügen</button>
+      <div class="wb-totals" id="wb-totals"></div>`;
+    document.getElementById('wb-add-stint').addEventListener('click', addStint);
+  }
+  renderStints();
+  renderEval();
+  document.getElementById('wb-phase-eval').hidden = false;
+}
+
+function addStint() {
+  state.stints.push({
+    id: "s" + Date.now() + "-" + Math.random().toString(36).slice(2, 6),
+    beginn: "", ende: "", klinik: "", bereich: ""
+  });
+  saveState();
+  renderStints();
+  renderEval();
+}
+
+function delStint(id) {
+  state.stints = state.stints.filter(s => s.id !== id);
+  saveState();
+  renderStints();
+  renderEval();
+}
+
+function renderStints() {
+  const pfad = getPfad();
+  if (!pfad) return;
+  const ul = document.getElementById('wb-stints');
+  if (!ul) return;
+  ul.innerHTML = "";
+
+  // Bereich-Optionen aus Pfad-Blocks (ohne reine Container-Subblocks)
+  const bereichOpts = pfad.blocks.map(b =>
+    `<option value="${escapeAttr(b.key)}">${escapeHtml(b.label)}</option>`
+  ).join("");
+
+  state.stints.forEach((s, i) => {
+    const li = document.createElement('li');
+    li.className = "wb-stint";
+    li.innerHTML = `
+      <input type="month" value="${escapeAttr(s.beginn)}" data-field="beginn" data-id="${s.id}" />
+      <input type="month" value="${escapeAttr(s.ende)}"  data-field="ende"   data-id="${s.id}" />
+      <input type="text"  value="${escapeAttr(s.klinik)}" data-field="klinik" data-id="${s.id}" placeholder="z.B. Charité CCM, Nephrologie" />
+      <select data-field="bereich" data-id="${s.id}">
+        <option value="">— wählen —</option>
+        ${bereichOpts.replace(`value="${escapeAttr(s.bereich)}"`, `value="${escapeAttr(s.bereich)}" selected`)}
+      </select>
+      <span class="wb-stint-mo">${stintMonths(s)} Mo</span>
+      <button type="button" class="wb-del-btn" data-del="${s.id}" title="Station löschen">×</button>
+    `;
+    ul.appendChild(li);
+  });
+
+  // Listeners
+  ul.querySelectorAll('input, select').forEach(el => {
+    el.addEventListener('input', onStintChange);
+    el.addEventListener('change', onStintChange);
+  });
+  ul.querySelectorAll('.wb-del-btn').forEach(b => {
+    b.addEventListener('click', () => delStint(b.dataset.del));
+  });
+
+  // Totals
+  const totals = document.getElementById('wb-totals');
+  if (totals) {
+    const total = totalMonths();
+    const soll = pfad.monate_total || 0;
+    totals.innerHTML = `<div>Gesamt eingetragen: <span class="wb-totals-num">${total}</span> Monate</div>` +
+                       (soll ? `<div>Sollwert: <span class="wb-totals-num">${soll}</span> Monate</div>` : "") +
+                       (soll ? `<div>Differenz: <span class="wb-totals-num">${total - soll}</span> Mo</div>` : "");
+  }
+}
+
+function onStintChange(e) {
+  const id = e.target.dataset.id;
+  const field = e.target.dataset.field;
+  const stint = state.stints.find(s => s.id === id);
+  if (!stint) return;
+  stint[field] = e.target.value;
+  saveState();
+  // Monate-Anzeige live updaten — minimal: nur die Mo-Zelle dieser Zeile aktualisieren
+  const row = e.target.closest('.wb-stint');
+  if (row) row.querySelector('.wb-stint-mo').textContent = stintMonths(stint) + " Mo";
+  renderEval();
+  // Totals live updaten
+  const pfad = getPfad();
+  const totals = document.getElementById('wb-totals');
+  if (pfad && totals) {
+    const total = totalMonths();
+    const soll = pfad.monate_total || 0;
+    totals.innerHTML = `<div>Gesamt eingetragen: <span class="wb-totals-num">${total}</span> Monate</div>` +
+                       (soll ? `<div>Sollwert: <span class="wb-totals-num">${soll}</span> Monate</div>` : "") +
+                       (soll ? `<div>Differenz: <span class="wb-totals-num">${total - soll}</span> Mo</div>` : "");
+  }
+}
+
+// =========================================================================
+//  AUSWERTUNG / LÜCKENANALYSE (Variante B: streng, mit Reihenfolge-Prüfung)
+// =========================================================================
+
+function renderEval() {
+  const pfad = getPfad();
+  const host = document.getElementById('wb-eval-content');
+  if (!pfad || !host || pfad.nur_hinweis) return;
+
+  // Stints chronologisch sortieren (für Reihenfolge-Check)
+  const sorted = state.stints.slice().sort((a, b) => {
+    const ai = ymToIdx(a.beginn) ?? Number.MAX_SAFE_INTEGER;
+    const bi = ymToIdx(b.beginn) ?? Number.MAX_SAFE_INTEGER;
+    return ai - bi;
+  });
+
+  // Pro Block: Summe valider Monate + Liste der Reihenfolge-Verstöße
+  const blockResults = {};
+  pfad.blocks.forEach(b => { blockResults[b.key] = { ok_mo: 0, reihenfolge_violations: [] }; });
+
+  sorted.forEach(st => {
+    const mo = stintMonths(st);
+    if (!mo || !st.bereich) return;
+    const block = pfad.blocks.find(b => b.key === st.bereich);
+    if (!block) return;
+
+    // Reihenfolge-Check
+    if (block.frueheste_wb_monate != null) {
+      const cumBefore = cumulativeBeforeStart(st, sorted);
+      if (cumBefore < block.frueheste_wb_monate) {
+        blockResults[block.key].reihenfolge_violations.push({
+          stint: st,
+          cumBefore: cumBefore,
+          required: block.frueheste_wb_monate
+        });
+      }
+    }
+    blockResults[block.key].ok_mo += mo;
+  });
+
+  // Gesamtfortschritt
+  const total = totalMonths();
+  const soll = pfad.monate_total || 0;
+  const totalPct = soll ? Math.min(100, Math.round((total / soll) * 100)) : 0;
+  const totalCls = total >= soll ? "wb-good" : (total >= soll * 0.5 ? "wb-warn" : "wb-bad");
+
+  let html = `
+    <div class="wb-eval-summary">
+      <div><b>Gesamtfortschritt:</b> ${total} / ${soll} Monate (${totalPct}%)</div>
+      <div class="wb-bar" style="margin-top: 6px;"><div class="wb-bar-fill ${totalCls}" style="width:${totalPct}%"></div></div>
+    </div>
+  `;
+
+  // Pro Block
+  pfad.blocks.forEach(b => {
+    const r = blockResults[b.key];
+    const min = b.mo_min || 0;
+    const have = r.ok_mo;
+    const pct = min ? Math.min(100, Math.round((have / min) * 100)) : (have > 0 ? 100 : 0);
+    const cls = have >= min ? "wb-good" : (have >= min * 0.5 ? "wb-warn" : "wb-bad");
+    const violations = r.reihenfolge_violations;
+
+    html += `
+      <div class="wb-eval-block">
+        <div class="wb-eval-block-head">
+          <span class="wb-eval-block-label">${escapeHtml(b.label)}</span>
+          <span class="wb-eval-block-mo">${have} / ${min} Mo</span>
+        </div>
+        <div class="wb-bar"><div class="wb-bar-fill ${cls}" style="width:${pct}%"></div></div>
+        ${b.frueheste_wb_monate != null ? `<div style="font-size:11px;color:var(--wb-muted);margin-top:4px;">Reihenfolge: frühestens nach ${b.frueheste_wb_monate} Mo Gesamt-WB</div>` : ""}
+        ${violations.length ? `<div class="wb-eval-issues"><b>Reihenfolge-Verstoß:</b><ul>${
+          violations.map(v => `<li>Station „${escapeHtml(v.stint.klinik || "(ohne Klinik)")}" beginnt bei kum. ${v.cumBefore} Mo (Anforderung: ${v.required} Mo).</li>`).join("")
+        }</ul></div>` : ""}
+      </div>
+    `;
+  });
+
+  // Constraints / Hinweise
+  if (pfad.constraints && pfad.constraints.length) {
+    html += `<div class="wb-eval-block" style="background:#fffbeb;border-color:#fde68a;">
+      <div class="wb-eval-block-label" style="color:#92400e;">Wichtige Hinweise / Nebenbedingungen</div>
+      <ul style="margin:6px 0 0 18px;padding:0;font-size:13px;">
+        ${pfad.constraints.map(c => `<li>${escapeHtml(c.text)}</li>`).join("")}
+      </ul>
+    </div>`;
+  }
+
+  // Übergangsfristen wenn alte WBO
+  if (state.wbo === "wbo2004") {
+    const u = PFADE.wbo2004.uebergang;
+    html += `<div class="wb-info-block" style="margin-top:10px;">
+      <b>Übergangsregelung § 21 WBO 2021:</b>
+      <ul style="margin:6px 0 0 18px;padding:0;">
+        <li>${escapeHtml(u.facharzt)}</li>
+        <li>${escapeHtml(u.schwerpunkt)}</li>
+        <li>${escapeHtml(u.zusatz)}</li>
+      </ul>
+    </div>`;
+  }
+
+  host.innerHTML = html;
+}
+
+// =========================================================================
+//  BEFUGTE
+// =========================================================================
+
+function renderBefugte() {
+  const ul = document.getElementById('wb-bef-list');
+  const q = (document.getElementById('wb-bef-search').value || "").toLowerCase().trim();
+  const pfad = document.getElementById('wb-bef-pfad').value;
+  ul.innerHTML = "";
+  const filtered = BEFUGTE.filter(b => {
+    if (pfad && b.pfad !== pfad) return false;
+    if (q) {
+      const hay = [b.name, b.klinik, b.bezirk].join(" ").toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  if (filtered.length === 0) {
+    ul.innerHTML = `<li style="padding:14px;color:var(--wb-muted);font-size:13px;text-align:center;">
+      ${BEFUGTE.length === 0 ? "Liste wird gepflegt — bitte vorerst direkt im Verzeichnis der ÄK Berlin nachschauen." : "Keine Treffer mit diesen Filtern."}
+    </li>`;
+    return;
+  }
+  filtered.forEach(b => {
+    const li = document.createElement('li');
+    li.className = "wb-befugter";
+    const pfadLbl = (PFADE.wbo2021.pfade[b.pfad] || PFADE.wbo2004.pfade[b.pfad] || {}).kurz || b.pfad;
+    li.innerHTML = `
+      <div>
+        <div class="wb-bef-name">${escapeHtml(b.name)}</div>
+        <div class="wb-bef-meta">${escapeHtml(b.klinik)} · ${escapeHtml(b.bezirk || "")}</div>
+      </div>
+      <div class="wb-bef-meta">${escapeHtml(pfadLbl)}</div>
+      <div class="wb-bef-meta">${b.monate ? b.monate + " Mo" : ""}</div>
+    `;
+    ul.appendChild(li);
+  });
+}
+document.getElementById('wb-bef-search').addEventListener('input', renderBefugte);
+document.getElementById('wb-bef-pfad').addEventListener('change', renderBefugte);
+
+document.getElementById('wb-back-to-wizard').addEventListener('click', () => {
+  document.getElementById('wb-phase-timeline').hidden = true;
+  document.getElementById('wb-phase-eval').hidden = true;
+  document.getElementById('wb-phase-wizard').scrollIntoView({behavior: 'smooth', block: 'start'});
+});
+
+// =========================================================================
+//  HELPERS
+// =========================================================================
+function escapeHtml(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, m => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[m]));
+}
+function escapeAttr(s) { return escapeHtml(s); }
+
+// =========================================================================
+//  INIT
+// =========================================================================
+loadState();
+renderWizard();
+if (state.wbo && state.status && state.ziel) showTimelineAndEval();
+renderBefugte();
+</script>
+</body>
+</html>
