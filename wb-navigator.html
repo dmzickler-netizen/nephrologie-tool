@@ -1058,16 +1058,18 @@ function onStintChange(e) {
   const stint = state.stints.find(s => s.id === id);
   if (!stint) return;
   // Datums-Felder kommen als field="beginn-yr"/"beginn-mo"/"ende-yr"/"ende-mo"
-  // — wir setzen jeweils Jahr/Monat in den Stint und reassemblieren "YYYY-MM"
+  // — wir lesen jeweils beide Selects (Jahr+Monat) frisch aus dem DOM und
+  // reassemblieren "YYYY-MM". So überleben wir auch unvollständige Eingaben:
+  // erst Jahr setzen → leerer Monat → stint bleibt "", aber DOM hält Jahr,
+  // sobald Monat gesetzt wird, kommt das Jahr beim Lesen wieder dazu.
   const dm = field.match(/^(beginn|ende)-(yr|mo)$/);
   if (dm) {
-    const which = dm[1]; // beginn|ende
-    const part  = dm[2]; // yr|mo
-    const cur = stint[which] || "";
-    let y = "", m = "";
-    if (/^\d{4}-\d{2}$/.test(cur)) { y = cur.slice(0,4); m = cur.slice(5,7); }
-    if (part === 'yr') y = e.target.value;
-    if (part === 'mo') m = e.target.value;
+    const which = dm[1]; // 'beginn' | 'ende'
+    const li = e.target.closest('.wb-stint');
+    const ySel = li ? li.querySelector(`select[data-field="${which}-yr"]`) : null;
+    const mSel = li ? li.querySelector(`select[data-field="${which}-mo"]`) : null;
+    const y = ySel ? ySel.value : "";
+    const m = mSel ? mSel.value : "";
     stint[which] = (y && m) ? `${y}-${m}` : "";
   } else {
     stint[field] = e.target.value;
