@@ -222,6 +222,158 @@ section.wb-phase {
   .wb-stint-header { display: none; }
   .wb-stint input, .wb-stint select { width: 100%; }
 }
+
+/* ============== EDUKATIVE SEKTIONEN ============== */
+.wb-section-intro { font-size: 14px; color: var(--wb-muted); margin: 0 0 14px; }
+
+/* Bausteine-Übersicht: drei Karten */
+.wb-overview-grid {
+  display: grid; gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+.wb-baustein-card {
+  border: 1px solid var(--wb-border); border-radius: 8px;
+  padding: 14px; background: #fafbfc;
+}
+.wb-baustein-card h3 {
+  margin: 0 0 4px; font-size: 15px; color: var(--wb-primary);
+}
+.wb-baustein-card .wb-baustein-meta {
+  font-size: 12px; color: var(--wb-muted); margin-bottom: 10px;
+}
+.wb-baustein-card .wb-baustein-quelle {
+  font-size: 11px; color: var(--wb-muted); margin-top: 8px; font-style: italic;
+}
+
+/* Stacked horizontal bar */
+.wb-stack-bar {
+  display: flex; height: 28px; border-radius: 4px; overflow: hidden;
+  margin-bottom: 8px; border: 1px solid var(--wb-border);
+  font-size: 11px;
+}
+.wb-stack-seg {
+  display: flex; align-items: center; justify-content: center;
+  color: #1f2937; font-weight: 600;
+  border-right: 1px solid rgba(255,255,255,0.6);
+  white-space: nowrap; overflow: hidden;
+}
+.wb-stack-seg:last-child { border-right: none; }
+.wb-stack-legend {
+  display: flex; flex-wrap: wrap; gap: 8px 14px;
+  font-size: 12px; line-height: 1.4;
+}
+.wb-stack-legend-item {
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.wb-legend-dot {
+  width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0;
+  display: inline-block;
+}
+.wb-legend-text { color: var(--wb-fg); }
+.wb-legend-mo { color: var(--wb-muted); font-variant-numeric: tabular-nums; }
+.wb-legend-rule { color: var(--wb-muted); font-size: 11px; font-style: italic; }
+.wb-baustein-hinweise {
+  margin-top: 8px; font-size: 12px; color: var(--wb-muted);
+}
+.wb-baustein-hinweise ul { margin: 4px 0 0 16px; padding: 0; }
+
+/* Block-Farben (semantisch) */
+.wb-c-stationaer  { background: #bfdbfe; }   /* hellblau */
+.wb-c-innere      { background: #dbeafe; }   /* sehr hell */
+.wb-c-andere_komp { background: #c4b5fd; }   /* lila */
+.wb-c-nephro      { background: #6ee7b7; }   /* grün */
+.wb-c-dialyse     { background: #34d399; color: #064e3b; }   /* dunkelgrün */
+.wb-c-notfall     { background: #fcd34d; }   /* gelb */
+.wb-c-intensiv    { background: #fca5a5; }   /* rot/rosa */
+.wb-c-sonstige    { background: #e5e7eb; }   /* grau */
+
+/* Anrechnungs-Diagramm */
+.wb-anr-flow {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 12px; align-items: center;
+  margin-bottom: 14px;
+}
+.wb-anr-box {
+  background: white; border: 2px solid var(--wb-border); border-radius: 8px;
+  padding: 12px 14px; text-align: center; font-size: 13px;
+}
+.wb-anr-box.wb-anr-have { border-color: #16a34a; background: #f0fdf4; }
+.wb-anr-box.wb-anr-need { border-color: #2563eb; background: #eff6ff; }
+.wb-anr-box .wb-anr-box-label { font-size: 11px; color: var(--wb-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+.wb-anr-box .wb-anr-box-title { font-weight: 600; color: var(--wb-primary); font-size: 14px; }
+.wb-anr-box .wb-anr-box-mo { font-size: 22px; font-weight: 700; color: var(--wb-primary); margin-top: 4px; }
+.wb-anr-arrow {
+  font-size: 28px; color: var(--wb-muted);
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+}
+.wb-anr-arrow-label { font-size: 11px; color: var(--wb-muted); white-space: nowrap; }
+
+.wb-anr-table {
+  width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 6px;
+}
+.wb-anr-table th, .wb-anr-table td {
+  text-align: left; padding: 7px 10px; border-bottom: 1px solid #f3f4f6;
+  vertical-align: top;
+}
+.wb-anr-table th {
+  font-size: 11px; color: var(--wb-muted); text-transform: uppercase; letter-spacing: 0.04em;
+  background: #fafbfc;
+}
+.wb-anr-table td.wb-anr-status { width: 30px; font-size: 16px; }
+.wb-anr-table td.wb-anr-status.wb-anr-yes { color: var(--wb-good); }
+.wb-anr-table td.wb-anr-status.wb-anr-no  { color: var(--wb-bad); }
+.wb-anr-table td.wb-anr-mo { width: 80px; font-variant-numeric: tabular-nums; text-align: right; color: var(--wb-muted); }
+.wb-anr-table tr.wb-anr-rest td {
+  background: #fef3c7; font-weight: 600;
+}
+
+.wb-anr-conclusion {
+  margin-top: 12px; padding: 12px 14px; border-radius: 6px;
+  background: var(--wb-primary-soft); color: var(--wb-primary);
+  font-size: 14px; font-weight: 500;
+}
+.wb-anr-conclusion .wb-anr-conclusion-num {
+  font-size: 22px; font-weight: 700; margin: 0 4px;
+}
+
+/* Richtzahlen */
+.wb-richt-grid {
+  display: grid; gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  margin-top: 10px;
+}
+.wb-richt-card {
+  background: #fafbfc; border: 1px solid var(--wb-border); border-radius: 6px;
+  padding: 10px 12px;
+}
+.wb-richt-card .wb-richt-cat {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--wb-muted); margin-bottom: 6px;
+}
+.wb-richt-item {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
+  padding: 4px 0; border-bottom: 1px dashed #e5e7eb; font-size: 13px;
+}
+.wb-richt-item:last-child { border-bottom: none; }
+.wb-richt-num {
+  font-weight: 700; color: var(--wb-primary); font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.wb-richt-label { flex: 1; }
+
+/* Verbindender Text und Akkordeon */
+.wb-collapsible { margin-top: 10px; }
+.wb-collapsible summary {
+  cursor: pointer; font-weight: 500; color: var(--wb-primary);
+  padding: 6px 0; font-size: 13px;
+}
+.wb-collapsible[open] summary { margin-bottom: 8px; }
+
+@media (max-width: 700px) {
+  .wb-anr-flow { grid-template-columns: 1fr; }
+  .wb-anr-arrow { transform: rotate(90deg); margin: 4px 0; }
+}
 </style>
 </head>
 <body>
@@ -239,9 +391,68 @@ section.wb-phase {
   bitte immer die <a href="https://www.aekb.de/aerzt-innen/weiterbildung" target="_blank" rel="noopener">Ärztekammer Berlin</a> direkt kontaktieren.
 </div>
 
+<!-- ============== EDUKATIV 1: BAUSTEINE ============== -->
+<section class="wb-phase">
+  <h2>1. Aus welchen Bausteinen besteht die Weiterbildung?</h2>
+  <p class="wb-section-intro">
+    Jede Facharzt-Weiterbildung in der Inneren Medizin ist ein 60-/72-monatiges Curriculum aus
+    Pflichtbausteinen unter Befugnis. Die Reihenfolge mancher Bausteine ist vorgeschrieben
+    (z.B. Notaufnahme erst nach 12 Mo Gesamt-WB, Intensivmedizin erst nach 24 Mo).
+  </p>
+  <div class="wb-overview-grid" id="wb-overview-grid"></div>
+  <p class="wb-legend-rule" style="margin-top: 12px;">
+    Hinweis: Die Bausteinsummen einzelner Wege addieren sich rechnerisch über die Mindestdauer hinaus —
+    in der Praxis überlappen sich Inhalte (eine Station Nephrologie kann gleichzeitig Notaufnahmen-Dienste enthalten).
+    Die jeweils maßgebliche Mindestdauer steht in der Karte.
+  </p>
+</section>
+
+<!-- ============== EDUKATIV 2: ANRECHNUNG ============== -->
+<section class="wb-phase">
+  <h2>2. Was wird angerechnet, wenn du schon FA Innere bist?</h2>
+  <p class="wb-section-intro">
+    Rechtsgrundlage: <b>§ 4 Abs. 9 WBO Berlin 2021</b> — beim Erwerb einer weiteren Facharztbezeichnung
+    kann die Weiterbildungszeit „im Einzelfall um höchstens die Hälfte der Mindestdauer" verkürzt werden.
+    Die ÄK Berlin entscheidet auf Antrag (Logbuch + Bescheid).
+  </p>
+
+  <h3 style="font-size:15px;color:var(--wb-primary);margin:18px 0 8px;">FA Innere → FA Innere und Nephrologie</h3>
+  <div id="wb-anr-nephro"></div>
+
+  <h3 style="font-size:15px;color:var(--wb-primary);margin:22px 0 8px;">FA Innere → Zusatz-Weiterbildung Internistische Intensivmedizin</h3>
+  <div id="wb-anr-intensiv"></div>
+
+  <details class="wb-collapsible">
+    <summary>Übergangsregelungen § 21 WBO 2021 (klick für Details)</summary>
+    <div class="wb-info-block">
+      <ul style="margin:0;padding-left:20px;font-size:13px;">
+        <li><b>Abs. 4 (laufende FA-WB):</b> Wer am 30.11.2022 in laufender FA-WB war, darf nach alter WBO 2004 bis <b>30.11.2029</b> abschließen.</li>
+        <li><b>Abs. 5 (laufende Schwerpunkt-WB):</b> Frist <b>30.11.2025</b>, Voraussetzung „in laufender WB am 30.11.2022".</li>
+        <li><b>Abs. 6 (laufende Zusatz-WB):</b> Frist <b>30.11.2025</b>.</li>
+        <li><b>Schwerpunkt Nephrologie alt:</b> Bezeichnung in Berlin schon mit 11. Nachtrag (2019) durch „FA Innere und Nephrologie" ersetzt — Altinhaber dürfen die neue Bezeichnung automatisch führen.</li>
+      </ul>
+    </div>
+  </details>
+</section>
+
+<!-- ============== EDUKATIV 3: RICHTZAHLEN ============== -->
+<section class="wb-phase">
+  <h2>3. Logbuch-Richtzahlen Nephrologie (WBO 2021 B 13.9)</h2>
+  <p class="wb-section-intro">
+    Mindestmengen aus dem eLogbuch der ÄK Berlin (B 13.9, S. 181–185). Alle Untersuchungen / Eingriffe
+    müssen unter Befugnis Nephrologie selbst durchgeführt und im eLogbuch dokumentiert werden —
+    Übernahme aus FA Innere ist nur möglich, soweit dort schon nephrologie-relevante Inhalte unter passender
+    Befugnis erbracht wurden.
+  </p>
+  <div class="wb-richt-grid" id="wb-richt-grid"></div>
+  <p class="wb-legend-rule" style="margin-top: 12px;">
+    Quelle: WBO Berlin 2021 (mit 2. Änderung, in Kraft 01.04.2025), Abschn. B 13.9 „Innere Medizin und Nephrologie", Spalte „Richtzahl" S. 181–185.
+  </p>
+</section>
+
 <!-- ============== PHASE 1: WIZARD ============== -->
 <section class="wb-phase" id="wb-phase-wizard">
-  <h2>1. Dein Pfad</h2>
+  <h2>4. Dein individueller Plan</h2>
 
   <!-- Schritt 0: WBO -->
   <div class="wb-wizard-step" id="wb-step-wbo">
@@ -283,7 +494,7 @@ section.wb-phase {
 <!-- ============== PHASE 2: TIMELINE ============== -->
 <section class="wb-phase" id="wb-phase-timeline" hidden>
   <h2>
-    2. Bisherige Weiterbildungs-Stationen
+    5. Bisherige Weiterbildungs-Stationen
     <button type="button" class="wb-edit-btn" id="wb-back-to-wizard">← Pfad ändern</button>
   </h2>
 
@@ -313,7 +524,7 @@ section.wb-phase {
 <!-- ============== PHASE 3: AUSWERTUNG ============== -->
 <section class="wb-phase" id="wb-phase-eval" hidden>
   <h2>
-    3. Lückenanalyse
+    6. Lückenanalyse
     <span id="wb-print-row">
       <button type="button" class="wb-btn-secondary" onclick="window.print()">Drucken / PDF</button>
     </span>
@@ -969,6 +1180,230 @@ document.getElementById('wb-back-to-wizard').addEventListener('click', () => {
 document.getElementById('wb-add-stint').addEventListener('click', addStint);
 
 // =========================================================================
+//  EDUKATIVE SEKTIONEN: Bausteine-Übersicht, Anrechnung, Richtzahlen
+// =========================================================================
+
+const BLOCK_COLORS = {
+  stationaer:        'wb-c-stationaer',
+  basis_stat:        'wb-c-stationaer',
+  basis_unmittelbar: 'wb-c-innere',
+  innere_nephro:     'wb-c-nephro',
+  nephro:            'wb-c-nephro',
+  dialyse:           'wb-c-dialyse',
+  andere_komp:       'wb-c-andere_komp',
+  stat_2_komp:       'wb-c-andere_komp',
+  notfall:           'wb-c-notfall',
+  intensiv:          'wb-c-intensiv',
+  intensiv_zwb:      'wb-c-intensiv',
+  sonstige:          'wb-c-sonstige'
+};
+
+// Logbuch-Richtzahlen B 13.9 WBO Berlin 2021 (S. 181–185)
+const RICHTZAHLEN_NEPHRO = [
+  { kategorie: "Sonographie", items: [
+    { label: "B-Mode Sono Abdomen / Nieren / ableitende Harnwege", richtzahl: 400 },
+    { label: "B-Mode Sono Schilddrüse + Nebenschilddrüsen",         richtzahl: 150 },
+    { label: "Duplex abdominell / retroperitoneal / mediastinal",   richtzahl: 100 },
+    { label: "Duplex Extremitäten + Dialyse-Shunts (arteriell)",    richtzahl: 100 },
+    { label: "Duplex Extremitäten + Dialyse-Shunts (venös)",        richtzahl: 100 }
+  ]},
+  { kategorie: "Dialyse / Apherese", items: [
+    { label: "Hämodialyse / Hämofiltration / HDF (intermittierend + kontinuierlich)", richtzahl: 2000 },
+    { label: "Peritonealdialyse (intermittierend + kontinuierlich)",                  richtzahl: 100 },
+    { label: "Therapeutische Apherese (Plasma, Lipid, Immunadsorption)",              richtzahl: 30 },
+    { label: "Anlage Katheter zur extrakorporalen Therapie",                          richtzahl: 50 }
+  ]},
+  { kategorie: "Diagnostik / Intervention", items: [
+    { label: "Nierenbiopsie — Durchführung und Interpretation", richtzahl: 20 }
+  ]}
+];
+
+// --- Bausteine-Übersicht: drei Wege als Stacked Bars ---
+function renderOverview() {
+  const host = document.getElementById('wb-overview-grid');
+  if (!host) return;
+  const wege = [
+    PFADE.wbo2021.pfade.fa_innere,
+    PFADE.wbo2021.pfade.fa_innere_nephro,
+    PFADE.wbo2021.pfade.zwb_intensivmedizin
+  ];
+  host.innerHTML = wege.map(renderBausteinCard).join("");
+}
+
+function renderBausteinCard(pfad) {
+  // Top-Level-Blöcke (ohne parent-Sub-Items wie "dialyse")
+  const topBlocks = pfad.blocks.filter(b => !b.parent);
+  const subBlocks = pfad.blocks.filter(b => b.parent);
+  const sumMo = topBlocks.reduce((s, b) => s + (b.mo_min || 0), 0);
+
+  // Stacked Bar: jede Top-Komponente proportional zu mo_min
+  const segments = topBlocks.map(b => {
+    const pct = sumMo ? (b.mo_min / sumMo * 100) : (100 / topBlocks.length);
+    const cls = BLOCK_COLORS[b.key] || 'wb-c-sonstige';
+    const lbl = b.mo_min >= 6 ? `${b.mo_min}` : '';
+    return `<div class="wb-stack-seg ${cls}" style="width:${pct.toFixed(2)}%" title="${escapeAttr(b.label)} — ${b.mo_min} Mo">${lbl}</div>`;
+  }).join("");
+
+  // Legende: jeder Block mit Mo + Reihenfolge-Hinweis
+  const legend = topBlocks.map(b => {
+    const cls = BLOCK_COLORS[b.key] || 'wb-c-sonstige';
+    const subForBlock = subBlocks.filter(s => s.parent === b.key);
+    const subLine = subForBlock.length ?
+      `<div class="wb-legend-rule" style="margin-left:18px;">↳ inkl. ${subForBlock.map(s => `${s.mo_min} Mo ${s.label.replace(/^…\s*davon\s*/i,"")}`).join(", ")}</div>` : "";
+    const ruleLine = b.frueheste_wb_monate != null ?
+      `<div class="wb-legend-rule" style="margin-left:18px;">⏱ frühestens nach ${b.frueheste_wb_monate} Mo Gesamt-WB</div>` : "";
+    return `<div class="wb-stack-legend-item">
+              <span class="wb-legend-dot ${cls}"></span>
+              <span class="wb-legend-text">${escapeHtml(b.label)}</span>
+              <span class="wb-legend-mo">— ${b.mo_min} Mo</span>
+            </div>${subLine}${ruleLine}`;
+  }).join("");
+
+  const constraintsHtml = (pfad.constraints || []).length ? `
+    <div class="wb-baustein-hinweise">
+      <ul>${pfad.constraints.map(c => `<li>${escapeHtml(c.text)}</li>`).join("")}</ul>
+    </div>` : "";
+
+  return `
+    <div class="wb-baustein-card">
+      <h3>${escapeHtml(pfad.label)}</h3>
+      <div class="wb-baustein-meta">
+        Mindestdauer: <b>${pfad.monate_total} Monate</b>${pfad.voraussetzung ? ` · Voraussetzung: ${escapeHtml(pfad.voraussetzung)}` : ""}
+      </div>
+      <div class="wb-stack-bar">${segments}</div>
+      <div class="wb-stack-legend">${legend}</div>
+      ${constraintsHtml}
+      <div class="wb-baustein-quelle">${escapeHtml(pfad.quelle)}</div>
+    </div>`;
+}
+
+// --- Anrechnungs-Diagramm: FA Innere → FA Innere und Nephrologie ---
+function renderAnrechnungNephro() {
+  const host = document.getElementById('wb-anr-nephro');
+  if (!host) return;
+  // Bausteine im 72-Mo-Pfad und ihre Anrechenbarkeit aus FA Innere
+  const rows = [
+    { label: "Stationäre Patientenversorgung",                pflicht: 24, an: 24, status: 'yes', erlaeuterung: "FA Innere fordert sogar 30 Mo stationär — vollständig anrechenbar." },
+    { label: "Mind. 2 weitere FA-Kompetenzen Innere",         pflicht: 24, an: 24, status: 'yes', erlaeuterung: "FA Innere fordert 3 Kompetenzen — vollständig anrechenbar." },
+    { label: "Notfallaufnahme",                               pflicht:  6, an:  6, status: 'yes', erlaeuterung: "Identische Anforderung in beiden Wegen." },
+    { label: "Intensivmedizin",                               pflicht:  6, an:  6, status: 'yes', erlaeuterung: "Identische Anforderung in beiden Wegen." },
+    { label: "Innere Medizin und Nephrologie (inkl. 6 Mo Dialyse)", pflicht: 36, an: 0, status: 'no', erlaeuterung: "Nephrologie-spezifisch — neu unter Befugnis Nephrologie zu absolvieren.", rest: true }
+  ];
+  const sumPflicht = rows.reduce((s, r) => s + r.pflicht, 0);
+  const sumAn      = rows.reduce((s, r) => s + r.an, 0);
+  const sumNoch    = sumPflicht - sumAn;
+
+  host.innerHTML = `
+    <div class="wb-anr-flow">
+      <div class="wb-anr-box wb-anr-have">
+        <div class="wb-anr-box-label">Du hast</div>
+        <div class="wb-anr-box-title">FA Innere Medizin</div>
+        <div class="wb-anr-box-mo">60 Mo</div>
+      </div>
+      <div class="wb-anr-arrow">
+        →
+        <span class="wb-anr-arrow-label">§ 4 Abs. 9 WBO 2021</span>
+        <span class="wb-anr-arrow-label">max. 50 % Anrechnung</span>
+      </div>
+      <div class="wb-anr-box wb-anr-need">
+        <div class="wb-anr-box-label">Ziel</div>
+        <div class="wb-anr-box-title">FA Innere und Nephrologie</div>
+        <div class="wb-anr-box-mo">72 Mo</div>
+      </div>
+    </div>
+
+    <table class="wb-anr-table">
+      <thead><tr>
+        <th></th><th>Pflichtbaustein B 13.9</th><th>Soll</th><th>Aus FA Innere</th><th>Erläuterung</th>
+      </tr></thead>
+      <tbody>
+        ${rows.map(r => `
+          <tr ${r.rest ? 'class="wb-anr-rest"' : ""}>
+            <td class="wb-anr-status wb-anr-${r.status === 'yes' ? 'yes' : 'no'}">${r.status === 'yes' ? '✓' : '✗'}</td>
+            <td>${escapeHtml(r.label)}</td>
+            <td class="wb-anr-mo">${r.pflicht} Mo</td>
+            <td class="wb-anr-mo">${r.an} Mo</td>
+            <td style="font-size:12px;color:var(--wb-muted);">${escapeHtml(r.erlaeuterung)}</td>
+          </tr>`).join("")}
+      </tbody>
+    </table>
+
+    <div class="wb-anr-conclusion">
+      Effektiv noch zu absolvieren:
+      <span class="wb-anr-conclusion-num">${sumNoch}</span>
+      Monate Nephrologie unter Befugnis (inkl. 6 Mo Dialyse) — entspricht der Anrechnungs-Obergrenze
+      von 50 % nach § 4 Abs. 9. Im Einzelfall entscheidet die ÄK Berlin per Anrechnungsbescheid.
+    </div>
+  `;
+}
+
+// --- Anrechnungs-Diagramm: FA Innere → ZWB Intensivmedizin ---
+function renderAnrechnungIntensiv() {
+  const host = document.getElementById('wb-anr-intensiv');
+  if (!host) return;
+  host.innerHTML = `
+    <div class="wb-anr-flow">
+      <div class="wb-anr-box wb-anr-have">
+        <div class="wb-anr-box-label">Du hast</div>
+        <div class="wb-anr-box-title">FA Innere Medizin</div>
+        <div class="wb-anr-box-mo">60 Mo</div>
+      </div>
+      <div class="wb-anr-arrow">
+        →
+        <span class="wb-anr-arrow-label">WBO 2021 C 17</span>
+        <span class="wb-anr-arrow-label">max. 6 Mo Anrechnung</span>
+      </div>
+      <div class="wb-anr-box wb-anr-need">
+        <div class="wb-anr-box-label">Ziel</div>
+        <div class="wb-anr-box-title">ZWB Internistische Intensivmedizin</div>
+        <div class="wb-anr-box-mo">18 Mo</div>
+      </div>
+    </div>
+
+    <table class="wb-anr-table">
+      <thead><tr>
+        <th></th><th>Voraussetzung</th><th>Anrechnung</th><th>Noch zu absolvieren</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td class="wb-anr-status wb-anr-yes">✓</td>
+          <td>Du hast in der FA Innere bereits <b>≥ 12 Mo Intensivmedizin unter Befugnis</b> abgeleistet</td>
+          <td class="wb-anr-mo">6 Mo</td>
+          <td class="wb-anr-mo"><b>12 Mo</b></td>
+        </tr>
+        <tr class="wb-anr-rest">
+          <td class="wb-anr-status wb-anr-no">✗</td>
+          <td>Du hattest nur die Pflicht-6 Mo Intensivmedizin im FA Innere</td>
+          <td class="wb-anr-mo">0 Mo</td>
+          <td class="wb-anr-mo"><b>18 Mo</b></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="wb-anr-conclusion" style="font-size:13px;">
+      Bezeichnung nach Erwerb: <b>„Zusatz-Weiterbildung Internistische Intensivmedizin"</b>
+      (adjektivischer Zusatz nach FA-Bezeichnung, WBO 2021 C 17, S. 364).
+    </div>
+  `;
+}
+
+// --- Richtzahlen-Übersicht ---
+function renderRichtzahlen() {
+  const host = document.getElementById('wb-richt-grid');
+  if (!host) return;
+  host.innerHTML = RICHTZAHLEN_NEPHRO.map(cat => `
+    <div class="wb-richt-card">
+      <div class="wb-richt-cat">${escapeHtml(cat.kategorie)}</div>
+      ${cat.items.map(item => `
+        <div class="wb-richt-item">
+          <span class="wb-richt-label">${escapeHtml(item.label)}</span>
+          <span class="wb-richt-num">${item.richtzahl.toLocaleString('de-DE')}</span>
+        </div>`).join("")}
+    </div>
+  `).join("");
+}
+
+// =========================================================================
 //  HELPERS
 // =========================================================================
 function escapeHtml(s) {
@@ -985,6 +1420,10 @@ loadState();
 renderWizard();
 if (state.wbo && state.status && state.ziel) showTimelineAndEval();
 renderBefugte();
+renderOverview();
+renderAnrechnungNephro();
+renderAnrechnungIntensiv();
+renderRichtzahlen();
 </script>
 </body>
 </html>
