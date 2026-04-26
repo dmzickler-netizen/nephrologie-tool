@@ -109,7 +109,7 @@ section.wb-phase {
 .wb-timeline-list { margin: 0; padding: 0; list-style: none; }
 .wb-stint {
   display: grid;
-  grid-template-columns: 130px 130px 1fr 1fr 70px 32px;
+  grid-template-columns: 130px 130px 1fr 1fr 75px 80px 32px;
   gap: 8px; align-items: center;
   padding: 8px 0; border-bottom: 1px solid #f3f4f6;
 }
@@ -127,7 +127,7 @@ section.wb-phase {
 .wb-stint .wb-del-btn:hover { background: #fee2e2; }
 .wb-stint-header {
   display: grid;
-  grid-template-columns: 130px 130px 1fr 1fr 70px 32px;
+  grid-template-columns: 130px 130px 1fr 1fr 75px 80px 32px;
   gap: 8px;
   font-size: 11px; color: var(--wb-muted); text-transform: uppercase; letter-spacing: 0.04em;
   padding: 4px 0; border-bottom: 1px solid var(--wb-border);
@@ -212,7 +212,7 @@ section.wb-phase {
   .wb-disclaimer { border: 1px solid #d97706; }
   section.wb-phase { box-shadow: none; border: 1px solid #999; page-break-inside: avoid; }
   .wb-add-btn, .wb-del-btn, .wb-edit-btn, .wb-btn-primary, .wb-btn-secondary, #wb-print-row, .wb-no-print { display: none !important; }
-  .wb-stint, .wb-stint-header { grid-template-columns: 90px 90px 1fr 1fr 50px; }
+  .wb-stint, .wb-stint-header { grid-template-columns: 90px 90px 1fr 1fr 50px 50px; }
   .wb-stint .wb-del-btn { display: none; }
   .wb-card-btn { background: white !important; }
 }
@@ -360,6 +360,7 @@ section.wb-phase {
 .wb-c-dialyse     { background: #34d399; color: #064e3b; }   /* dunkelgrün */
 .wb-c-notfall     { background: #fcd34d; }   /* gelb */
 .wb-c-intensiv    { background: #fca5a5; }   /* rot/rosa */
+.wb-c-frei        { background: #fde68a; }   /* amber — flexibel, stat. od. ambulant */
 .wb-c-sonstige    { background: #e5e7eb; }   /* grau */
 
 /* Anrechnungs-Diagramm */
@@ -580,15 +581,17 @@ section.wb-phase {
   <!-- bei rein hinweisbasierten Pfaden (ZWB Intensiv 2004) wird nur ein Info-Block gezeigt -->
   <div id="wb-timeline-input">
     <p style="color: var(--wb-muted); font-size: 13px; margin: 0 0 10px;">
-      Trag jede Weiterbildungs-Station chronologisch ein (Beginn → Ende, Klinik, primärer Bereich).
-      Halbe Monate lassen sich über die Datumswahl abbilden — Standard ist „Monat zählt voll".
+      Trag jede Weiterbildungs-Station chronologisch ein (Beginn → Ende, Klinik, primärer Bereich, Pensum).
+      Bei Teilzeit zählen die Monate anteilig (§ 4 Abs. 6 WBO 2021): z.B. 12 Mo bei 75% = 9 Mo anrechenbar.
+      Mindest-Pensum 50% — darunter Sonder-Anzeige bei der ÄK Berlin nötig.
     </p>
     <div class="wb-stint-header" aria-hidden="true">
       <div>Beginn</div>
       <div>Ende</div>
       <div>Klinik / Abteilung</div>
       <div>Bereich</div>
-      <div style="text-align:right">Monate</div>
+      <div>Pensum</div>
+      <div style="text-align:right">Mo (anr.)</div>
       <div></div>
     </div>
     <ul class="wb-timeline-list" id="wb-stints"></ul>
@@ -679,7 +682,7 @@ const PFADE = {
         blocks: [
           {key:"stationaer", label:"Stationäre Patientenversorgung", mo_min:30,
            setting: "stationaer",
-           details: "Auf internistischen Bettenstationen — d.h. Patienten, die im Krankenhaus aufgenommen sind. NICHT in Sprechstunde / Ambulanz / Praxis. Typische Kompetenzen: Kardiologie, Gastroenterologie, Pneumologie, Hämatologie/Onkologie, Endokrinologie/Diabetologie, Nephrologie, Rheumatologie, Infektiologie oder Geriatrie. Inhalte: Diagnostik und Therapie internistischer Krankheitsbilder, multimorbide und geriatrische Patienten, Ernährungs- und Schmerzmanagement, Hygiene/Antibiotic Stewardship."},
+           details: "Diese 30 Mo nur auf internistischen Bettenstationen (inpatient). Sprechstunde / Ambulanz / Praxis zählt hier NICHT — sehr wohl aber im „Frei wählbar"-Block weiter unten (bis 18 Mo ambulant möglich). Typische Bettenstationen: Kardiologie, Gastroenterologie, Pneumologie, Hämatologie/Onkologie, Endokrinologie/Diabetologie, Nephrologie, Rheumatologie, Infektiologie oder Geriatrie. Inhalte: Diagnostik und Therapie internistischer Krankheitsbilder, multimorbide und geriatrische Patienten, Ernährungs- und Schmerzmanagement, Hygiene/Antibiotic Stewardship."},
           {key:"notfall",    label:"Notfallaufnahme",                mo_min:6, frueheste_wb_monate:12,
            setting: "notfall",
            details: "Zentrale interdisziplinäre Notaufnahme (ZNA): Triage, Erstdiagnostik (EKG, Labor, Sonographie, Bildgebung), Akutbehandlung internistischer Notfälle, Übergabe an Stationen oder Intensivmedizin."},
@@ -702,7 +705,7 @@ const PFADE = {
         blocks: [
           {key:"stationaer",   label:"Stationäre Patientenversorgung",                       mo_min:24,
            setting: "stationaer",
-           details: "Auf internistischen Bettenstationen (inpatient). NICHT in Sprechstunde / Ambulanz / Praxis."},
+           details: "Diese 24 Mo nur auf internistischen Bettenstationen (inpatient). Ambulante Zeiten (Sprechstunde, Praxis, MVZ) zählen NICHT zu diesem Block — gehen aber in die Nephrologie-/Andere-Kompetenzen-Blöcke ein, sofern dort befugt."},
           {key:"innere_nephro",label:"Innere Medizin und Nephrologie",                       mo_min:36,
            setting: "ambulant_moeglich",
            details: "Stationär ODER ambulant unter Befugnis Nephrologie — d.h. nephrologische Station, Dialyse-Zentrum, nephrologische Sprechstunde, Hypertonie- oder Transplantations-Ambulanz. Inhalte: akute/chronische Nierenerkrankungen, Glomerulonephritiden, Vaskulitiden, Hypertensiologie, Wasser-/Elektrolyt-/Säure-Basen-Haushalt, Transplantationsmedizin (prä- und post-NTX), Schwangerschaftsnephrologie."},
@@ -878,7 +881,10 @@ function loadState() {
     if (s.wbo) state.wbo = s.wbo;
     if (s.status) state.status = s.status;
     if (s.ziel) state.ziel = s.ziel;
-    if (Array.isArray(s.stints)) state.stints = s.stints;
+    if (Array.isArray(s.stints)) {
+      // Migration: fehlende pensum-Werte auf 100 setzen
+      state.stints = s.stints.map(st => Object.assign({pensum: 100}, st));
+    }
   } catch (e) { /* ignore */ }
 }
 
@@ -897,15 +903,30 @@ function ymToIdx(ym) {
   const [y, m] = ym.split("-").map(Number);
   return y * 12 + (m - 1);
 }
-// Stationsdauer in Monaten (inklusive: Mai bis Mai = 1 Mo? Konvention: ende-beginn+1)
-function stintMonths(stint) {
+// Kalender-Dauer in Monaten (inklusive: Mai bis Mai = 1 Mo)
+function stintRawMonths(stint) {
   const a = ymToIdx(stint.beginn);
   const b = ymToIdx(stint.ende);
   if (a == null || b == null || b < a) return 0;
   return b - a + 1;
 }
+// Anrechenbare Monate = Kalender × Pensum/100 (§ 4 Abs. 6 WBO 2021:
+// "Die Weiterbildungszeit verlängert sich bei einer Weiterbildung in Teilzeit
+// entsprechend einer Weiterbildung in Vollzeit." Mindest-Pensum 50%.)
+function stintMonths(stint) {
+  const raw = stintRawMonths(stint);
+  const p = stint && stint.pensum != null ? Number(stint.pensum) : 100;
+  return raw * (p / 100);
+}
 function totalMonths() {
   return state.stints.reduce((s, st) => s + stintMonths(st), 0);
+}
+function totalRawMonths() {
+  return state.stints.reduce((s, st) => s + stintRawMonths(st), 0);
+}
+function fmtMo(n) {
+  // 1 Nachkommastelle wenn nicht ganzzahlig
+  return Math.abs(n - Math.round(n)) < 1e-9 ? String(Math.round(n)) : n.toFixed(1);
 }
 // Cumulative Monate vor einer Position (chronologisch sortiert)
 function cumulativeBeforeStart(stint, sortedStints) {
@@ -1044,12 +1065,13 @@ function showTimelineAndEval() {
   if (!document.getElementById('wb-stints')) {
     timelineInput.innerHTML = `
       <p style="color: var(--wb-muted); font-size: 13px; margin: 0 0 10px;">
-        Trag jede Weiterbildungs-Station chronologisch ein (Beginn → Ende, Klinik, primärer Bereich).
-        Halbe Monate lassen sich über die Datumswahl abbilden — Standard ist „Monat zählt voll".
+        Trag jede Weiterbildungs-Station chronologisch ein (Beginn → Ende, Klinik, primärer Bereich, Pensum).
+        Bei Teilzeit zählen die Monate anteilig (§ 4 Abs. 6 WBO 2021): z.B. 12 Mo bei 75% = 9 Mo anrechenbar.
+        Mindest-Pensum 50% — darunter Sonder-Anzeige bei der ÄK Berlin nötig.
       </p>
       <div class="wb-stint-header" aria-hidden="true">
         <div>Beginn</div><div>Ende</div><div>Klinik / Abteilung</div>
-        <div>Bereich</div><div style="text-align:right">Monate</div><div></div>
+        <div>Bereich</div><div>Pensum</div><div style="text-align:right">Mo (anr.)</div><div></div>
       </div>
       <ul class="wb-timeline-list" id="wb-stints"></ul>
       <button type="button" class="wb-add-btn" id="wb-add-stint">+ Station hinzufügen</button>
@@ -1064,7 +1086,7 @@ function showTimelineAndEval() {
 function addStint() {
   state.stints.push({
     id: "s" + Date.now() + "-" + Math.random().toString(36).slice(2, 6),
-    beginn: "", ende: "", klinik: "", bereich: ""
+    beginn: "", ende: "", klinik: "", bereich: "", pensum: 100
   });
   saveState();
   renderStints();
@@ -1110,9 +1132,15 @@ function renderStints() {
     </div>`;
   }
 
+  const pensumOpts = [100, 90, 80, 75, 70, 60, 50];
   state.stints.forEach((s, i) => {
     const li = document.createElement('li');
     li.className = "wb-stint";
+    const sPensum = (s.pensum != null) ? Number(s.pensum) : 100;
+    const pensumHtml = `<select data-field="pensum" data-id="${s.id}" title="Beschäftigungsumfang (% der regelmäßigen Arbeitszeit). § 4 Abs. 6 WBO 2021: mind. 50% — sonst Sonder-Anzeige bei der ÄK nötig.">
+      ${pensumOpts.map(p => `<option value="${p}"${p === sPensum ? ' selected' : ''}>${p}%</option>`).join("")}
+    </select>`;
+    const moTitle = sPensum < 100 ? `Kalender ${stintRawMonths(s)} Mo × ${sPensum}% = ${fmtMo(stintMonths(s))} Mo anrechenbar` : "";
     li.innerHTML = `
       ${dateSelectHtml('beginn', s.id, s.beginn)}
       ${dateSelectHtml('ende',   s.id, s.ende)}
@@ -1121,7 +1149,8 @@ function renderStints() {
         <option value="">— wählen —</option>
         ${bereichOpts.replace(`value="${escapeAttr(s.bereich)}"`, `value="${escapeAttr(s.bereich)}" selected`)}
       </select>
-      <span class="wb-stint-mo">${stintMonths(s)} Mo</span>
+      ${pensumHtml}
+      <span class="wb-stint-mo" title="${escapeAttr(moTitle)}">${fmtMo(stintMonths(s))} Mo</span>
       <button type="button" class="wb-del-btn" data-del="${s.id}" title="Station löschen">×</button>
     `;
     ul.appendChild(li);
@@ -1136,15 +1165,7 @@ function renderStints() {
     b.addEventListener('click', () => delStint(b.dataset.del));
   });
 
-  // Totals
-  const totals = document.getElementById('wb-totals');
-  if (totals) {
-    const total = totalMonths();
-    const soll = pfad.monate_total || 0;
-    totals.innerHTML = `<div>Gesamt eingetragen: <span class="wb-totals-num">${total}</span> Monate</div>` +
-                       (soll ? `<div>Sollwert: <span class="wb-totals-num">${soll}</span> Monate</div>` : "") +
-                       (soll ? `<div>Differenz: <span class="wb-totals-num">${total - soll}</span> Mo</div>` : "");
-  }
+  renderTotals();
 }
 
 function onStintChange(e) {
@@ -1166,24 +1187,38 @@ function onStintChange(e) {
     const y = ySel ? ySel.value : "";
     const m = mSel ? mSel.value : "";
     stint[which] = (y && m) ? `${y}-${m}` : "";
+  } else if (field === 'pensum') {
+    stint.pensum = parseInt(e.target.value, 10) || 100;
   } else {
     stint[field] = e.target.value;
   }
   saveState();
-  // Monate-Anzeige live updaten — minimal: nur die Mo-Zelle dieser Zeile aktualisieren
+  // Monate-Anzeige live updaten
   const row = e.target.closest('.wb-stint');
-  if (row) row.querySelector('.wb-stint-mo').textContent = stintMonths(stint) + " Mo";
+  if (row) {
+    const cell = row.querySelector('.wb-stint-mo');
+    cell.textContent = fmtMo(stintMonths(stint)) + " Mo";
+    const sP = (stint.pensum != null) ? Number(stint.pensum) : 100;
+    cell.title = sP < 100 ? `Kalender ${stintRawMonths(stint)} Mo × ${sP}% = ${fmtMo(stintMonths(stint))} Mo anrechenbar` : "";
+  }
   renderEval();
-  // Totals live updaten
+  renderTotals();
+}
+
+function renderTotals() {
   const pfad = getPfad();
   const totals = document.getElementById('wb-totals');
-  if (pfad && totals) {
-    const total = totalMonths();
-    const soll = pfad.monate_total || 0;
-    totals.innerHTML = `<div>Gesamt eingetragen: <span class="wb-totals-num">${total}</span> Monate</div>` +
-                       (soll ? `<div>Sollwert: <span class="wb-totals-num">${soll}</span> Monate</div>` : "") +
-                       (soll ? `<div>Differenz: <span class="wb-totals-num">${total - soll}</span> Mo</div>` : "");
-  }
+  if (!pfad || !totals) return;
+  const total = totalMonths();
+  const totalRaw = totalRawMonths();
+  const soll = pfad.monate_total || 0;
+  const diff = total - soll;
+  const teilzeitNote = (totalRaw > total) ?
+    `<div style="font-size:12px;color:var(--wb-muted);">Kalenderzeit: ${fmtMo(totalRaw)} Mo · Teilzeit-Reduktion: ${fmtMo(totalRaw - total)} Mo</div>` : "";
+  totals.innerHTML = `<div>Anrechenbar: <span class="wb-totals-num">${fmtMo(total)}</span> Monate</div>` +
+                     (soll ? `<div>Sollwert: <span class="wb-totals-num">${soll}</span> Monate</div>` : "") +
+                     (soll ? `<div>Differenz: <span class="wb-totals-num">${fmtMo(diff)}</span> Mo</div>` : "") +
+                     teilzeitNote;
 }
 
 // =========================================================================
@@ -1234,7 +1269,7 @@ function renderEval() {
 
   let html = `
     <div class="wb-eval-summary">
-      <div><b>Gesamtfortschritt:</b> ${total} / ${soll} Monate (${totalPct}%)</div>
+      <div><b>Gesamtfortschritt:</b> ${fmtMo(total)} / ${soll} Monate (${totalPct}%)</div>
       <div class="wb-bar" style="margin-top: 6px;"><div class="wb-bar-fill ${totalCls}" style="width:${totalPct}%"></div></div>
     </div>
   `;
@@ -1252,12 +1287,12 @@ function renderEval() {
       <div class="wb-eval-block">
         <div class="wb-eval-block-head">
           <span class="wb-eval-block-label">${escapeHtml(b.label)}</span>
-          <span class="wb-eval-block-mo">${have} / ${min} Mo</span>
+          <span class="wb-eval-block-mo">${fmtMo(have)} / ${min} Mo</span>
         </div>
         <div class="wb-bar"><div class="wb-bar-fill ${cls}" style="width:${pct}%"></div></div>
         ${b.frueheste_wb_monate != null ? `<div style="font-size:11px;color:var(--wb-muted);margin-top:4px;">Reihenfolge: frühestens nach ${b.frueheste_wb_monate} Mo Gesamt-WB</div>` : ""}
         ${violations.length ? `<div class="wb-eval-issues"><b>Reihenfolge-Verstoß:</b><ul>${
-          violations.map(v => `<li>Station „${escapeHtml(v.stint.klinik || "(ohne Klinik)")}" beginnt bei kum. ${v.cumBefore} Mo (Anforderung: ${v.required} Mo).</li>`).join("")
+          violations.map(v => `<li>Station „${escapeHtml(v.stint.klinik || "(ohne Klinik)")}" beginnt bei kum. ${fmtMo(v.cumBefore)} Mo (Anforderung: ${v.required} Mo).</li>`).join("")
         }</ul></div>` : ""}
       </div>
     `;
@@ -1439,7 +1474,7 @@ function renderBausteinCard(pfad) {
   }).join("");
   if (filler > 0) {
     const fpct = (filler / denom * 100).toFixed(2);
-    segments += `<div class="wb-stack-seg wb-c-sonstige" style="width:${fpct}%" title="Frei wählbar (Innere-Inhalte) — ${filler} Mo">${filler}</div>`;
+    segments += `<div class="wb-stack-seg wb-c-frei" style="width:${fpct}%" title="Frei wählbar — stationär ODER ambulant (befugte Praxis, MVZ, Ambulanz) — ${filler} Mo">${filler}</div>`;
   }
 
   // Block-Liste: vertikal, jeder Block als eigene Karte mit Hinweis + Inhaltsbeschreibung
@@ -1476,13 +1511,14 @@ function renderBausteinCard(pfad) {
   if (filler > 0) {
     blockList += `
       <div class="wb-block-row">
-        <span class="wb-legend-dot wb-c-sonstige"></span>
+        <span class="wb-legend-dot wb-c-frei"></span>
         <div class="wb-block-info">
           <div class="wb-block-head">
-            <span class="wb-block-label">Frei wählbar (weitere Innere-Inhalte)</span>
+            <span class="wb-block-label">Frei wählbar — Bettenstation ODER Ambulanz/Praxis</span>
             <span class="wb-block-mo">${filler} Mo</span>
           </div>
-          <div class="wb-block-details">Vertiefung in einer FA-Kompetenz oder Rotation in weitere Bereiche — keine spezifische WBO-Vorgabe, füllt die Mindestdauer von ${pfad.monate_total} Mo auf.</div>
+          <span class="wb-block-setting wb-setting-amb">🚪 Stationär oder ambulant</span>
+          <div class="wb-block-details"><b>Hier zählt ambulante Zeit:</b> befugte fachärztliche Praxis, MVZ, Institutsambulanz oder poliklinische Ambulanz im Gebiet Innere — z.B. infektiologische, kardiologische, gastroenterologische, endokrinologische Praxis/Ambulanz. Auch zur Vertiefung einer Schwerpunkt-Kompetenz nutzbar. <b>Ausschluss:</b> ärztliche Tätigkeit in eigener (Niederlassungs-)Praxis (§ 4 Abs. 4 WBO 2021). Voraussetzung: WB-Befugnis der ÄK Berlin für die jeweilige FA-Kompetenz Innere (§ 5 WBO 2021).</div>
         </div>
       </div>`;
   }
