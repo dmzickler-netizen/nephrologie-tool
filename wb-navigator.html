@@ -232,10 +232,31 @@ section.wb-phase {
   .wb-header { border-bottom: 2px solid #1e3a5f; padding-bottom: 8px; }
   .wb-disclaimer { border: 1px solid #d97706; }
   section.wb-phase { box-shadow: none; border: 1px solid #999; page-break-inside: avoid; }
-  .wb-add-btn, .wb-del-btn, .wb-edit-btn, .wb-btn-primary, .wb-btn-secondary, #wb-print-row, .wb-no-print { display: none !important; }
-  .wb-stint, .wb-stint-header { grid-template-columns: 90px 90px 1fr 1fr 50px 50px; }
+  .wb-add-btn, .wb-clear-btn, .wb-del-btn, .wb-edit-btn, .wb-btn-primary, .wb-btn-secondary, #wb-print-row, .wb-no-print { display: none !important; }
+  .wb-stint, .wb-stint-header { grid-template-columns: 110px 110px 1.4fr 1.6fr 55px 60px; gap: 6px; }
   .wb-stint .wb-del-btn { display: none; }
+  .wb-stint-date { grid-template-columns: 45px 60px; gap: 3px; }
   .wb-card-btn { background: white !important; }
+
+  /* Native Select-Pfeile beim Drucken unterdruecken — sonst zeigt der Browser
+     nur die Chevron-Icon-Andeutung statt des ausgewaehlten Werts. */
+  .wb-stint select, .wb-stint input,
+  .wb-fa-date-block select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: none !important;
+    background: white !important;
+    border: 1px solid #aaa !important;
+    padding: 2px 5px !important;
+    font-size: 10pt !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    min-width: 0;
+    color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  .wb-fa-date-block { background: #fffbe6 !important; border: 1px solid #d97706 !important; }
 }
 
 @media (max-width: 700px) {
@@ -523,8 +544,20 @@ section.wb-phase {
       </button>
       <button type="button" class="wb-card-btn" data-wbo="wbo2004">
         <span class="wb-card-title">Alte WBO (2004)</span>
-        <span class="wb-card-sub">Übergang § 21 — Abschluss bis 30.11.2029</span>
+        <span class="wb-card-sub">Voraussetzung: WB-Beginn vor 30.11.2022 · Abschluss bis 30.11.2029 (§ 21 Abs. 4)</span>
       </button>
+    </div>
+    <div id="wb-wbo2004-prereq" class="wb-info-block" hidden style="margin-top: 10px;">
+      <b>Voraussetzung für die Anwendung der alten WBO 2004</b><br>
+      <span style="font-size: 13px;">
+        Nach <b>§ 21 Abs. 4 WBO 2021</b>: Du musst dich bei Inkrafttreten der neuen WBO
+        (30.11.2022) <b>bereits in einer Facharzt-Weiterbildung befunden</b> haben.
+        Dann darfst du diese WB innerhalb einer Frist von sieben Jahren (bis 30.11.2029)
+        nach den Bestimmungen der alten WBO 2004 abschließen. Wer nach diesem Datum mit
+        der WB begonnen hat, fällt zwingend unter die neue WBO 2021.<br>
+        Schwerpunkt-WB und Zusatz-Weiterbildung haben kürzere Fristen: 30.11.2025
+        (§ 21 Abs. 5 + 6).
+      </span>
     </div>
   </div>
 
@@ -1020,6 +1053,9 @@ function renderWizard() {
   document.querySelectorAll('#wb-wbo-cards .wb-card-btn').forEach(btn => {
     btn.classList.toggle('wb-selected', btn.dataset.wbo === state.wbo);
   });
+  // WBO 2004 Voraussetzungs-Hinweis nur einblenden, wenn alte WBO gewaehlt
+  const prereq = document.getElementById('wb-wbo2004-prereq');
+  if (prereq) prereq.hidden = state.wbo !== 'wbo2004';
 
   // Schritt 1 nur sichtbar wenn WBO gewählt
   const stepStatus = document.getElementById('wb-step-status');
