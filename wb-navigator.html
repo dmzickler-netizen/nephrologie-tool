@@ -615,21 +615,30 @@ section.wb-phase {
 <!-- ============== BEFUGTE ============== -->
 <section class="wb-phase wb-no-print">
   <h2>Weiterbildungsbefugte in Berlin</h2>
-  <div class="wb-bef-filter">
-    <input type="text" id="wb-bef-search" placeholder="Suchen (Name, Klinik, Bezirk)…" />
-    <select id="wb-bef-pfad">
-      <option value="">Alle Pfade</option>
-      <option value="fa_innere">FA Innere</option>
-      <option value="fa_innere_nephro">FA Innere u. Nephrologie</option>
-      <option value="zwb_intensivmedizin">ZWB Intensivmedizin</option>
-    </select>
-  </div>
-  <ul class="wb-befugte-list" id="wb-bef-list"></ul>
-  <p style="font-size: 12px; color: var(--wb-muted); margin-top: 12px;">
-    Diese Liste wird manuell gepflegt und ist <b>nicht vollständig</b>.
-    Vollständiges Verzeichnis:
-    <a href="https://www.aekb.de/service-kontakt/verzeichnisse/verzeichnis-der-weiterbildungsbefugten" target="_blank" rel="noopener">aekb.de — Verzeichnis der Weiterbildungsbefugten</a>.
+  <p style="font-size: 14px; margin: 0 0 12px;">
+    Die offizielle Liste pflegt die Ärztekammer Berlin und wird laufend aktualisiert.
+    Dieses Tool hat <b>keine eigene Datenbank</b> — die Suche läuft direkt im ÄK-Verzeichnis:
   </p>
+  <p style="margin: 0 0 12px;">
+    <a href="https://www.aekb.de/service-kontakt/verzeichnisse/verzeichnis-der-weiterbildungsbefugten"
+       target="_blank" rel="noopener"
+       style="display:inline-block; background: var(--wb-primary); color: white; padding: 10px 18px;
+              border-radius: 6px; text-decoration: none; font-weight: 500; font-size: 14px;">
+      🔍 Verzeichnis der Weiterbildungsbefugten (ÄK Berlin) öffnen →
+    </a>
+  </p>
+  <div style="font-size: 13px; color: var(--wb-muted); background: #fafbfc; border: 1px solid #e5e7eb; padding: 10px 12px; border-radius: 6px;">
+    <b>Filter, die das ÄK-Verzeichnis bietet:</b>
+    <ul style="margin: 6px 0 0 18px; padding: 0;">
+      <li>Name der Ärztin / des Arztes oder der Weiterbildungsstätte</li>
+      <li>Adresse (Straße, PLZ, Ort)</li>
+      <li>Mindestumfang der Befugnis (0–72 Monate)</li>
+      <li>Einrichtungsart (ambulant / stationär / sonstige)</li>
+      <li>Weiterbildungsordnung (1994 / 2004 / 2021)</li>
+      <li>Gebiet, Fachrichtung, Schwerpunkt, Zusatz-Weiterbildung</li>
+    </ul>
+    <div style="margin-top: 8px;"><b>Tipp für Innere/Nephrologie:</b> Gebiet = „Innere Medizin", WBO = 2021 (oder 2004 für Altfälle), Fachrichtung = „Nephrologie" oder „Internistische Intensivmedizin".</div>
+  </div>
 </section>
 
 <footer class="wb-footer wb-no-print">
@@ -853,12 +862,6 @@ const ZIELE_NACH_STATUS = {
   kein_fa: ["fa_innere", "fa_innere_nephro"],
   fa_innere: ["fa_innere_nephro_aufbau", "zwb_intensivmedizin"]
 };
-
-// Stub für Befugten-DB — wird manuell gepflegt
-const BEFUGTE = [
-  // Beispiel-Eintrag — bitte mit echten Daten aus aekb.de/service-kontakt/verzeichnisse füllen
-  // { name: "Prof. Dr. ...", klinik: "Charité CCM", bezirk: "Mitte", pfad: "fa_innere_nephro", monate: 72, stand: "2025-01", url: "..." }
-];
 
 // =========================================================================
 //  STATE + PERSISTENCE
@@ -1324,47 +1327,6 @@ function renderEval() {
   host.innerHTML = html;
 }
 
-// =========================================================================
-//  BEFUGTE
-// =========================================================================
-
-function renderBefugte() {
-  const ul = document.getElementById('wb-bef-list');
-  const q = (document.getElementById('wb-bef-search').value || "").toLowerCase().trim();
-  const pfad = document.getElementById('wb-bef-pfad').value;
-  ul.innerHTML = "";
-  const filtered = BEFUGTE.filter(b => {
-    if (pfad && b.pfad !== pfad) return false;
-    if (q) {
-      const hay = [b.name, b.klinik, b.bezirk].join(" ").toLowerCase();
-      if (!hay.includes(q)) return false;
-    }
-    return true;
-  });
-  if (filtered.length === 0) {
-    ul.innerHTML = `<li style="padding:14px;color:var(--wb-muted);font-size:13px;text-align:center;">
-      ${BEFUGTE.length === 0 ? "Liste wird gepflegt — bitte vorerst direkt im Verzeichnis der ÄK Berlin nachschauen." : "Keine Treffer mit diesen Filtern."}
-    </li>`;
-    return;
-  }
-  filtered.forEach(b => {
-    const li = document.createElement('li');
-    li.className = "wb-befugter";
-    const pfadLbl = (PFADE.wbo2021.pfade[b.pfad] || PFADE.wbo2004.pfade[b.pfad] || {}).kurz || b.pfad;
-    li.innerHTML = `
-      <div>
-        <div class="wb-bef-name">${escapeHtml(b.name)}</div>
-        <div class="wb-bef-meta">${escapeHtml(b.klinik)} · ${escapeHtml(b.bezirk || "")}</div>
-      </div>
-      <div class="wb-bef-meta">${escapeHtml(pfadLbl)}</div>
-      <div class="wb-bef-meta">${b.monate ? b.monate + " Mo" : ""}</div>
-    `;
-    ul.appendChild(li);
-  });
-}
-document.getElementById('wb-bef-search').addEventListener('input', renderBefugte);
-document.getElementById('wb-bef-pfad').addEventListener('change', renderBefugte);
-
 document.getElementById('wb-back-to-wizard').addEventListener('click', () => {
   document.getElementById('wb-phase-timeline').hidden = true;
   document.getElementById('wb-phase-eval').hidden = true;
@@ -1702,7 +1664,6 @@ function escapeAttr(s) { return escapeHtml(s); }
 //  INIT
 // =========================================================================
 loadState();
-renderBefugte();
 // Wizard + alle kontextuellen Sektionen einmal durchlaufen lassen
 afterWizardChange();
 </script>
