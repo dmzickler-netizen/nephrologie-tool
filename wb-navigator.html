@@ -723,8 +723,8 @@ section.wb-phase {
       <div>Beginn</div>
       <div>Ende</div>
       <div>Klinik / Abteilung</div>
-      <div>Bereich</div>
-      <div>FA-Kompetenz</div>
+      <div>Setting</div>
+      <div>Fachgebiet</div>
       <div>Pensum</div>
       <div style="text-align:right">Mo (anr.)</div>
       <div></div>
@@ -826,25 +826,26 @@ const PFADE = {
         kategorie: "facharzt",
         quelle: "WBO Berlin 2021, Abschn. B 13.1, S. 122",
         monate_total: 60,
-        // Block-Liste: pro Block ein Soll-Minimum.
-        // 'frueheste_wb_monate' = Reihenfolge-Bedingung: dieser Block kann erst angerechnet
-        // werden, wenn vorher mind. X Monate Gesamt-WB absolviert sind.
+        // Block-Liste mit setting-Feld → Eval aggregiert per stint.setting.
+        // 'frueheste_wb_monate' = Reihenfolge-Bedingung (in anrechenbaren WB-Monaten).
         rotation_pflicht: true,
         blocks: [
-          {key:"stationaer", label:"Stationäre Patientenversorgung", mo_min:30,
+          {key:"set_stat", label:"Stationäre Patientenversorgung", mo_min:30,
            setting: "stationaer",
-           details: "WBO 2021 B 13.1 wörtlich: 30 Monate in der stationären Patientenversorgung. Auf internistischen Bettenstationen (inpatient). Sprechstunde / Ambulanz / Praxis zählt hier NICHT — sehr wohl aber im Frei-wählbar-Block weiter unten (bis 18 Mo ambulant möglich). Typische Bettenstationen: Kardiologie, Gastroenterologie, Pneumologie, Hämatologie/Onkologie, Endokrinologie/Diabetologie, Nephrologie, Rheumatologie, Infektiologie oder Geriatrie."},
-          {key:"notfall",    label:"Notfallaufnahme",                mo_min:6, frueheste_wb_monate:12,
+           details: "WBO 2021 B 13.1 wörtlich: 30 Monate in der stationären Patientenversorgung. Auf internistischen Bettenstationen (inpatient). Ambulante Zeit zählt hier NICHT — kann aber im Rest (18 Mo flexibel) als Setting=Ambulant abgeleistet werden und dort zu Fachgebiet-Vielfalt + 36-Mo-Limit beitragen."},
+          {key:"set_notfall", label:"Notfallaufnahme", mo_min:6, frueheste_wb_monate:12,
            setting: "notfall",
-           details: "WBO 2021 B 13.1 wörtlich: 6 Monate in der Notfallaufnahme, frühestens nach Absolvierung von 12 Monaten Weiterbildung. Zentrale interdisziplinäre Notaufnahme (ZNA): Triage, Erstdiagnostik (EKG, Labor, Sonographie, Bildgebung), Akutbehandlung internistischer Notfälle."},
-          {key:"intensiv",   label:"Intensivmedizin",                mo_min:6, frueheste_wb_monate:24,
+           details: "WBO 2021 B 13.1 wörtlich: 6 Monate in der Notfallaufnahme, frühestens nach Absolvierung von 12 Monaten Weiterbildung. Pflichtabschnitt — keine FA-Kompetenz zugeordnet, zählt NICHT auf Fachgebiet-Vielfalt oder 36-Mo-Limit."},
+          {key:"set_intensiv", label:"Intensivmedizin", mo_min:6, frueheste_wb_monate:24,
            setting: "intensiv",
-           details: "WBO 2021 B 13.1 wörtlich: 6 Monate in der Intensivmedizin, frühestens nach Absolvierung von 24 Monaten Weiterbildung. Internistische oder interdisziplinäre Intensivstation."}
+           details: "WBO 2021 B 13.1 wörtlich: 6 Monate in der Intensivmedizin, frühestens nach Absolvierung von 24 Monaten Weiterbildung. Pflichtabschnitt — keine FA-Kompetenz zugeordnet, zählt NICHT auf Fachgebiet-Vielfalt oder 36-Mo-Limit."}
         ],
+        // Fachgebiet-Constraint: ueber alle stat+amb+dialyse Stints
+        fachgebiet_constraint: { min_distinct: 3, max_per_fachgebiet: 36 },
         constraints: [
           {type:"hinweis", text:"WBO 2021 B 13.1 (S. 122): 60 Monate im Gebiet Innere Medizin unter Befugnis an Weiterbildungsstätten in mindestens drei verschiedenen Facharztkompetenzen des Gebiets Innere Medizin."},
           {type:"hinweis", text:"Maximal 36 Monate dürfen in derselben Facharztkompetenz abgeleistet werden."},
-          {type:"hinweis", text:"Die übrigen 18 Mo (Differenz aus 60 − 30 − 6 − 6) sind in der WBO nicht als eigener Block definiert und können stationär oder ambulant unter Befugnis im Gebiet Innere abgeleistet werden — typisch zur Vertiefung in einer angestrebten Schwerpunkt-Kompetenz oder als Praxis-/MVZ-Rotation."}
+          {type:"hinweis", text:"Die übrigen 18 Mo (60 − 30 − 6 − 6) können stationär oder ambulant unter Befugnis abgeleistet werden — Setting=Ambulant zählt voll auf Fachgebiet-Vielfalt + 36-Mo-Limit, NICHT aber auf die 30 Mo Stationär-Pflicht."}
         ]
       },
       // Quelle: WBO 2021, Abschn. B 13.9 „Facharzt für Innere Medizin und Nephrologie", S. 179
@@ -1028,23 +1029,67 @@ const PFADE = {
   }
 };
 
-// FA-Kompetenzen des Gebiets Innere Medizin (WBO 2021 B 13.1–13.11)
-// Wird pro Stint optional zugeordnet, fuer die Constraint-Pruefung
-// "mind. 3 verschiedene FA-Kompetenzen" und "max. 36 Mo in derselben FA-Kompetenz".
-const KOMPETENZ_OPTIONS = [
-  { value: 'allgemein', label: 'Allgemeine Innere (13.1)' },
-  { value: 'angiologie', label: 'Angiologie (13.2)' },
-  { value: 'endokrino', label: 'Endokrino. u. Diabetologie (13.3)' },
-  { value: 'gastro', label: 'Gastroenterologie (13.4)' },
-  { value: 'geriatrie', label: 'Geriatrie (13.5)' },
-  { value: 'haemato', label: 'Hämatologie u. Onkologie (13.6)' },
-  { value: 'infektio', label: 'Infektiologie (13.7)' },
-  { value: 'kardio', label: 'Kardiologie (13.8)' },
-  { value: 'nephro', label: 'Nephrologie (13.9)' },
-  { value: 'pneumo', label: 'Pneumologie (13.10)' },
-  { value: 'rheumato', label: 'Rheumatologie (13.11)' },
-  { value: 'na', label: '— interdisz. / nicht zugeordnet —' }
+// =========================================================================
+//  Setting & Fachgebiet — sauber getrennte Achsen (Refactor Phase 1)
+//  Setting beschreibt WIE/WO gearbeitet wurde (5 Werte).
+//  Fachgebiet beschreibt die FA-Kompetenz nach WBO 2021 B 13.1–13.11.
+// =========================================================================
+const SETTING_OPTIONS = [
+  { value: 'stationaer', label: 'Stationäre Patientenversorgung' },
+  { value: 'ambulant',   label: 'Ambulante Patientenversorgung' },
+  { value: 'notfall',    label: 'Notfallaufnahme' },
+  { value: 'intensiv',   label: 'Intensivmedizin' },
+  { value: 'dialyse',    label: 'Dialyse-Zentrum' }
 ];
+
+const FACHGEBIET_OPTIONS = [
+  { value: '13.1',  label: 'Innere Medizin (13.1)' },
+  { value: '13.2',  label: 'Innere u. Angiologie (13.2)' },
+  { value: '13.3',  label: 'Innere u. Endokrino. u. Diabetologie (13.3)' },
+  { value: '13.4',  label: 'Innere u. Gastroenterologie (13.4)' },
+  { value: '13.5',  label: 'Innere u. Geriatrie (13.5)' },
+  { value: '13.6',  label: 'Innere u. Hämatologie u. Onkologie (13.6)' },
+  { value: '13.7',  label: 'Innere u. Infektiologie (13.7)' },
+  { value: '13.8',  label: 'Innere u. Kardiologie (13.8)' },
+  { value: '13.9',  label: 'Innere u. Nephrologie (13.9)' },
+  { value: '13.10', label: 'Innere u. Pneumologie (13.10)' },
+  { value: '13.11', label: 'Innere u. Rheumatologie (13.11)' },
+  { value: 'entfaellt', label: '— entfällt —' }
+];
+
+// Settings, bei denen das Fachgebiet-Feld disabled wird:
+//   notfall + intensiv → fachgebiet = 'entfaellt' (Pflichtabschnitt nach B 13.1)
+//   dialyse → fachgebiet = '13.9' (Dialyse ist per definitionem Nephrologie)
+function fachgebietForcedBySetting(setting) {
+  if (setting === 'notfall' || setting === 'intensiv') return 'entfaellt';
+  if (setting === 'dialyse') return '13.9';
+  return null;
+}
+
+// Sync zu Legacy-Feldern (bereich, kompetenz) fuer Pfade, die noch nicht
+// auf Setting/Fachgebiet umgestellt sind (WBO 2004 — Phase 4).
+function syncLegacyFields(st) {
+  st.bereich = st.setting || '';
+  if (st.fachgebiet === 'entfaellt' || !st.fachgebiet) {
+    st.kompetenz = '';
+  } else {
+    const map = {'13.1':'allgemein','13.2':'angiologie','13.3':'endokrino','13.4':'gastro','13.5':'geriatrie','13.6':'haemato','13.7':'infektio','13.8':'kardio','13.9':'nephro','13.10':'pneumo','13.11':'rheumato'};
+    st.kompetenz = map[st.fachgebiet] || '';
+  }
+}
+
+// Backwards compat: fuer Render-Code, der noch KOMPETENZ_OPTIONS referenziert
+const KOMPETENZ_OPTIONS = FACHGEBIET_OPTIONS.map(o => ({ value: o.value, label: o.label }));
+
+// Match einer Station gegen einen Pfad-Block:
+//   block.setting → matche stint.setting (neue Welt, Phase 1)
+//   block.fachgebiet → matche stint.fachgebiet (Phase 2)
+//   sonst Legacy: block.key === stint.bereich
+function stintMatchesBlock(stint, block) {
+  if (block.setting) return stint.setting === block.setting;
+  if (block.fachgebiet) return stint.fachgebiet === block.fachgebiet;
+  return block.key === stint.bereich;
+}
 
 // Welche Ziele sind nach Status verfügbar?
 // kein_fa     → komplette FA-Wege (60/72 Mo)
@@ -1077,14 +1122,50 @@ function loadState() {
     if (s.status) state.status = s.status;
     if (s.ziel) state.ziel = s.ziel;
     if (Array.isArray(s.stints)) {
-      // Migration: fehlende pensum-Werte auf 100, fehlende kompetenz auf "" setzen.
-      // Bei Bereich=notfall/intensiv wird kompetenz IMMER auf "" gesetzt
-      // (Pflichtabschnitt — keine FA-Kompetenz möglich).
+      // Migration:
+      // 1) fehlendes pensum auf 100 setzen
+      // 2) NEUE Felder setting + fachgebiet aus alten bereich + kompetenz ableiten
+      //    bereich → setting:
+      //      stationaer → stationaer · ambulant_moeglich → ambulant
+      //      notfall → notfall · intensiv → intensiv · dialyse → dialyse
+      //      innere_nephro/nephro → stationaer (Default), fachgebiet=13.9
+      //      andere_komp/basis_stat/basis_unmittelbar/stat_2_komp → stationaer (User muss ggf. korrigieren)
+      //    kompetenz → fachgebiet:
+      //      allgemein→13.1 · angiologie→13.2 · endokrino→13.3 · gastro→13.4 · geriatrie→13.5
+      //      haemato→13.6 · infektio→13.7 · kardio→13.8 · nephro→13.9 · pneumo→13.10 · rheumato→13.11
+      //      na/leer → entfaellt (bei notfall/intensiv) oder leer
+      const bereichToSetting = {
+        'stationaer':'stationaer', 'ambulant_moeglich':'ambulant',
+        'notfall':'notfall', 'intensiv':'intensiv', 'dialyse':'dialyse',
+        'innere_nephro':'stationaer', 'nephro':'stationaer',
+        'andere_komp':'stationaer', 'basis_stat':'stationaer',
+        'basis_unmittelbar':'ambulant', 'stat_2_komp':'stationaer',
+        'intensiv_zwb':'intensiv'
+      };
+      const kompToFachgebiet = {
+        'allgemein':'13.1','angiologie':'13.2','endokrino':'13.3','gastro':'13.4',
+        'geriatrie':'13.5','haemato':'13.6','infektio':'13.7','kardio':'13.8',
+        'nephro':'13.9','pneumo':'13.10','rheumato':'13.11','na':'entfaellt'
+      };
       state.stints = s.stints.map(function(st) {
-        const merged = Object.assign({pensum: 100, kompetenz: ""}, st);
-        if (merged.bereich === 'notfall' || merged.bereich === 'intensiv') {
-          merged.kompetenz = "";
+        const merged = Object.assign({pensum: 100, kompetenz: "", bereich: ""}, st);
+        // Wenn bereits neue Felder vorhanden: behalten, sonst aus Legacy ableiten
+        if (merged.setting == null) {
+          merged.setting = bereichToSetting[merged.bereich] || '';
         }
+        if (merged.fachgebiet == null) {
+          let fg = kompToFachgebiet[merged.kompetenz] || '';
+          // Fachgebiet-Defaults aus alten Block-Keys (z.B. innere_nephro/nephro/dialyse → 13.9)
+          if (!fg && (merged.bereich === 'innere_nephro' || merged.bereich === 'nephro' || merged.bereich === 'dialyse')) {
+            fg = '13.9';
+          }
+          merged.fachgebiet = fg;
+        }
+        // Forced-Werte je nach Setting durchsetzen
+        const forced = fachgebietForcedBySetting(merged.setting);
+        if (forced) merged.fachgebiet = forced;
+        // Legacy-Felder synchron halten fuer noch nicht refactorte Pfade
+        syncLegacyFields(merged);
         return merged;
       });
     }
@@ -1356,7 +1437,7 @@ function showTimelineAndEval() {
       <p id="wb-timeline-intro" style="color: var(--wb-muted); font-size: 13px; margin: 0 0 10px;"></p>
       <div class="wb-stint-header" aria-hidden="true">
         <div>Beginn</div><div>Ende</div><div>Klinik / Abteilung</div>
-        <div>Bereich</div><div>FA-Kompetenz</div><div>Pensum</div><div style="text-align:right">Mo (anr.)</div><div></div>
+        <div>Setting</div><div>Fachgebiet</div><div>Pensum</div><div style="text-align:right">Mo (anr.)</div><div></div>
       </div>
       <ul class="wb-timeline-list" id="wb-stints"></ul>
       <button type="button" class="wb-add-btn" id="wb-add-stint">+ Station hinzufügen</button>
@@ -1374,7 +1455,10 @@ function showTimelineAndEval() {
 function addStint() {
   state.stints.push({
     id: "s" + Date.now() + "-" + Math.random().toString(36).slice(2, 6),
-    beginn: "", ende: "", klinik: "", bereich: "", kompetenz: "", pensum: 100
+    beginn: "", ende: "", klinik: "",
+    setting: "", fachgebiet: "",
+    bereich: "", kompetenz: "",  // Legacy fuer alte Pfade — werden via syncLegacyFields aktualisiert
+    pensum: 100
   });
   saveState();
   renderStints();
@@ -1405,7 +1489,14 @@ function renderStints() {
   if (!ul) return;
   ul.innerHTML = "";
 
-  // Bereich-Optionen aus Pfad-Blocks (ohne reine Container-Subblocks)
+  // Setting-Optionen sind jetzt fix (5 Werte), unabhaengig vom Pfad.
+  const settingOptsHtml = SETTING_OPTIONS.map(o =>
+    `<option value="${escapeAttr(o.value)}">${escapeHtml(o.label)}</option>`
+  ).join("");
+  const fachgebietOptsHtml = FACHGEBIET_OPTIONS.map(o =>
+    `<option value="${escapeAttr(o.value)}">${escapeHtml(o.label)}</option>`
+  ).join("");
+  // (Legacy: alte bereichOpts werden nicht mehr genutzt)
   const bereichOpts = pfad.blocks.map(b =>
     `<option value="${escapeAttr(b.key)}">${escapeHtml(b.label)}</option>`
   ).join("");
@@ -1431,38 +1522,41 @@ function renderStints() {
   }
 
   const pensumOpts = [100, 90, 80, 75, 70, 60, 50];
-  const kompOptsHtml = KOMPETENZ_OPTIONS.map(k =>
-    `<option value="${escapeAttr(k.value)}">${escapeHtml(k.label)}</option>`
-  ).join("");
   state.stints.forEach((s, i) => {
     const li = document.createElement('li');
     li.className = "wb-stint";
     const sPensum = (s.pensum != null) ? Number(s.pensum) : 100;
-    const sKomp = s.kompetenz || "";
-    // Notfallaufnahme und Intensivmedizin sind Pflichtabschnitte (B 13.1 WBO 2021),
-    // KEINE FA-Kompetenzen des Gebiets Innere — daher Kompetenz-Feld disabled.
-    const isPflichtAbschnitt = (s.bereich === 'notfall' || s.bereich === 'intensiv');
+    const sSetting = s.setting || "";
+    const sFachgebiet = s.fachgebiet || "";
+    const forced = fachgebietForcedBySetting(sSetting);
+    const fachgebietDisabled = forced != null;
+    let fachgebietPlaceholder = '— wählen —';
+    if (sSetting === 'notfall' || sSetting === 'intensiv') fachgebietPlaceholder = '— entfällt (Pflichtabschnitt) —';
+    else if (sSetting === 'dialyse') fachgebietPlaceholder = '— Dialyse (auto: 13.9) —';
+    const fachgebietTitle = fachgebietDisabled
+      ? (sSetting === 'dialyse'
+          ? 'Dialyse-Zentrum ist per definitionem Nephrologie (13.9) — Feld automatisch gesetzt.'
+          : 'Notfallaufnahme und Intensivmedizin sind Pflichtabschnitte (B 13.1 WBO 2021), keine FA-Kompetenzen — Feld entfällt.')
+      : 'Facharzt-Kompetenz nach WBO 2021 B 13.1–13.11. Pflichtfeld bei Setting "Stationär" oder "Ambulant" — relevant für ≥ 3 verschiedene Kompetenzen + max. 36 Mo / Kompetenz.';
     const pensumHtml = `<select data-field="pensum" data-id="${s.id}" title="Beschäftigungsumfang (% der regelmäßigen Arbeitszeit). § 4 Abs. 6 WBO 2021: mind. 50% — sonst Sonder-Anzeige bei der ÄK nötig.">
       ${pensumOpts.map(p => `<option value="${p}"${p === sPensum ? ' selected' : ''}>${p}%</option>`).join("")}
     </select>`;
-    const kompPlaceholder = isPflichtAbschnitt ? '— Pflichtabschnitt —' : '— wählen —';
-    const kompTitle = isPflichtAbschnitt
-      ? 'Notfallaufnahme und Intensivmedizin sind Pflichtabschnitte (B 13.1 WBO 2021), keine FA-Kompetenzen — Feld bleibt leer.'
-      : 'FA-Kompetenz des Gebiets Innere Medizin — relevant für die Pflicht-Rotation (mind. 3 verschiedene Kompetenzen, max. 36 Mo in einer)';
-    const kompHtml = `<select data-field="kompetenz" data-id="${s.id}"${isPflichtAbschnitt ? ' disabled' : ''} title="${escapeAttr(kompTitle)}">
-      <option value="">${escapeHtml(kompPlaceholder)}</option>
-      ${kompOptsHtml.replace(`value="${escapeAttr(sKomp)}"`, `value="${escapeAttr(sKomp)}" selected`)}
+    const settingHtml = `<select data-field="setting" data-id="${s.id}" title="Wo/wie wurde gearbeitet?">
+      <option value="">— wählen —</option>
+      ${settingOptsHtml.replace(`value="${escapeAttr(sSetting)}"`, `value="${escapeAttr(sSetting)}" selected`)}
+    </select>`;
+    const fachgebietValue = fachgebietDisabled ? forced : sFachgebiet;
+    const fachgebietHtml = `<select data-field="fachgebiet" data-id="${s.id}"${fachgebietDisabled ? ' disabled' : ''} title="${escapeAttr(fachgebietTitle)}">
+      <option value="">${escapeHtml(fachgebietPlaceholder)}</option>
+      ${fachgebietOptsHtml.replace(`value="${escapeAttr(fachgebietValue)}"`, `value="${escapeAttr(fachgebietValue)}" selected`)}
     </select>`;
     const moTitle = sPensum < 100 ? `Kalender ${stintRawMonths(s)} Mo × ${sPensum}% = ${fmtMo(stintMonths(s))} Mo anrechenbar` : "";
     li.innerHTML = `
       ${dateSelectHtml('beginn', s.id, s.beginn)}
       ${dateSelectHtml('ende',   s.id, s.ende)}
       <input type="text"  value="${escapeAttr(s.klinik)}" data-field="klinik" data-id="${s.id}" placeholder="z.B. Charité CCM" />
-      <select data-field="bereich" data-id="${s.id}">
-        <option value="">— wählen —</option>
-        ${bereichOpts.replace(`value="${escapeAttr(s.bereich)}"`, `value="${escapeAttr(s.bereich)}" selected`)}
-      </select>
-      ${kompHtml}
+      ${settingHtml}
+      ${fachgebietHtml}
       ${pensumHtml}
       <span class="wb-stint-mo" title="${escapeAttr(moTitle)}">${fmtMo(stintMonths(s))} Mo</span>
       <button type="button" class="wb-del-btn" data-del="${s.id}" title="Station löschen">×</button>
@@ -1506,19 +1600,38 @@ function onStintChange(e) {
   } else {
     stint[field] = e.target.value;
   }
-  // Bei Bereich-Wechsel auf Notfall/Intensiv: Kompetenz auto-resetten + Select disablen
-  if (field === 'bereich') {
-    const isPflicht = stint.bereich === 'notfall' || stint.bereich === 'intensiv';
-    if (isPflicht) stint.kompetenz = '';
+  // Bei Setting-Wechsel: Fachgebiet automatisch anpassen + Select disablen/enablen.
+  //   notfall/intensiv → fachgebiet='entfaellt', disabled
+  //   dialyse → fachgebiet='13.9', disabled
+  //   stationaer/ambulant → User-Auswahl, enabled (zuvor auto-gesetzten Wert leeren falls nicht user-gesetzt)
+  if (field === 'setting') {
+    const forced = fachgebietForcedBySetting(stint.setting);
+    if (forced) {
+      stint.fachgebiet = forced;
+    } else if (stint.fachgebiet === 'entfaellt' || stint.fachgebiet === '13.9' && (e.target._previousForced)) {
+      // Vom vorherigen Forced-Wert: leeren, damit User neu waehlen kann
+      stint.fachgebiet = '';
+    }
     const row = e.target.closest('.wb-stint');
-    const kSel = row ? row.querySelector('select[data-field="kompetenz"]') : null;
-    if (kSel) {
-      kSel.disabled = isPflicht;
-      if (isPflicht) kSel.value = '';
-      const ph = kSel.querySelector('option[value=""]');
-      if (ph) ph.textContent = isPflicht ? '— Pflichtabschnitt —' : '— wählen —';
+    const fgSel = row ? row.querySelector('select[data-field="fachgebiet"]') : null;
+    if (fgSel) {
+      const isDisabled = forced != null;
+      fgSel.disabled = isDisabled;
+      if (forced != null) {
+        fgSel.value = forced;
+      } else {
+        fgSel.value = stint.fachgebiet || '';
+      }
+      const ph = fgSel.querySelector('option[value=""]');
+      if (ph) {
+        if (stint.setting === 'notfall' || stint.setting === 'intensiv') ph.textContent = '— entfällt (Pflichtabschnitt) —';
+        else if (stint.setting === 'dialyse') ph.textContent = '— Dialyse (auto: 13.9) —';
+        else ph.textContent = '— wählen —';
+      }
     }
   }
+  // Legacy-Felder synchronisieren (fuer Pfade, die noch bereich/kompetenz lesen)
+  syncLegacyFields(stint);
   saveState();
   // Monate-Anzeige live updaten
   const row = e.target.closest('.wb-stint');
@@ -1566,16 +1679,18 @@ function renderRotationCheck() {
   const ist_FA_innere_nephro = state.ziel === 'fa_innere_nephro';
   if (!ist_FA_innere && !ist_FA_innere_nephro) return "";
 
-  // Pro Kompetenz die anrechenbaren Mo aufsummieren.
-  // Notfall- und Intensiv-Stints sind Pflichtabschnitte (B 13.1 WBO 2021),
-  // keine FA-Kompetenz — sie werden hier nicht aggregiert.
+  // Pro Fachgebiet die anrechenbaren Mo aufsummieren.
+  // Nur Setting=stationaer/ambulant/dialyse zählen (Notfall + Intensiv sind
+  // Pflichtabschnitte ohne Fachgebiet-Anrechnung — B 13.1 WBO 2021).
   const kompMo = {};
   state.stints.forEach(function(st) {
-    if (st.bereich === 'notfall' || st.bereich === 'intensiv') return;
-    if (!st.kompetenz || st.kompetenz === 'na') return;
+    const setting = st.setting || st.bereich || '';
+    if (setting === 'notfall' || setting === 'intensiv') return;
+    const fg = st.fachgebiet || st.kompetenz || '';
+    if (!fg || fg === 'entfaellt' || fg === 'na') return;
     const mo = stintMonths(st);
     if (!mo) return;
-    kompMo[st.kompetenz] = (kompMo[st.kompetenz] || 0) + mo;
+    kompMo[fg] = (kompMo[fg] || 0) + mo;
   });
   const kompKeys = Object.keys(kompMo);
   const distinctCount = kompKeys.length;
@@ -1587,11 +1702,16 @@ function renderRotationCheck() {
   const minDistinct = 3;
   const maxPerKomp = 36;
 
-  // Pruefe wie viele Stints noch keine Kompetenz haben — Notfall/Intensiv
-  // sind Pflichtabschnitte und brauchen keine FA-Kompetenz, daher ausgenommen.
+  // Pruefe wie viele Stints noch kein Fachgebiet haben — Notfall/Intensiv
+  // sind Pflichtabschnitte und brauchen keins, daher ausgenommen. Dialyse
+  // wird automatisch auf 13.9 gesetzt.
   const unsetCount = state.stints.filter(function(s) {
-    if (s.bereich === 'notfall' || s.bereich === 'intensiv') return false;
-    return s.bereich && stintMonths(s) > 0 && (!s.kompetenz || s.kompetenz === '');
+    const setting = s.setting || s.bereich || '';
+    if (!setting) return false;
+    if (setting === 'notfall' || setting === 'intensiv' || setting === 'dialyse') return false;
+    if (stintMonths(s) <= 0) return false;
+    const fg = s.fachgebiet || s.kompetenz || '';
+    return !fg;
   }).length;
 
   const issues = [];
@@ -1603,7 +1723,7 @@ function renderRotationCheck() {
     issues.push('Bisher nur ' + distinctCount + ' verschiedene FA-Kompetenz' + (distinctCount === 1 ? '' : 'en') + ' — ' + fehlt + ' weitere nötig (WBO fordert mindestens ' + minDistinct + ').');
   }
   overspec.forEach(function(k) {
-    const lbl = (KOMPETENZ_OPTIONS.find(function(o) { return o.value === k; }) || {label:k}).label;
+    const lbl = (FACHGEBIET_OPTIONS.find(function(o) { return o.value === k; }) || {label:k}).label;
     issues.push('Mehr als ' + maxPerKomp + ' Mo in ' + lbl + ' (' + fmtMo(kompMo[k]) + ' Mo) — überschreitet die Höchstgrenze derselben Facharztkompetenz.');
   });
 
@@ -1619,7 +1739,7 @@ function renderRotationCheck() {
     const sortedKeys = kompKeys.slice().sort(function(a, b) { return kompMo[b] - kompMo[a]; });
     kompList = '<div class="wb-rot-detail">Eingetragen: ' +
       sortedKeys.map(function(k) {
-        const lbl = (KOMPETENZ_OPTIONS.find(function(o) { return o.value === k; }) || {label:k}).label;
+        const lbl = (FACHGEBIET_OPTIONS.find(function(o) { return o.value === k; }) || {label:k}).label;
         return escapeHtml(lbl) + ' (' + fmtMo(kompMo[k]) + ' Mo)';
       }).join(' · ') + '</div>';
   }
@@ -1662,19 +1782,20 @@ function renderCurriculumBar() {
   let segments = "";
   sorted.forEach(function(st) {
     const mo = stintMonths(st);
-    if (!mo || !st.bereich) {
-      cumBefore += mo;
-      return;
-    }
-    const block = pfad.blocks.find(function(b) { return b.key === st.bereich; });
-    const cls = (typeof BLOCK_COLORS !== 'undefined' && BLOCK_COLORS[st.bereich]) || 'wb-c-sonstige';
+    if (!mo) { cumBefore += mo; return; }
+    if (!st.setting && !st.bereich) { cumBefore += mo; return; }
+    const block = pfad.blocks.find(function(b) { return stintMatchesBlock(st, b); });
+    // Color-Key: neue Welt nach setting, sonst Fallback auf bereich
+    const colorKey = st.setting || st.bereich || 'sonstige';
+    const cls = (typeof BLOCK_COLORS !== 'undefined' && BLOCK_COLORS[colorKey]) || 'wb-c-sonstige';
     let violation = false;
     if (block && block.frueheste_wb_monate != null && cumBefore < block.frueheste_wb_monate) {
       violation = true;
     }
     const w = (mo / denom * 100).toFixed(2);
     const labelMo = mo >= 2 ? fmtMo(mo) : "";
-    const klinikLbl = (st.klinik || "(o.A.)") + " — " + (block ? block.label : st.bereich) + ": " + fmtMo(mo) + " Mo";
+    const settingLbl = (SETTING_OPTIONS.find(o => o.value === st.setting) || {}).label || st.setting || st.bereich || '?';
+    const klinikLbl = (st.klinik || "(o.A.)") + " — " + settingLbl + ": " + fmtMo(mo) + " Mo";
     segments += '<div class="wb-curr-seg ' + cls + (violation ? ' wb-curr-violation' : '') +
                 '" style="width:' + w + '%" title="' + escapeAttr(klinikLbl + (violation ? ' [Reihenfolge-Verstoss]' : '')) + '">' +
                 escapeHtml(labelMo) + '</div>';
@@ -1703,14 +1824,17 @@ function renderCurriculumBar() {
   // Achsen-Beschriftung (links 0 Mo, rechts denom Mo)
   const axisHtml = '<div class="wb-curr-axis"><span>0 Mo</span><span>' + soll + ' Mo (Soll)</span></div>';
 
-  // Legende: alle vorkommenden Bereiche + fehlend
-  const usedKeys = {};
-  sorted.forEach(function(st) { if (st.bereich && stintMonths(st) > 0) usedKeys[st.bereich] = true; });
+  // Legende: alle tatsächlich vorkommenden Settings + fehlend
+  const usedSettings = {};
+  sorted.forEach(function(st) {
+    if (stintMonths(st) > 0 && st.setting) usedSettings[st.setting] = true;
+    else if (stintMonths(st) > 0 && st.bereich) usedSettings[st.bereich] = true;
+  });
   let legend = '<div class="wb-curr-legend">';
-  pfad.blocks.forEach(function(b) {
-    if (!usedKeys[b.key]) return;
-    const cls = (typeof BLOCK_COLORS !== 'undefined' && BLOCK_COLORS[b.key]) || 'wb-c-sonstige';
-    legend += '<span class="wb-curr-legend-item"><span class="wb-curr-legend-dot ' + cls + '"></span>' + escapeHtml(b.label) + '</span>';
+  Object.keys(usedSettings).forEach(function(key) {
+    const cls = (typeof BLOCK_COLORS !== 'undefined' && BLOCK_COLORS[key]) || 'wb-c-sonstige';
+    const lbl = (SETTING_OPTIONS.find(o => o.value === key) || {}).label || key;
+    legend += '<span class="wb-curr-legend-item"><span class="wb-curr-legend-dot ' + cls + '"></span>' + escapeHtml(lbl) + '</span>';
   });
   if (total < soll) {
     legend += '<span class="wb-curr-legend-item"><span class="wb-curr-legend-dot wb-curr-missing"></span>noch fehlend</span>';
@@ -1806,8 +1930,9 @@ function renderEval() {
 
   sorted.forEach(st => {
     const mo = stintMonths(st);
-    if (!mo || !st.bereich) return;
-    const block = pfad.blocks.find(b => b.key === st.bereich);
+    if (!mo) return;
+    if (!st.setting && !st.bereich) return;  // weder neue noch alte Felder
+    const block = pfad.blocks.find(b => stintMatchesBlock(st, b));
     if (!block) return;
 
     // Reihenfolge-Check
@@ -1911,16 +2036,25 @@ const SETTING_LABELS = {
 };
 
 const BLOCK_COLORS = {
+  // Setting-basierte Keys (neue Welt)
   stationaer:        'wb-c-stationaer',
+  ambulant:          'wb-c-frei',
+  notfall:           'wb-c-notfall',
+  intensiv:          'wb-c-intensiv',
+  dialyse:           'wb-c-dialyse',
+  // Block-Keys (alt + neu)
+  set_stat:          'wb-c-stationaer',
+  set_notfall:       'wb-c-notfall',
+  set_intensiv:      'wb-c-intensiv',
+  set_amb:           'wb-c-frei',
+  set_dialyse:       'wb-c-dialyse',
+  // Legacy bereich-Keys
   basis_stat:        'wb-c-stationaer',
   basis_unmittelbar: 'wb-c-innere',
   innere_nephro:     'wb-c-nephro',
   nephro:            'wb-c-nephro',
-  dialyse:           'wb-c-dialyse',
   andere_komp:       'wb-c-andere_komp',
   stat_2_komp:       'wb-c-andere_komp',
-  notfall:           'wb-c-notfall',
-  intensiv:          'wb-c-intensiv',
   intensiv_zwb:      'wb-c-intensiv',
   sonstige:          'wb-c-sonstige'
 };
