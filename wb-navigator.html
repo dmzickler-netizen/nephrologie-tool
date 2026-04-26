@@ -138,6 +138,14 @@ section.wb-phase {
   padding: 7px 14px; cursor: pointer; font-size: 13px; font-family: inherit;
 }
 .wb-add-btn:hover { background: #142847; }
+.wb-clear-btn {
+  margin-top: 10px; margin-left: 8px;
+  background: white; color: var(--wb-bad);
+  border: 1px solid var(--wb-bad); border-radius: 4px;
+  padding: 7px 14px; cursor: pointer; font-size: 13px; font-family: inherit;
+}
+.wb-clear-btn:hover { background: #fee2e2; }
+.wb-clear-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .wb-totals {
   display: flex; gap: 16px; flex-wrap: wrap;
@@ -596,6 +604,7 @@ section.wb-phase {
     </div>
     <ul class="wb-timeline-list" id="wb-stints"></ul>
     <button type="button" class="wb-add-btn" id="wb-add-stint">+ Station hinzufügen</button>
+    <button type="button" class="wb-clear-btn" id="wb-clear-stints" title="Alle Stationen aus der Timeline entfernen">🗑 Alle Stationen löschen</button>
 
     <div class="wb-totals" id="wb-totals"></div>
   </div>
@@ -1109,8 +1118,10 @@ function showTimelineAndEval() {
       </div>
       <ul class="wb-timeline-list" id="wb-stints"></ul>
       <button type="button" class="wb-add-btn" id="wb-add-stint">+ Station hinzufügen</button>
+    <button type="button" class="wb-clear-btn" id="wb-clear-stints" title="Alle Stationen aus der Timeline entfernen">🗑 Alle Stationen löschen</button>
       <div class="wb-totals" id="wb-totals"></div>`;
     document.getElementById('wb-add-stint').addEventListener('click', addStint);
+    document.getElementById('wb-clear-stints').addEventListener('click', clearStints);
   }
   renderStints();
   renderEval();
@@ -1129,6 +1140,16 @@ function addStint() {
 
 function delStint(id) {
   state.stints = state.stints.filter(s => s.id !== id);
+  saveState();
+  renderStints();
+  renderEval();
+}
+
+function clearStints() {
+  const n = state.stints.length;
+  if (n === 0) return;
+  if (!confirm("Alle " + n + " Stationen aus der Timeline löschen? Diese Aktion lässt sich nicht rückgängig machen.")) return;
+  state.stints = [];
   saveState();
   renderStints();
   renderEval();
@@ -1366,6 +1387,7 @@ document.getElementById('wb-back-to-wizard').addEventListener('click', () => {
 
 // FIX: Add-Stint-Button-Listener immer attachen (Button existiert bereits im Initial-HTML)
 document.getElementById('wb-add-stint').addEventListener('click', addStint);
+document.getElementById('wb-clear-stints').addEventListener('click', clearStints);
 
 // =========================================================================
 //  EDUKATIVE SEKTIONEN: Bausteine-Übersicht, Anrechnung, Richtzahlen
