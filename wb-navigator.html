@@ -35,16 +35,16 @@ body {
 .wb-header .wb-source-link { font-size: 12px; }
 
 .wb-disclaimer {
-  background: #fef3c7;
-  border: 1px solid #f59e0b;
-  border-left: 4px solid #d97706;
-  color: #78350f;
-  padding: 10px 14px;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  color: #0c4a6e;
+  padding: 7px 12px;
   border-radius: 6px;
-  margin: 14px 0 18px;
-  font-size: 14px;
+  margin: 10px 0 14px;
+  font-size: 12.5px;
+  line-height: 1.45;
 }
-.wb-disclaimer b { color: #7c2d12; }
+.wb-disclaimer b { color: #075985; }
 
 section.wb-phase {
   background: var(--wb-card-bg);
@@ -405,6 +405,54 @@ section.wb-phase {
 .wb-c-frei        { background: #fde68a; }   /* amber — flexibel, stat. od. ambulant */
 .wb-c-sonstige    { background: #e5e7eb; }   /* grau */
 
+/* Curriculum-Visualisierung: zeigt eingegebene Stints chronologisch als
+   farbigen Balken, mit Marker fuer Reihenfolge-Constraints und Hatched-
+   Bereich fuer Fehlmonate. */
+.wb-curr-wrap { margin: 14px 0 18px; }
+.wb-curr-label {
+  font-size: 13px; font-weight: 600; color: var(--wb-primary); margin-bottom: 6px;
+}
+.wb-curr-sub { font-size: 11px; color: var(--wb-muted); margin-bottom: 8px; }
+.wb-curr-bar {
+  position: relative; display: flex; height: 38px;
+  border: 1px solid var(--wb-border); border-radius: 6px; overflow: hidden;
+  background: white;
+}
+.wb-curr-seg {
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600; color: #1f2937;
+  min-width: 0; overflow: hidden; white-space: nowrap;
+  border-right: 1px solid rgba(255,255,255,0.6);
+  position: relative;
+}
+.wb-curr-seg:last-child { border-right: none; }
+.wb-curr-seg.wb-curr-violation::after {
+  content: '⚠'; position: absolute; top: 1px; right: 3px; font-size: 10px; color: #b91c1c;
+}
+.wb-curr-missing {
+  background: repeating-linear-gradient(45deg, #f3f4f6, #f3f4f6 5px, #e5e7eb 5px, #e5e7eb 10px);
+  color: var(--wb-muted); font-style: italic;
+}
+.wb-curr-marker {
+  position: absolute; top: 0; bottom: 0; width: 0;
+  border-left: 2px dashed #b91c1c;
+  pointer-events: none;
+}
+.wb-curr-marker-label {
+  position: absolute; top: -16px; left: 50%; transform: translateX(-50%);
+  font-size: 9px; color: #b91c1c; white-space: nowrap; font-weight: 600;
+}
+.wb-curr-axis {
+  display: flex; justify-content: space-between; font-size: 10px;
+  color: var(--wb-muted); margin-top: 4px; padding: 0 2px;
+}
+.wb-curr-legend {
+  display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px;
+  font-size: 11px; color: var(--wb-fg);
+}
+.wb-curr-legend-item { display: inline-flex; align-items: center; gap: 5px; }
+.wb-curr-legend-dot { width: 11px; height: 11px; border-radius: 2px; flex-shrink: 0; }
+
 /* Anrechnungs-Diagramm */
 .wb-anr-flow {
   display: grid;
@@ -520,11 +568,8 @@ section.wb-phase {
   <p>Orientierungshilfe für die Weiterbildung Innere Medizin / Nephrologie / Intensivmedizin in Berlin</p>
 </header>
 
-<div class="wb-disclaimer" role="alert">
-  <b>⚠ Orientierungshilfe — keine verbindliche Auskunft.</b>
-  Dieses Tool ersetzt keine Beratung der Ärztekammer Berlin. Bei konkreten Fragen zur
-  Anrechenbarkeit von Weiterbildungszeiten, Übergangsregelungen oder Logbuch-Einträgen
-  bitte immer die <a href="https://www.aekb.de/aerzt-innen/weiterbildung" target="_blank" rel="noopener">Ärztekammer Berlin</a> direkt kontaktieren.
+<div class="wb-disclaimer" role="note">
+  💡 <b>Orientierungshilfe</b> — ersetzt keine verbindliche ÄK-Beratung. Bei konkreten Fragen zur Anrechenbarkeit, Übergangsregelung oder Logbuch direkt an die <a href="https://www.aekb.de/aerzt-innen/weiterbildung" target="_blank" rel="noopener">Ärztekammer Berlin</a> wenden.
 </div>
 
 <!-- ============== 1. WIZARD ============== -->
@@ -1409,6 +1454,94 @@ function renderTotals() {
 //  AUSWERTUNG / LÜCKENANALYSE (Variante B: streng, mit Reihenfolge-Prüfung)
 // =========================================================================
 
+// Curriculum-Visualisierung: chronologischer Balken aus eingegebenen Stints,
+// gefolgt vom fehlenden Anteil als gehatchter Bereich. Marker fuer Reihenfolge-
+// Constraints (z.B. Notfall ab Mo 12, Intensiv ab Mo 24).
+function renderCurriculumBar() {
+  const pfad = getPfad();
+  if (!pfad || pfad.nur_hinweis) return "";
+  const soll = pfad.monate_total || 0;
+  if (!soll) return "";
+
+  // Stints chronologisch
+  const sorted = state.stints.slice().sort(function(a, b) {
+    const ai = ymToIdx(a.beginn);
+    const bi = ymToIdx(b.beginn);
+    return (ai == null ? Number.MAX_SAFE_INTEGER : ai) - (bi == null ? Number.MAX_SAFE_INTEGER : bi);
+  });
+
+  const total = totalMonths();
+  // Skala: max von Soll und Tatsaechlich, damit ueberfuellte Pfade auch passen
+  const denom = Math.max(soll, total);
+
+  // Cumulative-Mo-Tracking fuer Reihenfolge-Pruefung
+  let cumBefore = 0;
+  let segments = "";
+  sorted.forEach(function(st) {
+    const mo = stintMonths(st);
+    if (!mo || !st.bereich) {
+      cumBefore += mo;
+      return;
+    }
+    const block = pfad.blocks.find(function(b) { return b.key === st.bereich; });
+    const cls = (typeof BLOCK_COLORS !== 'undefined' && BLOCK_COLORS[st.bereich]) || 'wb-c-sonstige';
+    let violation = false;
+    if (block && block.frueheste_wb_monate != null && cumBefore < block.frueheste_wb_monate) {
+      violation = true;
+    }
+    const w = (mo / denom * 100).toFixed(2);
+    const labelMo = mo >= 2 ? fmtMo(mo) : "";
+    const klinikLbl = (st.klinik || "(o.A.)") + " — " + (block ? block.label : st.bereich) + ": " + fmtMo(mo) + " Mo";
+    segments += '<div class="wb-curr-seg ' + cls + (violation ? ' wb-curr-violation' : '') +
+                '" style="width:' + w + '%" title="' + escapeAttr(klinikLbl + (violation ? ' [Reihenfolge-Verstoss]' : '')) + '">' +
+                escapeHtml(labelMo) + '</div>';
+    cumBefore += mo;
+  });
+
+  // Fehlbetrag als gehatchter Block
+  if (total < soll) {
+    const wMiss = ((soll - total) / denom * 100).toFixed(2);
+    const missLbl = "fehlend: " + fmtMo(soll - total) + " Mo";
+    segments += '<div class="wb-curr-seg wb-curr-missing" style="width:' + wMiss + '%" title="' + escapeAttr(missLbl) + '">' +
+                escapeHtml(fmtMo(soll - total) + " Mo fehlt") + '</div>';
+  }
+
+  // Reihenfolge-Marker (vertikale Linien fuer frueheste_wb_monate)
+  let markers = "";
+  pfad.blocks.forEach(function(b) {
+    if (b.frueheste_wb_monate != null && b.frueheste_wb_monate > 0 && b.frueheste_wb_monate <= denom) {
+      const pos = (b.frueheste_wb_monate / denom * 100).toFixed(2);
+      markers += '<div class="wb-curr-marker" style="left:' + pos + '%">' +
+                 '<span class="wb-curr-marker-label">' + escapeHtml(b.label.split(' ')[0]) + ' ab Mo ' + b.frueheste_wb_monate + '</span>' +
+                 '</div>';
+    }
+  });
+
+  // Achsen-Beschriftung (links 0 Mo, rechts denom Mo)
+  const axisHtml = '<div class="wb-curr-axis"><span>0 Mo</span><span>' + soll + ' Mo (Soll)</span></div>';
+
+  // Legende: alle vorkommenden Bereiche + fehlend
+  const usedKeys = {};
+  sorted.forEach(function(st) { if (st.bereich && stintMonths(st) > 0) usedKeys[st.bereich] = true; });
+  let legend = '<div class="wb-curr-legend">';
+  pfad.blocks.forEach(function(b) {
+    if (!usedKeys[b.key]) return;
+    const cls = (typeof BLOCK_COLORS !== 'undefined' && BLOCK_COLORS[b.key]) || 'wb-c-sonstige';
+    legend += '<span class="wb-curr-legend-item"><span class="wb-curr-legend-dot ' + cls + '"></span>' + escapeHtml(b.label) + '</span>';
+  });
+  if (total < soll) {
+    legend += '<span class="wb-curr-legend-item"><span class="wb-curr-legend-dot wb-curr-missing"></span>noch fehlend</span>';
+  }
+  legend += '</div>';
+
+  return '<div class="wb-curr-wrap">' +
+         '<div class="wb-curr-label">Mein Curriculum visuell</div>' +
+         '<div class="wb-curr-sub">Chronologisch nach Eingabe, Breite = anrechenbare Monate. Gestreifter Bereich = noch fehlend. Rote gestrichelte Linien = Reihenfolge-Mindestschwelle (Notfall, Intensiv).</div>' +
+         '<div class="wb-curr-bar" style="margin-top: 18px;">' + segments + markers + '</div>' +
+         axisHtml + legend +
+         '</div>';
+}
+
 function renderEval() {
   const pfad = getPfad();
   const host = document.getElementById('wb-eval-content');
@@ -1456,7 +1589,7 @@ function renderEval() {
       <div><b>Gesamtfortschritt:</b> ${fmtMo(total)} / ${soll} Monate (${totalPct}%)</div>
       <div class="wb-bar" style="margin-top: 6px;"><div class="wb-bar-fill ${totalCls}" style="width:${totalPct}%"></div></div>
     </div>
-  `;
+  ` + renderCurriculumBar();
 
   // Pro Block
   pfad.blocks.forEach(b => {
