@@ -147,6 +147,19 @@ section.wb-phase {
 .wb-clear-btn:hover { background: #fee2e2; }
 .wb-clear-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
+/* FA-Innere-Anerkennungsdatum (Cutoff fuer Aufbau-Pfade) */
+.wb-fa-date-block {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  background: #fef9c3; border: 1px solid #fde68a; border-radius: 6px;
+  padding: 10px 14px; margin-bottom: 12px; font-size: 13px;
+}
+.wb-fa-date-block label { font-weight: 600; color: #713f12; }
+.wb-fa-date-block select {
+  padding: 5px 8px; font-size: 13px; border: 1px solid var(--wb-border); border-radius: 4px;
+  background: white; font-family: inherit;
+}
+.wb-fa-date-block .wb-fa-date-hint { color: #78350f; font-size: 12px; flex-basis: 100%; }
+
 .wb-totals {
   display: flex; gap: 16px; flex-wrap: wrap;
   margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--wb-border);
@@ -586,13 +599,12 @@ section.wb-phase {
 
   <div id="wb-pfad-info" class="wb-info-block" style="margin-bottom: 12px;"></div>
 
+  <!-- FA-Innere-Anerkennungsdatum als Cutoff für Aufbau-Pfade (ZWB Intensiv, Aufbau Nephrologie) -->
+  <div class="wb-fa-date-block" id="wb-fa-date-block" hidden></div>
+
   <!-- bei rein hinweisbasierten Pfaden (ZWB Intensiv 2004) wird nur ein Info-Block gezeigt -->
   <div id="wb-timeline-input">
-    <p style="color: var(--wb-muted); font-size: 13px; margin: 0 0 10px;">
-      Trag jede Weiterbildungs-Station chronologisch ein (Beginn → Ende, Klinik, primärer Bereich, Pensum).
-      Bei Teilzeit zählen die Monate anteilig (§ 4 Abs. 6 WBO 2021): z.B. 12 Mo bei 75% = 9 Mo anrechenbar.
-      Mindest-Pensum 50% — darunter Sonder-Anzeige bei der ÄK Berlin nötig.
-    </p>
+    <p id="wb-timeline-intro" style="color: var(--wb-muted); font-size: 13px; margin: 0 0 10px;"></p>
     <div class="wb-stint-header" aria-hidden="true">
       <div>Beginn</div>
       <div>Ende</div>
@@ -912,7 +924,8 @@ const state = {
   wbo: null,        // 'wbo2021' | 'wbo2004'
   status: null,     // 'kein_fa' | 'fa_innere'
   ziel: null,       // pfad-key
-  stints: []        // [{id, beginn:'YYYY-MM', ende:'YYYY-MM', klinik, bereich}]
+  stints: [],       // [{id, beginn:'YYYY-MM', ende:'YYYY-MM', klinik, bereich, pensum}]
+  fa_innere_anerkannt: ""  // 'YYYY-MM' Cutoff für Aufbau-Pfade (Anerkennungsdatum FA Innere)
 };
 
 function saveState() {
@@ -928,6 +941,7 @@ function loadState() {
       // Migration: fehlende pensum-Werte auf 100 setzen
       state.stints = s.stints.map(st => Object.assign({pensum: 100}, st));
     }
+    if (typeof s.fa_innere_anerkannt === 'string') state.fa_innere_anerkannt = s.fa_innere_anerkannt;
   } catch (e) { /* ignore */ }
 }
 
@@ -956,8 +970,21 @@ function stintRawMonths(stint) {
 // Anrechenbare Monate = Kalender × Pensum/100 (§ 4 Abs. 6 WBO 2021:
 // "Die Weiterbildungszeit verlängert sich bei einer Weiterbildung in Teilzeit
 // entsprechend einer Weiterbildung in Vollzeit." Mindest-Pensum 50%.)
+// Bei Aufbau-Pfaden (status='fa_innere'): nur Zeit ab FA-Innere-Anerkennung
+// zählt — Stationen davor zählen 0, partielle Überschneidungen anteilig.
 function stintMonths(stint) {
-  const raw = stintRawMonths(stint);
+  const a = ymToIdx(stint.beginn);
+  const b = ymToIdx(stint.ende);
+  if (a == null || b == null || b < a) return 0;
+  let effectiveBeginn = a;
+  if (state.status === 'fa_innere' && state.fa_innere_anerkannt) {
+    const cutoff = ymToIdx(state.fa_innere_anerkannt);
+    if (cutoff != null) {
+      if (b < cutoff) return 0;
+      effectiveBeginn = Math.max(a, cutoff);
+    }
+  }
+  const raw = b - effectiveBeginn + 1;
   const p = stint && stint.pensum != null ? Number(stint.pensum) : 100;
   return raw * (p / 100);
 }
@@ -1080,6 +1107,72 @@ document.querySelectorAll('#wb-status-cards .wb-card-btn').forEach(btn => {
 //  TIMELINE
 // =========================================================================
 
+// Intro-Text der Timeline-Sektion — abhaengig vom Status. Macht klar, ob ALLE
+// WB-Zeit eingetragen werden soll oder nur seit FA Innere.
+function renderTimelineIntro() {
+  const el = document.getElementById('wb-timeline-intro');
+  if (!el) return;
+  const isAufbau = state.status === 'fa_innere';
+  if (isAufbau) {
+    el.innerHTML = `
+      <b>Trag ALLE Weiterbildungs-Stationen ein</b> — auch die aus deiner FA-Innere-Zeit.
+      Stationen vor dem oben angegebenen Datum der Facharztreife werden im Aufbau mit 0 Mo gerechnet,
+      Stationen danach normal × Pensum. Bei Teilzeit zählen die Monate anteilig
+      (§ 4 Abs. 6 WBO 2021): 12 Mo bei 75% = 9 Mo anrechenbar. Mindest-Pensum 50%.`;
+  } else {
+    el.innerHTML = `
+      Trag jede Weiterbildungs-Station chronologisch ein (Beginn → Ende, Klinik, primärer Bereich, Pensum).
+      Bei Teilzeit zählen die Monate anteilig (§ 4 Abs. 6 WBO 2021): z.B. 12 Mo bei 75% = 9 Mo anrechenbar.
+      Mindest-Pensum 50% — darunter Sonder-Anzeige bei der ÄK Berlin nötig.`;
+  }
+}
+
+// FA-Innere-Anerkennungsdatum als Cutoff fuer Aufbau-Pfade.
+// Nur sichtbar wenn status='fa_innere'. Bei Aenderung wird stintMonths
+// automatisch neu ausgewertet (renderStints + renderEval).
+function renderFaDateBlock() {
+  const block = document.getElementById('wb-fa-date-block');
+  if (!block) return;
+  const isAufbau = state.status === 'fa_innere';
+  block.hidden = !isAufbau;
+  if (!isAufbau) return;
+
+  const monthLabels = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+  const yMin = 2000, yMax = new Date().getFullYear() + 1;
+  const yearOpts = [];
+  for (let y = yMin; y <= yMax; y++) yearOpts.push(y);
+
+  const [y, m] = (state.fa_innere_anerkannt && /^\d{4}-\d{2}$/.test(state.fa_innere_anerkannt))
+    ? state.fa_innere_anerkannt.split("-") : ["",""];
+
+  block.innerHTML = `
+    <label>Facharztreife Innere Medizin erreicht am:</label>
+    <select id="wb-fa-date-mo" aria-label="Monat Facharztreife">
+      <option value="">Mon.</option>
+      ${monthLabels.map((mo, i) => {
+        const v = String(i+1).padStart(2,'0');
+        return `<option value="${v}"${v === m ? ' selected' : ''}>${mo}</option>`;
+      }).join("")}
+    </select>
+    <select id="wb-fa-date-yr" aria-label="Jahr Facharztreife">
+      <option value="">Jahr</option>
+      ${yearOpts.map(yr => `<option value="${yr}"${String(yr) === y ? ' selected' : ''}>${yr}</option>`).join("")}
+    </select>
+    <span class="wb-fa-date-hint"><b>Facharztreife</b> = Zeitpunkt, an dem alle formalen WB-Zeiten und -Inhalte für FA Innere erfüllt waren — <b>nicht</b> das Datum der FA-Prüfung oder der Urkunde. Trag unten ALLE Weiterbildungs-Stationen ein (auch vor Facharztreife). Anrechenbar für den Aufbau ist nur die Zeit ab diesem Monat — frühere Stationen werden mit 0 Mo gerechnet, partielle Überschneidungen anteilig.</span>
+  `;
+
+  function updateFa() {
+    const ySel = document.getElementById('wb-fa-date-yr');
+    const mSel = document.getElementById('wb-fa-date-mo');
+    state.fa_innere_anerkannt = (ySel.value && mSel.value) ? `${ySel.value}-${mSel.value}` : "";
+    saveState();
+    renderStints();
+    renderEval();
+  }
+  document.getElementById('wb-fa-date-mo').addEventListener('change', updateFa);
+  document.getElementById('wb-fa-date-yr').addEventListener('change', updateFa);
+}
+
 function showTimelineAndEval() {
   const pfad = getPfad();
   if (!pfad) return;
@@ -1096,6 +1189,9 @@ function showTimelineAndEval() {
   }
   info.innerHTML = infoHtml;
 
+  // FA-Innere-Cutoff (nur für Aufbau-Pfade)
+  renderFaDateBlock();
+
   // Bei reinen Hinweis-Pfaden: Timeline-Eingabe ausblenden
   const timelineInput = document.getElementById('wb-timeline-input');
   if (pfad.nur_hinweis) {
@@ -1107,11 +1203,7 @@ function showTimelineAndEval() {
   // Timeline-Header und Liste neu rendern (falls vorher Hinweis-Pfad gezeigt war)
   if (!document.getElementById('wb-stints')) {
     timelineInput.innerHTML = `
-      <p style="color: var(--wb-muted); font-size: 13px; margin: 0 0 10px;">
-        Trag jede Weiterbildungs-Station chronologisch ein (Beginn → Ende, Klinik, primärer Bereich, Pensum).
-        Bei Teilzeit zählen die Monate anteilig (§ 4 Abs. 6 WBO 2021): z.B. 12 Mo bei 75% = 9 Mo anrechenbar.
-        Mindest-Pensum 50% — darunter Sonder-Anzeige bei der ÄK Berlin nötig.
-      </p>
+      <p id="wb-timeline-intro" style="color: var(--wb-muted); font-size: 13px; margin: 0 0 10px;"></p>
       <div class="wb-stint-header" aria-hidden="true">
         <div>Beginn</div><div>Ende</div><div>Klinik / Abteilung</div>
         <div>Bereich</div><div>Pensum</div><div style="text-align:right">Mo (anr.)</div><div></div>
@@ -1123,6 +1215,7 @@ function showTimelineAndEval() {
     document.getElementById('wb-add-stint').addEventListener('click', addStint);
     document.getElementById('wb-clear-stints').addEventListener('click', clearStints);
   }
+  renderTimelineIntro();
   renderStints();
   renderEval();
   document.getElementById('wb-phase-eval').hidden = false;
