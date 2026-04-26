@@ -453,6 +453,26 @@ section.wb-phase {
 .wb-curr-legend-item { display: inline-flex; align-items: center; gap: 5px; }
 .wb-curr-legend-dot { width: 11px; height: 11px; border-radius: 2px; flex-shrink: 0; }
 
+/* Bonus-Analyse: Was waere noch noetig fuer ZWB Intensiv / Nephrologie aufbauend? */
+.wb-bonus-wrap {
+  background: #f5f3ff; border: 1px solid #c4b5fd; border-radius: 6px;
+  padding: 12px 14px; margin-top: 16px; font-size: 13px;
+}
+.wb-bonus-head {
+  font-weight: 600; color: #4c1d95; margin-bottom: 6px; font-size: 13px;
+  display: flex; align-items: center; gap: 6px;
+}
+.wb-bonus-sub { font-size: 11px; color: var(--wb-muted); margin-bottom: 10px; }
+.wb-bonus-item {
+  background: white; border: 1px solid #e9d5ff; border-radius: 5px;
+  padding: 8px 10px; margin-bottom: 8px;
+}
+.wb-bonus-item:last-child { margin-bottom: 0; }
+.wb-bonus-title { font-weight: 600; color: var(--wb-primary); margin-bottom: 4px; }
+.wb-bonus-detail { color: var(--wb-fg); font-size: 12.5px; line-height: 1.45; }
+.wb-bonus-done { color: var(--wb-good); font-weight: 500; }
+.wb-bonus-mo { font-variant-numeric: tabular-nums; }
+
 /* Anrechnungs-Diagramm */
 .wb-anr-flow {
   display: grid;
@@ -1542,6 +1562,69 @@ function renderCurriculumBar() {
          '</div>';
 }
 
+// Bonus-Analyse: Wenn der User aktuell auf 'FA Innere' (basis) ist, zeigen wir
+// hier kompakt, was noch fehlen wuerde, falls er anschliessend FA Innere u.
+// Nephrologie oder ZWB Intensivmedizin draufsatteln will. Basis: schon
+// eingegebene Stints (nach Bereich aggregiert).
+function renderBonusAnalysis() {
+  // Nur sinnvoll im Basis-FA-Innere-Pfad (Frage: was kann ich danach machen?)
+  if (state.ziel !== 'fa_innere' || state.status !== 'kein_fa') return "";
+  if (state.stints.length === 0) return "";
+
+  // Summen pro Bereich
+  const sums = {};
+  state.stints.forEach(function(st) {
+    if (!st.bereich) return;
+    sums[st.bereich] = (sums[st.bereich] || 0) + stintMonths(st);
+  });
+  const stationaer = sums.stationaer || 0;
+  const intensiv = sums.intensiv || 0;
+  const notfall = sums.notfall || 0;
+  const innereNephro = sums.innere_nephro || 0;
+  const dialyse = sums.dialyse || 0;
+
+  // === FA Innere u. Nephrologie (Aufbau) ===
+  // Quelle: WBO 2021 B 13.9, S. 179 — 36 Mo Innere u. Nephrologie inkl. 6 Mo Dialyse
+  const nephroNeeded = 36;
+  const nephroDone = innereNephro;
+  const nephroMissing = Math.max(0, nephroNeeded - nephroDone);
+  const dialyseNeeded = 6;
+  const dialyseMissing = Math.max(0, dialyseNeeded - dialyse);
+
+  let nephroDetail = "";
+  if (nephroMissing === 0 && dialyseMissing === 0) {
+    nephroDetail = '<span class="wb-bonus-done">✓ Alle Nephro-Anteile bereits eingegeben — nach FA-Anerkennung Innere könnte die Bezeichnung Innere u. Nephrologie direkt beantragt werden.</span>';
+  } else {
+    nephroDetail = 'Zusätzlich erforderlich: <b class="wb-bonus-mo">' + nephroMissing + ' Mo Nephrologie</b>';
+    if (dialyseMissing > 0) {
+      nephroDetail += ' (davon <b class="wb-bonus-mo">' + dialyseMissing + ' Mo Dialyse</b> obligat)';
+    }
+    nephroDetail += '. Stationär-/Notfall-/Intensiv-Anteile aus deiner FA-Innere-WB werden auf die 72 Mo Gesamtdauer angerechnet — die <b>24 Mo in mind. 2 weiteren FA-Kompetenzen</b> sind bei rotierter FA-Innere-WB meist bereits erfüllt (ÄK prüfen lassen).';
+  }
+
+  // === ZWB Intensivmedizin ===
+  // Quelle: WBO 2021 C 17, S. 364 — 18 Mo Intensiv unter Befugnis,
+  // davon 6 Mo aus FA-WB anrechenbar wenn dort >= 12 Mo Intensiv unter Befugnis
+  const zwbAnrechnung = intensiv >= 12 ? 6 : 0;
+  const zwbStillNeeded = 18 - zwbAnrechnung;
+
+  let zwbDetail = '';
+  if (zwbAnrechnung > 0) {
+    zwbDetail = 'Zusätzlich erforderlich: <b class="wb-bonus-mo">' + zwbStillNeeded + ' Mo Intensivmedizin</b> unter ZWB-Befugnis. ' +
+                'Du hast <b class="wb-bonus-mo">' + fmtMo(intensiv) + ' Mo Intensiv</b> in der FA-WB → <b>6 Mo Anrechnung</b> möglich (§ C 17 WBO 2021).';
+  } else {
+    zwbDetail = 'Zusätzlich erforderlich: <b class="wb-bonus-mo">18 Mo Intensivmedizin</b> unter ZWB-Befugnis. ' +
+                'Du hast <b class="wb-bonus-mo">' + fmtMo(intensiv) + ' Mo Intensiv</b> in der FA-WB — für die 6-Mo-Anrechnung wären mindestens 12 Mo Intensiv unter Befugnis nötig.';
+  }
+
+  return '<div class="wb-bonus-wrap">' +
+         '<div class="wb-bonus-head">🔮 Bonus: Was fehlt noch für Aufbau-Pfade?</div>' +
+         '<div class="wb-bonus-sub">Hypothetisch — falls du nach dem FA Innere noch Nephrologe oder Intensivmediziner werden willst. Berechnung auf Basis deiner Eingaben oben.</div>' +
+         '<div class="wb-bonus-item"><div class="wb-bonus-title">Facharzt für Innere Medizin und Nephrologie</div><div class="wb-bonus-detail">' + nephroDetail + '</div></div>' +
+         '<div class="wb-bonus-item"><div class="wb-bonus-title">Zusatz-Weiterbildung Intensivmedizin (Internistisch)</div><div class="wb-bonus-detail">' + zwbDetail + '</div></div>' +
+         '</div>';
+}
+
 function renderEval() {
   const pfad = getPfad();
   const host = document.getElementById('wb-eval-content');
@@ -1589,7 +1672,7 @@ function renderEval() {
       <div><b>Gesamtfortschritt:</b> ${fmtMo(total)} / ${soll} Monate (${totalPct}%)</div>
       <div class="wb-bar" style="margin-top: 6px;"><div class="wb-bar-fill ${totalCls}" style="width:${totalPct}%"></div></div>
     </div>
-  ` + renderCurriculumBar();
+  ` + renderCurriculumBar() + renderBonusAnalysis();
 
   // Pro Block
   pfad.blocks.forEach(b => {
