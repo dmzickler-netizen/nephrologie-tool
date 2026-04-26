@@ -708,7 +708,10 @@ section.wb-phase {
 <section class="wb-phase" id="wb-phase-timeline" hidden>
   <h2>
     5. Bisherige Weiterbildungs-Stationen
-    <button type="button" class="wb-edit-btn" id="wb-back-to-wizard">← Pfad ändern</button>
+    <span style="display:inline-flex; gap:6px;">
+      <button type="button" class="wb-clear-btn" id="wb-clear-stints-top" style="margin-top:0;" title="Alle Stationen + Facharztreife-Datum zurücksetzen">🗑 Alle löschen</button>
+      <button type="button" class="wb-edit-btn" id="wb-back-to-wizard">← Pfad ändern</button>
+    </span>
   </h2>
 
   <div id="wb-pfad-info" class="wb-info-block" style="margin-bottom: 12px;"></div>
@@ -1491,11 +1494,17 @@ function delStint(id) {
 
 function clearStints() {
   const n = state.stints.length;
-  if (n === 0) return;
-  if (!confirm("Alle " + n + " Stationen aus der Timeline löschen? Diese Aktion lässt sich nicht rückgängig machen.")) return;
+  const hasFaDate = !!state.fa_innere_anerkannt;
+  if (n === 0 && !hasFaDate) return;
+  const msg = (n > 0 ? ('Alle ' + n + ' Stationen aus der Timeline löschen') : 'Alle Eingaben löschen')
+            + (hasFaDate ? ' (inkl. Facharztreife-Datum)' : '')
+            + '? Diese Aktion lässt sich nicht rückgängig machen.';
+  if (!confirm(msg)) return;
   state.stints = [];
+  state.fa_innere_anerkannt = '';
   saveState();
   renderStints();
+  renderFaDateBlock();
   renderEval();
 }
 
@@ -2059,6 +2068,8 @@ document.getElementById('wb-back-to-wizard').addEventListener('click', () => {
 // FIX: Add-Stint-Button-Listener immer attachen (Button existiert bereits im Initial-HTML)
 document.getElementById('wb-add-stint').addEventListener('click', addStint);
 document.getElementById('wb-clear-stints').addEventListener('click', clearStints);
+const topClearBtn = document.getElementById('wb-clear-stints-top');
+if (topClearBtn) topClearBtn.addEventListener('click', clearStints);
 
 // =========================================================================
 //  EDUKATIVE SEKTIONEN: Bausteine-Übersicht, Anrechnung, Richtzahlen
