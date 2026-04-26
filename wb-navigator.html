@@ -109,8 +109,8 @@ section.wb-phase {
 .wb-timeline-list { margin: 0; padding: 0; list-style: none; }
 .wb-stint {
   display: grid;
-  grid-template-columns: 130px 130px 1fr 1fr 75px 80px 32px;
-  gap: 8px; align-items: center;
+  grid-template-columns: 105px 105px 1fr 1.1fr 1.1fr 65px 65px 32px;
+  gap: 6px; align-items: center;
   padding: 8px 0; border-bottom: 1px solid #f3f4f6;
 }
 .wb-stint:last-child { border-bottom: none; }
@@ -127,8 +127,8 @@ section.wb-phase {
 .wb-stint .wb-del-btn:hover { background: #fee2e2; }
 .wb-stint-header {
   display: grid;
-  grid-template-columns: 130px 130px 1fr 1fr 75px 80px 32px;
-  gap: 8px;
+  grid-template-columns: 105px 105px 1fr 1.1fr 1.1fr 65px 65px 32px;
+  gap: 6px;
   font-size: 11px; color: var(--wb-muted); text-transform: uppercase; letter-spacing: 0.04em;
   padding: 4px 0; border-bottom: 1px solid var(--wb-border);
 }
@@ -233,7 +233,7 @@ section.wb-phase {
   .wb-disclaimer { border: 1px solid #d97706; }
   section.wb-phase { box-shadow: none; border: 1px solid #999; page-break-inside: avoid; }
   .wb-add-btn, .wb-clear-btn, .wb-del-btn, .wb-edit-btn, .wb-btn-primary, .wb-btn-secondary, #wb-print-row, .wb-no-print { display: none !important; }
-  .wb-stint, .wb-stint-header { grid-template-columns: 110px 110px 1.4fr 1.6fr 55px 60px; gap: 6px; }
+  .wb-stint, .wb-stint-header { grid-template-columns: 95px 95px 1.2fr 1.3fr 1.3fr 50px 55px; gap: 5px; }
   .wb-stint .wb-del-btn { display: none; }
   .wb-stint-date { grid-template-columns: 45px 60px; gap: 3px; }
   .wb-card-btn { background: white !important; }
@@ -452,6 +452,18 @@ section.wb-phase {
 }
 .wb-curr-legend-item { display: inline-flex; align-items: center; gap: 5px; }
 .wb-curr-legend-dot { width: 11px; height: 11px; border-radius: 2px; flex-shrink: 0; }
+
+/* Rotations-Compliance-Block */
+.wb-rot-block {
+  margin-top: 14px; padding: 10px 14px; border-radius: 6px;
+  border: 1px solid; font-size: 13px;
+}
+.wb-rot-block.wb-rot-ok { background: #f0fdf4; border-color: #86efac; color: #166534; }
+.wb-rot-block.wb-rot-bad { background: #fef2f2; border-color: #fca5a5; color: #991b1b; }
+.wb-rot-head { font-weight: 600; margin-bottom: 6px; }
+.wb-rot-list { margin: 0; padding: 0 0 0 18px; }
+.wb-rot-list li { margin-bottom: 3px; }
+.wb-rot-detail { font-size: 11.5px; color: var(--wb-muted); margin-top: 4px; }
 
 /* Bonus-Analyse: Was waere noch noetig fuer ZWB Intensiv / Nephrologie aufbauend? */
 .wb-bonus-wrap {
@@ -708,6 +720,7 @@ section.wb-phase {
       <div>Ende</div>
       <div>Klinik / Abteilung</div>
       <div>Bereich</div>
+      <div>FA-Kompetenz</div>
       <div>Pensum</div>
       <div style="text-align:right">Mo (anr.)</div>
       <div></div>
@@ -1005,6 +1018,24 @@ const PFADE = {
   }
 };
 
+// FA-Kompetenzen des Gebiets Innere Medizin (WBO 2021 B 13.1–13.11)
+// Wird pro Stint optional zugeordnet, fuer die Constraint-Pruefung
+// "mind. 3 verschiedene FA-Kompetenzen" und "max. 36 Mo in derselben FA-Kompetenz".
+const KOMPETENZ_OPTIONS = [
+  { value: 'allgemein', label: 'Allgemeine Innere (13.1)' },
+  { value: 'angiologie', label: 'Angiologie (13.2)' },
+  { value: 'endokrino', label: 'Endokrino. u. Diabetologie (13.3)' },
+  { value: 'gastro', label: 'Gastroenterologie (13.4)' },
+  { value: 'geriatrie', label: 'Geriatrie (13.5)' },
+  { value: 'haemato', label: 'Hämatologie u. Onkologie (13.6)' },
+  { value: 'infektio', label: 'Infektiologie (13.7)' },
+  { value: 'kardio', label: 'Kardiologie (13.8)' },
+  { value: 'nephro', label: 'Nephrologie (13.9)' },
+  { value: 'pneumo', label: 'Pneumologie (13.10)' },
+  { value: 'rheumato', label: 'Rheumatologie (13.11)' },
+  { value: 'na', label: '— interdisz. / nicht zugeordnet —' }
+];
+
 // Welche Ziele sind nach Status verfügbar?
 // kein_fa     → komplette FA-Wege (60/72 Mo)
 // fa_innere   → Aufbau-Pfade (Nephrologie 36 Mo Aufbau, ZWB Intensivmedizin 18 Mo)
@@ -1036,8 +1067,8 @@ function loadState() {
     if (s.status) state.status = s.status;
     if (s.ziel) state.ziel = s.ziel;
     if (Array.isArray(s.stints)) {
-      // Migration: fehlende pensum-Werte auf 100 setzen
-      state.stints = s.stints.map(st => Object.assign({pensum: 100}, st));
+      // Migration: fehlende pensum-Werte auf 100, fehlende kompetenz auf "" setzen
+      state.stints = s.stints.map(st => Object.assign({pensum: 100, kompetenz: ""}, st));
     }
     if (typeof s.fa_innere_anerkannt === 'string') state.fa_innere_anerkannt = s.fa_innere_anerkannt;
   } catch (e) { /* ignore */ }
@@ -1307,7 +1338,7 @@ function showTimelineAndEval() {
       <p id="wb-timeline-intro" style="color: var(--wb-muted); font-size: 13px; margin: 0 0 10px;"></p>
       <div class="wb-stint-header" aria-hidden="true">
         <div>Beginn</div><div>Ende</div><div>Klinik / Abteilung</div>
-        <div>Bereich</div><div>Pensum</div><div style="text-align:right">Mo (anr.)</div><div></div>
+        <div>Bereich</div><div>FA-Kompetenz</div><div>Pensum</div><div style="text-align:right">Mo (anr.)</div><div></div>
       </div>
       <ul class="wb-timeline-list" id="wb-stints"></ul>
       <button type="button" class="wb-add-btn" id="wb-add-stint">+ Station hinzufügen</button>
@@ -1325,7 +1356,7 @@ function showTimelineAndEval() {
 function addStint() {
   state.stints.push({
     id: "s" + Date.now() + "-" + Math.random().toString(36).slice(2, 6),
-    beginn: "", ende: "", klinik: "", bereich: "", pensum: 100
+    beginn: "", ende: "", klinik: "", bereich: "", kompetenz: "", pensum: 100
   });
   saveState();
   renderStints();
@@ -1382,22 +1413,31 @@ function renderStints() {
   }
 
   const pensumOpts = [100, 90, 80, 75, 70, 60, 50];
+  const kompOptsHtml = KOMPETENZ_OPTIONS.map(k =>
+    `<option value="${escapeAttr(k.value)}">${escapeHtml(k.label)}</option>`
+  ).join("");
   state.stints.forEach((s, i) => {
     const li = document.createElement('li');
     li.className = "wb-stint";
     const sPensum = (s.pensum != null) ? Number(s.pensum) : 100;
+    const sKomp = s.kompetenz || "";
     const pensumHtml = `<select data-field="pensum" data-id="${s.id}" title="Beschäftigungsumfang (% der regelmäßigen Arbeitszeit). § 4 Abs. 6 WBO 2021: mind. 50% — sonst Sonder-Anzeige bei der ÄK nötig.">
       ${pensumOpts.map(p => `<option value="${p}"${p === sPensum ? ' selected' : ''}>${p}%</option>`).join("")}
+    </select>`;
+    const kompHtml = `<select data-field="kompetenz" data-id="${s.id}" title="FA-Kompetenz des Gebiets Innere Medizin — relevant für die Pflicht-Rotation (mind. 3 verschiedene Kompetenzen, max. 36 Mo in einer)">
+      <option value="">— wählen —</option>
+      ${kompOptsHtml.replace(`value="${escapeAttr(sKomp)}"`, `value="${escapeAttr(sKomp)}" selected`)}
     </select>`;
     const moTitle = sPensum < 100 ? `Kalender ${stintRawMonths(s)} Mo × ${sPensum}% = ${fmtMo(stintMonths(s))} Mo anrechenbar` : "";
     li.innerHTML = `
       ${dateSelectHtml('beginn', s.id, s.beginn)}
       ${dateSelectHtml('ende',   s.id, s.ende)}
-      <input type="text"  value="${escapeAttr(s.klinik)}" data-field="klinik" data-id="${s.id}" placeholder="z.B. Charité CCM, Nephrologie" />
+      <input type="text"  value="${escapeAttr(s.klinik)}" data-field="klinik" data-id="${s.id}" placeholder="z.B. Charité CCM" />
       <select data-field="bereich" data-id="${s.id}">
         <option value="">— wählen —</option>
         ${bereichOpts.replace(`value="${escapeAttr(s.bereich)}"`, `value="${escapeAttr(s.bereich)}" selected`)}
       </select>
+      ${kompHtml}
       ${pensumHtml}
       <span class="wb-stint-mo" title="${escapeAttr(moTitle)}">${fmtMo(stintMonths(s))} Mo</span>
       <button type="button" class="wb-del-btn" data-del="${s.id}" title="Station löschen">×</button>
@@ -1473,6 +1513,86 @@ function renderTotals() {
 // =========================================================================
 //  AUSWERTUNG / LÜCKENANALYSE (Variante B: streng, mit Reihenfolge-Prüfung)
 // =========================================================================
+
+// Pflicht-Rotation: pruefe "mind. 3 verschiedene FA-Kompetenzen" und
+// "max. 36 Mo in derselben FA-Kompetenz" (WBO 2021 B 13.1, S. 122).
+// Fuer FA Innere u. Nephrologie analog (B 13.9: "24 Mo in mind. 2 anderen
+// FA-Kompetenzen des Gebiets" — d.h. Nephro + 2 weitere = 3 distinct).
+// Fuer WBO 2004: 13.1 fordert min. 2 versch. Kompetenzen in den 24 Mo
+// stationaer (zusaetzlich zur Basis-WB).
+function renderRotationCheck() {
+  const pfad = getPfad();
+  if (!pfad || pfad.nur_hinweis) return "";
+  // Nur fuer FA-Pfade relevant (nicht ZWB Intensiv, nicht Aufbau-Pfade)
+  const ist_FA_innere = state.ziel === 'fa_innere';
+  const ist_FA_innere_nephro = state.ziel === 'fa_innere_nephro';
+  if (!ist_FA_innere && !ist_FA_innere_nephro) return "";
+
+  // Pro Kompetenz die anrechenbaren Mo aufsummieren
+  const kompMo = {};
+  state.stints.forEach(function(st) {
+    if (!st.kompetenz || st.kompetenz === 'na') return;
+    const mo = stintMonths(st);
+    if (!mo) return;
+    kompMo[st.kompetenz] = (kompMo[st.kompetenz] || 0) + mo;
+  });
+  const kompKeys = Object.keys(kompMo);
+  const distinctCount = kompKeys.length;
+  const overspec = kompKeys.filter(function(k) { return kompMo[k] > 36; });
+
+  // Soll-Werte
+  // WBO 2021 B 13.1: min. 3 versch. FA-Kompetenzen, max. 36 Mo in einer
+  // WBO 2021 B 13.9: 24 Mo in 2 anderen FA-Kompetenzen + Nephro = min. 3
+  const minDistinct = 3;
+  const maxPerKomp = 36;
+
+  // Pruefe wie viele Stints noch keine Kompetenz haben
+  const unsetCount = state.stints.filter(function(s) {
+    return s.bereich && stintMonths(s) > 0 && (!s.kompetenz || s.kompetenz === '');
+  }).length;
+
+  const issues = [];
+  if (unsetCount > 0) {
+    issues.push(unsetCount + ' Station' + (unsetCount === 1 ? '' : 'en') + ' ohne FA-Kompetenz — bitte ergänzen, sonst kann die Rotations-Pflicht nicht geprüft werden.');
+  }
+  if (distinctCount < minDistinct) {
+    const fehlt = minDistinct - distinctCount;
+    issues.push('Bisher nur ' + distinctCount + ' verschiedene FA-Kompetenz' + (distinctCount === 1 ? '' : 'en') + ' — ' + fehlt + ' weitere nötig (WBO fordert mindestens ' + minDistinct + ').');
+  }
+  overspec.forEach(function(k) {
+    const lbl = (KOMPETENZ_OPTIONS.find(function(o) { return o.value === k; }) || {label:k}).label;
+    issues.push('Mehr als ' + maxPerKomp + ' Mo in ' + lbl + ' (' + fmtMo(kompMo[k]) + ' Mo) — überschreitet die Höchstgrenze derselben Facharztkompetenz.');
+  });
+
+  // Ist alles OK — und gab es ueberhaupt Daten?
+  const ok = issues.length === 0 && distinctCount > 0;
+  const cls = ok ? 'wb-rot-ok' : 'wb-rot-bad';
+  const headIcon = ok ? '✓' : '⚠';
+  const headText = ok ? 'Rotations-Pflicht erfüllt' : 'Rotations-Pflicht — Hinweise';
+
+  // Kompetenz-Liste zur Info
+  let kompList = '';
+  if (kompKeys.length > 0) {
+    const sortedKeys = kompKeys.slice().sort(function(a, b) { return kompMo[b] - kompMo[a]; });
+    kompList = '<div class="wb-rot-detail">Eingetragen: ' +
+      sortedKeys.map(function(k) {
+        const lbl = (KOMPETENZ_OPTIONS.find(function(o) { return o.value === k; }) || {label:k}).label;
+        return escapeHtml(lbl) + ' (' + fmtMo(kompMo[k]) + ' Mo)';
+      }).join(' · ') + '</div>';
+  }
+
+  let html = '<div class="wb-rot-block ' + cls + '">' +
+             '<div class="wb-rot-head">' + headIcon + ' ' + headText + '</div>';
+  if (issues.length > 0) {
+    html += '<ul class="wb-rot-list">';
+    issues.forEach(function(i) { html += '<li>' + escapeHtml(i) + '</li>'; });
+    html += '</ul>';
+  } else if (distinctCount === 0) {
+    html += '<div class="wb-rot-detail">Noch keine FA-Kompetenz eingetragen — fülle das Feld bei jeder Station aus, damit die Pflicht-Rotation (' + minDistinct + ' verschiedene Kompetenzen, max. ' + maxPerKomp + ' Mo in einer) automatisch geprüft werden kann.</div>';
+  }
+  html += kompList + '</div>';
+  return html;
+}
 
 // Curriculum-Visualisierung: chronologischer Balken aus eingegebenen Stints,
 // gefolgt vom fehlenden Anteil als gehatchter Bereich. Marker fuer Reihenfolge-
@@ -1672,7 +1792,7 @@ function renderEval() {
       <div><b>Gesamtfortschritt:</b> ${fmtMo(total)} / ${soll} Monate (${totalPct}%)</div>
       <div class="wb-bar" style="margin-top: 6px;"><div class="wb-bar-fill ${totalCls}" style="width:${totalPct}%"></div></div>
     </div>
-  ` + renderCurriculumBar() + renderBonusAnalysis();
+  ` + renderCurriculumBar() + renderRotationCheck() + renderBonusAnalysis();
 
   // Pro Block
   pfad.blocks.forEach(b => {
