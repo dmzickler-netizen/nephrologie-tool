@@ -119,6 +119,10 @@ section.wb-phase {
   background: white; font-family: inherit;
 }
 .wb-stint input:focus, .wb-stint select:focus { outline: 2px solid var(--wb-accent); outline-offset: -1px; }
+.wb-stint select:disabled {
+  opacity: 0.55; background: #f3f4f6 !important;
+  cursor: not-allowed; color: var(--wb-muted) !important;
+}
 .wb-stint .wb-stint-mo { text-align: right; color: var(--wb-muted); font-variant-numeric: tabular-nums; font-size: 13px; }
 .wb-stint .wb-del-btn {
   background: transparent; border: 1px solid var(--wb-border); border-radius: 4px;
@@ -810,6 +814,12 @@ const PFADE = {
     sub: "in Kraft seit 30.11.2022",
     pfade: {
       // Quelle: WBO 2021, Abschn. B 13.1 „Facharzt für Innere Medizin", S. 122
+      // TODO: Klären — Überschneidung Notfallaufnahme ↔ stationäre Patientenversorgung?
+      // WBO 2021 B 13.1 listet die 4 "müssen"-Items separat (30 stat / 6 Notfall / 6 Intensiv / Rest).
+      // § 2a Abs. 4 (stationär) und Abs. 6 (Notaufnahme) definieren beides als eigene Bereiche —
+      // Notaufnahme ist NICHT explizit als stationär klassifiziert. Konservative Lesart:
+      // 30 + 6 + 6 = 42 Mo gebunden, 18 Mo flexibel. ÄK Berlin entscheidet im Einzelfall.
+      // Tool-Modell: separate, nicht überschneidende Blöcke. Bei Klärung anpassen.
       fa_innere: {
         label: "Facharzt für Innere Medizin",
         kurz: "FA Innere Medizin",
@@ -1067,8 +1077,16 @@ function loadState() {
     if (s.status) state.status = s.status;
     if (s.ziel) state.ziel = s.ziel;
     if (Array.isArray(s.stints)) {
-      // Migration: fehlende pensum-Werte auf 100, fehlende kompetenz auf "" setzen
-      state.stints = s.stints.map(st => Object.assign({pensum: 100, kompetenz: ""}, st));
+      // Migration: fehlende pensum-Werte auf 100, fehlende kompetenz auf "" setzen.
+      // Bei Bereich=notfall/intensiv wird kompetenz IMMER auf "" gesetzt
+      // (Pflichtabschnitt — keine FA-Kompetenz möglich).
+      state.stints = s.stints.map(function(st) {
+        const merged = Object.assign({pensum: 100, kompetenz: ""}, st);
+        if (merged.bereich === 'notfall' || merged.bereich === 'intensiv') {
+          merged.kompetenz = "";
+        }
+        return merged;
+      });
     }
     if (typeof s.fa_innere_anerkannt === 'string') state.fa_innere_anerkannt = s.fa_innere_anerkannt;
   } catch (e) { /* ignore */ }
@@ -1421,11 +1439,18 @@ function renderStints() {
     li.className = "wb-stint";
     const sPensum = (s.pensum != null) ? Number(s.pensum) : 100;
     const sKomp = s.kompetenz || "";
+    // Notfallaufnahme und Intensivmedizin sind Pflichtabschnitte (B 13.1 WBO 2021),
+    // KEINE FA-Kompetenzen des Gebiets Innere — daher Kompetenz-Feld disabled.
+    const isPflichtAbschnitt = (s.bereich === 'notfall' || s.bereich === 'intensiv');
     const pensumHtml = `<select data-field="pensum" data-id="${s.id}" title="Beschäftigungsumfang (% der regelmäßigen Arbeitszeit). § 4 Abs. 6 WBO 2021: mind. 50% — sonst Sonder-Anzeige bei der ÄK nötig.">
       ${pensumOpts.map(p => `<option value="${p}"${p === sPensum ? ' selected' : ''}>${p}%</option>`).join("")}
     </select>`;
-    const kompHtml = `<select data-field="kompetenz" data-id="${s.id}" title="FA-Kompetenz des Gebiets Innere Medizin — relevant für die Pflicht-Rotation (mind. 3 verschiedene Kompetenzen, max. 36 Mo in einer)">
-      <option value="">— wählen —</option>
+    const kompPlaceholder = isPflichtAbschnitt ? '— Pflichtabschnitt —' : '— wählen —';
+    const kompTitle = isPflichtAbschnitt
+      ? 'Notfallaufnahme und Intensivmedizin sind Pflichtabschnitte (B 13.1 WBO 2021), keine FA-Kompetenzen — Feld bleibt leer.'
+      : 'FA-Kompetenz des Gebiets Innere Medizin — relevant für die Pflicht-Rotation (mind. 3 verschiedene Kompetenzen, max. 36 Mo in einer)';
+    const kompHtml = `<select data-field="kompetenz" data-id="${s.id}"${isPflichtAbschnitt ? ' disabled' : ''} title="${escapeAttr(kompTitle)}">
+      <option value="">${escapeHtml(kompPlaceholder)}</option>
       ${kompOptsHtml.replace(`value="${escapeAttr(sKomp)}"`, `value="${escapeAttr(sKomp)}" selected`)}
     </select>`;
     const moTitle = sPensum < 100 ? `Kalender ${stintRawMonths(s)} Mo × ${sPensum}% = ${fmtMo(stintMonths(s))} Mo anrechenbar` : "";
@@ -1481,6 +1506,19 @@ function onStintChange(e) {
   } else {
     stint[field] = e.target.value;
   }
+  // Bei Bereich-Wechsel auf Notfall/Intensiv: Kompetenz auto-resetten + Select disablen
+  if (field === 'bereich') {
+    const isPflicht = stint.bereich === 'notfall' || stint.bereich === 'intensiv';
+    if (isPflicht) stint.kompetenz = '';
+    const row = e.target.closest('.wb-stint');
+    const kSel = row ? row.querySelector('select[data-field="kompetenz"]') : null;
+    if (kSel) {
+      kSel.disabled = isPflicht;
+      if (isPflicht) kSel.value = '';
+      const ph = kSel.querySelector('option[value=""]');
+      if (ph) ph.textContent = isPflicht ? '— Pflichtabschnitt —' : '— wählen —';
+    }
+  }
   saveState();
   // Monate-Anzeige live updaten
   const row = e.target.closest('.wb-stint');
@@ -1528,9 +1566,12 @@ function renderRotationCheck() {
   const ist_FA_innere_nephro = state.ziel === 'fa_innere_nephro';
   if (!ist_FA_innere && !ist_FA_innere_nephro) return "";
 
-  // Pro Kompetenz die anrechenbaren Mo aufsummieren
+  // Pro Kompetenz die anrechenbaren Mo aufsummieren.
+  // Notfall- und Intensiv-Stints sind Pflichtabschnitte (B 13.1 WBO 2021),
+  // keine FA-Kompetenz — sie werden hier nicht aggregiert.
   const kompMo = {};
   state.stints.forEach(function(st) {
+    if (st.bereich === 'notfall' || st.bereich === 'intensiv') return;
     if (!st.kompetenz || st.kompetenz === 'na') return;
     const mo = stintMonths(st);
     if (!mo) return;
@@ -1546,8 +1587,10 @@ function renderRotationCheck() {
   const minDistinct = 3;
   const maxPerKomp = 36;
 
-  // Pruefe wie viele Stints noch keine Kompetenz haben
+  // Pruefe wie viele Stints noch keine Kompetenz haben — Notfall/Intensiv
+  // sind Pflichtabschnitte und brauchen keine FA-Kompetenz, daher ausgenommen.
   const unsetCount = state.stints.filter(function(s) {
+    if (s.bereich === 'notfall' || s.bereich === 'intensiv') return false;
     return s.bereich && stintMonths(s) > 0 && (!s.kompetenz || s.kompetenz === '');
   }).length;
 
@@ -2182,6 +2225,7 @@ function escapeAttr(s) { return escapeHtml(s); }
 //  INIT
 // =========================================================================
 loadState();
+saveState(); // Persistiert evtl. Migrations-Aenderungen sofort zurueck nach localStorage
 // Wizard + alle kontextuellen Sektionen einmal durchlaufen lassen
 afterWizardChange();
 </script>
