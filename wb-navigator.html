@@ -935,6 +935,8 @@ const PFADE = {
     },
     pfade: {
       // Quelle: WBO 2004 (konsolidierte Fassung, 11. Nachtrag), 13.1 „Facharzt für Innere Medizin", S. 63
+      // HINWEIS: WBO 2004 hat zeitlich-strukturierte Anforderungen (erst Basis, dann Schwerpunkt-WB).
+      // Tool nutzt eine flache Aggregation und kann die Time-Order nicht voll prüfen — ggf. ÄK kontaktieren.
       fa_innere: {
         label: "Facharzt für Innere Medizin (alte WBO)",
         kurz: "FA Innere Medizin (2004)",
@@ -942,23 +944,24 @@ const PFADE = {
         quelle: "WBO Berlin 2004, 13.1, S. 63",
         monate_total: 60,
         blocks: [
-          {key:"basis_stat",        label:"Stationäre Basisweiterbildung im Gebiet Innere Medizin", mo_min:24,
+          {key:"basis_stat", label:"Stationäre Basisweiterbildung im Gebiet Innere Medizin", mo_min:24,
            setting:"stationaer",
-           details:"Teil der 36 Mo Basisweiterbildung. Auf einer internistischen Bettenstation. Maximal 12 Monate dürfen in derselben Facharztkompetenz abgeleistet werden."},
-          {key:"basis_unmittelbar", label:"Gebiete der unmittelbaren Patientenversorgung", mo_min:12,
-           setting:"ambulant_moeglich",
-           details:"Teil der 36 Mo Basisweiterbildung. WBO 2004 13.1 (S. 63) wörtlich: 12 Monate in den Gebieten der unmittelbaren Patientenversorgung, die auch am Beginn der Weiterbildung und im ambulanten Bereich ableistbar sind. Hier zählt z.B. befugte fachärztliche Praxis, MVZ, Institutsambulanz oder Sprechstunde im Gebiet Innere — auch direkt zum Beginn der WB. Ausgeschlossen: ärztliche Tätigkeit in eigener Niederlassung (§ 4 Abs. 4)."},
-          {key:"stat_2_komp",       label:"Stationäre Weiterbildung Innere in mind. zwei verschiedenen Facharztkompetenzen", mo_min:24,
+           details:"WBO 2004 13.1 (S. 63) wörtlich: 24 Monate stationäre Basisweiterbildung im Gebiet Innere Medizin, davon maximal 12 Monate in derselben Facharztkompetenz. Auf internistischen Bettenstationen."},
+          {key:"basis_unmittelbar", label:"Gebiete der unmittelbaren Patientenversorgung (auch ambulant)", mo_min:12,
+           setting_in:["stationaer","ambulant"],
+           details:"WBO 2004 13.1 (S. 63) wörtlich: 12 Monate in den Gebieten der unmittelbaren Patientenversorgung, die auch am Beginn der Weiterbildung und im ambulanten Bereich ableistbar sind. Befugte fachärztliche Praxis, MVZ, Institutsambulanz oder Sprechstunde im Gebiet Innere. Ausgeschlossen: eigene Niederlassung (§ 4 Abs. 4 WBO 2021)."},
+          {key:"stat_2_komp", label:"Stationäre WB Innere in mind. zwei verschiedenen Facharztkompetenzen", mo_min:24, min_distinct:2,
            setting:"stationaer",
-           details:"Auf internistischen Bettenstationen in mindestens zwei verschiedenen Facharztkompetenzen (z.B. Kardiologie + Gastroenterologie). Davon können max. 12 Monate einer Kompetenz entsprechen, die bereits in der Basisweiterbildung abgeleistet wurde."},
-          {key:"intensiv",          label:"Internistische oder internistisch-interdisziplinäre Intensivstation", mo_min:6, frueheste_wb_monate:24,
+           details:"WBO 2004 13.1 (S. 63) wörtlich: 24 Monate stationäre Weiterbildung im Gebiet Innere Medizin in mindestens zwei verschiedenen Facharztkompetenzen, davon können maximal 12 Monate einer der in der Basisweiterbildung abgeleisteten Facharztkompetenzen 13.1 bis 13.10 entsprechen."},
+          {key:"set_intensiv", label:"Internistische oder internistisch-interdisziplinäre Intensivstation", mo_min:6, frueheste_wb_monate:24,
            setting:"intensiv",
            details:"WBO 2004 13.1 (S. 63) wörtlich: Innerhalb der Gesamtweiterbildung sind 6 Monate Weiterbildung auf einer internistischen oder internistisch-interdisziplinären Intensivstation frühestens nach Absolvierung von 24 Monaten Weiterbildung abzuleisten."}
         ],
         constraints: [
           {type:"hinweis", text:"Die ersten beiden Blöcke (24 + 12 Mo) bilden zusammen die 36 Mo Basisweiterbildung im Gebiet Innere Medizin."},
-          {type:"hinweis", text:"Stationäre Basisweiterbildung: max. 12 Monate in derselben Facharztkompetenz."},
-          {type:"hinweis", text:"In den 24 Mo stationärer WB in zwei versch. Kompetenzen können max. 12 Mo einer in der Basisweiterbildung abgeleisteten Kompetenz entsprechen."}
+          {type:"hinweis", text:"Stationäre Basisweiterbildung: max. 12 Monate in derselben Facharztkompetenz (Tool prüft Aggregation flat — Reihenfolge Basis vs. Schwerpunkt nicht detailliert)."},
+          {type:"hinweis", text:"In den 24 Mo Schwerpunkt-WB können max. 12 Mo einer in der Basisweiterbildung abgeleisteten Kompetenz entsprechen."},
+          {type:"hinweis", text:"Hinweis: stationaer-Stints zählen sowohl zur Basis-stat (24) als auch zur Schwerpunkt-stat (24) — das Tool kann die zeitliche Reihenfolge (erst 24 Mo Basis, dann 24 Mo Schwerpunkt) nicht prüfen. Bei Zweifel ÄK Berlin direkt fragen."}
         ]
       },
       // Quelle: WBO 2004, 13.8 „Facharzt für Innere Medizin und Nephrologie", S. 73
@@ -969,19 +972,19 @@ const PFADE = {
         quelle: "WBO Berlin 2004, 13.8, S. 73",
         monate_total: 72,
         blocks: [
-          {key:"basis_stat",        label:"Stationäre Basisweiterbildung im Gebiet Innere Medizin", mo_min:24,
+          {key:"basis_stat", label:"Stationäre Basisweiterbildung im Gebiet Innere Medizin", mo_min:24,
            setting:"stationaer",
-           details:"Teil der 36 Mo Basisweiterbildung. Max. 12 Monate in derselben Facharztkompetenz."},
-          {key:"basis_unmittelbar", label:"Gebiete der unmittelbaren Patientenversorgung", mo_min:12,
-           setting:"ambulant_moeglich",
-           details:"Teil der 36 Mo Basisweiterbildung. WBO 2004 wörtlich: 12 Monate in den Gebieten der unmittelbaren Patientenversorgung, die auch am Beginn der Weiterbildung und im ambulanten Bereich ableistbar sind. Befugte Praxis, MVZ, Sprechstunde oder Institutsambulanz im Gebiet Innere — auch zu Beginn der WB. Ausgeschlossen: eigene Niederlassung (§ 4 Abs. 4)."},
-          {key:"nephro",            label:"Nephrologie", mo_min:36,
-           setting:"ambulant_moeglich",
-           details:"WBO 2004 13.8: 36 Monate Nephrologie, davon 6 Monate Dialyse obligat. Bis zu 18 Monate können im ambulanten Bereich abgeleistet werden — z.B. nephrologische Sprechstunde, Hypertonie-Ambulanz, Transplantations-Nachsorge oder befugtes Dialyse-Zentrum."},
-          {key:"dialyse",           label:"… davon Dialyse (obligat)", mo_min:6, parent:"nephro",
+           details:"WBO 2004 13.8 (S. 73): 24 Monate stationäre Basisweiterbildung im Gebiet Innere Medizin, davon maximal 12 Monate in derselben Facharztkompetenz."},
+          {key:"basis_unmittelbar", label:"Gebiete der unmittelbaren Patientenversorgung (auch ambulant)", mo_min:12,
+           setting_in:["stationaer","ambulant"],
+           details:"WBO 2004 13.8 wörtlich: 12 Monate in den Gebieten der unmittelbaren Patientenversorgung, die auch am Beginn der Weiterbildung und im ambulanten Bereich ableistbar sind."},
+          {key:"fg_nephro", label:"Nephrologie", mo_min:36,
+           fachgebiet:"13.9",
+           details:"WBO 2004 13.8 wörtlich: 36 Monate Nephrologie, davon sind 6 Monate Dialyse obligat. Bis zu 18 Monate können im ambulanten Bereich abgeleistet werden — z.B. nephrologische Sprechstunde, Hypertonie-Ambulanz, Transplantations-Nachsorge oder befugtes Dialyse-Zentrum."},
+          {key:"set_dialyse", label:"… davon Dialyse (obligat)", mo_min:6, parent:"fg_nephro",
            setting:"dialyse",
-           details:"Hämodialyse, Hämofiltration, Hämodiafiltration, Peritonealdialyse; ggf. therapeutische Apherese, Anlage Dialyse-Katheter, Shunt-Versorgung."},
-          {key:"intensiv",          label:"Internistische oder internistisch-interdisziplinäre Intensivstation", mo_min:6, frueheste_wb_monate:24,
+           details:"WBO 2004 13.8 wörtlich: 6 Monate Dialyse obligat. Hämodialyse, Hämofiltration, Hämodiafiltration, Peritonealdialyse, therapeutische Apherese, Anlage Dialyse-Katheter, Shunt-Versorgung."},
+          {key:"set_intensiv", label:"Internistische oder internistisch-interdisziplinäre Intensivstation", mo_min:6, frueheste_wb_monate:24,
            setting:"intensiv",
            details:"WBO 2004 13.8 wörtlich: Innerhalb der Gesamtweiterbildung sind 6 Monate Weiterbildung auf einer internistischen oder internistisch-interdisziplinären Intensivstation frühestens nach Absolvierung von 24 Monaten Weiterbildung abzuleisten."}
         ],
@@ -1001,10 +1004,10 @@ const PFADE = {
         monate_total: 36,
         voraussetzung: "Anerkennung als Facharzt für Innere Medizin (alte WBO)",
         blocks: [
-          {key:"nephro",  label:"Nephrologie", mo_min:36,
-           setting:"ambulant_moeglich",
-           details:"36 Monate Nephrologie nach Anerkennung als FA Innere. Bis zu 18 Monate können im ambulanten Bereich abgeleistet werden (z.B. nephrologische Sprechstunde, Hypertonie-Ambulanz, Transplantations-Nachsorge, befugtes Dialyse-Zentrum)."},
-          {key:"dialyse", label:"… davon Dialyse (obligat)", mo_min:6, parent:"nephro",
+          {key:"fg_nephro", label:"Nephrologie", mo_min:36,
+           fachgebiet:"13.9",
+           details:"WBO 2004 13.8: 36 Monate Nephrologie nach Anerkennung als FA Innere, davon 6 Monate Dialyse obligat. Bis zu 18 Monate können im ambulanten Bereich abgeleistet werden (Sprechstunde, Hypertonie-Ambulanz, Transplantations-Nachsorge, befugtes Dialyse-Zentrum)."},
+          {key:"set_dialyse", label:"… davon Dialyse (obligat)", mo_min:6, parent:"fg_nephro",
            setting:"dialyse",
            details:"Obligat: 6 Monate Dialyse-Erfahrung. Hämodialyse, Hämofiltration, Hämodiafiltration, Peritonealdialyse."}
         ],
@@ -1013,17 +1016,24 @@ const PFADE = {
           {type:"hinweis", text:"Übergangsfrist § 21 Abs. 5 WBO 2021: Schwerpunkt-Abschluss nach alter WBO bis 30.11.2025 möglich. Nach Anerkennung darf die neue Bezeichnung Facharzt für Innere Medizin und Nephrologie geführt werden."}
         ]
       },
-      // Quelle: WBO 2004, C-14 Intensivmedizin, S. 134 — Detail nicht modelliert, nur Hinweis
+      // Quelle: WBO 2004, C-14 Intensivmedizin, S. 134
       zwb_intensivmedizin: {
         label: "Zusatz-Weiterbildung Intensivmedizin (alte WBO)",
         kurz: "ZWB Intensivmedizin (2004)",
         kategorie: "zusatz_weiterbildung",
         quelle: "WBO Berlin 2004, Abschn. C-14, S. 134",
-        nur_hinweis: true,
-        hinweis_text:
-          "Die Detailregeln der ZWB Intensivmedizin nach alter WBO 2004 sind in diesem Tool nicht modelliert. " +
-          "Übergangsfrist nach § 21 Abs. 6 WBO 2021: Abschluss nach alter WBO bis 30.11.2025 möglich. " +
-          "Bitte zur konkreten Anrechenbarkeit direkt die Ärztekammer Berlin kontaktieren."
+        monate_total: 24,
+        voraussetzung: "Facharztanerkennung in den Gebieten Anästhesiologie, Chirurgie, Innere Medizin, Kinder- und Jugendmedizin, Neurochirurgie oder Neurologie",
+        blocks: [
+          {key:"set_intensiv", label:"Intensivmedizin unter Befugnis", mo_min:24,
+           setting:"intensiv",
+           details:"WBO 2004 C-14 (S. 134) wörtlich: 24 Monate bei einem Weiterbildungsbefugten für Intensivmedizin. Aggregiert ALLE Stints mit Setting=Intensivmedizin."}
+        ],
+        constraints: [
+          {type:"hinweis", text:"WBO 2004 C-14 wörtlich: Davon können 12 Monate während der Weiterbildung in Anästhesiologie oder Innere Medizin bei einem Weiterbildungsbefugten für Intensivmedizin abgeleistet werden (oder 6 Monate bei Chirurgie/Kinder-Jugendmed./Neurochir./Neurol.)."},
+          {type:"hinweis", text:"6 Monate müssen in der Intensivmedizin eines weiteren, unter den Voraussetzungen genannten Gebietes bei einem Befugten für Intensivmedizin abgeleistet werden (multidisziplinäre Erfahrung)."},
+          {type:"hinweis", text:"Übergangsfrist § 21 Abs. 6 WBO 2021: Abschluss nach alter WBO bis 30.11.2025 möglich. Bezeichnungs-Zusatz Internistische Intensivmedizin zulässig (WBO 2004 C-14)."}
+        ]
       }
     }
   }
@@ -1088,6 +1098,7 @@ const KOMPETENZ_OPTIONS = FACHGEBIET_OPTIONS.map(o => ({ value: o.value, label: 
 //   sonst Legacy: block.key === stint.bereich
 function stintMatchesBlock(stint, block) {
   if (block.setting) return stint.setting === block.setting;
+  if (block.setting_in) return block.setting_in.indexOf(stint.setting) !== -1;
   if (block.fachgebiet_other_than) {
     const fg = stint.fachgebiet || '';
     if (!fg || fg === 'entfaellt') return false;
