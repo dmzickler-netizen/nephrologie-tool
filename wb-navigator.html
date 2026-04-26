@@ -857,22 +857,22 @@ const PFADE = {
         monate_total: 72,
         rotation_pflicht: true,
         blocks: [
-          {key:"stationaer",   label:"Stationäre Patientenversorgung", mo_min:24,
+          {key:"set_stat", label:"Stationäre Patientenversorgung", mo_min:24,
            setting: "stationaer",
-           details: "WBO 2021 B 13.9 wörtlich: 24 Monate in der stationären Patientenversorgung. Auf internistischen Bettenstationen. Ambulante Zeiten zählen NICHT zu diesem Block — gehen aber in die Nephrologie-/Andere-Kompetenzen-Blöcke ein, sofern dort befugt."},
-          {key:"innere_nephro",label:"Innere Medizin und Nephrologie", mo_min:36,
-           setting: "ambulant_moeglich",
-           details: "WBO 2021 B 13.9 wörtlich: 36 Monate in Innere Medizin und Nephrologie, davon 6 Monate in der Dialyse. Stationär ODER ambulant unter Befugnis Nephrologie — nephrologische Station, Dialyse-Zentrum, nephrologische Sprechstunde, Hypertonie- oder Transplantations-Ambulanz. Inhalte: akute/chronische Nierenerkrankungen, Glomerulonephritiden, Vaskulitiden, Hypertensiologie, Wasser-/Elektrolyt-/Säure-Basen-Haushalt, Transplantationsmedizin (prä- und post-NTX), Schwangerschaftsnephrologie."},
-          {key:"dialyse",      label:"… davon in der Dialyse", mo_min:6, parent:"innere_nephro",
+           details: "WBO 2021 B 13.9 wörtlich: 24 Monate in der stationären Patientenversorgung. Auf internistischen Bettenstationen — beliebige Innere-FA-Kompetenz."},
+          {key:"fg_nephro", label:"Innere Medizin und Nephrologie", mo_min:36,
+           fachgebiet: "13.9",
+           details: "WBO 2021 B 13.9 wörtlich: 36 Monate in Innere Medizin und Nephrologie, davon 6 Monate in der Dialyse. Aggregiert ALLE Stints mit Fachgebiet 13.9 (stationär, ambulant oder Dialyse-Zentrum) — d.h. nephrologische Station, Dialyse-Zentrum, nephrologische Sprechstunde, Hypertonie- oder Transplantations-Ambulanz."},
+          {key:"set_dialyse", label:"… davon in der Dialyse", mo_min:6, parent:"fg_nephro",
            setting: "dialyse",
-           details: "WBO 2021 B 13.9 wörtlich: 6 Monate in der Dialyse. Hämodialyse, Hämofiltration, Hämodiafiltration, Peritonealdialyse, therapeutische Apherese (Plasma, Lipid, Immunadsorption), Anlage Dialyse-Katheter, Shunt-Versorgung. Typisch im Dialyse-Zentrum (stationär oder ambulant)."},
-          {key:"andere_komp",  label:"Mindestens zwei andere Facharztkompetenzen des Gebiets", mo_min:24,
-           setting: "ambulant_moeglich",
-           details: "WBO 2021 B 13.9 wörtlich: 24 Monate in mindestens zwei anderen Facharztkompetenzen des Gebiets. Typisch je 12 Mo (z.B. Kardiologie + Gastroenterologie, oder Pneumologie + Hämato-Onkologie). Kann stationär ODER in Ambulanz/Sprechstunde abgeleistet werden. Pflicht zur Rotation — Breite der internistischen Ausbildung."},
-          {key:"notfall",      label:"Notfallaufnahme", mo_min:6, frueheste_wb_monate:12,
+           details: "WBO 2021 B 13.9 wörtlich: 6 Monate in der Dialyse. Hämodialyse, Hämofiltration, Hämodiafiltration, Peritonealdialyse, therapeutische Apherese, Anlage Dialyse-Katheter, Shunt-Versorgung. Setting=Dialyse-Zentrum."},
+          {key:"andere_fg", label:"Mind. 2 andere Facharztkompetenzen des Gebiets", mo_min:24, min_distinct:2,
+           fachgebiet_other_than: "13.9",
+           details: "WBO 2021 B 13.9 wörtlich: 24 Monate in mindestens zwei anderen Facharztkompetenzen des Gebiets. Aggregiert Stints mit Fachgebiet ≠ 13.9 (stationär oder ambulant) — typisch z.B. Kardiologie + Gastroenterologie. Erfordert beides: ≥ 24 Mo gesamt UND mindestens 2 verschiedene Fachgebiete."},
+          {key:"set_notfall", label:"Notfallaufnahme", mo_min:6, frueheste_wb_monate:12,
            setting: "notfall",
            details: "WBO 2021 B 13.9 wörtlich: 6 Monate in der Notfallaufnahme, frühestens nach Absolvierung von 12 Monaten Weiterbildung."},
-          {key:"intensiv",     label:"Intensivmedizin", mo_min:6, frueheste_wb_monate:24,
+          {key:"set_intensiv", label:"Intensivmedizin", mo_min:6, frueheste_wb_monate:24,
            setting: "intensiv",
            details: "WBO 2021 B 13.9 wörtlich: 6 Monate in der Intensivmedizin, frühestens nach Absolvierung von 24 Monaten Weiterbildung."}
         ],
@@ -892,12 +892,12 @@ const PFADE = {
         monate_total: 36,
         voraussetzung: "Anerkennung als Facharzt für Innere Medizin",
         blocks: [
-          {key:"innere_nephro", label:"Innere Medizin und Nephrologie", mo_min:36,
-           setting:"ambulant_moeglich",
-           details:"WBO 2021 B 13.9 wörtlich: 36 Monate in Innere Medizin und Nephrologie, davon 6 Monate in der Dialyse."},
-          {key:"dialyse",       label:"… davon in der Dialyse", mo_min:6, parent:"innere_nephro",
+          {key:"fg_nephro", label:"Innere Medizin und Nephrologie", mo_min:36,
+           fachgebiet:"13.9",
+           details:"WBO 2021 B 13.9 wörtlich: 36 Monate in Innere Medizin und Nephrologie, davon 6 Monate in der Dialyse. Aggregiert alle Stints mit Fachgebiet 13.9 (Setting stationär, ambulant oder Dialyse-Zentrum)."},
+          {key:"set_dialyse", label:"… davon in der Dialyse", mo_min:6, parent:"fg_nephro",
            setting:"dialyse",
-           details:"WBO 2021 B 13.9 wörtlich: 6 Monate in der Dialyse."}
+           details:"WBO 2021 B 13.9 wörtlich: 6 Monate in der Dialyse. Setting=Dialyse-Zentrum."}
         ],
         constraints: [
           {type:"hinweis", text:"Bei vorhandenem Facharzt für Innere Medizin werden die bereits absolvierten Innere-Anteile angerechnet — zusätzlich erforderlich sind 36 Monate in Innere Medizin und Nephrologie inkl. 6 Monate in der Dialyse, um die Bezeichnung Facharzt für Innere Medizin und Nephrologie zu erlangen."},
@@ -913,7 +913,7 @@ const PFADE = {
         monate_total: 18,
         voraussetzung: "Facharztanerkennung in den Gebieten Anästhesiologie, Chirurgie, Innere Medizin, Kinder- und Jugendmedizin, Neurochirurgie oder Neurologie",
         blocks: [
-          {key:"intensiv_zwb", label:"Intensivmedizin unter Befugnis an Weiterbildungsstätten", mo_min:18,
+          {key:"set_intensiv", label:"Intensivmedizin unter Befugnis an Weiterbildungsstätten", mo_min:18,
            setting: "intensiv",
            details: "WBO 2021 C 17 wörtlich: 18 Monate Intensivmedizin unter Befugnis an Weiterbildungsstätten. Internistische Intensivmedizin: Beatmungsstrategien (NIV/HFNC/invasiv), hämodynamisches Monitoring, Sepsis-Bundle, Volumenmanagement, ECMO-/CRRT-Indikation, Detoxikation, Delir, Frührehabilitation, Hirntoddiagnostik. Richtzahlen: 10 perkutane Tracheotomien, 3 transvenöse Schrittmacher (WBO C 17 S. 367–368)."}
         ],
@@ -1082,11 +1082,17 @@ function syncLegacyFields(st) {
 const KOMPETENZ_OPTIONS = FACHGEBIET_OPTIONS.map(o => ({ value: o.value, label: o.label }));
 
 // Match einer Station gegen einen Pfad-Block:
-//   block.setting → matche stint.setting (neue Welt, Phase 1)
+//   block.setting → matche stint.setting (Phase 1)
 //   block.fachgebiet → matche stint.fachgebiet (Phase 2)
+//   block.fachgebiet_other_than → matche stint.fachgebiet ≠ X und nicht 'entfaellt' (Phase 2)
 //   sonst Legacy: block.key === stint.bereich
 function stintMatchesBlock(stint, block) {
   if (block.setting) return stint.setting === block.setting;
+  if (block.fachgebiet_other_than) {
+    const fg = stint.fachgebiet || '';
+    if (!fg || fg === 'entfaellt') return false;
+    return fg !== block.fachgebiet_other_than;
+  }
   if (block.fachgebiet) return stint.fachgebiet === block.fachgebiet;
   return block.key === stint.bereich;
 }
@@ -1858,17 +1864,19 @@ function renderBonusAnalysis() {
   if (state.ziel !== 'fa_innere' || state.status !== 'kein_fa') return "";
   if (state.stints.length === 0) return "";
 
-  // Summen pro Bereich
-  const sums = {};
+  // Aggregation per Setting + Fachgebiet (neue Welt)
+  let intensiv = 0, dialyse = 0, fachgebiet_nephro = 0;
   state.stints.forEach(function(st) {
-    if (!st.bereich) return;
-    sums[st.bereich] = (sums[st.bereich] || 0) + stintMonths(st);
+    const mo = stintMonths(st);
+    if (!mo) return;
+    const setting = st.setting || st.bereich || '';
+    if (setting === 'intensiv') intensiv += mo;
+    if (setting === 'dialyse') dialyse += mo;
+    if ((st.fachgebiet || '') === '13.9') fachgebiet_nephro += mo;
   });
-  const stationaer = sums.stationaer || 0;
-  const intensiv = sums.intensiv || 0;
-  const notfall = sums.notfall || 0;
-  const innereNephro = sums.innere_nephro || 0;
-  const dialyse = sums.dialyse || 0;
+  // Innere u. Nephrologie = alle Stints mit Fachgebiet 13.9 (inkl. Dialyse-Stints,
+  // weil Setting=dialyse → fachgebiet automatisch 13.9)
+  const innereNephro = fachgebiet_nephro;
 
   // === FA Innere u. Nephrologie (Aufbau) ===
   // Quelle: WBO 2021 B 13.9, S. 179 — 36 Mo Innere u. Nephrologie inkl. 6 Mo Dialyse
@@ -1924,29 +1932,31 @@ function renderEval() {
     return ai - bi;
   });
 
-  // Pro Block: Summe valider Monate + Liste der Reihenfolge-Verstöße
+  // Pro Block: Summe valider Monate + distinct fachgebiete + Reihenfolge-Verstöße.
+  // Multi-Match: Ein Stint kann zu mehreren Blocks zählen (z.B. Dialyse zaehlt zu
+  // fg_nephro UND set_dialyse). Daher iteriere pro Block ueber alle Stints.
   const blockResults = {};
-  pfad.blocks.forEach(b => { blockResults[b.key] = { ok_mo: 0, reihenfolge_violations: [] }; });
-
-  sorted.forEach(st => {
-    const mo = stintMonths(st);
-    if (!mo) return;
-    if (!st.setting && !st.bereich) return;  // weder neue noch alte Felder
-    const block = pfad.blocks.find(b => stintMatchesBlock(st, b));
-    if (!block) return;
-
-    // Reihenfolge-Check
-    if (block.frueheste_wb_monate != null) {
-      const cumBefore = cumulativeBeforeStart(st, sorted);
-      if (cumBefore < block.frueheste_wb_monate) {
-        blockResults[block.key].reihenfolge_violations.push({
-          stint: st,
-          cumBefore: cumBefore,
-          required: block.frueheste_wb_monate
-        });
+  pfad.blocks.forEach(function(block) {
+    const r = { ok_mo: 0, reihenfolge_violations: [], distinct_fachgebiete: {} };
+    sorted.forEach(function(st) {
+      const mo = stintMonths(st);
+      if (!mo) return;
+      if (!st.setting && !st.bereich) return;
+      if (!stintMatchesBlock(st, block)) return;
+      r.ok_mo += mo;
+      // Fachgebiet-tracking fuer "andere fachgebiete"-Block (distinct count)
+      if (block.fachgebiet_other_than && st.fachgebiet) {
+        r.distinct_fachgebiete[st.fachgebiet] = (r.distinct_fachgebiete[st.fachgebiet] || 0) + mo;
       }
-    }
-    blockResults[block.key].ok_mo += mo;
+      // Reihenfolge-Check
+      if (block.frueheste_wb_monate != null) {
+        const cumBefore = cumulativeBeforeStart(st, sorted);
+        if (cumBefore < block.frueheste_wb_monate) {
+          r.reihenfolge_violations.push({ stint: st, cumBefore: cumBefore, required: block.frueheste_wb_monate });
+        }
+      }
+    });
+    blockResults[block.key] = r;
   });
 
   // Gesamtfortschritt
@@ -1968,8 +1978,24 @@ function renderEval() {
     const min = b.mo_min || 0;
     const have = r.ok_mo;
     const pct = min ? Math.min(100, Math.round((have / min) * 100)) : (have > 0 ? 100 : 0);
-    const cls = have >= min ? "wb-good" : (have >= min * 0.5 ? "wb-warn" : "wb-bad");
+    let cls = have >= min ? "wb-good" : (have >= min * 0.5 ? "wb-warn" : "wb-bad");
     const violations = r.reihenfolge_violations;
+
+    // Distinct-Check fuer Blocks mit min_distinct (z.B. "≥ 2 andere Fachgebiete")
+    let distinctLine = "";
+    if (b.min_distinct && r.distinct_fachgebiete) {
+      const distinct = Object.keys(r.distinct_fachgebiete).length;
+      const distinctOk = distinct >= b.min_distinct;
+      if (!distinctOk && cls === "wb-good") cls = "wb-warn";
+      const fgList = Object.keys(r.distinct_fachgebiete).map(function(k) {
+        const lbl = (FACHGEBIET_OPTIONS.find(function(o) { return o.value === k; }) || {label:k}).label;
+        return escapeHtml(lbl) + ' (' + fmtMo(r.distinct_fachgebiete[k]) + ' Mo)';
+      }).join(' · ');
+      distinctLine = '<div style="font-size:11.5px;margin-top:4px;color:' + (distinctOk ? 'var(--wb-good)' : 'var(--wb-bad)') + ';">' +
+                     (distinctOk ? '✓' : '⚠') + ' Verschiedene Fachgebiete: <b>' + distinct + ' / ' + b.min_distinct + '</b>' +
+                     (fgList ? ' — <span style="color:var(--wb-muted);">' + fgList + '</span>' : '') +
+                     '</div>';
+    }
 
     html += `
       <div class="wb-eval-block">
@@ -1978,6 +2004,7 @@ function renderEval() {
           <span class="wb-eval-block-mo">${fmtMo(have)} / ${min} Mo</span>
         </div>
         <div class="wb-bar"><div class="wb-bar-fill ${cls}" style="width:${pct}%"></div></div>
+        ${distinctLine}
         ${b.frueheste_wb_monate != null ? `<div style="font-size:11px;color:var(--wb-muted);margin-top:4px;">Reihenfolge: frühestens nach ${b.frueheste_wb_monate} Mo Gesamt-WB</div>` : ""}
         ${violations.length ? `<div class="wb-eval-issues"><b>Reihenfolge-Verstoß:</b><ul>${
           violations.map(v => `<li>Station „${escapeHtml(v.stint.klinik || "(ohne Klinik)")}" beginnt bei kum. ${fmtMo(v.cumBefore)} Mo (Anforderung: ${v.required} Mo).</li>`).join("")
