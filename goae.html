@@ -134,13 +134,9 @@ body { background: #f4f6f8; font-family: -apple-system, BlinkMacSystemFont, "Seg
 
 <div class="goae-wrap">
   <div class="goae-hdr">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;">
-      <div>
-        <h2 style="margin:0 0 2px;">🧾 GOÄ-Abrechnung</h2>
-        <p style="margin:0;font-size:.82rem;opacity:.9;">PD Dr. med. D. Zickler &nbsp;·&nbsp; St. Joseph Krankenhaus Berlin-Tempelhof</p>
-        <p style="margin:2px 0 0;font-size:.75rem;opacity:.7;">Klinik m.S. Nephrologie u. Int. Intensivmedizin &nbsp;·&nbsp; GOÄ 1996 · Punktwert 5,8287 ct/P</p>
-      </div>
-      <div style="font-size:.75rem;opacity:.7;text-align:right;padding-top:4px;">Wüsthoffstraße 15<br>12101 Berlin</div>
+    <div>
+      <h2 style="margin:0 0 2px;">🧾 GOÄ-Abrechnung</h2>
+      <p style="margin:2px 0 0;font-size:.75rem;opacity:.7;">GOÄ 1996 · Punktwert 5,8287 ct/P</p>
     </div>
   </div>
 
@@ -230,13 +226,14 @@ var goaeDB = [
   { nr:7,   name:'Körperl. Untersuchung (≥2 Systeme)',   short:'US ≥2 Organsysteme',            kat:'Beratung & Untersuchung', typ:'P', p:320,  excl:[5,6,8],  voraus:'Mindestens 2 Organsysteme vollständig untersucht.', doku:'Befund beider Systeme.', haeufig:'1×/Tag', tip:'Mindestens 2 Organsysteme vollständig untersucht und dokumentiert.' },
   { nr:8,   name:'Eingehende ganzkörperl. Untersuchung', short:'Ganzkörperuntersuchung',        kat:'Beratung & Untersuchung', typ:'P', p:450,  excl:[5,6,7],  voraus:'Eingehende ganzkörperliche Untersuchung (alle Organsysteme).', doku:'Vollst. internist. Status inkl. Anamnese.', haeufig:'1×/Jahr begründbar', tip:'Erstvorstellung oder wesentliche Statusänderung. Vollst. internist. Befund inkl. Anamnese.' },
   { nr:15,  name:'Betreuung chronisch Kranker',           short:'Chronisch Kranke (≥3 Konsult.)',kat:'Beratung & Untersuchung', typ:'P', p:80,   excl:[],       voraus:'≥3 Konsultationen/Jahr für dieselbe chronische Erkrankung.', doku:'Grunderkrankung + Betreuungsverlauf.', haeufig:'3×/Jahr je Erkrankung', tip:'Bei ≥3 Konsultationen/Jahr für dieselbe Grunderkrankung (CKD, HTN, Diabetes). Zusätzlich neben Nr. 1 oder 3 ansetzbar.' },
-  { nr:401, name:'Sonographie (1 Organ)',                  short:'Sono 1 Organ',                kat:'Sonographie',             typ:'T', p:200,  excl:[410,413],voraus:'Sonographie eines Organs/einer Region.', doku:'Befund + Bildarchiv.', haeufig:'1×/Tag je Region', tip:'Einzelorganbefundung, z.B. Harnblase, Pleura. Bei Niere besser Nr. 410 (beide Nieren = 1 Region).' },
-  { nr:410, name:'Sonographie Niere/Organ',               short:'Sono Niere (1 Region)',        kat:'Sonographie',             typ:'T', p:330,  excl:[401,413],voraus:'Nierensonographie (beide Nieren = 1 Region).', doku:'Befund bds. + Bildarchiv.', haeufig:'1×/Tag', tip:'Nieren bilateral = 1 Region. Bei fast jedem nephrologischen Besuch ansetzbar.' },
-  { nr:413, name:'Sonographie Abdomen/Mehrorgan',         short:'Sono Abdomen (≥3 Organe)',     kat:'Sonographie',             typ:'T', p:550,  excl:[401,410],voraus:'Mindestens 3 Organe/Regionen untersucht.', doku:'Befund aller Organe + Bildarchiv.', haeufig:'1×/Tag', tip:'Mindestens 3 Organe/Regionen. Statt Nr. 410 wenn Abdomen vollständig.' },
-  { nr:417, name:'Schilddrüse Sonographie',               short:'Sono Schilddrüse',             kat:'Sonographie',             typ:'T', p:250,  excl:[],       voraus:'Schilddrüsen-Sonographie.', doku:'Volumen, Echogenität, Knoten.', haeufig:'je Untersuchung', tip:'Relevant bei CKD mit Hypothyreose (häufig), HTN, medikamentöser Therapie. Zusätzlich zu Abdomensono ansetzbar.' },
-  { nr:420, name:'Doppler/Duplex Nierenarterie',          short:'Duplex-Sono Nierenarterie',    kat:'Sonographie',             typ:'T', p:600,  excl:[],       voraus:'Farbkodierte Duplexsonographie.', doku:'Flussparameter + Bildarchiv.', haeufig:'je Untersuchung', tip:'Farbkodierte Duplexsonographie. Zusätzlich zu Nr. 410/413. Bei RR-resistenter HTN, Transplantat.' },
   { nr:558, name:'Muskelfunktionsprüfung',                 short:'Muskuläre Untersuchung',       kat:'Klinische Untersuchung',  typ:'P', p:80,   excl:[],       voraus:'Prüfung Muskelkraft/-funktion.', doku:'Muskelkraftgrade, befallene Muskelgruppen.', haeufig:'je Untersuchung', tip:'Prüfung Muskelkraft/-funktion; relevant bei CKD-Sarkopenie, neuromuskulären Begleiterkrankungen, Myopathie unter Statinen/Steroiden.' },
-  { nr:800, name:'Neurologische Untersuchung (eingehend)', short:'Neurol. Untersuchung',          kat:'Klinische Untersuchung',  typ:'P', p:206,  excl:[],       voraus:'Eingehende neurologische Untersuchung.', doku:'Vollst. neurol. Status (Kraft, Reflexe, Sensibilität).', haeufig:'1×/Tag', tip:'Vollständige neurologische Untersuchung; z.B. urämische Neuropathie, Enzephalopathie, Shunt-bedingte Stehlen-Syndrome.' },
+  { nr:800, name:'Neurologische Untersuchung (eingehend)', short:'Neurol. Untersuchung',          kat:'Klinische Untersuchung',  typ:'P', p:206,  excl:[],       voraus:'Eingehende neurologische Untersuchung.', doku:'Vollst. neurol. Status (Kraft, Reflexe, Sensibilität).', haeufig:'1×/Tag', tip:'Vollständige neurologische Untersuchung; z.B. urämische Neuropathie, Enzephalopathie, Shunt-bedingte Steal-Syndrome.' },
+  { nr:410, name:'Sonographie 1. Organ',                  short:'Sono 1. Organ',               kat:'Sonographie',             typ:'T', p:200,  excl:[],       voraus:'B-Mode-Sonographie eines Organs (z.B. Niere bds., Leber, Schilddrüse, Pleura, Harnblase, Herz, Pankreas).', doku:'Befund + Bildarchiv.', haeufig:'1×/Tag', tip:'Erstes Organ — Grund-Sono. Bei Abdomen-Sono komplett: zusätzlich 3× Nr. 420 für die weiteren Organe (z.B. Leber + Galle + Pankreas + Niere = 1×410 + 3×420).' },
+  { nr:420, name:'Sono jedes weitere Organ (Zuschlag)',    short:'Sono +1 Organ (Zuschlag)',     kat:'Sonographie',             typ:'T', p:80,   excl:[],       voraus:'Zuschlag zu Nr. 410 — bei Untersuchung eines weiteren Organs in derselben Sitzung.', doku:'Jedes Organ einzeln im Befund nennen + dokumentieren.', haeufig:'max. 3× pro Sitzung', tip:'Nicht mit Duplex verwechseln! Nr. 420 ist der ZUSCHLAG für weitere Organe bei B-Mode-Sono. Max. 3× pro Sitzung → max. 4 Organe gesamt (1×410 + 3×420). Bei ≥5 Organen Faktor bis 3,5 begründbar (Adipositas, Notfall, Tumor-Screening).' },
+  { nr:413, name:'Sono Hüftgelenke Säugling (pädiatr.)',   short:'Hüftgelenke Säugling',        kat:'Sonographie',             typ:'T', p:250,  excl:[],       voraus:'Säugling/Kleinkind bis vollendetes 2. LJ — Hüftgelenks-Sonographie nach Graf.', doku:'Klassifikation nach Graf, beidseits.', haeufig:'U2/U3-Vorsorge', tip:'⚠ Pädiatrische Leistung — in der Erwachsenen-Nephrologie NICHT verwendbar. Wer Abdomen-Sono abrechnen will: 1× Nr. 410 + 3× Nr. 420 (max. 4 Organe).' },
+  { nr:4011,display:'401', name:'Zuschlag Duplex-Verfahren', short:'Duplex-Zuschlag',          kat:'Sonographie',             typ:'T', p:80,   excl:[],       voraus:'Zusätzlicher Zuschlag bei farbkodiertem Duplex-Verfahren zu B-Mode-Sono (Nr. 410-418).', doku:'Flussparameter, Spektralkurven, Farbduplex-Bild.', haeufig:'je Sitzung', tip:'Reiner Zuschlag. Typische Sequenz Nierenarterien-Duplex: 1× Nr. 410 (Aorta) + 3× Nr. 420 (A. renalis re/li + A. lienalis) + Nr. 401 (Duplex) + Nr. 404 (Frequenzanalyse).' },
+  { nr:4014,display:'404', name:'Zuschlag Frequenzspektrum-Analyse', short:'Frequenzanalyse-Zuschlag', kat:'Sonographie',     typ:'T', p:80,   excl:[],       voraus:'Zuschlag bei zusätzlicher Frequenzspektrum-Analyse zur Doppler-/Duplex-Sonographie.', doku:'Spektralkurve, Maximalfluss, Resistance-Index.', haeufig:'je Sitzung', tip:'Wird neben 401 berechnet. Nicht zusätzlich zu 644/645/649/1754 möglich (dort schon enthalten).' },
+  { nr:417, name:'Schilddrüse Sonographie',               short:'Sono Schilddrüse',             kat:'Sonographie',             typ:'T', p:250,  excl:[],       voraus:'Schilddrüsen-Sonographie.', doku:'Volumen, Echogenität, Knoten.', haeufig:'je Untersuchung', tip:'Relevant bei CKD mit Hypothyreose (häufig), HTN, medikamentöser Therapie. Zusätzlich zu Abdomensono ansetzbar.' },
   { nr:424, name:'Echokardiographie (TTE)',               short:'Echo TTE',                     kat:'Echo / Gefäß-Duplex',     typ:'T', p:700,  excl:[],       voraus:'Transthorakale Echokardiographie (B-Mode).', doku:'Messwerte (LV-EF, Wände, Klappen) + Bild.', haeufig:'1×/Tag', tip:'Herzinsuffizienz, Volumenüberlastung, kardiorenales Syndrom, Perikarderguss. Nr. 424a/424b zusätzlich ansetzbar.' },
   { nr:4240,display:'424a', name:'Echo + Doppler-Zusatz', short:'Echo Doppler-Zusatz',          kat:'Echo / Gefäß-Duplex',     typ:'T', p:370,  excl:[],       voraus:'Nur zusätzlich zu Nr. 424.', doku:'Doppler-Messwerte (Klappengradient, E/A).', haeufig:'zusätzlich zu 424', tip:'Doppler-Klappengradient, E/A-Ratio. Nur zusätzlich zu Nr. 424.' },
   { nr:4241,display:'424b', name:'Echo + Farbduplex',     short:'Echo Farbduplex-Zusatz',       kat:'Echo / Gefäß-Duplex',     typ:'T', p:550,  excl:[],       voraus:'Nur zusätzlich zu Nr. 424.', doku:'Farbduplex-Befund (Regurgitation, Shunts).', haeufig:'zusätzlich zu 424', tip:'Farbkodierter Duplex. Nur zusätzlich zu Nr. 424.' },
@@ -304,8 +301,8 @@ var goaeOptRules = [
     text: 'Untersuchung (Nr. 5–8) ergänzen', nr: 6 },
   { cond: function(s){ return (s.has(3)||s.has(1)||s.has(6)||s.has(7)||s.has(8)) && !s.has(76)&&!s.has(75); },
     text: 'Nr. 76 Arztbrief — fast immer vergessen!', nr: 76 },
-  { cond: function(s){ return (s.has(3)||s.has(6)||s.has(7)||s.has(8)) && !s.has(410)&&!s.has(413)&&!s.has(60); },
-    text: 'Nr. 410 Nierensonographie ergänzen', nr: 410 },
+  { cond: function(s){ return (s.has(3)||s.has(6)||s.has(7)||s.has(8)) && !s.has(410)&&!s.has(60); },
+    text: 'Nr. 410 Sonographie ergänzen', nr: 410 },
   { cond: function(s){ return s.has(651) && !s.has(652); },
     text: 'Nr. 652 ABPM-Auswertung (Folgetag)', nr: 652 },
   { cond: function(s){ return s.has(4240) && !s.has(424); },
@@ -395,7 +392,7 @@ var goaeBefundTpl = {
        'Harnblase: [gefüllt, wandglatt / Restharn … ml].\n' +
        'Beurteilung: [regelrechter sonographischer Nierenbefund / CKD-typisch verkleinert bds. / Aufstau re. …].\n' +
        'Bildarchivierung erfolgt.',
-  413: 'Sonographie Abdomen (≥3 Organe/Regionen):\n' +
+  420: 'Sonographie Abdomen (1× Nr. 410 + 3× Nr. 420 — max. 4 Organe):\n' +
        '- Leber: homogene Echotextur, keine fokalen Läsionen, Lebervenen/Pfortader regelrecht\n' +
        '- Gallenblase: schlank, wandzart, kein Konkrement; DHC … mm\n' +
        '- Pankreas: soweit darstellbar homogen, kein Tumor, kein Aufstau\n' +
@@ -405,7 +402,7 @@ var goaeBefundTpl = {
        '- Harnblase: [gefüllt/leer]\n' +
        'Keine freie intraabdominelle Flüssigkeit. Bildarchivierung erfolgt.\n' +
        'Beurteilung: [regelrecht / pathologisch: …]',
-  420: 'Farbkodierte Duplexsonographie Nierenarterien:\n' +
+  401: 'Farbkodierte Duplexsonographie Nierenarterien (Zuschlag Nr. 401 zu Nr. 410+420):\n' +
        'Aorta abdominalis: Vmax [X] cm/s, Durchmesser … mm.\n' +
        'Rechte A. renalis: Abgang darstellbar, Vmax abgangsnah [X] cm/s, Vmax intraparench. [Y] cm/s, RI [0,XX]; aorto-renale Ratio [Z].\n' +
        'Linke A. renalis: Abgang darstellbar, Vmax abgangsnah [X] cm/s, Vmax intraparench. [Y] cm/s, RI [0,XX].\n' +
@@ -883,11 +880,11 @@ function goaePreset(type, btn) {
   document.querySelectorAll('.goae-preset-btn').forEach(function(b){ b.classList.remove('active'); });
   if (btn) btn.classList.add('active');
   var map = {
-    erst:       [3,8,413,76],
-    folge:      [3,6,413],
-    htn:        [3,6,650,413,76],
-    hypertensio:[3,6,650,413,76],
-    sono:       [3,5,413],
+    erst:       [3,8,410,420,76],
+    folge:      [3,6,410,420],
+    htn:        [3,6,650,410,420,76],
+    hypertensio:[3,6,650,410,420,76],
+    sono:       [3,5,410,420],
     biopsy:     [3,7,315,410],
     dialyse:    [3,34,626,76],
     wundErst:   [3,5,2000,200,76],
