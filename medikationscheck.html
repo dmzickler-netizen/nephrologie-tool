@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Medikamenten-Dosisrechner bei CKD</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0f2f5; color: #263238; font-size: 15px; }
+
+  header {
+    background: linear-gradient(135deg, #1a237e 0%, #3949ab 100%);
+    color: white; padding: 18px 28px;
+    display: flex; align-items: center; gap: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .logo { font-size: 2rem; }
+  header h1 { font-size: 1.3rem; font-weight: 700; }
+  header p  { font-size: 0.78rem; opacity: 0.8; margin-top: 2px; }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 20px 16px; }
+
+  .card {
+    background: white; border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 20px 22px; margin-bottom: 18px;
+  }
+  .card h2 { font-size: 1.05rem; color: #1a237e; margin-bottom: 14px; }
+
+  /* eGFR input row */
+  .egfr-row {
+    display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end;
+    margin-bottom: 18px;
+  }
+  .egfr-row .fg { display: flex; flex-direction: column; gap: 4px; }
+  .egfr-row label { font-size: 0.76rem; font-weight: 600; color: #455a64; text-transform: uppercase; letter-spacing: 0.4px; }
+  .egfr-row input, .egfr-row select {
+    padding: 8px 12px; border: 1.5px solid #cfd8dc; border-radius: 8px;
+    font-size: 0.92rem; background: #fafafa; width: 110px;
+  }
+  .egfr-row input:focus, .egfr-row select:focus { outline: none; border-color: #3949ab; background: white; }
+  .egfr-row .unit { font-size: 0.72rem; color: #90a4ae; margin-top: 2px; }
+
+  .btn-calc-egfr {
+    padding: 9px 20px; background: #3949ab; color: white;
+    border: none; border-radius: 8px; font-size: 0.88rem; font-weight: 700;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .btn-calc-egfr:hover { background: #1a237e; }
+
+  .egfr-badge {
+    padding: 8px 18px; background: #e8eaf6; border-radius: 8px;
+    font-size: 0.88rem; color: #1a237e; font-weight: 700;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .egfr-badge span { font-size: 1.15rem; }
+
+  /* Drug search */
+  .search-wrap {
+    display: flex; gap: 10px; align-items: center; margin-bottom: 12px;
+  }
+  .drug-search {
+    flex: 1; padding: 10px 14px;
+    border: 1.5px solid #cfd8dc; border-radius: 8px;
+    font-size: 0.92rem; background: #fafafa;
+  }
+  .drug-search:focus { outline: none; border-color: #3949ab; background: white; }
+  .egfr-info { font-size: 0.8rem; color: #607d8b; white-space: nowrap; }
+
+  /* Drug table */
+  .drug-table-wrap { max-height: 580px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 8px; }
+  .drug-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+  .drug-table th {
+    background: #e8eaf6; color: #1a237e; font-weight: 700;
+    padding: 8px 9px; text-align: left;
+    border-bottom: 2px solid #c5cae9;
+    position: sticky; top: 0; z-index: 1;
+  }
+  .drug-table th.active-col { background: #fff9c4; color: #5d4037; }
+  .drug-table td { padding: 7px 9px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
+  .drug-table tr:hover td { background: #f5f5ff; }
+  .drug-table tr.hidden { display: none; }
+  .drug-table .cat-row td {
+    background: #e8eaf6; font-weight: 700; color: #1a237e;
+    font-size: 0.73rem; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .egfr-highlight { background: #fffde7 !important; }
+  .dose-ok     { color: #2e7d32; font-weight: 600; }
+  .dose-reduce { color: #e65100; font-weight: 600; }
+  .dose-ci     { color: #b71c1c; font-weight: 700; }
+
+  .note-cell { font-size: 0.7rem; color: #607d8b; }
+
+  /* Legend */
+  .legend {
+    display: flex; gap: 16px; flex-wrap: wrap;
+    font-size: 0.75rem; margin-top: 10px; color: #546e7a;
+  }
+  .legend span { display: flex; align-items: center; gap: 4px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+  footer {
+    text-align: center; padding: 16px;
+    font-size: 0.72rem; color: #90a4ae; margin-top: 4px;
+  }
+
+  @media print {
+    header, .egfr-row, .search-wrap, footer { display: none !important; }
+    .drug-table-wrap { max-height: none; overflow: visible; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">💊</div>
+  <div>
+    <h1>Medikamenten-Dosisrechner bei Niereninsuffizienz</h1>
+    <p>Dosisanpassung nach eGFR · KDIGO 2024 · Fachinformationen · Lacy et al.</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="card">
+    <h2>⚙️ eGFR eingeben oder berechnen</h2>
+    <div class="egfr-row">
+      <div class="fg">
+        <label>eGFR direkt</label>
+        <input type="number" id="egfr-direct" placeholder="z.B. 38" min="0" max="150" oninput="applyEGFR()">
+        <span class="unit">ml/min/1.73m²</span>
+      </div>
+
+      <div style="align-self:center;color:#b0bec5;font-size:0.85rem;padding-bottom:14px;">— oder berechnen —</div>
+
+      <div class="fg">
+        <label>Kreatinin</label>
+        <input type="number" id="scr" placeholder="z.B. 2.1" step="0.01" min="0">
+        <span class="unit">mg/dl</span>
+      </div>
+      <div class="fg">
+        <label>Alter</label>
+        <input type="number" id="age" placeholder="z.B. 68" min="18" max="110">
+        <span class="unit">Jahre</span>
+      </div>
+      <div class="fg">
+        <label>Geschlecht</label>
+        <select id="sex">
+          <option value="">— wählen —</option>
+          <option value="male">Männlich</option>
+          <option value="female">Weiblich</option>
+        </select>
+      </div>
+      <div class="fg">
+        <button class="btn-calc-egfr" onclick="calcEGFR()">Berechnen</button>
+      </div>
+
+      <div class="egfr-badge" id="egfr-badge" style="display:none;">
+        Aktuelle eGFR: <span id="egfr-val">—</span> ml/min
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>💊 Dosistabelle nach eGFR</h2>
+    <div class="search-wrap">
+      <input type="text" class="drug-search" id="drug-search"
+             placeholder="🔍 Medikament suchen … (z.B. Metformin, Ramipril, Apixaban)"
+             oninput="filterDrugs()">
+      <div class="egfr-info" id="egfr-info">Kein eGFR gesetzt — alle Spalten ungefärbt</div>
+    </div>
+    <div class="drug-table-wrap">
+      <table class="drug-table" id="drug-table">
+        <thead>
+          <tr>
+            <th style="width:22%" id="th-name">Medikament</th>
+            <th style="width:10%" id="th-0">≥ 60</th>
+            <th style="width:13%" id="th-1">45 – 59</th>
+            <th style="width:13%" id="th-2">30 – 44</th>
+            <th style="width:13%" id="th-3">15 – 29</th>
+            <th style="width:13%" id="th-4">&lt; 15 / Dialyse</th>
+            <th style="width:16%">Hinweis</th>
+          </tr>
+        </thead>
+        <tbody id="drug-tbody"></tbody>
+      </table>
+    </div>
+    <div class="legend">
+      <span><span class="dot" style="background:#2e7d32;"></span> Normale Dosis</span>
+      <span><span class="dot" style="background:#e65100;"></span> Dosisreduktion / Vorsicht / TDM</span>
+      <span><span class="dot" style="background:#b71c1c;"></span> Kontraindiziert (KI)</span>
+      <span><span class="dot" style="background:#fffde7;border:1px solid #ccc;"></span> Aktuelle eGFR-Spalte</span>
+    </div>
+    <p style="font-size:0.68rem;color:#b0bec5;margin-top:10px;">
+      Quellen: Fachinformationen, KDIGO 2024, Dosierungsempfehlungen bei Niereninsuffizienz (Lacy et al.).
+      Immer aktuelle Fachinformation und klinisches Urteil hinzuziehen.
+    </p>
+  </div>
+
+</div>
+
+<footer>Medikamenten-Dosisrechner bei CKD · KDIGO 2024 · Immer Fachinformation prüfen</footer>
+
+<script>
+// Columns: name, category, ge60, 45-59, 30-44, 15-29, lt15, note
+const DRUGS = [
+  // ANTIDIABETIKA
+  ['cat','Antidiabetika','','','','','',''],
+  ['Metformin','Antidiabetika','Normal (max 2g)','Max 1g/d, engmaschig','Max 500mg/d','KI','KI','Laktatazidose-Risiko; Pause bei Kontrastmittel'],
+  ['Sitagliptin','Antidiabetika','100 mg/d','50 mg/d','25 mg/d','25 mg/d','25 mg/d','DPP4-I, keine Hypoglykämie'],
+  ['Empagliflozin','Antidiabetika','10 mg (BZ+Nephro)','10 mg (Nephro)','10 mg (Nephro)','10 mg (Nephro, eGFR ≥20)','KI für BZ','BZ-Wirkung verloren ab eGFR <45, nephroprotektiv weiter'],
+  ['Dapagliflozin','Antidiabetika','10 mg/d','10 mg/d','10 mg/d','10 mg/d (eGFR ≥25)','KI','Nephroprotektiv DAPA-CKD'],
+  ['Glibenclamid','Antidiabetika','Normal','Vermeiden','KI','KI','KI','Aktive Metaboliten akkumulieren'],
+  ['Insulin','Antidiabetika','Normal','Normal','Dosis-Check ↓','Dosis ↓↓','Dosis ↓↓, HD-Effekt','Hypoglykämiegefahr ↑ bei sinkender eGFR'],
+  ['Semaglutid','Antidiabetika','Normal','Normal','Normal','Normal','Normal','GLP-1-RA, keine renale Dosisanpassung nötig'],
+  ['Pioglitazon','Antidiabetika','Normal','Normal','Normal','Vorsicht','Vorsicht','Ödemneigung; keine renale Elim.'],
+  // ANTIHYPERTENSIVA
+  ['cat','Antihypertensiva — ACE-Hemmer / ARB','','','','','',''],
+  ['Ramipril','Antihypertensiva','Normal','Normal','Dosis ↓ 50%','Dosis ↓ 50%','Vorsicht/Dosis ↓','K⁺ + Krea-Kontrolle 2–4 Wo nach Start; Anstieg <30% tolerierbar'],
+  ['Lisinopril','Antihypertensiva','Normal','Normal','Dosis ↓ 25–50%','Dosis ↓ 50%','Vorsicht','Renal eliminiert; Anpassung nötig; kein Angioödem-Kreuzrisiko mit ARB'],
+  ['Enalapril','Antihypertensiva','Normal','Normal','Dosis ↓ 50%','Dosis ↓ 75%','Vorsicht/KI','Prodrug; renale Elimination des aktiven Enalaprilats'],
+  ['Perindopril','Antihypertensiva','Normal','Normal','Dosis ↓ 50%','Vorsicht','Vorsicht','Kardiovaskulärer Nutzen (EUROPA-Studie)'],
+  ['Losartan','Antihypertensiva','100 mg/d','100 mg/d','100 mg/d','50–100 mg/d','50 mg/d (Vorsicht)','Hepatisch eliminiert; weniger Dosisanpassung; RENAAL-Studie'],
+  ['Irbesartan','Antihypertensiva','300 mg/d','300 mg/d','300 mg/d','150–300 mg/d','150 mg/d (Vorsicht)','Vollständig hepatisch; IDNT-Studie bei DM-Nephropathie'],
+  ['Valsartan','Antihypertensiva','Normal (160 mg 2×)','Normal','Normal, Vorsicht','Dosis ↓ 50%','Vorsicht','Hepatisch; gut verträglich; wenig renale Elimination'],
+  ['Candesartan','Antihypertensiva','Normal (32 mg/d)','Normal','Dosis ↓','Dosis ↓↓','Vorsicht','Stärkstes ARB pro mg; teilweise renale Elimination'],
+  ['Telmisartan','Antihypertensiva','80 mg/d','80 mg/d','80 mg/d','40–80 mg/d','Vorsicht','Vollständig hepatisch; günstig bei Begleit-KHK (ONTARGET)'],
+  ['cat','Antihypertensiva — Kalziumantagonisten','','','','','',''],
+  ['Amlodipin','Antihypertensiva','5–10 mg/d','5–10 mg/d','5–10 mg/d','5 mg/d','5 mg/d','Keine Dosisanpassung; Cave Ödeme; Erstlinie bei Transplant'],
+  ['Lercanidipin','Antihypertensiva','10–20 mg/d','10–20 mg/d','10 mg/d','10 mg/d (Vorsicht)','Vorsicht','Weniger Ödeme als Amlodipin; hepatisch eliminiert'],
+  ['Felodipin','Antihypertensiva','5–10 mg/d','5–10 mg/d','5–10 mg/d','5 mg/d','Vorsicht','Ähnlich Amlodipin; hepatisch'],
+  ['Diltiazem','Antihypertensiva','180–360 mg/d','Normal','Vorsicht','Vorsicht','KI/Vorsicht','Non-DHP; antiproteinurischer Zusatzeffekt; Cave Bradykardie+BB'],
+  ['Verapamil','Antihypertensiva','120–480 mg/d','Normal','Vorsicht','Vorsicht','Vorsicht','Non-DHP; hepatisch; Cave AV-Block; Obstipation'],
+  ['cat','Antihypertensiva — Diuretika','','','','','',''],
+  ['HCT (Hydrochlorothiazid)','Antihypertensiva','12,5–25 mg/d','12,5–25 mg/d','12,5 mg/d (↓ Wirk.)','Wenig effektiv','Nicht empfohlen','Wirkungsverlust ab eGFR <30; Chlortalidon/Indapamid bevorzugen'],
+  ['Chlortalidon','Antihypertensiva','12,5–25 mg/d','12,5–25 mg/d','12,5–25 mg/d','12,5 mg/d (Vorsicht)','Nicht empfohlen','Bleibt effektiv bis eGFR <30; länger wirksam als HCT'],
+  ['Indapamid','Antihypertensiva','1,25–2,5 mg/d','1,25–2,5 mg/d','1,25–2,5 mg/d','1,25 mg/d (Vorsicht)','Nicht empfohlen','Thiazid-artig; wirksam bei GFR <30; hepatisch eliminiert'],
+  ['Torasemid','Antihypertensiva','5–20 mg/d','5–20 mg/d','10–40 mg/d','20–100 mg/d','20–100 mg/d','Schleifendiuretikum; bessere Resorption als Furosemid'],
+  ['Furosemid','Antihypertensiva','20–80 mg/d','20–80 mg/d','Höhere Dosis nötig','Sehr hohe Dosen','Eingeschränkt','Diuretika-Resistenz ↑ bei sinkender GFR; Dosis titirieren'],
+  ['cat','Antihypertensiva — MRA / weitere','','','','','',''],
+  ['Spironolacton','Antihypertensiva','25–50 mg/d','25–50 mg/d (K⁺-Mon.)','Vorsicht, K⁺-Monitor','KI (Hyperkaliämie)','KI','4. Stufe resistente HTN; Hyperkaliämie-Risiko ↑↑ ab eGFR <30'],
+  ['Eplerenon','Antihypertensiva','25–50 mg/d','25–50 mg/d (K⁺-Mon.)','Vorsicht, K⁺-Monitor','KI','KI','Selektiveres MRA; weniger Gynäkomastie; gleiche K⁺-Risiken'],
+  ['Finerenon','Antihypertensiva','10–20 mg/d','10–20 mg/d','10 mg/d (eGFR≥25)','KI (<25)','KI','Nicht-steroidales MRA; Nierenschutz bei DKD (FIDELIO-DKD)'],
+  ['Bisoprolol','Antihypertensiva','10 mg/d','10 mg/d','Normal','Vorsicht (max 10mg)','Vorsicht','Beta-Blocker; nicht Erstlinie für reine HTN; bei KHK/HFrEF indiziert'],
+  ['Carvedilol','Antihypertensiva','6,25–25 mg 2×','Normal','Normal','Vorsicht','Vorsicht','Alpha+Beta-Blocker; hepatisch; günstig bei HFrEF'],
+  ['Doxazosin','Antihypertensiva','4–8 mg/d','4–8 mg/d','4–8 mg/d','Vorsicht','Vorsicht','Alpha-Blocker; 4. Stufe; Cave orthostatische Hypotonie'],
+  ['Moxonidin','Antihypertensiva','0,2–0,4 mg/d','Vorsicht','Dosis ↓ 50%','KI','KI','Zentral; Renal eliminiert; Cave Rebound bei abruptem Absetzen'],
+  // KARDIOVASKULÄR (sonstige)
+  ['cat','Kardiovaskulär (sonstige)','','','','','',''],
+  ['Atenolol','Kardiovaskulär','Normal','100% q24h','50% q24h','25% q24h','25% q48h','Renal eliminiert! Gut dialysierbar'],
+  ['Digoxin','Kardiovaskulär','Normal','75% Normaldosis','50%','Vorsicht + Spiegel','KI / Spiegel','Toxisches Fenster eng; TDM obligat'],
+  ['Amiodaron','Kardiovaskulär','Normal','Normal','Normal','Normal','Normal','Keine renale Elimination'],
+  ['Statine (allg.)','Kardiovaskulär','Normal','Normal','Normal','Vorsicht (Dosis ↓)','Vorsicht','Myopathie-Risiko ↑ bei CKD; Rosuvastatin max 10mg bei <30'],
+  // ANTIKOAGULATION
+  ['cat','Antikoagulation','','','','','',''],
+  ['Dabigatran','Antikoagulation','Normal (150mg 2×)','Normal','Vorsicht (110mg 2×)','KI','KI','Hauptsächlich renal eliminiert; Blutungsrisiko ↑'],
+  ['Rivaroxaban','Antikoagulation','Normal (20mg/d)','Normal','15 mg/d','KI','KI','Cave: Fachinformation genau prüfen'],
+  ['Apixaban','Antikoagulation','Normal (5mg 2×)','Normal','2,5 mg 2× (wenn 2/3 Krit.)','2,5 mg 2×','KI (relativ)','Weniger renal elim.; relativ sicherster DOAK'],
+  ['Edoxaban','Antikoagulation','60 mg/d','30 mg/d','30 mg/d','KI','KI','Reduktion ab eGFR <50'],
+  ['Enoxaparin (NMH)','Antikoagulation','Normal','Normal','Dosis ↓ 50% oder 1×/d','Anti-Xa-Monitoring','UFH bevorzugen','Anti-Xa-Spiegel messen; ggf. UFH wechseln'],
+  ['Phenprocoumon','Antikoagulation','Normal','Normal','Normal, INR-Monitor','Vorsicht','Vorsicht','Blutungsrisiko ↑; renale Anpassung INR-gesteuert'],
+  // ANALGETIKA
+  ['cat','Analgetika','','','','','',''],
+  ['Ibuprofen / NSAR','Analgetika','Kurzfristig möglich','Vermeiden','KI','KI','KI','Vasokonstriktion; akutes Nierenversagen; GI-Blutung'],
+  ['Paracetamol','Analgetika','Normal (max 4g/d)','Normal','Normal','Max 2g/d, q6h','Max 2g/d','Sicherste Analgesie bei CKD'],
+  ['Tramadol','Analgetika','Normal','Max 200mg/d','Max 100mg/d, q12h','KI','KI','Aktive Metaboliten; Krampfrisiko'],
+  ['Morphin','Analgetika','Normal','Dosis ↓, q6–8h','Dosis ↓↓, q12h','Vorsicht/KI','KI','M6G akkumuliert; Opioid-Neurotoxizität'],
+  ['Oxycodon','Analgetika','Normal','Dosis ↓ 25%','Dosis ↓ 50%','Vorsicht','KI','Weniger renale Metaboliten als Morphin'],
+  ['Pregabalin','Analgetika','Normal (max 600mg)','150–300 mg/d','75–150 mg/d','25–75 mg/d','25 mg/d oder q24h','Neuropathischer Schmerz; Sedierungsrisiko ↑'],
+  ['Gabapentin','Analgetika','Normal (max 3600mg)','700–1400 mg/d','200–700 mg/d','200–700 mg q24h','100–300 mg q24h','TDM sinnvoll; ZNS-Toxizität bei CKD'],
+  // ANTIBIOTIKA
+  ['cat','Antibiotika','','','','','',''],
+  ['Amoxicillin','Antibiotika','Normal','Normal','500 mg q12h','500 mg q24h','250–500 mg q24h','Auch bei HD standard dosieren post-Dialyse'],
+  ['Amox/Clavulansäure','Antibiotika','Normal','Normal','875/125 mg q12h','500/125 mg q24h','250/125 mg q24h','Clavulansäure akkumuliert'],
+  ['Piperacillin/Tazob.','Antibiotika','Normal (4,5g q6h)','Normal','4,5g q8h','4,5g q12h','2,25g q12h','TDM bei Intensivpatienten'],
+  ['Meropenem','Antibiotika','1g q8h','1g q8h','1g q12h','0,5g q12h','0,5g q24h','Bei Sepsis ggf. höhere Dosen + TDM'],
+  ['Ciprofloxacin','Antibiotika','Normal (500mg q12h)','250–500mg q12h','250–500mg q12h','250–500mg q24h','250–500mg q24h','ZNS-Toxizität ↑; Cave Fluorchinolon-Risiken'],
+  ['Cotrimoxazol','Antibiotika','Normal','Normal','50% Dosis','Vorsicht, 50%','KI (außer PCP-Prophylaxe)','PCP-Prophylaxe: Cotrimoxazol 480mg/d bis GFR 15'],
+  ['Vancomycin','Antibiotika','TDM-gesteuert','TDM, Intervall ↑','TDM, Intervall ↑↑','TDM, q72–96h','Post-HD Dosierung','AUC-gesteuertes TDM; Ziel AUC 400–600'],
+  ['Aciclovir','Antibiotika','Normal (5mg/kg q8h)','Normal','5mg/kg q24h','2,5mg/kg q24h','2,5mg/kg post-HD','Kristallurie; Hydrierung wichtig'],
+  ['Valaciclovir','Antibiotika','1g q8h (Herpes)','1g q12h','1g q24h','500mg q24h','500mg post-HD','Prodrug von Aciclovir'],
+  // IMMUNSUPPRESSIVA / RHEUMA
+  ['cat','Immunsuppressiva / Rheuma','','','','','',''],
+  ['Methotrexat','Immunsuppressiva / Rheuma','Normal (Rheuma)','75% Dosis','50% Dosis','KI','KI','Mukositis/Panzytopenie-Risiko; Leukovorin bereithalten'],
+  ['Colchicin','Immunsuppressiva / Rheuma','Normal','Normal','0,5 mg/d max','0,5 mg jeden 2. Tag','KI','Neuromuskuläre Toxizität; Gicht-Attacke max 0,5mg/Dosis'],
+  ['Hydroxychloroquin','Immunsuppressiva / Rheuma','Normal','Normal','Normal','Normal (Vorsicht)','Vorsicht','Keine relevante renale Elim.'],
+  ['Mycophenolat','Immunsuppressiva / Rheuma','Normal','Normal','Normal','Vorsicht, GI↑','Vorsicht','GI-Toxizität ↑; Spiegel-Monitoring'],
+  ['Tacrolimus','Immunsuppressiva / Rheuma','TDM','TDM','TDM','TDM','TDM','Keine Dosisanpassung nach eGFR — TDM-gesteuert'],
+  ['Cyclosporin','Immunsuppressiva / Rheuma','TDM','TDM','TDM','TDM','TDM','Nephrotoxisch! Spiegel + Krea engmaschig'],
+  // DIVERSES
+  ['cat','Diverses','','','','','',''],
+  ['Allopurinol','Diverses','Normal (300mg/d)','200 mg/d','100–200 mg/d','100 mg/d','100 mg q48h','Hypersensitivitätssyndrom; HLA-B*58:01 testen'],
+  ['Febuxostat','Diverses','Normal (80–120mg)','Normal','Normal','Normal (Vorsicht)','Vorsicht','Besser als Allopurinol bei CKD (keine renale Elim.)'],
+  ['Bisphosphonate','Diverses','Normal (>60)','Normal (50–59)','Vorsicht, ggf. KI','KI','KI','Zoledronat KI <35; Denosumab sicherer bei CKD'],
+  ['Lithium','Diverses','Normal (TDM)','Dosis ↓, TDM','Dosis ↓↓, TDM','Vorsicht/KI','KI','Schmalste therapeutische Breite; TDM obligat'],
+];
+
+let currentEGFR = null;
+
+function egfrColIndex(egfr) {
+  if (egfr === null) return -1;
+  return egfr >= 60 ? 0 : egfr >= 45 ? 1 : egfr >= 30 ? 2 : egfr >= 15 ? 3 : 4;
+}
+
+function doseClass(txt) {
+  if (!txt) return '';
+  const t = txt.toLowerCase();
+  if (t === 'ki' || t.startsWith('ki')) return 'dose-ci';
+  if (t.includes('vorsicht') || t.includes('↓') || t.includes('monitor') || t.includes('tdm')) return 'dose-reduce';
+  return 'dose-ok';
+}
+
+function buildDrugTable() {
+  const tbody = document.getElementById('drug-tbody');
+  const col = egfrColIndex(currentEGFR);
+  let html = '';
+  DRUGS.forEach(d => {
+    if (d[0] === 'cat') {
+      html += `<tr class="cat-row"><td colspan="7">${d[1]}</td></tr>`;
+      return;
+    }
+    const highlight = [0,1,2,3,4].map(i => i === col ? ' class="egfr-highlight"' : '');
+    html += `<tr data-name="${d[0].toLowerCase()} ${d[1].toLowerCase()}">
+      <td><strong>${d[0]}</strong></td>
+      <td${highlight[0]}><span class="${doseClass(d[2])}">${d[2]}</span></td>
+      <td${highlight[1]}><span class="${doseClass(d[3])}">${d[3]}</span></td>
+      <td${highlight[2]}><span class="${doseClass(d[4])}">${d[4]}</span></td>
+      <td${highlight[3]}><span class="${doseClass(d[5])}">${d[5]}</span></td>
+      <td${highlight[4]}><span class="${doseClass(d[6])}">${d[6]}</span></td>
+      <td class="note-cell">${d[7]}</td>
+    </tr>`;
+  });
+  tbody.innerHTML = html;
+  updateHeaderHighlight(col);
+  filterDrugs();
+}
+
+function updateHeaderHighlight(col) {
+  for (let i = 0; i < 5; i++) {
+    const th = document.getElementById('th-' + i);
+    if (th) th.className = i === col ? 'active-col' : '';
+  }
+}
+
+function applyEGFR() {
+  const val = parseFloat(document.getElementById('egfr-direct').value);
+  if (!isNaN(val) && val >= 0) {
+    setEGFR(val);
+  } else {
+    currentEGFR = null;
+    document.getElementById('egfr-badge').style.display = 'none';
+    document.getElementById('egfr-info').textContent = 'Kein eGFR gesetzt — alle Spalten ungefärbt';
+    buildDrugTable();
+  }
+}
+
+function calcEGFR() {
+  const scr = parseFloat(document.getElementById('scr').value);
+  const age = parseFloat(document.getElementById('age').value);
+  const sex = document.getElementById('sex').value;
+  if (!scr || !age || !sex) {
+    alert('Bitte Kreatinin, Alter und Geschlecht eingeben.');
+    return;
+  }
+  // CKD-EPI 2021 (creatinine only)
+  const kappa = sex === 'female' ? 0.7 : 0.9;
+  const alpha = sex === 'female' ? -0.241 : -0.302;
+  const sexMult = sex === 'female' ? 1.012 : 1.0;
+  const ratio = scr / kappa;
+  const egfr = Math.round(
+    142 * Math.pow(Math.min(ratio, 1), alpha) * Math.pow(Math.max(ratio, 1), -1.200)
+    * Math.pow(0.9938, age) * sexMult
+  );
+  document.getElementById('egfr-direct').value = egfr;
+  setEGFR(egfr);
+}
+
+function setEGFR(val) {
+  currentEGFR = val;
+  document.getElementById('egfr-val').textContent = val;
+  document.getElementById('egfr-badge').style.display = 'flex';
+  const labels = ['≥ 60','45–59','30–44','15–29','< 15 / Dialyse'];
+  const col = egfrColIndex(val);
+  document.getElementById('egfr-info').textContent =
+    `eGFR ${val} ml/min → Spalte "${labels[col]}" markiert`;
+  buildDrugTable();
+}
+
+function filterDrugs() {
+  const q = document.getElementById('drug-search').value.toLowerCase();
+  document.querySelectorAll('#drug-tbody tr').forEach(row => {
+    if (row.classList.contains('cat-row')) {
+      row.classList.toggle('hidden', q.length > 0);
+      return;
+    }
+    const name = row.getAttribute('data-name') || '';
+    row.classList.toggle('hidden', q.length > 0 && !name.includes(q));
+  });
+}
+
+// Initial build
+buildDrugTable();
+</script>
+</body>
+</html>
