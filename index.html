@@ -18,6 +18,7 @@
   flex-direction: row;
   flex-wrap: nowrap;
   align-items: center;
+  justify-content: space-between;
   gap: 16px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
@@ -509,17 +510,7 @@
     margin-top: 20px;
   }
 
-  /* Drug calculator */
-  .drug-search {
-    width: 100%;
-    padding: 10px 14px;
-    border: 1.5px solid #cfd8dc;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    margin-bottom: 12px;
-    background: #fafafa;
-  }
-  .drug-search:focus { outline: none; border-color: #3949ab; background: white; }
+
   .drug-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
   .drug-table th {
     background: #e8eaf6;
@@ -578,7 +569,7 @@
     body { background: white; font-size: 11pt; }
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     header, footer, .card:not(#print-card), button, .tabs, .tab-btn,
-    .btn-copy, .btn-print, .btn-calc, #drug-calc-section, #electrolyte-section { display: none !important; }
+    .btn-copy, .btn-print, .btn-calc, #electrolyte-section { display: none !important; }
     #print-card { display: block !important; box-shadow: none; border: none; padding: 0; }
     .print-header { border-bottom: 2px solid #1a237e; margin-bottom: 16px; padding-bottom: 8px; }
     .print-header h2 { font-size: 14pt; color: #1a237e; }
@@ -2245,39 +2236,6 @@ window.goHome = function(e){
     </div>
   </div>
 
-
-  <!-- Row 3: Drug Calculator + Electrolytes -->
-  <div class="grid-2" style="margin-top:20px;" id="drug-calc-section">
-    <div class="card">
-      <h2>💊 Medikamenten-Dosisrechner nach eGFR</h2>
-      <div style="display:flex;gap:10px;margin-bottom:10px;align-items:center;">
-        <input type="text" class="drug-search" id="drug-search" placeholder="🔍 Medikament suchen …" oninput="filterDrugs()">
-        <div style="white-space:nowrap;font-size:0.8rem;color:#607d8b;">
-          Aktuell: <strong id="current-egfr-display">— ml/min</strong>
-        </div>
-      </div>
-      <div class="drug-table-wrap">
-        <table class="drug-table" id="drug-table">
-          <thead>
-            <tr>
-              <th style="width:24%">Medikament</th>
-              <th style="width:10%">≥60</th>
-              <th style="width:13%">45–59</th>
-              <th style="width:13%">30–44</th>
-              <th style="width:13%">15–29</th>
-              <th style="width:13%">&lt;15 / Dialyse</th>
-              <th style="width:14%">Hinweis</th>
-            </tr>
-          </thead>
-          <tbody id="drug-tbody"></tbody>
-        </table>
-      </div>
-      <p style="font-size:0.7rem;color:#90a4ae;margin-top:8px;">Quellen: Fachinformationen, KDIGO 2024, Dosierungsempfehlungen bei Niereninsuffizienz (Lacy et al.). Immer aktuelle Fachinformation prüfen.</p>
-    </div>
-
-    <!-- electrolyte-section placeholder (moved to Anämie/MBD tab) -->
-    <div id="electrolyte-section" style="display:none;"></div>
-  </div>
   <!-- mbd-panel hidden (kept for JS compat; filled by Anämie/MBD tab) -->
   <div id="mbd-panel" style="display:none;"></div>
 
@@ -16529,9 +16487,6 @@ function calculate() {
   // Build matrix
   buildMatrix(gfrStage ? gfrStage.row : -1, albStage ? albStage.col : -1);
 
-  // Update drug table with current eGFR
-  updateDrugEGFR(primaryEGFR);
-
   // Store for print matrix
   _lastGFRStage = gfrStage; _lastAlbStage = albStage; _lastRiskInfo = riskInfo;
 
@@ -17452,122 +17407,7 @@ function copyText(id) {
   setTimeout(() => btn.textContent = orig, 1500);
 }
 
-// ===== DRUG DATABASE =====
-// Columns: name, cat, ge60, 45-59, 30-44, 15-29, lt15, note
-const DRUGS = [
-  // ANTIDIABETIKA
-  ['cat','Antidiabetika','','','','','',''],
-  ['Metformin','Antidiabetika','Normal (max 2g)','Max 1g/d, engmaschig','Max 500mg/d','KI','KI','Laktatazidose-Risiko; Pause bei Kontrastmittel'],
-  ['Sitagliptin','Antidiabetika','100 mg/d','50 mg/d','25 mg/d','25 mg/d','25 mg/d','DPP4-I, keine Hypoglykämie'],
-  ['Empagliflozin','Antidiabetika','10 mg (BZ+Nephro)','10 mg (Nephro)','10 mg (Nephro)','10 mg (Nephro, eGFR ≥20)','KI für BZ','BZ-Wirkung verloren ab eGFR <45, nephroprotektiv weiter'],
-  ['Dapagliflozin','Antidiabetika','10 mg/d','10 mg/d','10 mg/d','10 mg/d (eGFR ≥25)','KI','Nephroprotektiv DAPA-CKD'],
-  ['Glibenclamid','Antidiabetika','Normal','Vermeiden','KI','KI','KI','Aktive Metaboliten akkumulieren'],
-  ['Insulin','Antidiabetika','Normal','Normal','Dosis-Check ↓','Dosis ↓↓','Dosis ↓↓, HD-Effekt','Hypoglykämiegefahr ↑ bei sinkender eGFR'],
-  ['Semaglutid','Antidiabetika','Normal','Normal','Normal','Normal','Normal','GLP-1-RA, keine renale Dosisanpassung nötig'],
-  ['Pioglitazon','Antidiabetika','Normal','Normal','Normal','Vorsicht','Vorsicht','Ödemneigung; keine renale Elim.'],
-  // KARDIOVASKULÄR
-  ['cat','Kardiovaskulär','','','','','',''],
-  ['Bisoprolol','Kardiovaskulär','Normal','Normal','Normal','Vorsicht (max 10mg)','Vorsicht','Keine renale Elim.; bei GFR <20 engmaschig'],
-  ['Atenolol','Kardiovaskulär','Normal','100% q24h','50% q24h','25% q24h','25% q48h','Renal eliminiert! Gut dialysierbar'],
-  ['Ramipril','Kardiovaskulär','Normal','Normal','Dosis ↓ 50%','Dosis ↓ 50%','Vorsicht/Dosis ↓','K+-Kontrolle; GFR-Monitoring'],
-  ['Digoxin','Kardiovaskulär','Normal','75% Normaldosis','50%','Vorsicht + Spiegel','KI / Spiegel','Toxisches Fenster eng; TDM obligat'],
-  ['Spironolacton','Kardiovaskulär','Normal','Normal, K+-Monitor','Vorsicht, K+-Monitor','KI (Hyperkaliämie)','KI','Bei GFR <30 Hyperkaliämie-Risiko hoch'],
-  ['Furosemid','Kardiovaskulär','Normal','Normal, Dosis ↑ nötig','Höhere Dosis nötig','Sehr hohe Dosen nötig','Eingeschränkt wirksam','Diuretika-Resistenz ↑ bei sinkender GFR'],
-  ['Amiodaron','Kardiovaskulär','Normal','Normal','Normal','Normal','Normal','Keine renale Elimination'],
-  ['Statine (allg.)','Kardiovaskulär','Normal','Normal','Normal','Vorsicht (Dosis ↓)','Vorsicht','Myopathie-Risiko ↑ bei CKD; Rosuvastatin max 10mg bei <30'],
-  // ANTIKOAGULATION
-  ['cat','Antikoagulation','','','','','',''],
-  ['Dabigatran','Antikoagulation','Normal (150mg 2×)','Normal','Vorsicht (110mg 2×)','KI','KI','Hauptsächlich renal eliminiert; Blutungsrisiko ↑'],
-  ['Rivaroxaban','Antikoagulation','Normal (20mg/d)','Normal','15 mg/d','KI','KI','Cave: Fachinformation genau prüfen'],
-  ['Apixaban','Antikoagulation','Normal (5mg 2×)','Normal','2,5 mg 2× (wenn 2/3 Krit.)','2,5 mg 2×','KI (relativ)','Weniger renal elim.; relativ sicherster DOAK'],
-  ['Edoxaban','Antikoagulation','60 mg/d','30 mg/d','30 mg/d','KI','KI','Reduktion ab eGFR <50'],
-  ['Enoxaparin (NMH)','Antikoagulation','Normal','Normal','Dosis ↓ 50% oder 1×/d','Anti-Xa-Monitoring','UFH bevorzugen','Anti-Xa-Spiegel messen; ggf. UFH wechseln'],
-  ['Phenprocoumon','Antikoagulation','Normal','Normal','Normal, INR-Monitor','Vorsicht','Vorsicht','Blutungsrisiko ↑; renale Anpassung INR-gesteuert'],
-  // ANALGETIKA
-  ['cat','Analgetika','','','','','',''],
-  ['Ibuprofen / NSAR','Analgetika','Kurzfristig möglich','Vermeiden','KI','KI','KI','Vasokonstriktion; akutes Nierenversagen; GI-Blutung'],
-  ['Paracetamol','Analgetika','Normal (max 4g/d)','Normal','Normal','Max 2g/d, q6h','Max 2g/d','Sicherste Analgesie bei CKD'],
-  ['Tramadol','Analgetika','Normal','Max 200mg/d','Max 100mg/d, q12h','KI','KI','Aktive Metaboliten; Krampfrisiko'],
-  ['Morphin','Analgetika','Normal','Dosis ↓, q6–8h','Dosis ↓↓, q12h','Vorsicht/KI','KI','M6G akkumuliert; Opioid-Neurotoxizität'],
-  ['Oxycodon','Analgetika','Normal','Dosis ↓ 25%','Dosis ↓ 50%','Vorsicht','KI','Weniger renale Metaboliten als Morphin'],
-  ['Pregabalin','Analgetika','Normal (max 600mg)','150–300 mg/d','75–150 mg/d','25–75 mg/d','25 mg/d oder q24h','Neuropathischer Schmerz; Sedierungsrisiko ↑'],
-  ['Gabapentin','Analgetika','Normal (max 3600mg)','700–1400 mg/d','200–700 mg/d','200–700 mg q24h','100–300 mg q24h','TDM sinnvoll; ZNS-Toxizität bei CKD'],
-  // ANTIBIOTIKA
-  ['cat','Antibiotika','','','','','',''],
-  ['Amoxicillin','Antibiotika','Normal','Normal','500 mg q12h','500 mg q24h','250–500 mg q24h','Auch bei HD standard dosieren post-Dialyse'],
-  ['Amox/Clavulansäure','Antibiotika','Normal','Normal','875/125 mg q12h','500/125 mg q24h','250/125 mg q24h','Clavulansäure akkumuliert'],
-  ['Piperacillin/Tazob.','Antibiotika','Normal (4,5g q6h)','Normal','4,5g q8h','4,5g q12h','2,25g q12h','TDM bei Intensivpatienten'],
-  ['Meropenem','Antibiotika','1g q8h','1g q8h','1g q12h','0,5g q12h','0,5g q24h','Bei Sepsis ggf. höhere Dosen + TDM'],
-  ['Ciprofloxacin','Antibiotika','Normal (500mg q12h)','250–500mg q12h','250–500mg q12h','250–500mg q24h','250–500mg q24h','ZNS-Toxizität ↑; Cave Fluorchinolon-Risiken'],
-  ['Cotrimoxazol','Antibiotika','Normal','Normal','50% Dosis','Vorsicht, 50%','KI (außer PCP-Prophylaxe)','PCP-Prophylaxe: Cotrimoxazol 480mg/d bis GFR 15'],
-  ['Vancomycin','Antibiotika','TDM-gesteuert','TDM, Intervall ↑','TDM, Intervall ↑↑','TDM, q72–96h','Post-HD Dosierung','AUC-gesteuertes TDM; Ziel AUC 400–600'],
-  ['Aciclovir','Antibiotika','Normal (5mg/kg q8h)','Normal','5mg/kg q24h','2,5mg/kg q24h','2,5mg/kg post-HD','Kristallurie; Hydrierung wichtig'],
-  ['Valaciclovir','Antibiotika','1g q8h (Herpes)','1g q12h','1g q24h','500mg q24h','500mg post-HD','Prodrug von Aciclovir'],
-  // IMMUNSUPPRESSIVA / RHEUMA
-  ['cat','Immunsuppressiva / Rheuma','','','','','',''],
-  ['Methotrexat','Immunsuppressiva / Rheuma','Normal (Rheuma)','75% Dosis','50% Dosis','KI','KI','Mukositis/Panzytopenie-Risiko; Leukovorin bereithalten'],
-  ['Colchicin','Immunsuppressiva / Rheuma','Normal','Normal','0,5 mg/d max','0,5 mg jeden 2. Tag','KI','Neuromuskuläre Toxizität; Gicht-Attacke max 0,5mg/Dosis'],
-  ['Hydroxychloroquin','Immunsuppressiva / Rheuma','Normal','Normal','Normal','Normal (Vorsicht)','Vorsicht','Keine relevante renale Elim.'],
-  ['Mycophenolat','Immunsuppressiva / Rheuma','Normal','Normal','Normal','Vorsicht, GI↑','Vorsicht','GI-Toxizität ↑; Spiegel-Monitoring'],
-  ['Tacrolimus','Immunsuppressiva / Rheuma','TDM','TDM','TDM','TDM','TDM','Keine Dosisanpassung nach eGFR — TDM-gesteuert'],
-  ['Cyclosporin','Immunsuppressiva / Rheuma','TDM','TDM','TDM','TDM','TDM','Nephrotoxisch! Spiegel + Krea engmaschig'],
-  // DIVERSES
-  ['cat','Diverses','','','','','',''],
-  ['Allopurinol','Diverses','Normal (300mg/d)','200 mg/d','100–200 mg/d','100 mg/d','100 mg q48h','Hypersensitivitätssyndrom; HLA-B*58:01 testen'],
-  ['Febuxostat','Diverses','Normal (80–120mg)','Normal','Normal','Normal (Vorsicht)','Vorsicht','Besser als Allopurinol bei CKD (keine renale Elim.)'],
-  ['Bisphosphonate','Diverses','Normal (>60)','Normal (50–59)','Vorsicht, ggf. KI','KI','KI','Zoledronat KI <35; Denosumab sicherer bei CKD'],
-  ['Lithium','Diverses','Normal (TDM)','Dosis ↓, TDM','Dosis ↓↓, TDM','Vorsicht/KI','KI','Schmalste therapeutische Breite; TDM obligat'],
-];
-
-let currentEGFR = null;
 let _lastGFRStage = null, _lastAlbStage = null, _lastRiskInfo = null;
-
-function buildDrugTable() {
-  const tbody = document.getElementById('drug-tbody');
-  let html = '';
-  DRUGS.forEach(d => {
-    if (d[0] === 'cat') {
-      html += `<tr class="cat-row"><td colspan="7">${d[1]}</td></tr>`;
-      return;
-    }
-    // Highlight column based on current eGFR
-    let highlight = ['','','','',''];
-    if (currentEGFR !== null) {
-      let col = currentEGFR >= 60 ? 0 : currentEGFR >= 45 ? 1 : currentEGFR >= 30 ? 2 : currentEGFR >= 15 ? 3 : 4;
-      highlight[col] = ' class="egfr-highlight"';
-    }
-    // Color coding
-    function doseClass(txt) {
-      if (!txt) return '';
-      let t = txt.toLowerCase();
-      if (t === 'ki' || t.startsWith('ki')) return 'dose-ci';
-      if (t.includes('vorsicht') || t.includes('↓') || t.includes('monitor') || t.includes('tdm')) return 'dose-reduce';
-      return 'dose-ok';
-    }
-    html += `<tr data-name="${d[0].toLowerCase()} ${d[1].toLowerCase()}">
-      <td><strong>${d[0]}</strong></td>
-      <td${highlight[0]}><span class="${doseClass(d[2])}">${d[2]}</span></td>
-      <td${highlight[1]}><span class="${doseClass(d[3])}">${d[3]}</span></td>
-      <td${highlight[2]}><span class="${doseClass(d[4])}">${d[4]}</span></td>
-      <td${highlight[3]}><span class="${doseClass(d[5])}">${d[5]}</span></td>
-      <td${highlight[4]}><span class="${doseClass(d[6])}">${d[6]}</span></td>
-      <td style="font-size:0.7rem;color:#607d8b;">${d[7]}</td>
-    </tr>`;
-  });
-  tbody.innerHTML = html;
-}
-
-function filterDrugs() {
-  const q = document.getElementById('drug-search').value.toLowerCase();
-  document.querySelectorAll('#drug-tbody tr').forEach(row => {
-    if (row.classList.contains('cat-row')) {
-      row.classList.toggle('hidden', q.length > 0);
-      return;
-    }
-    const name = row.getAttribute('data-name') || '';
-    row.classList.toggle('hidden', q.length > 0 && !name.includes(q));
-  });
-}
 
 // ===== ASCII RISK MATRIX (for text export) =====
 function buildAsciiMatrix(gfrStage, albStage, riskInfo) {
@@ -18259,20 +18099,8 @@ function generateCKDMBDPanel({ weight, dialysisSt, hb, ferritin, tsat, pth, bica
     section('Säure-Base', '🧪', cardsAcid);
 }
 
-// ===== UPDATE EGFR DISPLAY IN DRUG TABLE =====
-function updateDrugEGFR(egfr) {
-  currentEGFR = egfr;
-  const disp = document.getElementById('current-egfr-display');
-  if (disp) disp.textContent = egfr !== null ? `${egfr} ml/min` : '— ml/min';
-  buildDrugTable();
-  // Verlaufsgraph aktualisieren
-  if (window.verlaufRenderTable) window.verlaufRenderTable();
-  if (window.verlaufDraw) window.verlaufDraw();
-}
-
 // Initial matrix render
 buildMatrix(-1, -1);
-buildDrugTable();
 
 // ===== ALTER ↔ GEBURTSJAHR SYNC =====
 // 'age' = User hat Alter geändert → Geburtsjahr ableiten
@@ -18368,9 +18196,8 @@ function clearCKD() {
   const tp = document.getElementById('therapy-panel');
   if (tp) tp.innerHTML = '<div class="placeholder-text">Wird nach Berechnung generiert.</div>';
 
-  // ── Matrix & Drug-Tabelle ────────────────────────────────────
+  // ── Matrix ────────────────────────────────────
   if (typeof buildMatrix === 'function') buildMatrix(-1, -1);
-  if (typeof updateDrugEGFR === 'function') updateDrugEGFR(null);
 }
 
 // Werte in ALLEN Tabs leeren — für Patientenwechsel
@@ -18598,7 +18425,7 @@ function verlaufClear() {
 }
 
 function verlaufGetCurrentEgfr() {
-  // currentEGFR wird von updateDrugEGFR() gesetzt (nach calculate())
+  // currentEGFR wird nach calculate() gesetzt
   return (typeof currentEGFR !== 'undefined' && currentEGFR !== null && currentEGFR > 0) ? currentEGFR : null;
 }
 
