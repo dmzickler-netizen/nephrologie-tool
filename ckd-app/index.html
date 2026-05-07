@@ -1,0 +1,2420 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CKD-Staging &amp; Arztbrief-Generator</title>
+<style>
+  :root {
+    --green-bright: #00b050;
+    --green: #92d050;
+    --yellow: #ffff00;
+    --orange: #ffc000;
+    --red: #ff0000;
+    --dark-red: #c00000;
+    --blue-header: #00b0f0;
+    --purple-header: #d9b3ff;
+    --cyan-side: #00ffff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a1a2e; }
+
+  header {
+    background: linear-gradient(135deg, #1a237e, #283593);
+    color: white;
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  header .logo { font-size: 2rem; }
+  header h1 { font-size: 1.4rem; font-weight: 700; letter-spacing: 0.5px; }
+  header p { font-size: 0.8rem; opacity: 0.8; margin-top: 2px; }
+
+  .container { max-width: 1300px; margin: 0 auto; padding: 24px 16px; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+
+  .card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    border: 1px solid #e8eaf6;
+  }
+  .card h2 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1a237e;
+    border-bottom: 2px solid #e8eaf6;
+    padding-bottom: 10px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .form-group { display: flex; flex-direction: column; gap: 4px; }
+  .form-group label { font-size: 0.78rem; font-weight: 600; color: #455a64; text-transform: uppercase; letter-spacing: 0.5px; }
+  .form-group input, .form-group select {
+    padding: 9px 12px;
+    border: 1.5px solid #cfd8dc;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: border-color 0.2s;
+    background: #fafafa;
+  }
+  .form-group input:focus, .form-group select:focus {
+    outline: none;
+    border-color: #3949ab;
+    background: white;
+  }
+  .form-group .unit { font-size: 0.7rem; color: #90a4ae; margin-top: 1px; }
+
+  .checkbox-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 6px;
+  }
+  .checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.85rem;
+  }
+  .checkbox-item:hover { border-color: #3949ab; background: #e8eaf6; }
+  .checkbox-item input[type="checkbox"] { width: 16px; height: 16px; accent-color: #3949ab; }
+  .checkbox-item.checked { border-color: #3949ab; background: #e8eaf6; font-weight: 600; }
+
+  .btn-calc {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #1a237e, #3949ab);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 16px;
+    letter-spacing: 0.5px;
+    transition: transform 0.1s, box-shadow 0.2s;
+    box-shadow: 0 4px 12px rgba(57,73,171,0.4);
+  }
+  .btn-calc:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(57,73,171,0.5); }
+  .btn-calc:active { transform: translateY(0); }
+  .btn-reset {
+    width: 100%; padding: 10px 18px; border: 2px solid #b71c1c; border-radius: 10px;
+    background: white; color: #b71c1c; font-size: 0.88rem; font-weight: 700;
+    cursor: pointer; letter-spacing: 0.3px; transition: all 0.15s ease; margin-top: 8px;
+  }
+  .btn-reset:hover { background: #ffebee; transform: translateY(-1px); }
+  .btn-reset:active { transform: translateY(0); }
+
+  /* eGFR Results */
+  .egfr-results {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .egfr-box {
+    text-align: center;
+    padding: 12px;
+    border-radius: 10px;
+    border: 2px solid #e0e0e0;
+    background: #fafafa;
+  }
+  .egfr-box.primary { border-color: #1a237e; background: #e8eaf6; }
+  .egfr-box .egfr-value { font-size: 2rem; font-weight: 800; color: #1a237e; line-height: 1; }
+  .egfr-box .egfr-label { font-size: 0.7rem; color: #607d8b; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .egfr-box .egfr-sub { font-size: 0.65rem; color: #90a4ae; margin-top: 2px; }
+
+  /* Stage badge */
+  .stage-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 16px;
+    border-radius: 10px;
+    margin-bottom: 16px;
+    border: 2px solid;
+  }
+  .stage-badge {
+    text-align: center;
+    padding: 8px 16px;
+    border-radius: 8px;
+    background: white;
+    min-width: 80px;
+  }
+  .stage-badge .stage-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7; }
+  .stage-badge .stage-value { font-size: 1.5rem; font-weight: 800; }
+  .risk-label { font-size: 1rem; font-weight: 700; text-align: center; }
+
+  .risk-low { background: #e8f5e9; border-color: var(--green-bright); color: #2e7d32; }
+  .risk-mod { background: #f9fbe7; border-color: #afb42b; color: #827717; }
+  .risk-high { background: #fff8e1; border-color: var(--orange); color: #e65100; }
+  .risk-very-high { background: #fce4ec; border-color: var(--red); color: #b71c1c; }
+  .risk-ext-high { background: #ffebee; border-color: var(--dark-red); color: #7f0000; }
+
+  /* Risk Matrix */
+  .matrix-table { width: 100%; border-collapse: collapse; font-size: 0.72rem; }
+  .matrix-table th, .matrix-table td {
+    border: 1.5px solid #ccc;
+    text-align: center;
+    padding: 5px 3px;
+  }
+  .matrix-table th { background: #e8eaf6; font-weight: 700; }
+  .matrix-table .header-acr { background: var(--blue-header); color: #1a1a2e; font-weight: 700; }
+  .matrix-table .header-alb { background: var(--purple-header); }
+  .matrix-table .side-gfr { background: var(--cyan-side); writing-mode: vertical-rl; transform: rotate(180deg); font-weight: 700; font-size: 0.8rem; }
+  .matrix-table .side-stage { background: var(--purple-header); font-weight: 700; }
+  .matrix-table .cell-green-bright { background: var(--green-bright); }
+  .matrix-table .cell-green { background: var(--green); }
+  .matrix-table .cell-yellow { background: var(--yellow); }
+  .matrix-table .cell-orange { background: var(--orange); }
+  .matrix-table .cell-red { background: var(--red); }
+  .matrix-table .cell-dark-red { background: var(--dark-red); }
+  .matrix-table .cell-highlight { outline: 3px solid #1a237e; outline-offset: -3px; position: relative; z-index: 1; }
+  .matrix-table td.active-cell::after {
+    content: '▶';
+    font-size: 0.9rem;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #1a237e;
+    text-shadow: 0 0 3px white;
+  }
+  .matrix-table td { position: relative; }
+
+  /* Arztbrief */
+  .arztbrief-area {
+    width: 100%;
+    min-height: 280px;
+    padding: 14px;
+    border: 1.5px solid #cfd8dc;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    resize: vertical;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #fafafa;
+  }
+  .arztbrief-area:focus { outline: none; border-color: #3949ab; background: white; }
+
+  /* Therapy */
+  .therapy-section { margin-top: 8px; }
+  .therapy-block {
+    margin-bottom: 14px;
+    border-left: 4px solid #3949ab;
+    padding-left: 12px;
+  }
+  .therapy-block h3 { font-size: 0.85rem; font-weight: 700; color: #1a237e; margin-bottom: 6px; }
+  .therapy-block ul { list-style: none; }
+  .therapy-block ul li {
+    font-size: 0.82rem;
+    padding: 4px 0;
+    color: #37474f;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .therapy-block ul li::before { content: '•'; color: #3949ab; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+
+  .btn-copy {
+    padding: 8px 16px;
+    background: #e8eaf6;
+    color: #1a237e;
+    border: 1.5px solid #c5cae9;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+    margin-right: 8px;
+    transition: background 0.2s;
+  }
+  .btn-copy:hover { background: #c5cae9; }
+
+  .placeholder-text {
+    color: #90a4ae;
+    font-style: italic;
+    text-align: center;
+    padding: 32px 16px;
+  }
+
+  .alert-box {
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .alert-warning { background: #fff3e0; border: 1.5px solid #ffb74d; color: #e65100; }
+  .alert-info { background: #e3f2fd; border: 1.5px solid #64b5f6; color: #1565c0; }
+
+  @media (max-width: 900px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+    .egfr-results { grid-template-columns: 1fr 1fr; }
+  }
+
+  .section-full { grid-column: 1 / -1; }
+
+  .tabs { display: flex; gap: 4px; margin-bottom: 16px; }
+  .tab-btn {
+    padding: 8px 18px;
+    border: 1.5px solid #c5cae9;
+    border-radius: 8px 8px 0 0;
+    background: #e8eaf6;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #455a64;
+    border-bottom: none;
+    transition: all 0.2s;
+  }
+  .tab-btn.active { background: white; color: #1a237e; border-color: #3949ab; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .progress-bar {
+    height: 8px;
+    background: #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 8px 0;
+  }
+  .progress-fill { height: 100%; border-radius: 4px; transition: width 0.5s; }
+
+  .drug-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: #e8eaf6;
+    color: #1a237e;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin: 2px;
+  }
+  .drug-tag.primary { background: #c8e6c9; color: #1b5e20; }
+  .drug-tag.warning { background: #fff3e0; color: #e65100; }
+  .drug-tag.danger { background: #ffebee; color: #b71c1c; }
+
+  footer {
+    text-align: center;
+    padding: 20px;
+    font-size: 0.75rem;
+    color: #90a4ae;
+    margin-top: 20px;
+  }
+
+  /* Electrolyte panel */
+  .electro-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .electro-card {
+    border: 1.5px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 14px;
+    background: #fafafa;
+  }
+  .electro-card h3 { font-size: 0.85rem; font-weight: 700; color: #1a237e; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+  .electro-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #f0f0f0; font-size: 0.8rem; }
+  .electro-row:last-child { border: none; }
+  .electro-val { font-weight: 700; }
+  .electro-val.normal { color: #2e7d32; }
+  .electro-val.warning { color: #e65100; }
+  .electro-val.danger { color: #b71c1c; }
+  .electro-action { font-size: 0.72rem; color: #607d8b; max-width: 55%; text-align: right; }
+
+  /* Print styles */
+  .btn-print {
+    padding: 8px 16px;
+    background: #1a237e;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+    margin-right: 8px;
+    transition: background 0.2s;
+  }
+  .btn-print:hover { background: #283593; }
+
+  @media print {
+    body { background: white; font-size: 11pt; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    header, footer, .card:not(#print-card), button, .tabs, .tab-btn,
+    .btn-copy, .btn-print, .btn-calc, #electrolyte-section { display: none !important; }
+    #print-card { display: block !important; box-shadow: none; border: none; padding: 0; }
+    .print-header { border-bottom: 2px solid #1a237e; margin-bottom: 16px; padding-bottom: 8px; }
+    .print-header h2 { font-size: 14pt; color: #1a237e; }
+    .print-section { margin-bottom: 16px; }
+    .print-section h3 { font-size: 11pt; color: #1a237e; border-bottom: 1px solid #ccc; padding-bottom: 4px; margin-bottom: 8px; }
+    .print-section p, .print-section li { font-size: 10pt; line-height: 1.5; }
+    .print-section ul { padding-left: 16px; }
+    .container { padding: 0; }
+    .grid-2, .grid-3 { display: block; }
+  }
+  #print-card { display: none; }
+
+  /* CKD-MBD Dosing Panel */
+  .mbd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .dose-card {
+    border-radius: 10px;
+    padding: 14px 16px;
+    border-left: 4px solid #ccc;
+    background: #fafafa;
+    border: 1px solid #e0e0e0;
+    border-left-width: 4px;
+  }
+  .dose-card.green  { border-left-color: #4caf50; background: #f1f8e9; }
+  .dose-card.blue   { border-left-color: #1976d2; background: #e3f2fd; }
+  .dose-card.orange { border-left-color: #ff9800; background: #fff3e0; }
+  .dose-card.red    { border-left-color: #f44336; background: #ffebee; }
+  .dose-card.purple { border-left-color: #9c27b0; background: #f3e5f5; }
+  .dose-card.grey   { border-left-color: #90a4ae; background: #f5f5f5; }
+  .dose-card h3 { font-size: 0.82rem; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .dose-card .dose-main { font-size: 1.05rem; font-weight: 700; color: #1a237e; margin: 6px 0; }
+  .dose-card .dose-detail { font-size: 0.78rem; color: #455a64; line-height: 1.5; }
+  .dose-card .dose-caveat { font-size: 0.73rem; color: #b71c1c; margin-top: 6px; font-style: italic; }
+  .dose-card .dose-ok { font-size: 0.85rem; color: #2e7d32; font-weight: 600; }
+  .lab-section-label {
+    font-size: 0.72rem; font-weight: 700; color: #1a237e; text-transform: uppercase;
+    letter-spacing: 0.6px; margin: 14px 0 6px 0; border-bottom: 1px solid #e8eaf6;
+    padding-bottom: 4px;
+  }
+  .mbd-placeholder { color: #90a4ae; font-size: 0.85rem; text-align: center; padding: 20px; }
+
+  /* Hypertonie Panel */
+  .bp-status-ok      { background: #e8f5e9; border: 2px solid #4caf50; border-radius: 8px; padding: 10px 14px; }
+  .bp-status-warn    { background: #fff8e1; border: 2px solid #ff9800; border-radius: 8px; padding: 10px 14px; }
+  .bp-status-bad     { background: #ffebee; border: 2px solid #f44336; border-radius: 8px; padding: 10px 14px; }
+  .bp-status-unknown { background: #f5f5f5; border: 2px solid #bdbdbd; border-radius: 8px; padding: 10px 14px; }
+  .bp-big { font-size: 2.2rem; font-weight: 800; text-align: center; letter-spacing: 1px; }
+  .bp-label-sm { font-size: 0.75rem; text-align: center; margin-top: 4px; font-weight: 600; }
+  .htn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .htn-step { padding: 10px 14px; border-radius: 8px; font-size: 0.82rem; }
+  .htn-step-1 { background: #e3f2fd; border-left: 4px solid #1976d2; }
+  .htn-step-2 { background: #fce4ec; border-left: 4px solid #c62828; }
+  .htn-step-3 { background: #f3e5f5; border-left: 4px solid #6a1b9a; }
+  .htn-step .htn-step-title { font-weight: 700; color: #1a237e; margin-bottom: 6px; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  .htn-note { margin-top: 10px; padding: 8px 12px; background: #fff8e1; border-radius: 6px; font-size: 0.78rem; border-left: 3px solid #ff9800; }
+  .htn-warning { margin-top: 8px; padding: 8px 12px; background: #ffebee; border-radius: 6px; font-size: 0.78rem; border-left: 3px solid #f44336; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🫘</div>
+  <div>
+    <h1>CKD-Staging &amp; Arztbrief-Generator</h1>
+    <p>Basierend auf KDIGO 2024 &bull; CKD-EPI 2021 &bull; Für nephrologische Ambulanz und Konsil</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Row 1: Input + Results -->
+  <div class="grid-2" style="margin-bottom:20px;">
+
+    <!-- INPUT -->
+    <div class="card">
+      <h2>📋 Patientendaten &amp; Labor</h2>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Alter</label>
+          <input type="number" id="age" placeholder="z.B. 65" min="18" max="110">
+          <span class="unit">Jahre</span>
+        </div>
+        <div class="form-group">
+          <label>Geschlecht</label>
+          <select id="sex">
+            <option value="">— bitte wählen —</option>
+            <option value="male">Männlich</option>
+            <option value="female">Weiblich</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Kreatinin</label>
+          <input type="number" id="creatinine" placeholder="z.B. 1.8" step="0.01" min="0">
+          <span class="unit">mg/dl</span>
+        </div>
+        <div class="form-group">
+          <label>Cystatin C</label>
+          <input type="number" id="cystatinc" placeholder="z.B. 1.4" step="0.01" min="0">
+          <span class="unit">mg/l (optional)</span>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>uACR</label>
+          <input type="number" id="uacr" placeholder="z.B. 45" step="1" min="0">
+          <span class="unit">mg/g Kreatinin</span>
+        </div>
+        <div class="form-group">
+          <label>Blutdruck</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+            <div>
+              <input type="number" id="bp_sys" placeholder="Sys. z.B. 145" min="80" max="250" style="width:100%;">
+              <span class="unit">mmHg sys.</span>
+            </div>
+            <div>
+              <input type="number" id="bp_dia" placeholder="Dia. z.B. 90" min="40" max="150" style="width:100%;">
+              <span class="unit">mmHg dia.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Kalium</label>
+          <input type="number" id="kalium" placeholder="z.B. 4.8" step="0.1" min="1" max="9">
+          <span class="unit">mmol/l (Finerenon, Spiro, RAAS)</span>
+        </div>
+        <div class="form-group">
+          <label>pH (venös/arteriell)</label>
+          <input type="number" id="ph" placeholder="z.B. 7.32" step="0.01" min="6.8" max="7.8">
+          <span class="unit">pH-Einheiten (Azidose-Beurteilung)</span>
+        </div>
+      </div>
+
+      <div style="margin-bottom:12px;">
+        <label style="font-size:0.78rem;font-weight:600;color:#455a64;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:8px;">Grunderkrankung(en)</label>
+        <div class="checkbox-grid" id="disease-checkboxes">
+          <label class="checkbox-item" onclick="toggleCheck(this)">
+            <input type="checkbox" value="diabetisch"> Diabetische Nephropathie
+          </label>
+          <label class="checkbox-item" onclick="toggleCheck(this)">
+            <input type="checkbox" value="hypertensiv"> Hypertensive Nephropathie
+          </label>
+          <label class="checkbox-item" onclick="toggleCheck(this)">
+            <input type="checkbox" value="igan"> IgA-Nephropathie
+          </label>
+          <label class="checkbox-item" onclick="toggleCheck(this)">
+            <input type="checkbox" value="fsgs"> FSGS
+          </label>
+          <label class="checkbox-item" onclick="toggleCheck(this)">
+            <input type="checkbox" value="mgn"> Membranöse Nephropathie
+          </label>
+          <label class="checkbox-item" onclick="toggleCheck(this)">
+            <input type="checkbox" value="adpkd"> ADPKD
+          </label>
+          <label class="checkbox-item" onclick="toggleCheck(this)">
+            <input type="checkbox" value="lupus"> Lupusnephritis
+          </label>
+          <label class="checkbox-item" onclick="toggleCheck(this)">
+            <input type="checkbox" value="vaskulitis"> ANCA-Vaskulitis
+          </label>
+          <label class="checkbox-item" onclick="toggleCheck(this)">
+            <input type="checkbox" value="transplantat"> Nierentransplantat
+          </label>
+          <label class="checkbox-item" onclick="toggleCheck(this)">
+            <input type="checkbox" value="andere"> Andere / Unklar
+          </label>
+        </div>
+      </div>
+
+      <!-- ADDITIONAL LABS -->
+      <div class="lab-section-label">⚖️ Gewicht &amp; Dialysestatus</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Körpergewicht</label>
+          <input type="number" id="weight" placeholder="z.B. 75" min="30" max="250">
+          <span class="unit">kg (für EPO-Dosierung)</span>
+        </div>
+        <div class="form-group">
+          <label>Dialysestatus</label>
+          <select id="dialysis_status">
+            <option value="praedialysis">Prä-Dialyse</option>
+            <option value="haemodialysis">Hämodialyse (HD)</option>
+            <option value="peritoneal">Peritonealdialyse (PD)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="lab-section-label">🩸 Anämie-Labor</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Hämoglobin</label>
+          <input type="number" id="hb" placeholder="z.B. 10.2" step="0.1" min="0">
+          <span class="unit">g/dl</span>
+        </div>
+        <div class="form-group">
+          <label>Ferritin</label>
+          <input type="number" id="ferritin" placeholder="z.B. 120" step="1" min="0">
+          <span class="unit">ng/ml (µg/l)</span>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>TSAT</label>
+          <input type="number" id="tsat" placeholder="z.B. 22" step="1" min="0" max="100">
+          <span class="unit">% (Transferrinsättigung)</span>
+        </div>
+        <div class="form-group">
+          <label>PTH (intakt)</label>
+          <input type="number" id="pth" placeholder="z.B. 185" step="1" min="0">
+          <span class="unit">pg/ml</span>
+        </div>
+      </div>
+
+      <div class="lab-section-label">⚗️ Mineralstoffwechsel &amp; Säure-Base</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Bikarbonat (HCO₃⁻)</label>
+          <input type="number" id="bicarb" placeholder="z.B. 20" step="0.5" min="0">
+          <span class="unit">mmol/l</span>
+        </div>
+        <div class="form-group">
+          <label>Phosphat</label>
+          <input type="number" id="phosphat" placeholder="z.B. 1.6" step="0.1" min="0">
+          <span class="unit">mmol/l</span>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Kalzium (gesamt)</label>
+          <input type="number" id="calcium" placeholder="z.B. 2.3" step="0.05" min="0">
+          <span class="unit">mmol/l</span>
+        </div>
+        <div class="form-group">
+          <label>25-OH-Vitamin D</label>
+          <input type="number" id="vitd" placeholder="z.B. 22" step="1" min="0">
+          <span class="unit">ng/ml (optional)</span>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:12px;">
+        <label>Vordiagnosen <span style="font-weight:400;color:#90a4ae;">(eine pro Zeile — erscheinen nach nephrol. Diagnosen im Arztbrief)</span></label>
+        <textarea id="vordiagnosen" rows="4" style="width:100%;padding:9px 12px;border:1.5px solid #cfd8dc;border-radius:8px;font-size:0.88rem;font-family:inherit;resize:vertical;background:#fafafa;" placeholder="z.B.&#10;Arterielle Hypertonie&#10;Diabetes mellitus Typ 2&#10;KHK, Z.n. PCI 2021&#10;Adipositas Grad II"></textarea>
+      </div>
+
+      <div class="form-group" style="margin-bottom:12px;">
+        <label>Weitere Laborwerte (für Arztbrief)</label>
+        <input type="text" id="extra_info" placeholder="z.B. Harnsäure 7.2, LDL 98 mg/dl …">
+      </div>
+
+      <button class="btn-calc" onclick="calculate()">🧮 Staging berechnen &amp; Arztbrief generieren</button>
+      <button class="btn-reset" onclick="resetForm()">🗑️ Neuer Patient — alles leeren</button>
+    </div>
+
+    <!-- RESULTS -->
+    <div>
+      <div class="card" style="margin-bottom:16px;">
+        <h2>📊 eGFR-Ergebnis (CKD-EPI 2021)</h2>
+        <div id="results-panel">
+          <div class="placeholder-text">Bitte Daten eingeben und Berechnung starten.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>🗺️ Risikomatrix</h2>
+        <div id="matrix-panel">
+          <table class="matrix-table">
+            <thead>
+              <tr>
+                <th colspan="2" rowspan="2" style="background:white;border:none;"></th>
+                <th colspan="5" class="header-acr">Albuminurie-Stadien (ACR mg/g)</th>
+              </tr>
+              <tr>
+                <th colspan="2" class="header-alb">A1</th>
+                <th class="header-alb">A2</th>
+                <th colspan="2" class="header-alb">A3</th>
+              </tr>
+              <tr>
+                <th colspan="2" style="background:white;border:none;"></th>
+                <th class="header-alb">&lt;10</th>
+                <th class="header-alb">10–29</th>
+                <th class="header-alb">30–299</th>
+                <th class="header-alb">300–1999</th>
+                <th class="header-alb">&gt;2000</th>
+              </tr>
+            </thead>
+            <tbody id="matrix-body">
+              <!-- Generated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 2: Arztbrief + Therapie -->
+  <div class="grid-2">
+    <div class="card">
+      <h2>📄 Arztbrief-Textbausteine</h2>
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('diagnose')">Diagnose</button>
+        <button class="tab-btn" onclick="switchTab('befund')">Befund</button>
+        <button class="tab-btn" onclick="switchTab('empfehlung')">Empfehlung</button>
+      </div>
+      <div id="tab-diagnose" class="tab-content active">
+        <textarea class="arztbrief-area" id="text-diagnose" readonly placeholder="Wird nach Berechnung generiert …"></textarea>
+        <button class="btn-copy" onclick="copyText('text-diagnose')">📋 Kopieren</button>
+      </div>
+      <div id="tab-befund" class="tab-content">
+        <textarea class="arztbrief-area" id="text-befund" readonly placeholder="Wird nach Berechnung generiert …"></textarea>
+        <button class="btn-copy" onclick="copyText('text-befund')">📋 Kopieren</button>
+      </div>
+      <div id="tab-empfehlung" class="tab-content">
+        <textarea class="arztbrief-area" id="text-empfehlung" readonly placeholder="Wird nach Berechnung generiert …"></textarea>
+        <button class="btn-copy" onclick="copyText('text-empfehlung')">📋 Kopieren</button>
+      </div>
+      <div style="border-top:1px solid #e8eaf6;margin-top:12px;padding-top:10px;display:flex;flex-wrap:wrap;align-items:center;gap:12px;">
+        <button class="btn-print" onclick="printArztbrief()">🖨️ Arztbrief drucken</button>
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:#455a64;cursor:pointer;user-select:none;">
+          <input type="checkbox" id="include_matrix" style="width:15px;height:15px;accent-color:#1a237e;">
+          Risikomatrix einschließen
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:#455a64;cursor:pointer;user-select:none;">
+          <input type="checkbox" id="include_matrix_text" style="width:15px;height:15px;accent-color:#1a237e;">
+          Matrix-Text in Befund
+        </label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>💊 Therapieempfehlungen</h2>
+      <div id="therapy-panel">
+        <div class="placeholder-text">Wird nach Berechnung generiert.</div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Row 3: Elektrolyte -->
+  <div class="card" style="margin-top:20px;" id="electrolyte-section">
+      <h2>⚗️ Elektrolyt- &amp; Metabolit-Grenzwerte</h2>
+      <div class="electro-grid">
+
+        <div class="electro-card">
+          <h3>🟡 Kalium</h3>
+          <div class="electro-row"><span>Zielbereich</span><span class="electro-val normal">3,5 – 5,0 mmol/l</span></div>
+          <div class="electro-row"><span>Tolerierbar CKD</span><span class="electro-val normal">3,5 – 5,5 mmol/l</span></div>
+          <div class="electro-row"><span>Handlungsbedarf</span><span class="electro-val warning">5,5 – 6,0 mmol/l</span><span class="electro-action">Diät, RAASi-Pause, Fludrokortison-Check</span></div>
+          <div class="electro-row"><span>Sofortmaßnahme</span><span class="electro-val danger">&gt; 6,0 mmol/l</span><span class="electro-action">EKG, Kalziumglukonat, Insulin/Glukose, Patiromer/SZC</span></div>
+          <div class="electro-row"><span>Hypokaliämie</span><span class="electro-val danger">&lt; 3,0 mmol/l</span><span class="electro-action">K+-Substitution oral/i.v.; Ursache klären</span></div>
+          <hr style="margin:8px 0;border-color:#f0f0f0;">
+          <div style="font-size:0.75rem;color:#607d8b;">
+            <strong>Kalium-Binder:</strong><br>
+            Patiromer (Veltassa) 8,4 g/d | SZC (Lokelma) 10 g 3×/d (Akut) → 5 g/d<br>
+            Cave: RAASi-Pause nur temporär, danach re-initiieren
+          </div>
+        </div>
+
+        <div class="electro-card">
+          <h3>🔶 Phosphat</h3>
+          <div class="electro-row"><span>Normalbereich</span><span class="electro-val normal">0,8 – 1,5 mmol/l</span></div>
+          <div class="electro-row"><span>Ziel G3–G5</span><span class="electro-val normal">0,8 – 1,5 mmol/l</span></div>
+          <div class="electro-row"><span>Diätberatung ab</span><span class="electro-val warning">&gt; 1,5 mmol/l</span><span class="electro-action">Phosphatarme Diät, Lebensmittelaufklärung</span></div>
+          <div class="electro-row"><span>Phosphatbinder ab</span><span class="electro-val warning">&gt; 1,7 mmol/l</span><span class="electro-action">Sevelamer, Ca-Carbonat, Lanthanum</span></div>
+          <div class="electro-row"><span>Kritisch erhöht</span><span class="electro-val danger">&gt; 2,0 mmol/l</span><span class="electro-action">KV-Risiko ↑, aggressiv behandeln</span></div>
+          <hr style="margin:8px 0;border-color:#f0f0f0;">
+          <div style="font-size:0.75rem;color:#607d8b;">
+            <strong>Phosphatbinder:</strong><br>
+            Sevelamer 800 mg 3×/d zu den Mahlzeiten | Lanthanum 500–1000 mg 3×/d<br>
+            Ca-Carbonat: max 1,5 g Ca/d (KV-Risiko beachten)
+          </div>
+        </div>
+
+        <div class="electro-card">
+          <h3>🦴 PTH &amp; Kalzium</h3>
+          <div class="electro-row"><span>Kalzium (ges.)</span><span class="electro-val normal">2,1 – 2,6 mmol/l</span></div>
+          <div class="electro-row"><span>PTH-Ziel G3a</span><span class="electro-val normal">Normal (14–72 pg/ml)</span></div>
+          <div class="electro-row"><span>PTH-Ziel G3b–G4</span><span class="electro-val normal">2–9× Normoberwert</span></div>
+          <div class="electro-row"><span>PTH-Ziel G5/Dialyse</span><span class="electro-val warning">150–300 pg/ml</span></div>
+          <div class="electro-row"><span>25-OH Vit D (Ziel)</span><span class="electro-val normal">&gt; 30 ng/ml</span></div>
+          <hr style="margin:8px 0;border-color:#f0f0f0;">
+          <div style="font-size:0.75rem;color:#607d8b;">
+            Cinacalcet (Mimpara) bei sek. HPT G5/Dialyse<br>
+            Etelcalcetide (Parsabiv) bei HD-Patienten<br>
+            Calcitriol/Paricalcitol bei erniedrigtem Ca + erhöhtem PTH
+          </div>
+        </div>
+
+        <div class="electro-card">
+          <h3>🩸 Hämoglobin &amp; Säure-Base</h3>
+          <div class="electro-row"><span>Hb-Ziel (CKD)</span><span class="electro-val normal">10 – 12 g/dl</span></div>
+          <div class="electro-row"><span>ESA starten ab</span><span class="electro-val warning">Hb &lt; 10 g/dl</span><span class="electro-action">Nach Eisenoptimierung</span></div>
+          <div class="electro-row"><span>Eisen i.v. ab</span><span class="electro-val warning">TSAT &lt; 25%</span><span class="electro-action">Ferritin &lt; 300 ng/ml</span></div>
+          <div class="electro-row"><span>Bicarbonat-Ziel</span><span class="electro-val normal">22 – 26 mmol/l</span></div>
+          <div class="electro-row"><span>NaHCO₃ starten ab</span><span class="electro-val warning">&lt; 22 mmol/l</span><span class="electro-action">0,5–1 mmol/kg/d oral</span></div>
+          <hr style="margin:8px 0;border-color:#f0f0f0;">
+          <div style="font-size:0.75rem;color:#607d8b;">
+            Harnsäure-Ziel &lt; 6 mg/dl (360 µmol/l)<br>
+            Allopurinol: Dosisanpassung nach eGFR obligat<br>
+            Febuxostat: sicherer bei CKD (keine renale Elimination)
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  <!-- Row 4: CKD-MBD Dosierungsrechner -->
+  <div class="card" style="margin-top:20px;">
+    <h2>💉 CKD-MBD &amp; Anämie — Dosierungsempfehlung</h2>
+    <div id="mbd-panel">
+      <div class="mbd-placeholder">Bitte Labordaten eingeben und Berechnung starten.</div>
+    </div>
+  </div>
+
+  <!-- Row 5: Hypertonie -->
+  <div class="card" style="margin-top:20px;" id="hypertonie-section">
+    <h2>🩺 Hypertonie-Management bei CKD <small style="font-weight:400;font-size:0.75rem;color:#90a4ae;">KDIGO 2021 BP Guideline</small></h2>
+    <div id="hypertonie-panel">
+      <div class="mbd-placeholder">Bitte Blutdruck und Labordaten eingeben und Berechnung starten.</div>
+    </div>
+  </div>
+
+  <!-- Hidden print card -->
+  <div id="print-card" class="card" style="margin-top:20px;">
+    <div id="print-content"></div>
+  </div>
+
+</div>
+
+<footer>
+  ⚕️ Nur zur ärztlichen Unterstützung — kein Ersatz für klinisches Urteil &bull; KDIGO CKD 2024 &bull; KDIGO BP 2021 &bull; CKD-EPI 2021 &bull; v1.2
+</footer>
+
+<script>
+// ===== CKD-EPI 2021 FORMULAS =====
+
+function egfrCreatinine(age, sex, scr) {
+  if (!scr || !age || !sex) return null;
+  let kappa = sex === 'female' ? 0.7 : 0.9;
+  let alpha = sex === 'female' ? -0.241 : -0.302;
+  let sexMult = sex === 'female' ? 1.012 : 1.0;
+  let ratio = scr / kappa;
+  let egfr;
+  if (ratio <= 1) {
+    egfr = 142 * Math.pow(ratio, alpha) * Math.pow(0.9938, age) * sexMult;
+  } else {
+    egfr = 142 * Math.pow(ratio, -1.200) * Math.pow(0.9938, age) * sexMult;
+  }
+  return Math.round(egfr * 10) / 10;
+}
+
+function egfrCystatinC(age, sex, cys) {
+  if (!cys || !age || !sex) return null;
+  let sexMult = sex === 'female' ? 0.932 : 1.0;
+  let ratio = cys / 0.8;
+  let egfr;
+  if (ratio <= 1) {
+    egfr = 133 * Math.pow(ratio, -0.499) * Math.pow(0.9961, age) * sexMult;
+  } else {
+    egfr = 133 * Math.pow(ratio, -1.328) * Math.pow(0.9961, age) * sexMult;
+  }
+  return Math.round(egfr * 10) / 10;
+}
+
+function egfrCombined(age, sex, scr, cys) {
+  if (!scr || !cys || !age || !sex) return null;
+  let kappa = sex === 'female' ? 0.7 : 0.9;
+  let scrAlpha = sex === 'female' ? -0.219 : -0.144;
+  let scrBeta  = sex === 'female' ? -0.544 : -0.544;
+  let sexMult  = sex === 'female' ? 0.963 : 1.0;
+  let scrRatio = scr / kappa;
+  let cysRatio = cys / 0.8;
+  let scrPow = scrRatio <= 1 ? Math.pow(scrRatio, scrAlpha) : Math.pow(scrRatio, scrBeta);
+  let cysPow = cysRatio <= 1 ? Math.pow(cysRatio, -0.323) : Math.pow(cysRatio, -1.132);
+  let egfr = 135 * scrPow * cysPow * Math.pow(0.9961, age) * sexMult;
+  return Math.round(egfr * 10) / 10;
+}
+
+function getGFRStage(egfr) {
+  if (egfr === null) return null;
+  if (egfr > 105) return { stage: 'G1', sub: '>105', label: 'Normal (hoch)', row: 0 };
+  if (egfr >= 90)  return { stage: 'G1', sub: '90–104', label: 'Normal', row: 1 };
+  if (egfr >= 75)  return { stage: 'G2', sub: '75–89', label: 'Leicht vermindert', row: 2 };
+  if (egfr >= 60)  return { stage: 'G2', sub: '60–74', label: 'Leicht vermindert', row: 3 };
+  if (egfr >= 45)  return { stage: 'G3a', sub: '45–59', label: 'Leicht bis mäßig vermindert', row: 4 };
+  if (egfr >= 30)  return { stage: 'G3b', sub: '30–44', label: 'Mäßig bis stark vermindert', row: 5 };
+  if (egfr >= 15)  return { stage: 'G4', sub: '15–29', label: 'Stark vermindert', row: 6 };
+  return { stage: 'G5', sub: '<15', label: 'Nierenversagen', row: 7 };
+}
+
+function getAlbStage(uacr) {
+  if (uacr === null || uacr === undefined || uacr === '') return null;
+  if (uacr < 10)    return { stage: 'A1', sub: '<10', label: 'Normal', col: 0 };
+  if (uacr <= 29)   return { stage: 'A1', sub: '10–29', label: 'Geringfügig erhöht', col: 1 };
+  if (uacr <= 299)  return { stage: 'A2', sub: '30–299', label: 'Mäßig erhöht', col: 2 };
+  if (uacr <= 1999) return { stage: 'A3', sub: '300–1999', label: 'Stark erhöht', col: 3 };
+  return { stage: 'A3', sub: '>2000', label: 'Nephrotisch', col: 4 };
+}
+
+// Risk matrix color lookup [row][col]
+// row: 0=G1>105, 1=G1 90-104, 2=G2 75-89, 3=G2 60-74, 4=G3a, 5=G3b, 6=G4, 7=G5
+// col: 0=<10, 1=10-29, 2=30-299, 3=300-1999, 4=>2000
+const riskMatrix = [
+  ['cell-green-bright','cell-green-bright','cell-yellow','cell-orange','cell-red'],
+  ['cell-green-bright','cell-green','cell-yellow','cell-orange','cell-red'],
+  ['cell-green-bright','cell-green','cell-orange','cell-red','cell-dark-red'],
+  ['cell-green',       'cell-yellow','cell-orange','cell-red','cell-dark-red'],
+  ['cell-yellow',      'cell-orange','cell-red','cell-dark-red','cell-dark-red'],
+  ['cell-orange',      'cell-red','cell-dark-red','cell-dark-red','cell-dark-red'],
+  ['cell-red',         'cell-red','cell-dark-red','cell-dark-red','cell-dark-red'],
+  ['cell-dark-red',    'cell-dark-red','cell-dark-red','cell-dark-red','cell-dark-red'],
+];
+
+const riskNames = {
+  'cell-green-bright': { name: 'Niedrig', css: 'risk-low' },
+  'cell-green':        { name: 'Mäßig erhöht', css: 'risk-mod' },
+  'cell-yellow':       { name: 'Mäßig erhöht', css: 'risk-mod' },
+  'cell-orange':       { name: 'Hoch', css: 'risk-high' },
+  'cell-red':          { name: 'Sehr hoch', css: 'risk-very-high' },
+  'cell-dark-red':     { name: 'Extrem hoch', css: 'risk-ext-high' },
+};
+
+// ===== BUILD MATRIX =====
+function buildMatrix(activeRow, activeCol) {
+  const rows = [
+    { stage: 'G1', sub: '>105' },
+    { stage: 'G1', sub: '90–104' },
+    { stage: 'G2', sub: '75–89' },
+    { stage: 'G2', sub: '60–74' },
+    { stage: 'G3a', sub: '45–59' },
+    { stage: 'G3b', sub: '30–44' },
+    { stage: 'G4', sub: '15–29' },
+    { stage: 'G5', sub: '<15' },
+  ];
+
+  let html = '';
+  let prevStage = '';
+
+  rows.forEach((r, ri) => {
+    html += '<tr>';
+    // Side GFR label (only first row)
+    if (ri === 0) {
+      html += `<td class="side-gfr" rowspan="8" style="font-size:0.7rem;font-weight:700;">GFR-Stadien ml/min</td>`;
+    }
+    // Stage cell (span where stage is same)
+    if (r.stage !== prevStage) {
+      let span = rows.filter(x => x.stage === r.stage).length;
+      html += `<td class="side-stage" rowspan="${span}">${r.stage}</td>`;
+      prevStage = r.stage;
+    }
+    // Sub-stage
+    html += `<td style="background:#f3f4f6;font-size:0.72rem;font-weight:600;min-width:45px;">${r.sub}</td>`;
+    // Risk cells
+    for (let ci = 0; ci < 5; ci++) {
+      let cls = riskMatrix[ri][ci];
+      let highlight = (ri === activeRow && ci === activeCol) ? ' cell-highlight active-cell' : '';
+      html += `<td class="${cls}${highlight}" style="width:50px;height:28px;"></td>`;
+    }
+    html += '</tr>';
+  });
+
+  document.getElementById('matrix-body').innerHTML = html;
+}
+
+// ===== CALCULATE =====
+function resetForm() {
+  // Alle Zahleneingaben leeren
+  ['age','creatinine','cystatinc','uacr','bp_sys','bp_dia','kalium','ph',
+   'weight','hb','ferritin','tsat','pth','bicarb','phosphat','calcium','vitd'
+  ].forEach(id => { document.getElementById(id).value = ''; });
+
+  // Selects auf Default
+  document.getElementById('sex').value = '';
+  document.getElementById('dialysis_status').value = 'praedialysis';
+
+  // Alle Grunderkrankungs-Checkboxen deaktivieren
+  document.querySelectorAll('#disease-checkboxes input[type=checkbox]').forEach(cb => {
+    cb.checked = false;
+    cb.closest('label').classList.remove('checked');
+  });
+
+  // Freitextfelder
+  document.getElementById('vordiagnosen').value = '';
+  document.getElementById('extra_info').value = '';
+
+  // Arztbrief-Textfelder
+  ['text-diagnose','text-befund','text-empfehlung'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+
+  // Ergebnispanels zurücksetzen
+  document.getElementById('results-panel').innerHTML =
+    '<div class="placeholder-text">Bitte Daten eingeben und Berechnung starten.</div>';
+  document.getElementById('therapy-panel').innerHTML =
+    '<div class="placeholder-text">Wird nach Berechnung generiert.</div>';
+  document.getElementById('mbd-panel').innerHTML =
+    '<div class="mbd-placeholder">Bitte Labordaten eingeben und Berechnung starten.</div>';
+  document.getElementById('hypertonie-panel').innerHTML =
+    '<div class="mbd-placeholder">Bitte Blutdruck und Labordaten eingeben und Berechnung starten.</div>';
+
+  // Globale Zustandsvariablen zurücksetzen
+  _lastGFRStage = null;
+  _lastAlbStage = null;
+  _lastRiskInfo = null;
+
+  // Matrix ohne Markierung neu aufbauen
+  buildMatrix(-1, -1);
+}
+
+function calculate() {
+  const age  = parseFloat(document.getElementById('age').value);
+  const sex  = document.getElementById('sex').value;
+  const scr  = parseFloat(document.getElementById('creatinine').value);
+  const cys  = parseFloat(document.getElementById('cystatinc').value) || null;
+  const uacrRaw = document.getElementById('uacr').value;
+  const uacr = uacrRaw !== '' ? parseFloat(uacrRaw) : null;
+  const bpSys = document.getElementById('bp_sys').value;
+  const bpDia = document.getElementById('bp_dia').value;
+  const extraInfo = document.getElementById('extra_info').value;
+
+  // New lab fields
+  const weight      = parseFloat(document.getElementById('weight').value) || null;
+  const dialysisSt  = document.getElementById('dialysis_status').value;
+  const hb          = parseFloat(document.getElementById('hb').value) || null;
+  const ferritin    = parseFloat(document.getElementById('ferritin').value) || null;
+  const tsat        = parseFloat(document.getElementById('tsat').value) || null;
+  const pth         = parseFloat(document.getElementById('pth').value) || null;
+  const bicarb      = parseFloat(document.getElementById('bicarb').value) || null;
+  const phosphat    = parseFloat(document.getElementById('phosphat').value) || null;
+  const calcium     = parseFloat(document.getElementById('calcium').value) || null;
+  const vitd        = parseFloat(document.getElementById('vitd').value) || null;
+  const kalium      = parseFloat(document.getElementById('kalium').value) || null;
+  const ph          = parseFloat(document.getElementById('ph').value) || null;
+  const vordiagnosen = document.getElementById('vordiagnosen').value.trim();
+
+  // Validation
+  if (!age || !sex || !scr) {
+    alert('Bitte Alter, Geschlecht und Kreatinin eingeben.');
+    return;
+  }
+
+  // Calculate eGFRs
+  const eGFR_cr  = egfrCreatinine(age, sex, scr);
+  const eGFR_cys = egfrCystatinC(age, sex, cys);
+  const eGFR_comb = egfrCombined(age, sex, scr, cys);
+
+  // Primary eGFR: combined if cystatin available, else creatinine
+  const primaryEGFR = eGFR_comb || eGFR_cr;
+  const gfrStage = getGFRStage(primaryEGFR);
+  const albStage = getAlbStage(uacr);
+
+  // Risk
+  let riskClass = null;
+  let riskInfo = null;
+  if (gfrStage && albStage) {
+    riskClass = riskMatrix[gfrStage.row][albStage.col];
+    riskInfo = riskNames[riskClass];
+  }
+
+  // Diseases
+  const checkedDiseases = Array.from(document.querySelectorAll('#disease-checkboxes input[type=checkbox]:checked'))
+    .map(cb => cb.value);
+
+  // Build results panel
+  let resHTML = `<div class="egfr-results">`;
+
+  resHTML += `<div class="egfr-box primary">
+    <div class="egfr-value">${eGFR_cr !== null ? eGFR_cr : '—'}</div>
+    <div class="egfr-label">eGFR Kreatinin</div>
+    <div class="egfr-sub">CKD-EPI 2021</div>
+  </div>`;
+
+  resHTML += `<div class="egfr-box ${eGFR_cys ? 'primary' : ''}">
+    <div class="egfr-value">${eGFR_cys !== null ? eGFR_cys : '—'}</div>
+    <div class="egfr-label">eGFR Cystatin C</div>
+    <div class="egfr-sub">CKD-EPI 2021</div>
+  </div>`;
+
+  resHTML += `<div class="egfr-box ${eGFR_comb ? 'primary' : ''}">
+    <div class="egfr-value">${eGFR_comb !== null ? eGFR_comb : '—'}</div>
+    <div class="egfr-label">eGFR kombiniert</div>
+    <div class="egfr-sub">Empfohlen bei Diskordanz</div>
+  </div>`;
+
+  resHTML += '</div>';
+
+  // Discordance warning
+  if (eGFR_cr && eGFR_cys) {
+    let diff = Math.abs(eGFR_cr - eGFR_cys);
+    if (diff > 15) {
+      resHTML += `<div class="alert-box alert-warning">⚠️ Diskordanz zwischen eGFR<sub>Krea</sub> (${eGFR_cr}) und eGFR<sub>Cys</sub> (${eGFR_cys}) &gt; 15 ml/min — kombinierter Wert bevorzugen. Mögliche Ursachen: Muskelmasse, Ernährung, Schwangerschaft.</div>`;
+    }
+  }
+
+  if (gfrStage) {
+    let stageColor = { 'G1': '#4caf50', 'G2': '#8bc34a', 'G3a': '#ffeb3b', 'G3b': '#ff9800', 'G4': '#f44336', 'G5': '#b71c1c' };
+    resHTML += `<div class="stage-display ${riskInfo ? riskInfo.css : ''}">`;
+    resHTML += `<div class="stage-badge">
+      <div class="stage-label">GFR-Stadium</div>
+      <div class="stage-value">${gfrStage.stage}</div>
+      <div style="font-size:0.7rem;">${gfrStage.sub} ml/min</div>
+    </div>`;
+
+    if (albStage) {
+      resHTML += `<div style="font-size:1.5rem;opacity:0.4;">+</div>
+      <div class="stage-badge">
+        <div class="stage-label">Albuminurie</div>
+        <div class="stage-value">${albStage.stage}</div>
+        <div style="font-size:0.7rem;">${uacr} mg/g</div>
+      </div>`;
+    }
+
+    if (riskInfo) {
+      resHTML += `<div>
+        <div style="font-size:0.7rem;text-align:center;text-transform:uppercase;letter-spacing:0.5px;opacity:0.7;margin-bottom:4px;">Risiko</div>
+        <div class="risk-label">${riskInfo.name}</div>
+      </div>`;
+    }
+    resHTML += '</div>';
+
+    // GFR progress
+    let pct = Math.min(100, Math.max(0, primaryEGFR / 1.5));
+    let pColor = primaryEGFR >= 60 ? '#4caf50' : primaryEGFR >= 30 ? '#ff9800' : '#f44336';
+    resHTML += `<div style="font-size:0.75rem;color:#607d8b;margin-bottom:4px;">eGFR: ${primaryEGFR} ml/min/1.73m²</div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${pColor};"></div></div>`;
+  }
+
+  document.getElementById('results-panel').innerHTML = resHTML;
+
+  // Build matrix
+  buildMatrix(gfrStage ? gfrStage.row : -1, albStage ? albStage.col : -1);
+
+  // Store for print matrix
+  _lastGFRStage = gfrStage; _lastAlbStage = albStage; _lastRiskInfo = riskInfo;
+
+  // Generate CKD-MBD dosing panel
+  generateCKDMBDPanel({ weight, dialysisSt, hb, ferritin, tsat, pth, bicarb, phosphat, calcium, vitd, gfrStage });
+
+  // Build Hypertonie panel
+  buildHypertoniePanel({ egfr: primaryEGFR, uacr, diseases: checkedDiseases, bpSys, bpDia, kalium });
+
+  // Generate texts
+  generateTexts(age, sex, scr, cys, uacr, bpSys, bpDia, extraInfo, eGFR_cr, eGFR_cys, eGFR_comb, primaryEGFR, gfrStage, albStage, riskInfo, checkedDiseases, { hb, ferritin, tsat, pth, bicarb, phosphat, calcium, kalium, ph }, vordiagnosen);
+}
+
+// ===== TEXT GENERATION =====
+function diseaseLabel(d) {
+  const map = {
+    diabetisch: 'diabetische Nephropathie',
+    hypertensiv: 'hypertensive Nephropathie',
+    igan: 'IgA-Nephropathie',
+    fsgs: 'fokal-segmentale Glomerulosklerose (FSGS)',
+    mgn: 'membranöse Nephropathie',
+    adpkd: 'autosomal-dominante polyzystische Nierenerkrankung (ADPKD)',
+    lupus: 'Lupusnephritis',
+    vaskulitis: 'ANCA-assoziierte Vaskulitis',
+    transplantat: 'Nierentransplantat-Nephropathie',
+    andere: 'chronische Nierenerkrankung (Ätiologie in Klärung)',
+  };
+  return map[d] || d;
+}
+
+function generateTexts(age, sex, scr, cys, uacr, bpSys, bpDia, extraInfo,
+  eGFR_cr, eGFR_cys, eGFR_comb, primaryEGFR, gfrStage, albStage, riskInfo, diseases, labs, vordiagnosen) {
+  const { hb, ferritin, tsat, pth, bicarb, phosphat, calcium, kalium, ph } = labs || {};
+
+  const sexStr = sex === 'female' ? 'der Patientin' : 'des Patienten';
+  const pronoun = sex === 'female' ? 'Die Patientin' : 'Der Patient';
+  const sexGenStr = sex === 'female' ? 'weiblich' : 'männlich';
+
+  // Build disease string
+  let diseaseStr = '';
+  if (diseases.length === 0) {
+    diseaseStr = 'chronischer Nierenerkrankung (Ätiologie noch nicht abschließend geklärt)';
+  } else if (diseases.length === 1) {
+    diseaseStr = diseaseLabel(diseases[0]);
+  } else {
+    let parts = diseases.map(diseaseLabel);
+    diseaseStr = parts.slice(0, -1).join(', ') + ' sowie ' + parts[parts.length - 1];
+  }
+
+  // ===== DIAGNOSE =====
+  // Build main nephrology line (for "Aktuell:")
+  let ckdLine = '';
+  let nephroLines = [];   // nephrology diagnoses (numbered first)
+  let vordiagnosenLines = vordiagnosen
+    ? vordiagnosen.split('\n').map(l => l.trim()).filter(l => l.length > 0)
+    : [];
+
+  if (gfrStage) {
+    const stadiumStr = `${gfrStage.stage}${albStage ? albStage.stage : ''}`;
+    const beiStr = diseases.length > 0
+      ? ' bei ' + diseases.map(diseaseLabel).join(', ')
+      : '';
+    ckdLine = `Chronische Nierenerkrankung (CKD), Stadium ${stadiumStr} nach KDIGO 2024${beiStr}`;
+    nephroLines.push(ckdLine);
+
+    if (albStage && albStage.stage !== 'A1') {
+      if (uacr >= 2000)      nephroLines.push('Nephrotisches Syndrom (uACR ≥ 2000 mg/g)');
+      else if (uacr >= 300)  nephroLines.push('Schwere Albuminurie (uACR 300–1999 mg/g)');
+      else                   nephroLines.push('Mäßige Albuminurie (uACR 30–299 mg/g)');
+    }
+    if (riskInfo && (riskInfo.css === 'risk-very-high' || riskInfo.css === 'risk-ext-high')) {
+      nephroLines.push('Hohes kardiovaskuläres und renales Progressionsrisiko');
+    }
+  }
+
+  let diagnoseText = '--- DIAGNOSEN ---\n\n';
+  if (ckdLine) {
+    diagnoseText += `Aktuell:\n${ckdLine}\n\n`;
+  }
+  diagnoseText += 'Diagnosen:\n';
+  let dNum = 1;
+  nephroLines.forEach(l => { diagnoseText += `${dNum++}. ${l}\n`; });
+  if (vordiagnosenLines.length > 0) {
+    diagnoseText += '\n';
+    vordiagnosenLines.forEach(l => { diagnoseText += `${dNum++}. ${l}\n`; });
+  }
+
+  document.getElementById('text-diagnose').value = diagnoseText;
+
+  // ===== BEFUND =====
+  let befundText = `--- NEPHROLOGISCHER BEFUND ---\n\n`;
+  befundText += `${pronoun} (${age} Jahre, ${sexGenStr}) stellte sich zur nephrologischen Beurteilung vor.\n\n`;
+
+  befundText += `Laborchemisch zeigt sich:\n`;
+  befundText += `- Serumkreatinin: ${scr} mg/dl\n`;
+  if (cys) befundText += `- Cystatin C: ${cys} mg/l\n`;
+  befundText += `- eGFR (CKD-EPI 2021, Kreatinin): ${eGFR_cr} ml/min/1,73 m²\n`;
+  if (eGFR_cys) befundText += `- eGFR (CKD-EPI 2021, Cystatin C): ${eGFR_cys} ml/min/1,73 m²\n`;
+  if (eGFR_comb) befundText += `- eGFR (CKD-EPI 2021, kombiniert): ${eGFR_comb} ml/min/1,73 m² [verwendeter Wert]\n`;
+  if (uacr !== null) befundText += `- Urin-Albumin-Kreatinin-Ratio (uACR): ${uacr} mg/g\n`;
+  if (bpSys)    befundText += `- Blutdruck: ${bpSys}${bpDia ? ' / ' + bpDia : ''} mmHg${bpDia ? '' : ' systolisch'}\n`;
+  if (kalium)   befundText += `- Kalium: ${kalium} mmol/l\n`;
+  if (ph)       befundText += `- pH (venös): ${ph}${ph < 7.35 ? ' → metabolische Azidose' : ph > 7.45 ? ' → Alkalose' : ' → normal'}\n`;
+  if (hb)       befundText += `- Hämoglobin: ${hb} g/dl\n`;
+  if (ferritin) befundText += `- Ferritin: ${ferritin} ng/ml\n`;
+  if (tsat)     befundText += `- Transferrinsättigung (TSAT): ${tsat}%\n`;
+  if (pth)      befundText += `- iPTH: ${pth} pg/ml\n`;
+  if (bicarb)   befundText += `- Bikarbonat (venös): ${bicarb} mmol/l\n`;
+  if (phosphat) befundText += `- Phosphat: ${phosphat} mmol/l\n`;
+  if (calcium)  befundText += `- Kalzium (gesamt): ${calcium} mmol/l\n`;
+  if (extraInfo) befundText += `- Weitere Befunde: ${extraInfo}\n`;
+
+  befundText += `\nNach KDIGO 2024 ergibt sich damit das Stadium ${gfrStage ? gfrStage.stage : '?'}${albStage ? albStage.stage : ''} `;
+  befundText += `(GFR-Stadium ${gfrStage ? gfrStage.stage : '?'}: eGFR ${gfrStage ? gfrStage.sub : '?'} ml/min`;
+  if (albStage) befundText += `; Albuminurie-Stadium ${albStage.stage}: ACR ${albStage.sub} mg/g`;
+  befundText += ').';
+
+  if (riskInfo) {
+    befundText += ` Das kardiovaskuläre und renale Progressionsrisiko wird als ${riskInfo.name.toLowerCase()} eingestuft.`;
+  }
+
+  befundText += `\n\nDie Nierenerkrankung besteht im Kontext einer ${diseaseStr}.`;
+  if (vordiagnosenLines.length > 0) {
+    befundText += ` An weiteren Vorerkrankungen sind bekannt: ${vordiagnosenLines.join(', ')}.`;
+  }
+
+  // Optionally append ASCII risk matrix
+  if (document.getElementById('include_matrix_text') && document.getElementById('include_matrix_text').checked && gfrStage) {
+    befundText += '\n\n' + buildAsciiMatrix(gfrStage, albStage, riskInfo);
+  }
+
+  document.getElementById('text-befund').value = befundText;
+
+  // ===== EMPFEHLUNG =====
+  let empfText = `--- THERAPEUTISCHE EMPFEHLUNGEN ---\n\n`;
+  let recList = [];
+
+  // General by stage
+  if (gfrStage) {
+    const stage = gfrStage.stage;
+
+    // BP target (context-specific per KDIGO 2021 BP Guideline)
+    const isTransplantRec = diseases.includes('transplantat');
+    const isADPKDRec      = diseases.includes('adpkd');
+    let bpTarget;
+    if (isADPKDRec) {
+      bpTarget = '< 110/75 mmHg (ADPKD, HALT-PKD); ACE-Hemmer/ARB bevorzugen';
+    } else if (isTransplantRec) {
+      bpTarget = '< 130/80 mmHg (Nierentransplantat, KDIGO 2021); CCB oder ARB als Erstlinie (Grad 1C)';
+    } else {
+      bpTarget = '< 120 mmHg systolisch (CKD, KDIGO 2021, Grad 2B); standardisierte Büromessung (AOBP)';
+    }
+    recList.push(`Blutdruckziel: ${bpTarget}`);
+
+    if (uacr && uacr >= 30) {
+      recList.push('RAS-Blockade: ACE-Hemmer oder AT1-Antagonist in maximal tolerierter Dosis (Ziel-ACR-Reduktion ≥ 30%)');
+    } else if (diseases.includes('diabetisch') || diseases.includes('hypertensiv')) {
+      recList.push('RAS-Blockade erwägen (ACE-Hemmer oder AT1-Antagonist) bei Hypertonie / Diabetes');
+    }
+
+    if (diseases.includes('diabetisch') || (uacr && uacr >= 30 && primaryEGFR >= 20)) {
+      recList.push('SGLT2-Inhibitor: Dapagliflozin (Forxiga®) 10 mg/d — ab eGFR ≥ 20 ml/min, nephroprotektiv unabhängig von BZ-Wirkung');
+    }
+
+    // Finerenon — K⁺ and eGFR dependent (K⁺ < 5, eGFR > 25, diabetische NP CKD 3-4 + Albuminurie)
+    if (diseases.includes('diabetisch') && uacr && uacr >= 30 && primaryEGFR >= 25) {
+      if (kalium !== null && kalium >= 5.0) {
+        recList.push(`⚠️ Finerenon (Kerendia® 10 mg): Indikation gegeben (diab. NP + Albuminurie + eGFR ≥ 25), aber AKTUELL KONTRAINDIZIERT — Kalium ${kalium} mmol/l ≥ 5,0 mmol/l! Erst Kalium senken, dann re-evaluieren.`);
+      } else {
+        const kNote = kalium !== null ? ` Kalium ${kalium} mmol/l — Bedingung erfüllt (< 5,0).` : ' Kalium bitte prüfen (Bedingung: < 5,0 mmol/l).';
+        recList.push(`Finerenon (Kerendia® 10 mg/d): Indiziert bei diab. NP + Albuminurie + eGFR ≥ 25 ml/min.${kNote} Additiver nephro- und kardiovaskulärer Schutz (FIDELIO/FIGARO). Kaliumkontrolle nach 4 Wochen.`);
+      }
+    }
+
+    // Kalium-spezifische Empfehlungen
+    if (kalium !== null) {
+      if (kalium >= 6.0) {
+        recList.push(`🚨 Hyperkaliämie (K⁺ ${kalium} mmol/l): EKG sofort! Kalziumglukonat i.v. → Insulin/Glukose → Patiromer (Veltassa®) oder Natriumzirkoniumcyclosilicat (Lokelma®) 10 g 3×/d × 2d → RAAS-I pausieren bis K⁺ < 5,5`);
+      } else if (kalium >= 5.5) {
+        recList.push(`⚠️ Hyperkaliämie (K⁺ ${kalium} mmol/l): RAAS-Inhibitor Dosis prüfen/reduzieren; Kaliumarme Diät; Kalium-Binder erwägen (Patiromer/SZC); Finerenon/Spironolacton pausieren/KI`);
+      } else if (kalium >= 5.0) {
+        recList.push(`K⁺ ${kalium} mmol/l: Grenzwertig erhöht — engmaschige Kontrolle; kaliumarme Diät; RAAS-I mit Vorsicht; Finerenon/Spironolacton KI bis K⁺ < 5,0`);
+      } else if (kalium < 3.5) {
+        recList.push(`⚠️ Hypokaliämie (K⁺ ${kalium} mmol/l): Kaliumsubstitution oral/i.v.; Ursache klären (Diuretika, GI-Verlust); Thiazid/Schleifendiuretikum-Dosis prüfen`);
+      }
+    }
+
+    // pH / Azidose
+    if (ph !== null && ph < 7.35) {
+      recList.push(`Metabolische Azidose (pH ${ph}): Bikarbonat-Therapie — Bicanorm® 1 g / Nephrotrans® 840 mg, 3–6 Kps./d; Ziel HCO₃⁻ > 22 mmol/l (Therapiestart hausintern: HCO₃⁻ < 19 mmol/l)`);
+    } else if (bicarb !== null && bicarb < 19) {
+      recList.push(`Renale Azidose (HCO₃⁻ ${bicarb} mmol/l): Bicanorm® 1 g / Nephrotrans® 840 mg 3× 1–2 Kps./d; Ziel HCO₃⁻ > 22 mmol/l`);
+    } else if (bicarb !== null && bicarb < 22) {
+      recList.push(`HCO₃⁻ ${bicarb} mmol/l: unter Ziel (> 22), aber > 19 — Verlaufskontrolle; diätetisch mehr Obst/Gemüse, NaHCO₃ erst bei < 19 mmol/l starten`);
+    }
+
+    if (stage === 'G3a' || stage === 'G3b') {
+      recList.push('Laborkontrollen: BB, Elektrolyte (inkl. Kalium!), Kreatinin, Phosphat, PTH, 25-OH-Vit D, Harnsäure — alle 3–6 Monate');
+      recList.push('Ernährung: Protein 0,8 g/kg/d; NaCl < 5 g/d; Phosphat < 1.000 mg/d; Kaliumrestriktion ab K⁺ > 5,0 mmol/l');
+    }
+
+    if (stage === 'G3b' || stage === 'G4') {
+      recList.push('CKD-MBD: Phosphatarme Diät (< 1.000 mg/d); Phosphatbinder bei dauerhafter Erhöhung (> 1,45 mmol/l); Dekristol® 20.000 IE/Woche (ab GFR < 60 immer!)');
+      recList.push(`Renale Anämie: Eisenstatus prüfen (Ferritin, TSAT); Ziel Ferritin 100–500, TSAT > 20%; Ferinject® i.v. bei Mangel; ESA (Darbepoetin alfa) bei Hb < 10 g/dl nach Eisenoptimierung — Ziel Hb 10–11 g/dl`);
+    }
+
+    if (stage === 'G4') {
+      recList.push('⚠️ Vorbereitung Nierenersatztherapie: Aufklärung über Hämodialyse, Peritonealdialyse, präemptive Transplantation');
+      recList.push('Shuntanlage/PD-Katheter-Planung: ab eGFR < 20 ml/min in Kooperation mit Gefäßchirurgie/Chirurgie');
+      recList.push('Anmeldung Transplantationsambulanz: Vorbereitung Listung ab eGFR < 20 ml/min (präemptive Transplantation bevorzugt)');
+      recList.push('Hepatitis B-Impfung sicherstellen, pneumokokken- und Influenza-Impfung');
+    }
+
+    if (stage === 'G5') {
+      recList.push('⚠️ Dialyseeinleitung vorbereiten / evaluieren; Notfalldialyse bei klinischer Dekompensation');
+      recList.push('Diät: strenge Protein-, Kalium- und Phosphatrestriktion; Flüssigkeitsrestriktion je nach Diurese');
+    }
+  }
+
+  // Disease-specific
+  if (diseases.includes('diabetisch')) {
+    recList.push('[Diabetes] HbA1c-Ziel: 7–7,5% (individualisiert); cave Hypoglykämie bei eingeschränkter eGFR');
+    if (!(uacr && uacr >= 30 && primaryEGFR >= 25)) { // only if not already in general section
+      recList.push('[Diabetes] Finerenon (Kerendia® 10 mg/d): bei eGFR ≥ 25 + ACR ≥ 30 mg/g + K⁺ < 5,0 mmol/l — nephro- und kardiovaskulärer Schutz (FIDELIO/FIGARO)');
+    }
+    recList.push('[Diabetes] GLP-1-Rezeptoragonist (Semaglutid) erwägen: kardiovaskulärer Nutzen, Gewichtsreduktion, möglicher nephroprotektiver Effekt (FLOW-Studie)');
+    recList.push('[Diabetes] Metformin: Dosisreduktion ab eGFR < 45; Absetzen bei eGFR < 30');
+  }
+
+  if (diseases.includes('igan')) {
+    recList.push('[IgA-N] Sparsentan (PROTECT-Studie): dualer AT1/Endothelin-A-Antagonist, Zulassung bei proteinurischer IgA-N');
+    recList.push('[IgA-N] Budesonid (Nefecon/Kinpeygo): zielgerichtete Freisetzung im terminalen Ileum; bei ACR ≥ 300 mg/g + eGFR ≥ 30 ml/min');
+    recList.push('[IgA-N] SGLT2-Inhibitor als Add-on (Dapagliflozin: DAPA-CKD subgruppe)');
+    recList.push('[IgA-N] Systemische Immunsuppression (Kortikosteroide) nur bei Rapid-Progressive IgA-N nach individueller Nutzen-Risiko-Abwägung');
+  }
+
+  if (diseases.includes('fsgs')) {
+    recList.push('[FSGS] Sparsentan: bei primärer FSGS mit Proteinurie (DUPLEX-Studie)');
+    recList.push('[FSGS] Differenzierung primär vs. sekundär/genetisch entscheidend für Therapiestrategie');
+    recList.push('[FSGS] Primäre FSGS: Kortikosteroide (Prednisolon 1 mg/kg/d für 4–16 Wochen), ggf. Calcineurininhibitoren (Tacrolimus/Cyclosporin) bei Steroidresistenz');
+  }
+
+  if (diseases.includes('mgn')) {
+    recList.push('[MGN] Anti-PLA2R-Antikörper-Verlauf als Therapiemonitor; spontane Remission möglich');
+    recList.push('[MGN] Immunsuppression bei persistierendem nephrotischem Syndrom > 6 Monate: Rituximab (bevorzugt, MENTOR-Studie)');
+    recList.push('[MGN] Antikoagulation bei schwerem nephrotischen Syndrom (Albumin < 25 g/l) nach individueller Abwägung');
+  }
+
+  if (diseases.includes('adpkd')) {
+    recList.push('[ADPKD] Tolvaptan (Jinarc): bei Erwachsenen mit gesicherter ADPKD und raschem Progress (Mayo-Klasse 1C–1E); LFP-Monitoring obligat');
+    recList.push('[ADPKD] Strenge Blutdruckkontrolle < 110/75 mmHg (HALT-PKD); ACE-Hemmer/ARB bevorzugt');
+    recList.push('[ADPKD] Ausreichend Flüssigkeit (> 3 l/d) bei Tolvaptan; Kochsalz- und Proteinrestriktion');
+  }
+
+  if (diseases.includes('lupus')) {
+    recList.push('[Lupus] Hydroxychloroquin: 200–400 mg/d dauerhaft (Basistherapie, OD-Monitoring)');
+    recList.push('[Lupus] Induktionstherapie: Mycophenolat Mofetil 2–3 g/d oder Cyclophosphamid (NIH/Euro-Lupus)');
+    recList.push('[Lupus] Voclosporin (Lupkynis) + MMF: bei aktiver LN Klasse III–IV (AURORA-Studie)');
+    recList.push('[Lupus] Belimumab: als Add-on zur Standardtherapie (BLISS-LN-Studie)');
+    recList.push('[Lupus] Remissionsziel: uPCR < 500 mg/g nach 12 Monaten; Steroid-Tapering anstreben');
+  }
+
+  if (diseases.includes('vaskulitis')) {
+    recList.push('[ANCA-Vaskulitis] Induktion: Rituximab (375 mg/m² × 4 oder 1000 mg × 2) oder Cyclophosphamid + Kortikosteroide');
+    recList.push('[ANCA-Vaskulitis] Erhaltung: Rituximab 500 mg alle 6 Monate für 24 Monate (MAINRITSAN)');
+    recList.push('[ANCA-Vaskulitis] Avacopan (Tavneos): C5a-Antagonist, Steroid-sparend (ADVOCATE-Studie)');
+    recList.push('[ANCA-Vaskulitis] ANCA-Titer-Verlauf; Pneumocystis-Prophylaxe (Cotrimoxazol)');
+  }
+
+  if (diseases.includes('transplantat')) {
+    recList.push('[Transplantat] Immunsuppression-Optimierung: Tacrolimus-Spiegel, MMF-Dosis, Steroidreduktion nach Schema');
+    recList.push('[Transplantat] SGLT2-Inhibitoren: zunehmende Evidenz auch post-Transplant (eGFR ≥ 30)');
+    recList.push('[Transplantat] CMV-, BKV-Monitoring; Infektionsprophylaxe individuell');
+    recList.push('[Transplantat] Transplantat-Biopsie bei ungeklärtem eGFR-Abfall > 25% erwägen');
+  }
+
+  // General always
+  recList.push('Nephrotoxika meiden: NSAR, Kontrastmittel (Hydrierung), Aminoglykoside; Dosisanpassung aller renal eliminierten Medikamente');
+  recList.push('Lebensstiländerung: Gewichtsreduktion, Rauchen stoppen, körperliche Aktivität 150 min/Woche');
+  recList.push('Statintherapie: bei CKD + kardiovaskulärem Risiko empfohlen (SHARP-Studie)');
+  recList.push(`Nephrologische Kontrollintervalle: ${primaryEGFR >= 60 ? 'jährlich' : primaryEGFR >= 30 ? 'alle 3–6 Monate' : 'alle 1–3 Monate'}`);
+
+  recList.forEach((r, i) => {
+    empfText += `${i + 1}. ${r}\n`;
+  });
+
+  document.getElementById('text-empfehlung').value = empfText;
+
+  // Build therapy panel
+  buildTherapyPanel(gfrStage, albStage, primaryEGFR, uacr, diseases, riskInfo);
+}
+
+function buildTherapyPanel(gfrStage, albStage, egfr, uacr, diseases, riskInfo) {
+  if (!gfrStage) return;
+
+  let html = '<div class="therapy-section">';
+
+  // Nephroprotection
+  html += `<div class="therapy-block">
+    <h3>🛡️ Nephroprotektive Basistherapie</h3>
+    <ul>`;
+
+  if (uacr >= 30) {
+    html += `<li>RAS-Blockade: <span class="drug-tag primary">ACE-Hemmer</span> oder <span class="drug-tag primary">ARB</span> — max. tolerierte Dosis, Ziel ACR-Reduktion ≥30%</li>`;
+  }
+  if (diseases.includes('diabetisch') || uacr >= 30 && egfr >= 20) {
+    html += `<li>SGLT2-Inhibitor: <span class="drug-tag primary">Dapagliflozin 10 mg</span> oder <span class="drug-tag primary">Empagliflozin 10 mg</span> (ab eGFR ≥20)</li>`;
+  }
+  html += `<li>Blutdruckziel: <span class="drug-tag">sys. &lt;120 mmHg</span> (individualisiert)</li>
+    <li>Kochsalzrestriktion: <span class="drug-tag">&lt;5 g NaCl/d</span></li>`;
+
+  if (diseases.includes('diabetisch')) {
+    html += `<li>Finerenon: <span class="drug-tag primary">Kerendia 10–20 mg/d</span> bei eGFR ≥25 + ACR ≥30</li>`;
+    html += `<li>GLP-1-RA: <span class="drug-tag">Semaglutid</span> — KV-Schutz, FLOW-Studie</li>`;
+  }
+
+  html += '</ul></div>';
+
+  // Stage-specific
+  if (['G3a','G3b','G4','G5'].includes(gfrStage.stage)) {
+    html += `<div class="therapy-block">
+      <h3>🔬 Labormonitoring (Stadium ${gfrStage.stage})</h3>
+      <ul>
+        <li>Blutbild, Kreatinin, Harnstoff, Elektrolyte, Phosphat, Calcium</li>
+        <li>PTH, 25-OH-Vitamin D, Harnsäure, Albumin</li>
+        <li>Ferritin, Transferrinsättigung (TSAT)</li>
+        <li>Intervall: <span class="drug-tag">${egfr >= 45 ? 'alle 3–6 Monate' : egfr >= 15 ? 'alle 1–3 Monate' : 'monatlich'}</span></li>
+      </ul></div>`;
+  }
+
+  if (gfrStage.stage === 'G3b' || gfrStage.stage === 'G4') {
+    html += `<div class="therapy-block">
+      <h3>💉 Anämie / CKD-MBD</h3>
+      <ul>
+        <li>Eisen i.v. bei Ferritin &lt;300 ng/ml oder TSAT &lt;25%</li>
+        <li>ESA (<span class="drug-tag">Darbepoetin, Epoetin</span>) bei Hb &lt;10 g/dl — Ziel: 10–12 g/dl</li>
+        <li>HIF-PHI (<span class="drug-tag">Roxadustat, Daprodustat</span>) als Alternative</li>
+        <li>Phosphatbinder bei Phosphat ↑: <span class="drug-tag">Sevelamer</span>, <span class="drug-tag">Calciumcarbonat</span></li>
+        <li>Vitamin D3-Substitution, ggf. aktiviertes Vitamin D (Calcitriol)</li>
+        <li>Bicarbonat oral bei Azidose (Ziel: 22–26 mmol/l)</li>
+      </ul></div>`;
+  }
+
+  if (gfrStage.stage === 'G4') {
+    html += `<div class="therapy-block" style="border-color:#f44336;">
+      <h3>⚠️ Vorbereitung Nierenersatz (G4)</h3>
+      <ul>
+        <li>Aufklärung Hämodialyse / Peritonealdialyse / Transplantation</li>
+        <li>Shuntanlage planen ab eGFR &lt;20 ml/min (6–12 Monate vor Bedarf)</li>
+        <li>Transplantationslistung vorbereiten (präemptiv bevorzugt)</li>
+        <li>Impfstatus komplettieren: HBV, Pneumokokken, Influenza, COVID</li>
+      </ul></div>`;
+  }
+
+  // Disease specific highlights
+  if (diseases.includes('igan')) {
+    html += `<div class="therapy-block" style="border-color:#9c27b0;">
+      <h3>🔵 IgA-Nephropathie</h3>
+      <ul>
+        <li><span class="drug-tag primary">Sparsentan</span> (PROTECT) — dual AT1/ET-A-Antagonist</li>
+        <li><span class="drug-tag primary">Budesonid (Nefecon)</span> — bei ACR ≥300, eGFR ≥30</li>
+        <li><span class="drug-tag">Kortikosteroide</span> nur bei Rapid-Progressive IgA-N</li>
+      </ul></div>`;
+  }
+
+  if (diseases.includes('lupus')) {
+    html += `<div class="therapy-block" style="border-color:#e91e63;">
+      <h3>🔴 Lupusnephritis</h3>
+      <ul>
+        <li><span class="drug-tag primary">Hydroxychloroquin</span> 200–400 mg/d (Basis)</li>
+        <li>Induktion: <span class="drug-tag primary">MMF 2–3 g/d</span> oder <span class="drug-tag">Cyclophosphamid</span></li>
+        <li><span class="drug-tag primary">Voclosporin</span> + MMF (AURORA), <span class="drug-tag">Belimumab</span> (BLISS-LN)</li>
+      </ul></div>`;
+  }
+
+  if (diseases.includes('adpkd')) {
+    html += `<div class="therapy-block" style="border-color:#00796b;">
+      <h3>🟢 ADPKD</h3>
+      <ul>
+        <li><span class="drug-tag primary">Tolvaptan (Jinarc)</span> bei raschem Progress (Mayo 1C–1E)</li>
+        <li>Blutdruckziel &lt;110/75 mmHg; ACE-Hemmer/ARB bevorzugt</li>
+        <li>Flüssigkeit &gt;3 l/d unter Tolvaptan</li>
+      </ul></div>`;
+  }
+
+  if (diseases.includes('vaskulitis')) {
+    html += `<div class="therapy-block" style="border-color:#ff5722;">
+      <h3>🔶 ANCA-Vaskulitis</h3>
+      <ul>
+        <li>Induktion: <span class="drug-tag primary">Rituximab</span> oder <span class="drug-tag">Cyclophosphamid</span> + Steroide</li>
+        <li>Erhaltung: <span class="drug-tag primary">Rituximab 500 mg</span> alle 6 Mo × 24 Mo</li>
+        <li><span class="drug-tag primary">Avacopan (Tavneos)</span> — Steroid-sparend</li>
+        <li>PCP-Prophylaxe: <span class="drug-tag warning">Cotrimoxazol 480 mg/d</span></li>
+      </ul></div>`;
+  }
+
+  html += `<div class="therapy-block">
+    <h3>🚫 Nephrotoxika vermeiden</h3>
+    <ul>
+      <li><span class="drug-tag danger">NSAR</span> kontraindiziert bei CKD G3+</li>
+      <li>Kontrastmittel: Hydrierung; nach Exposition Kreatinin-Kontrolle</li>
+      <li>Aminoglykoside: nur bei zwingender Indikation mit TDM</li>
+      <li>Dosisanpassung aller renal eliminierten Medikamente (z.B. Metformin ↓ ab G3a, stop G3b–4)</li>
+    </ul></div>`;
+
+  html += '</div>';
+
+  document.getElementById('therapy-panel').innerHTML = html;
+}
+
+// ===== HYPERTONIE PANEL =====
+function buildHypertoniePanel({ egfr, uacr, diseases, bpSys, bpDia, kalium }) {
+  const panel = document.getElementById('hypertonie-panel');
+  if (!panel) return;
+
+  const isTransplant = diseases.includes('transplantat');
+  const isDiabetes   = diseases.includes('diabetisch');
+  const isADPKD      = diseases.includes('adpkd');
+
+  // BP target
+  let targetSys, targetDia, targetNote, targetLabel;
+  if (isADPKD) {
+    targetSys = 110; targetDia = 75;
+    targetLabel = '< 110 / 75 mmHg';
+    targetNote = 'ADPKD (HALT-PKD): strengeres Ziel bei Hochrisiko-Patienten';
+  } else if (isTransplant) {
+    targetSys = 130; targetDia = 80;
+    targetLabel = '< 130 / 80 mmHg';
+    targetNote = 'Nierentransplantat: KDIGO 2021, Practice Point — CCB oder ARB bevorzugt';
+  } else {
+    targetSys = 120; targetDia = null;
+    targetLabel = '< 120 mmHg systolisch';
+    targetNote = 'CKD (KDIGO 2021, Grad 2B): standardisierte Büromessung (AOBP) — bei Intoleranz < 130 mmHg';
+  }
+
+  // BP status
+  const sysNum = bpSys ? parseFloat(bpSys) : null;
+  const diaNum = bpDia ? parseFloat(bpDia) : null;
+  let bpStatusClass, bpStatusIcon, bpStatusMsg;
+  if (!sysNum) {
+    bpStatusClass = 'bp-status-unknown';
+    bpStatusIcon  = '—';
+    bpStatusMsg   = 'Kein Blutdruck eingegeben';
+  } else if (sysNum < targetSys && (!targetDia || !diaNum || diaNum < targetDia)) {
+    bpStatusClass = 'bp-status-ok';
+    bpStatusIcon  = '✅';
+    bpStatusMsg   = 'Blutdruckziel erreicht';
+  } else if (sysNum < 140) {
+    bpStatusClass = 'bp-status-warn';
+    bpStatusIcon  = '⚠️';
+    bpStatusMsg   = 'Ziel nicht erreicht — Therapie optimieren';
+  } else {
+    bpStatusClass = 'bp-status-bad';
+    bpStatusIcon  = '🔴';
+    bpStatusMsg   = 'Unkontrollierte Hypertonie — dringend behandeln';
+  }
+
+  // RAAS indication
+  const strongRAAS = (uacr && uacr >= 300) || (isDiabetes && uacr && uacr >= 30);
+  const anyRAAS    = (uacr && uacr >= 30) || isDiabetes || diseases.includes('hypertensiv');
+
+  // Kalium alerts
+  const kHigh = kalium && kalium >= 5.5;
+  const kMod  = kalium && kalium >= 5.0 && kalium < 5.5;
+
+  // Step 1 drugs
+  let step1, step1Grade, step1Note;
+  if (isTransplant) {
+    step1      = 'Dihydropyridin-CCB (Amlodipin/Lercanidipin) <em>oder</em> ARB';
+    step1Grade = 'Grad 1C';
+    step1Note  = 'CCB ↓ Transplantatverlust −26% (Meta-Analyse); ARB ↓ −65% (3 RCTs). Frühpostoperativ ARB meiden bis stabile Fx.';
+  } else if (strongRAAS) {
+    step1      = 'ACE-Hemmer <em>oder</em> ARB — max. tolerierte Dosis';
+    step1Grade = 'Grad 1B';
+    step1Note  = 'Starke Empfehlung bei uACR ≥ 300 mg/g oder Diabetes + uACR ≥ 30 mg/g. Ziel: ACR-Reduktion ≥ 30%.';
+  } else if (anyRAAS) {
+    step1      = 'ACE-Hemmer <em>oder</em> ARB';
+    step1Grade = 'Grad 2C / 1B';
+    step1Note  = 'Empfohlen bei uACR 30–299 mg/g (2C) oder Diabetes + Hypertonie (1B). Nephro- und kardioprotektiv.';
+  } else {
+    step1      = 'CCB (Amlodipin 5–10 mg) <em>oder</em> Thiazid-artiges Diuretikum';
+    step1Grade = 'Practice Point';
+    step1Note  = 'Keine spezifische RAAS-Indikation. Kombination RASi + CCB + Thiazid wenn ≥ 2 Substanzen nötig.';
+  }
+
+  // Diuretic note (eGFR-based)
+  let diureticNote = '';
+  if (egfr !== null && egfr < 30) {
+    diureticNote = `<div class="htn-note">💊 eGFR ${Math.round(egfr)} ml/min: HCT verliert Wirksamkeit → <strong>Chlortalidon, Indapamid oder Metolazon</strong> bevorzugen. Bei Volumenüberlastung: <strong>Schleifendiuretikum</strong> (Torasemid/Furosemid).</div>`;
+  } else if (egfr !== null && egfr < 60) {
+    diureticNote = `<div class="htn-note">💊 eGFR ${Math.round(egfr)} ml/min: Thiazide noch wirksam — <strong>Chlortalidon oder Indapamid</strong> HCT vorziehen (längere Wirkdauer, bessere Evidenz).</div>`;
+  }
+
+  // MRA / K+ warning
+  let mraBlock = '';
+  if (kHigh) {
+    mraBlock = `<div class="htn-warning">⚠️ K⁺ ${kalium} mmol/l: MRA/Spironolacton <strong>kontraindiziert</strong>. RAAS-Initiierung nur mit engmaschigem Monitoring. Kaliumsenker (Patiromer/SZC) erwägen vor Dosisreduktion.</div>`;
+  } else if (kMod) {
+    mraBlock = `<div class="htn-warning">⚠️ K⁺ ${kalium} mmol/l: MRA nur mit engmaschigem K⁺-Monitoring (Ziel < 5,0). Patiromer (Veltassa) oder SZC (Lokelma) bereithalten.</div>`;
+  } else if (egfr !== null && egfr < 30) {
+    mraBlock = `<div class="htn-note">MRA (Spironolacton/Eplerenon) bei eGFR < 30 mit erhöhtem Hyperkaliämie-Risiko — nur unter engmaschiger Kontrolle (K⁺, eGFR alle 4 Wochen).</div>`;
+  }
+
+  // Dual-RAAS warning
+  const dualRaasWarning = `<div class="htn-warning">🚫 <strong>Dual-RAAS-Blockade verboten (Grad 1B):</strong> ACEi + ARB + DRI (Aliskiren) → kein Zusatznutzen, aber +40% AKI-Risiko + Hyperkaliämie (ONTARGET, VA-NEPHRON-D). ACEi + MRA in bestimmten Situationen vertretbar.</div>`;
+
+  // Build HTML
+  let html = '';
+
+  // Top row: BP status + Step 1
+  html += `<div class="htn-grid">
+    <div class="dose-card ${!sysNum ? 'grey' : sysNum < targetSys ? 'green' : sysNum < 140 ? 'orange' : 'red'}">
+      <h3>🩺 Aktueller Blutdruck</h3>
+      <div class="${bpStatusClass}">
+        <div class="bp-big">${sysNum ? (diaNum ? sysNum + ' / ' + diaNum : sysNum + ' / —') : '— / —'} <span style="font-size:1rem;font-weight:400;">mmHg</span></div>
+        <div class="bp-label-sm">${bpStatusIcon} ${bpStatusMsg}</div>
+      </div>
+      <div style="margin-top:10px;font-size:0.8rem;">
+        <strong>Zielwert:</strong> ${targetLabel}<br>
+        <span style="font-size:0.72rem;color:#607d8b;">${targetNote}</span>
+      </div>
+    </div>
+
+    <div class="dose-card ${strongRAAS ? 'blue' : anyRAAS ? 'blue' : 'grey'}">
+      <h3>💊 Erstlinientherapie <span style="font-weight:400;font-size:0.72rem;color:#607d8b;">${step1Grade}</span></h3>
+      <div class="dose-main">${step1}</div>
+      <div class="dose-detail">${step1Note}</div>
+      ${kHigh ? `<div class="dose-caveat">⚠️ K⁺ ${kalium} mmol/l — RAAS mit Vorsicht, K⁺ nach 2 Wochen kontrollieren</div>` : ''}
+    </div>
+  </div>`;
+
+  // Combination therapy 3-col
+  html += `<div class="dose-card grey" style="margin-bottom:14px;">
+    <h3>🔢 Stufentherapie — Kombinationsalgorithmus (KDIGO 2021 / SPRINT)</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:10px;">
+      <div class="htn-step htn-step-1">
+        <div class="htn-step-title">Schritt 1–2</div>
+        <ul style="padding-left:18px;margin:0;line-height:1.6;">
+          <li>${anyRAAS ? '<span class="drug-tag primary">ACEi oder ARB</span>' : '<span class="drug-tag primary">CCB (Amlodipin)</span>'}</li>
+          <li><span class="drug-tag primary">CCB</span> (Amlodipin/Lercanidipin)</li>
+          <li><span class="drug-tag">Thiazid-artig</span>${egfr !== null && egfr < 30 ? ' → Chlortalidon/Indapamid' : ' (Chlortalidon/Indapamid)'}</li>
+        </ul>
+        <div style="font-size:0.7rem;color:#1565c0;margin-top:6px;">Ziel: ≥ 2–3 Substanzen, monatliche Titration</div>
+      </div>
+      <div class="htn-step htn-step-2">
+        <div class="htn-step-title">Schritt 3–4 (Resistente HTN)</div>
+        <ul style="padding-left:18px;margin:0;line-height:1.6;">
+          <li><span class="drug-tag">MRA</span> Spironolacton 25–50 mg</li>
+          <li><span class="drug-tag">Beta-Blocker</span> (KHK/HFrEF)</li>
+          <li><span class="drug-tag">Alpha-Blocker</span> Doxazosin</li>
+        </ul>
+        <div style="font-size:0.7rem;color:#c62828;margin-top:6px;">Cave: K⁺ vor MRA; bei eGFR &lt; 30 erhöhtes Hyperkaliämie-Risiko</div>
+      </div>
+      <div class="htn-step htn-step-3">
+        <div class="htn-step-title">Schritt 5+ (Reservemittel)</div>
+        <ul style="padding-left:18px;margin:0;line-height:1.6;">
+          <li>Hydralazin / Dihydralazin</li>
+          <li>Minoxidil (Ödeme, Hirsutismus)</li>
+          <li>Moxonidin (Cave KI &lt; 30)</li>
+          <li>Clonidin (Cave Rebound)</li>
+        </ul>
+        <div style="font-size:0.7rem;color:#6a1b9a;margin-top:6px;">Nephrologische Mitbetreuung empfohlen</div>
+      </div>
+    </div>
+    ${diureticNote}
+    ${mraBlock}
+  </div>`;
+
+  // RAAS Monitoring + Kontraindikationen
+  html += `<div class="dose-card grey">
+    <h3>🔬 RAAS-Monitoring &amp; Kontraindikationen</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px;">
+      <div>
+        <div style="font-weight:700;font-size:0.78rem;margin-bottom:6px;color:#1a237e;">Nach ACEi/ARB-Start (Practice Points):</div>
+        <ul style="font-size:0.78rem;padding-left:18px;color:#455a64;line-height:1.7;">
+          <li>K⁺ + Kreatinin + RR: <strong>2–4 Wochen</strong> nach Start/Dosissteigerung</li>
+          <li>Kreatinin-Anstieg &lt; 30 % → fortführen (funktioneller hämodynamischer Effekt)</li>
+          <li>Kreatinin-Anstieg ≥ 30 % innerhalb 4 Wochen → Dosis ↓ oder pausieren</li>
+          <li>K⁺ 5,5–6,0 mmol/l → Kaliumsenker (Patiromer/SZC) <em>vor</em> Absetzen versuchen</li>
+          <li>K⁺ &gt; 6,0 mmol/l → sofortige Dosisreduktion/Pause + EKG</li>
+          <li>eGFR &lt; 15 + Urämiesymptome → ACEi/ARB pausieren</li>
+        </ul>
+      </div>
+      <div>
+        <div style="font-weight:700;font-size:0.78rem;margin-bottom:6px;color:#1a237e;">Kontraindikationen / Besonderheiten:</div>
+        <ul style="font-size:0.78rem;padding-left:18px;color:#455a64;line-height:1.7;">
+          <li>Schwangerschaft / Kinderwunsch → <strong>CCB bevorzugen</strong> (ARB/ACEi teratogen!)</li>
+          <li>ACEi bei Angioödem-Anamnese → <strong>ARB wechseln</strong> (kein Kreuzrisiko)</li>
+          <li>Non-DHP-CCB (Diltiazem/Verapamil) + Beta-Blocker → Cave Bradykardie/AV-Block</li>
+          <li>Transplant frühpostoperativ → ARB initial meiden bis stabile Transplantatfunktion</li>
+          <li>Messung: <strong>Standardisierte Büromessung</strong> (AOBP) für Zielwert-Anwendung obligat</li>
+        </ul>
+      </div>
+    </div>
+    ${dualRaasWarning}
+    <div style="margin-top:8px;font-size:0.7rem;color:#90a4ae;">Quelle: KDIGO 2021 Clinical Practice Guideline for the Management of Blood Pressure in CKD. Kidney International 2021;99(3S):S1–S87.</div>
+  </div>`;
+
+  panel.innerHTML = html;
+}
+
+// ===== UI HELPERS =====
+function toggleCheck(label) {
+  // Update visual state
+  setTimeout(() => {
+    const cb = label.querySelector('input[type=checkbox]');
+    if (cb.checked) {
+      label.classList.add('checked');
+    } else {
+      label.classList.remove('checked');
+    }
+  }, 0);
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function copyText(id) {
+  const el = document.getElementById(id);
+  el.select();
+  document.execCommand('copy');
+  // Flash feedback
+  const btn = event.target;
+  const orig = btn.textContent;
+  btn.textContent = '✅ Kopiert!';
+  setTimeout(() => btn.textContent = orig, 1500);
+}
+
+let _lastGFRStage = null, _lastAlbStage = null, _lastRiskInfo = null;
+
+// ===== ASCII RISK MATRIX (for text export) =====
+function buildAsciiMatrix(gfrStage, albStage, riskInfo) {
+  const rows = [
+    { stage:'G1',  sub:'>105'   },
+    { stage:'G1',  sub:'90–104' },
+    { stage:'G2',  sub:'75–89'  },
+    { stage:'G2',  sub:'60–74'  },
+    { stage:'G3a', sub:'45–59'  },
+    { stage:'G3b', sub:'30–44'  },
+    { stage:'G4',  sub:'15–29'  },
+    { stage:'G5',  sub:'<15'    },
+  ];
+  const cols = ['<10','10–29','30–299','300–1999','>2000'];
+  const riskLabel = {
+    'cell-green-bright':'Niedrig','cell-green':'Mäßig erhöht','cell-yellow':'Mäßig erhöht',
+    'cell-orange':'Hoch','cell-red':'Sehr hoch','cell-dark-red':'Extrem hoch'
+  };
+  const activeRow = gfrStage ? gfrStage.row : -1;
+  const activeCol = albStage ? albStage.col : -1;
+
+  let out = '--- KDIGO-RISIKOMATRIX (CKD-EPI 2021) ---\n\n';
+  out += '          Albuminurie-Stadium (uACR mg/g)\n';
+  out += '              A1          A2        A3\n';
+  out += '         ┌──────┬──────┬──────┬────────┬──────┐\n';
+  out += '  GFR    │  <10 │10–29 │30–299│300–1999│ >2000│\n';
+  out += '  ml/min ├──────┼──────┼──────┼────────┼──────┤\n';
+
+  rows.forEach((row, ri) => {
+    const label = `${row.stage} ${row.sub}`.padEnd(10);
+    const cells = cols.map((_, ci) => {
+      const cellClass = riskMatrix[ri][ci];
+      const sym = riskLabel[cellClass] === 'Niedrig' ? '  ██  ' :
+                  riskLabel[cellClass] === 'Mäßig erhöht' ? '  ▒▒  ' :
+                  riskLabel[cellClass] === 'Hoch' ? '  ▓▓  ' :
+                  riskLabel[cellClass] === 'Sehr hoch' ? '  ░R░  ' : '  ●●  ';
+      const isActive = (ri === activeRow && ci === activeCol);
+      // For text: mark patient cell with ★
+      const content = isActive ? ' [★] ' : sym.slice(0,5);
+      return content.padEnd(ci === 3 ? 8 : 6);
+    });
+    out += `  ${label}│${cells[0]}│${cells[1]}│${cells[2]}│${cells[3]}  │${cells[4]}│\n`;
+    if (ri < rows.length - 1) {
+      out += '          ├──────┼──────┼──────┼────────┼──────┤\n';
+    }
+  });
+  out += '          └──────┴──────┴──────┴────────┴──────┘\n';
+
+  if (gfrStage && albStage && riskInfo) {
+    out += `\n  ★ Patient: Stadium ${gfrStage.stage} (eGFR ${gfrStage.sub} ml/min) + ${albStage.stage} (uACR ${albStage.sub} mg/g)\n`;
+    out += `  Progressionsrisiko: ${riskInfo.name.toUpperCase()}\n`;
+  }
+  out += '  Legende: ██ Niedrig  ▒▒ Mäßig  ▓▓ Hoch  ░R░ Sehr hoch  ●● Extrem hoch\n';
+  out += '  Quelle: KDIGO CKD 2024';
+  return out;
+}
+
+// ===== HTML COLOR MATRIX (for print) =====
+function buildHtmlMatrix(gfrStage, albStage, riskInfo) {
+  const rows = [
+    { stage:'G1',  sub:'>105'   },
+    { stage:'G1',  sub:'90–104' },
+    { stage:'G2',  sub:'75–89'  },
+    { stage:'G2',  sub:'60–74'  },
+    { stage:'G3a', sub:'45–59'  },
+    { stage:'G3b', sub:'30–44'  },
+    { stage:'G4',  sub:'15–29'  },
+    { stage:'G5',  sub:'<15'    },
+  ];
+  const colLabels = ['<10','10–29','30–299','300–1999','>2000'];
+  const colorMap = {
+    'cell-green-bright':'#00b050','cell-green':'#92d050','cell-yellow':'#ffff00',
+    'cell-orange':'#ffc000','cell-red':'#ff0000','cell-dark-red':'#c00000'
+  };
+  const riskLabel = {
+    'cell-green-bright':'Niedrig','cell-green':'Mäßig','cell-yellow':'Mäßig',
+    'cell-orange':'Hoch','cell-red':'Sehr hoch','cell-dark-red':'Extrem hoch'
+  };
+  const activeRow = gfrStage ? gfrStage.row : -1;
+  const activeCol = albStage ? albStage.col : -1;
+
+  let html = `<div style="margin:12pt 0 8pt 0;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+    <div style="font-size:9pt;font-weight:700;color:#1a237e;margin-bottom:4pt;">KDIGO-Risikomatrix — Risiko für CKD-Progression &amp; kardiovask. Ereignisse (KDIGO 2024)</div>
+    <table style="border-collapse:collapse;font-size:7.5pt;width:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+      <thead>
+        <tr>
+          <th colspan="2" style="border:none;background:none;"></th>
+          <th colspan="5" style="background:#d9b3ff;border:1px solid #999;padding:2px 4px;text-align:center;">Albuminurie-Stadien (uACR mg/g)</th>
+        </tr>
+        <tr>
+          <th colspan="2" style="border:none;background:none;"></th>
+          <th colspan="2" style="background:#e6ccff;border:1px solid #999;padding:2px 4px;text-align:center;">A1</th>
+          <th style="background:#e6ccff;border:1px solid #999;padding:2px 4px;text-align:center;">A2</th>
+          <th colspan="2" style="background:#e6ccff;border:1px solid #999;padding:2px 4px;text-align:center;">A3</th>
+        </tr>
+        <tr>
+          <th colspan="2" style="border:none;background:none;font-size:6pt;color:#607d8b;">GFR (ml/min)</th>
+          ${colLabels.map(c=>`<th style="background:#f0e6ff;border:1px solid #999;padding:2px 4px;text-align:center;">${c}</th>`).join('')}
+        </tr>
+      </thead>
+      <tbody>`;
+
+  rows.forEach((row, ri) => {
+    html += '<tr>';
+    if (ri === 0 || rows[ri].stage !== rows[ri-1].stage) {
+      const span = rows.filter(r=>r.stage===row.stage).length;
+      html += `<td rowspan="${span}" style="background:#b3e5fc;border:1px solid #999;padding:2px 4px;text-align:center;font-weight:700;writing-mode:vertical-rl;font-size:6.5pt;-webkit-print-color-adjust:exact;print-color-adjust:exact;">${row.stage}</td>`;
+    }
+    html += `<td style="background:#e0e0e0;border:1px solid #999;padding:2px 6px;white-space:nowrap;">${row.sub}</td>`;
+    for (let ci = 0; ci < 5; ci++) {
+      const cellClass = riskMatrix[ri][ci];
+      const bg = colorMap[cellClass] || '#fff';
+      const isActive = (ri === activeRow && ci === activeCol);
+      const content = isActive ? '★' : '';
+      const border = isActive ? '3px solid #1a237e' : '1px solid #999';
+      const fw = isActive ? 'bold' : 'normal';
+      html += `<td style="background:${bg};border:${border};width:36pt;height:14pt;text-align:center;font-size:10pt;font-weight:${fw};-webkit-print-color-adjust:exact;print-color-adjust:exact;">${content}</td>`;
+    }
+    html += '</tr>';
+  });
+
+  html += `</tbody></table>`;
+
+  // Legend + patient info
+  const legendItems = [
+    {color:'#00b050',label:'Niedrig'},{color:'#92d050',label:'Mäßig erhöht'},
+    {color:'#ffff00',label:'Mäßig erhöht'},{color:'#ffc000',label:'Hoch'},
+    {color:'#ff0000',label:'Sehr hoch'},{color:'#c00000',label:'Extrem hoch'}
+  ];
+  html += `<div style="display:flex;gap:8pt;flex-wrap:wrap;margin-top:4pt;font-size:6.5pt;">`;
+  legendItems.forEach(l => {
+    html += `<span><span style="display:inline-block;width:8pt;height:8pt;background:${l.color};border:1px solid #999;margin-right:2pt;-webkit-print-color-adjust:exact;print-color-adjust:exact;"></span>${l.label}</span>`;
+  });
+  html += `</div>`;
+
+  if (gfrStage && albStage && riskInfo) {
+    html += `<div style="font-size:7.5pt;margin-top:4pt;color:#1a237e;">
+      <strong>★ Patient:</strong> ${gfrStage.stage} (${gfrStage.sub} ml/min) &bull; ${albStage.stage} (${albStage.sub} mg/g) &bull;
+      Progressionsrisiko: <strong>${riskInfo.name}</strong>
+    </div>`;
+  }
+  html += `</div>`;
+  return html;
+}
+
+// ===== PRINT ARZTBRIEF =====
+function printArztbrief() {
+  const diagnose = document.getElementById('text-diagnose').value;
+  const befund   = document.getElementById('text-befund').value;
+  const empf     = document.getElementById('text-empfehlung').value;
+
+  if (!diagnose && !befund && !empf) {
+    alert('Bitte zuerst Berechnung durchführen.');
+    return;
+  }
+
+  const includeMatrix = document.getElementById('include_matrix').checked;
+  const today = new Date().toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' });
+
+  function textToHtml(t) {
+    return t.split('\n').map(l => {
+      if (l.startsWith('---')) return `<h3 style="font-size:10pt;color:#1a237e;border-bottom:1px solid #ccc;margin:8pt 0 4pt 0;">${l.replace(/---/g,'').trim()}</h3>`;
+      if (l.startsWith('Aktuell:')) return `<p style="font-weight:700;margin:4pt 0 0 0;">${l}</p>`;
+      if (l.startsWith('Diagnosen:')) return `<p style="font-weight:700;margin:6pt 0 2pt 0;">${l}</p>`;
+      if (/^\d+\./.test(l)) return `<p style="margin:1pt 0 1pt 8pt;">${l}</p>`;
+      return l ? `<p style="margin:2pt 0;">${l}</p>` : '<p style="margin:4pt 0;"></p>';
+    }).join('');
+  }
+
+  let matrixHtml = '';
+  if (includeMatrix && _lastGFRStage) {
+    matrixHtml = buildHtmlMatrix(_lastGFRStage, _lastAlbStage, _lastRiskInfo);
+  }
+
+  const printContent = document.getElementById('print-content');
+  printContent.innerHTML = `
+    <div style="border-bottom:2px solid #1a237e;margin-bottom:12pt;padding-bottom:6pt;">
+      <div style="font-size:14pt;font-weight:700;color:#1a237e;">Nephrologischer Arztbrief</div>
+      <div style="font-size:8pt;color:#607d8b;">Erstellt: ${today} &bull; CKD-Staging App &bull; KDIGO 2024 &bull; CKD-EPI 2021</div>
+    </div>
+    <div style="margin-bottom:10pt;">${textToHtml(diagnose)}</div>
+    ${matrixHtml}
+    <div style="margin-bottom:10pt;">${textToHtml(befund)}</div>
+    <div style="margin-bottom:10pt;">${textToHtml(empf)}</div>
+    <div style="margin-top:36pt;font-size:8pt;color:#607d8b;border-top:1px solid #ccc;padding-top:6pt;display:flex;justify-content:space-between;">
+      <span>Unterschrift / Stempel: _______________________________</span>
+      <span>Datum: _______________</span>
+    </div>`;
+
+  document.getElementById('print-card').style.display = 'block';
+  window.print();
+  document.getElementById('print-card').style.display = 'none';
+}
+
+// ===== CKD-MBD DOSING PANEL =====
+function generateCKDMBDPanel({ weight, dialysisSt, hb, ferritin, tsat, pth, bicarb, phosphat, calcium, vitd, gfrStage }) {
+  const panel = document.getElementById('mbd-panel');
+  const hasAny = hb || ferritin || tsat || pth || bicarb || phosphat;
+  if (!hasAny) {
+    panel.innerHTML = '<div class="mbd-placeholder">Bitte Labordaten (Hb, Ferritin, TSAT, PTH, HCO₃⁻, Phosphat) eingeben.</div>';
+    return;
+  }
+
+  const isHD = dialysisSt === 'haemodialysis';
+  const isPD = dialysisSt === 'peritoneal';
+  const isDialysis = isHD || isPD;
+  const stage = gfrStage ? gfrStage.stage : null;
+  const egfr  = gfrStage ? null : null; // for reference
+
+  let cards = '';
+
+  // ── 1. EISEN (Ferinject) ──────────────────────────────────────────────────
+  // Zielwerte: CKD: Ferritin 100-500, TSAT > 20% | Dialyse: Ferritin 200-700, TSAT 30-40%
+  // Safety cutoff PIVOTAL: Ferritin < 700 UND TSAT < 40%
+  if (ferritin !== null || tsat !== null) {
+    // Determine targets based on dialysis status
+    const ferMinTarget  = isDialysis ? 200  : 100;
+    const ferMaxTarget  = isDialysis ? 700  : 500;
+    const tsatMinTarget = isDialysis ? 30   : 20;
+    const tsatMaxTarget = isDialysis ? 40   : 40;
+
+    const ferOk    = (ferritin === null || (ferritin >= ferMinTarget && ferritin <= ferMaxTarget)) &&
+                     (tsat === null || tsat >= tsatMinTarget);
+    const ferOver  = (ferritin !== null && ferritin >= 700) || (tsat !== null && tsat >= 40);
+    // IV iron indication: Ferritin < 100(200) OR TSAT < 20% AND Ferritin < 300
+    const ivIron   = (ferritin !== null && ferritin < (isDialysis ? 200 : 100)) ||
+                     (tsat !== null && tsat < 20 && (ferritin === null || ferritin < 300));
+    const ivIronHighDose = (ferritin !== null && ferritin < (isDialysis ? 100 : 80)) ||
+                           (tsat !== null && tsat < 15);
+
+    // Iron deficit formula: [Soll-Hb – Ist-Hb] × KG × 2,4 + 500 mg
+    let eisenDefizit = null;
+    let defizitText = '';
+    if (weight && hb) {
+      const sollHb = 11;
+      const deficit = Math.round(((sollHb - hb) * weight * 2.4) + 500);
+      eisenDefizit = Math.max(500, Math.min(deficit, 2000));
+      defizitText = `<br>• Eisendefizit nach Formel: [${sollHb}–${hb}] × ${weight} kg × 2,4 + 500 = <strong>${deficit} mg</strong>`;
+    }
+
+    let eisenColor, eisenTitle, eisenDose, eisenDetail, eisenCaveat = '';
+
+    if (ferOver) {
+      eisenColor = 'grey';
+      eisenTitle = '🚫 Eisen — Safety Cutoff überschritten';
+      eisenDose  = 'Keine Eisengabe (PIVOTAL Safety Cutoff)';
+      eisenDetail = `Ferritin ${ferritin ?? '?'} ng/ml / TSAT ${tsat ?? '?'}%<br>
+        Safety Cutoff [PIVOTAL-Studie]: Ferritin ≥ 700 ng/ml oder TSAT ≥ 40%.<br>
+        Keine weitere Eisenzufuhr — Überladungsrisiko, oxidativer Stress, kardiotoxisch.`;
+    } else if (!ivIron && ferOk) {
+      eisenColor = 'green';
+      eisenTitle = '✅ Eisen — Zielbereich erreicht';
+      eisenDose  = 'Keine Eisengabe erforderlich';
+      eisenDetail = `Ferritin ${ferritin ?? '?'} ng/ml / TSAT ${tsat ?? '?'}%<br>
+        Ziel ${isDialysis ? 'Dialyse' : 'CKD prä-Dialyse'}: Ferritin ${ferMinTarget}–${ferMaxTarget} ng/ml, TSAT > ${tsatMinTarget}%.<br>
+        Kontrolle alle 3 Monate.`;
+    } else if (ivIronHighDose) {
+      eisenColor = 'red';
+      eisenTitle = '❗ Ferinject — schwerer Eisenmangel';
+      eisenDose  = 'Ferinject® (Eisencarboxymaltose) 1.000 mg i.v.';
+      eisenDetail = `Ferritin ${ferritin ?? '?'} ng/ml / TSAT ${tsat ?? '?'}% — schwerer Mangel.${defizitText}<br>
+        • <strong>Ferinject® 1.000 mg</strong>: 100 ml NaCl 0,9%, über 15 Min i.v. (Sonderrezept)<br>
+        • Max. 1.000 mg/Infusion; max. 20 mg/kg KG<br>
+        • Keine Testdosis erforderlich<br>
+        • Überwachung während und 30 Min nach Infusion (Kounis-Syndrom!)<br>
+        • Kontrolle Ferritin + TSAT nach 4–8 Wochen<br>
+        • Bei anhaltender Indikation: 2. Gabe 500 mg nach 4 Wochen`;
+      eisenCaveat = 'Cave: Bei aktiver Infektion Eisengabe zurückstellen (Hepcidin ↑ hemmt Resorption). Keine parallele orale Eisengabe.';
+    } else if (ivIron) {
+      eisenColor = 'orange';
+      eisenTitle = '⚠️ Ferinject — Eisenmangel';
+      eisenDose  = 'Ferinject® (Eisencarboxymaltose) 500 mg i.v.';
+      eisenDetail = `Ferritin ${ferritin ?? '?'} ng/ml / TSAT ${tsat ?? '?'}%.${defizitText}<br>
+        • <strong>Ferinject® 500 mg</strong>: 100 ml NaCl 0,9%, über 6 Min i.v.<br>
+        • Überwachung während und 30 Min nach Infusion<br>
+        • Kontrolle Ferritin + TSAT nach 4–8 Wochen<br>
+        • Bei TSAT weiter &lt; 20%: Wiederholung 500 mg<br>
+        <em>Alternativ bei mildem Mangel + normalem CRP:</em><br>
+        • Ferro sanol duodenal® 100 mg: 1–0–0, jeden 2. Tag, 1 h vor dem Essen`;
+      eisenCaveat = 'Cave: Hepcidin bei Inflammation erhöht → orale Resorption blockiert → i.v. bevorzugen.';
+    } else {
+      // Ferritin ok but TSAT borderline
+      eisenColor = 'orange';
+      eisenTitle = '👁 Eisen — engmaschige Kontrolle';
+      eisenDose  = 'Eisen momentan nicht indiziert';
+      eisenDetail = `Ferritin ${ferritin ?? '?'} ng/ml / TSAT ${tsat ?? '?'}% — Grenzbereich.<br>
+        Ziel ${isDialysis ? 'Dialyse' : 'CKD'}: Ferritin ${ferMinTarget}–${ferMaxTarget} ng/ml, TSAT > ${tsatMinTarget}%.<br>
+        Kontrolle in 4–6 Wochen; bei weiterer Verschlechterung Ferinject® 500 mg erwägen.`;
+    }
+
+    cards += `<div class="dose-card ${eisenColor}">
+      <h3>${eisenTitle}</h3>
+      <div class="dose-main">${eisenDose}</div>
+      <div class="dose-detail">${eisenDetail}</div>
+      ${eisenCaveat ? `<div class="dose-caveat">${eisenCaveat}</div>` : ''}
+    </div>`;
+  }
+
+  // ── 2. ESA (Darbepoetin/Epoetin) ──────────────────────────────────────────
+  // Ziel-Hb: 10–11 g/dl | Anämieabklärung bei Hb < 11 g/dl
+  // Korrekturschema: >13 Pause | >11 Pause -25% | 10-11 beibehalten | 9-10 +25% | <9 +50% | <8 EK
+  if (hb !== null) {
+    let epoColor, epoTitle, epoDose, epoDetail, epoCaveat = '';
+    // Iron adequacy check (Iron first!)
+    const ironAdequate = ferritin !== null ? ferritin >= (isDialysis ? 200 : 100) : true;
+    const tsatAdequate = tsat !== null ? tsat >= (isDialysis ? 30 : 20) : true;
+    const ironOk = ironAdequate && tsatAdequate;
+
+    if (hb > 13) {
+      epoColor = 'red';
+      epoTitle = '🛑 ESA — Hb zu hoch → PAUSE';
+      epoDose  = 'ESA sofort pausieren';
+      epoDetail = `Hb ${hb} g/dl — deutlich über Ziel (10–11 g/dl).<br>
+        <strong>Hb > 13: ESA stoppen</strong> (TREAT-Studie: erhöhtes kardiovaskuläres Risiko!).<br>
+        • ESA pausieren bis Hb &lt; 11 g/dl<br>
+        • Dann Wiederanfang mit 50% der vorherigen Dosis<br>
+        • Kontrolle Hb nach 4 Wochen`;
+    } else if (hb > 11) {
+      epoColor = 'orange';
+      epoTitle = '⬇️ ESA — Hb zu hoch → Dosis −25%';
+      epoDose  = 'ESA-Dosis um 25% reduzieren';
+      epoDetail = `Hb ${hb} g/dl — über Ziel (10–11 g/dl).<br>
+        Korrekturschema: Hb > 11 → Pause, dann −25%.<br>
+        • Aktuelle ESA-Dosis um 25% reduzieren<br>
+        • Hb-Kontrolle nach 4 Wochen<br>
+        • Bei Hb > 13: ESA stoppen`;
+    } else if (hb >= 10) {
+      epoColor = 'green';
+      epoTitle = '✅ ESA — Ziel-Hb 10–11 g/dl erreicht';
+      epoDose  = 'Erhaltungsdosis beibehalten';
+      epoDetail = `Hb ${hb} g/dl — im Zielbereich (10–11 g/dl).<br>
+        Aktuelle Dosis weiterführen. Hb-Kontrolle alle 4 Wochen.`;
+    } else if (hb >= 9) {
+      // Hb 9-10
+      if (!ironOk && (ferritin !== null || tsat !== null)) {
+        epoColor = 'orange';
+        epoTitle = '⚠️ ESA — erst Eisen korrigieren (Iron first!)';
+        epoDose  = 'Ferinject® zuerst, dann ESA-Entscheidung';
+        epoDetail = `Hb ${hb} g/dl, aber Eisenmangel (Ferritin ${ferritin ?? '?'} / TSAT ${tsat ?? '?'}%).<br>
+          <strong>„Iron first"</strong>: Erst Eisenoptimierung, Hb-Kontrolle nach 4–8 Wochen.<br>
+          ESA-Beginn erst nach Korrektur des Eisenmangels.`;
+      } else {
+        epoColor = 'blue';
+        epoTitle = '⬆️ ESA — Dosis +25%';
+        epoDose  = 'Aktuelle ESA-Dosis um 25% erhöhen';
+        epoDetail = `Hb ${hb} g/dl — unter Ziel (10–11 g/dl).<br>
+          Korrekturschema: Hb 9–10 → ESA +25%.<br>
+          • Dosis um 25% steigern<br>
+          • Hb-Kontrolle nach 4 Wochen<br>
+          • Eisenstatus prüfen: Ferritin + TSAT`;
+      }
+    } else if (hb >= 8) {
+      // Hb < 9: +50%
+      if (!ironOk && (ferritin !== null || tsat !== null)) {
+        epoColor = 'red';
+        epoTitle = '❗ Hb < 9 — Eisen + ESA-Eskalation';
+        epoDose  = 'Ferinject® + ESA +50%';
+        epoDetail = `Hb ${hb} g/dl — deutlich unter Ziel mit Eisenmangel.<br>
+          • Ferinject® i.v. (s. Eisen-Empfehlung oben)<br>
+          • ESA-Dosis +50% (nach > 90 Tagen ohne Ansprechen)<br>
+          • Hb-Kontrolle nach 4 Wochen<br>
+          • Erythrozytenkonzentrat (EK) bei Symptomen evaluieren`;
+      } else {
+        epoColor = 'blue';
+        if (!isDialysis) {
+          // Prä-Dialyse: Darbepoetin alfa (0,75 µg/kg alle 2 Wochen)
+          let darboDose = '—', darboCalc = '';
+          if (weight) {
+            const rawDose = Math.round(0.75 * weight * 10) / 10;
+            const vials = [10, 15, 20, 30, 40, 50, 60, 80, 100, 150];
+            const rounded = vials.reduce((a, b) => Math.abs(b - rawDose) < Math.abs(a - rawDose) ? b : a);
+            darboDose = `${rounded} µg`;
+            darboCalc = ` (0,75 µg/kg × ${weight} kg = ${rawDose} µg → ${rounded} µg)`;
+          }
+          epoTitle = '⬆️ Darbepoetin alfa — Startdosis / +50%';
+          epoDose  = weight ? `Aranesp® ${darboDose} s.c. 1×/2 Wochen` : 'Aranesp® ~50 µg s.c. 1×/2 Wochen';
+          epoDetail = `Hb ${hb} g/dl — ESA-Startdosis oder Eskalation (+50% nach > 90d).<br>
+            • Startdosis: 0,75 µg/kg 1×/2 Wochen s.c.${darboCalc}<br>
+            • Verfügbare Ampullengrößen: 10, 15, 20, 30, 40, 50, 60, 80, 100, 150 µg<br>
+            • Im Verlauf: Wochendosis × 4 monatlich (ca. 100 µg/Monat)<br>
+            • Äquivalenz: 6.000 IE Epoetin = 30 µg Aranesp pro Woche<br>
+            • Hb-Kontrolle nach 4 Wochen`;
+          epoCaveat = 'Cave: Vor ESA-Start Malignomausschluss, RR-Kontrolle, Eisenstatus optimieren.';
+        } else if (isHD) {
+          let epoAlfaDose = '—', epoCalc = '';
+          if (weight) {
+            const raw50 = Math.round(50 * weight / 1000) * 1000;
+            epoAlfaDose = `${Math.max(2000, Math.min(raw50, 8000)).toLocaleString('de-DE')} IE`;
+            epoCalc = ` (50 IE/kg × ${weight} kg = ${raw50.toLocaleString('de-DE')} IE)`;
+          }
+          epoTitle = '💉 Epoetin alfa — HD';
+          epoDose  = weight ? `Erypo®/Epoetin alfa ${epoAlfaDose} i.v. 3×/Woche post-HD` : 'Epoetin alfa 2.000–4.000 IE i.v. 3×/Woche';
+          epoDetail = `Hb ${hb} g/dl — ESA-Startdosis.${epoCalc}<br>
+            • Startdosis: 50 IE/kg 3×/Woche i.v. post-HD (ca. 2.000–4.000 IE)<br>
+            • Äquivalenz: 6.000 IE/Wo Epoetin ≈ 30 µg/Wo Darbepoetin<br>
+            • Hb-Kontrolle monatlich<br>
+            • Kein Hb-Anstieg nach 90d → +50%`;
+          epoCaveat = 'Cave: Hb > 11 → −25%; Hb > 13 → STOP. Ziel: 10–11 g/dl.';
+        } else {
+          // PD
+          let darboDose = '—';
+          if (weight) {
+            const rawDose = Math.round(0.75 * weight * 10) / 10;
+            const vials = [10, 15, 20, 30, 40, 50, 60, 80, 100, 150];
+            darboDose = vials.reduce((a, b) => Math.abs(b - rawDose) < Math.abs(a - rawDose) ? b : a) + ' µg';
+          }
+          epoTitle = '💉 Darbepoetin alfa — PD';
+          epoDose  = `Aranesp® ${darboDose || '~50 µg'} s.c. 1×/2 Wochen`;
+          epoDetail = `PD-Patient: s.c.-Gabe bevorzugt. Startdosis 0,75 µg/kg 1×/2 Wochen.<br>
+            Kontrolle nach 4 Wochen, Ziel Hb 10–11 g/dl.`;
+          epoCaveat = 'Cave: Eisenstatus optimieren vor ESA-Start.';
+        }
+      }
+    } else {
+      // Hb < 8
+      epoColor = 'red';
+      epoTitle = '🚨 Hb < 8 g/dl — Transfusion evaluieren';
+      epoDose  = 'Erythrozytenkonzentrat (EK) evaluieren + ESA';
+      epoDetail = `Hb ${hb} g/dl — EK-Gabe nach Klinik evaluieren (Hb < 8 → EK evaluieren).<br>
+        • EK bei symptomatischer Anämie (Dyspnoe, Angina, Bewusstseinsminderung)<br>
+        • ESA +50% (nach > 90 Tagen ohne Ansprechen)<br>
+        • Eisenstatus prüfen und optimieren<br>
+        • Ursache der ESA-Hyporesponsivität klären: Infektion, Inflammation, B12/Folsäure-Mangel?`;
+    }
+
+    cards += `<div class="dose-card ${epoColor}">
+      <h3>${epoTitle}</h3>
+      <div class="dose-main">${epoDose}</div>
+      <div class="dose-detail">${epoDetail}</div>
+      ${epoCaveat ? `<div class="dose-caveat">${epoCaveat}</div>` : ''}
+    </div>`;
+  }
+
+  // ── 3. BIKARBONAT ──────────────────────────────────────────────────────────
+  // Ziel: HCO₃⁻ > 22 mmol/l | Start-Schwelle (hausinternes Protokoll): < 19 mmol/l
+  // Produkte: Bicanorm® 1g / Nephrotrans® 840 mg, 3-6 Kps./d
+  if (bicarb !== null) {
+    let bicColor, bicTitle, bicDose, bicDetail, bicCaveat = '';
+    if (bicarb >= 22) {
+      bicColor = 'green';
+      bicTitle = '✅ Bikarbonat — im Zielbereich';
+      bicDose  = 'Keine Substitution erforderlich';
+      bicDetail = `HCO₃⁻ ${bicarb} mmol/l — Ziel > 22 mmol/l erreicht.<br>
+        Diätetisch: Obst und Gemüse fördern Bikarbonat (pflanzliche Säuren).<br>
+        Verlaufskontrolle alle 3–6 Monate.`;
+    } else if (bicarb >= 19) {
+      bicColor = 'orange';
+      bicTitle = '⏳ Bikarbonat — leicht erniedrigt';
+      bicDose  = 'Noch kein NaHCO₃ — Kontrolle in 4–6 Wochen';
+      bicDetail = `HCO₃⁻ ${bicarb} mmol/l — unter Ziel (> 22), aber über Schwelle (19 mmol/l).<br>
+        • Diät: mehr Obst/Gemüse, weniger tierisches Protein<br>
+        • NaHCO₃-Gabe erst starten wenn HCO₃⁻ &lt; 19 mmol/l (hausinternes Protokoll)<br>
+        • Kontrolle in 4–6 Wochen`;
+    } else if (bicarb >= 17) {
+      bicColor = 'orange';
+      bicTitle = '⚠️ NaHCO₃ starten — milde Azidose';
+      bicDose  = 'Bicanorm® 1 g (oder Nephrotrans® 840 mg) 3× 1–2 Kps./d';
+      bicDetail = `HCO₃⁻ ${bicarb} mmol/l — Therapieschwelle &lt; 19 mmol/l überschritten.<br>
+        • <strong>Bicanorm® 1 g</strong> oder <strong>Nephrotrans® 840 mg</strong>: 3× 1–2 Kapseln/d<br>
+        • Start mit 3× 1 Kps./d (= 3 g/d); bei Bedarf auf 3× 2 Kps./d steigern<br>
+        • Ziel: HCO₃⁻ > 22 mmol/l<br>
+        • Auch: Obst/Gemüse-reiche Diät unterstützend<br>
+        • Kontrolle nach 4–6 Wochen`;
+      bicCaveat = 'Cave: Natriumlast (Hypervolämie, Hypertonie) — bei Herzinsuffizienz engmaschig!';
+    } else {
+      bicColor = 'red';
+      bicTitle = '❗ NaHCO₃ — ausgeprägte Azidose';
+      bicDose  = 'Bicanorm® 1 g / Nephrotrans® 840 mg: 3× 2 Kps./d';
+      bicDetail = `HCO₃⁻ ${bicarb} mmol/l — deutliche renale Azidose.<br>
+        • <strong>Bicanorm® 1 g</strong> oder <strong>Nephrotrans® 840 mg</strong>: 3× 2 Kapseln/d (= 6 g/d)<br>
+        • Alternativ: Natriumzitrat-Lösung bei GI-Unverträglichkeit<br>
+        • Ziel: HCO₃⁻ > 22 mmol/l<br>
+        • Kontrolle nach 2–4 Wochen<br>
+        • Bei HCO₃⁻ &lt; 15 oder pH &lt; 7,1: i.v.-Ausgleich erwägen`;
+      bicCaveat = 'Cave: Bikarbonat-Therapie bei Laktat-Azidose nur wenn pH < 7,1. Kalzium-Substitution ggf. nötig.';
+    }
+    cards += `<div class="dose-card ${bicColor}">
+      <h3>${bicTitle}</h3>
+      <div class="dose-main">${bicDose}</div>
+      <div class="dose-detail">${bicDetail}</div>
+      ${bicCaveat ? `<div class="dose-caveat">${bicCaveat}</div>` : ''}
+    </div>`;
+  }
+
+  // ── 4. PHOSPHAT ────────────────────────────────────────────────────────────
+  // Ziel: "in Richtung" Normalwerte (< 1,45 mmol/l) | Phosphatarme Diät < 1.000 mg/d
+  // Binder nur bei dauerhafter Erhöhung
+  if (phosphat !== null) {
+    let phColor, phTitle, phDose, phDetail, phCaveat = '';
+    const caHigh = calcium && calcium > 2.55;
+    const caLow  = calcium && calcium < 2.1;
+
+    if (phosphat <= 1.45) {
+      phColor = 'green';
+      phTitle = '✅ Phosphat — im Zielbereich';
+      phDose  = 'Keine Phosphatbinder erforderlich';
+      phDetail = `Phosphat ${phosphat} mmol/l — Ziel &lt; 1,45 mmol/l.<br>
+        Phosphatarme Ernährung beibehalten (&lt; 1.000 mg/d). Meiden: Fertigprodukte (E338–341, E450), Cola, Schmelzkäse.`;
+    } else if (phosphat <= 1.7) {
+      phColor = 'orange';
+      phTitle = '⚠️ Phosphat — leicht erhöht';
+      phDose  = 'Phosphatarme Diät intensivieren';
+      phDetail = `Phosphat ${phosphat} mmol/l — über Ziel (&lt; 1,45 mmol/l).<br>
+        • Diätziel: &lt; 1.000 mg Phosphat/d<br>
+        • Meiden: Fleisch, Milch, Schmelzkäse, Cola, Schokolade, Soßenbinder, E-Produkte<br>
+        • Phosphatbinder nur bei dauerhafter Erhöhung — zunächst Diät-Kontrolle in 4–6 Wochen`;
+    } else if (phosphat <= 2.26) {
+      phColor = 'orange';
+      phTitle = '❗ Phosphat erhöht → Phosphatbinder';
+      let binder = '';
+      if (caHigh) {
+        binder = `<strong>Sevelamer</strong>: Renagel® (Kautablette) 3× 800–1.600 mg zu den Mahlzeiten<br>
+          oder Renvela® (Pulver) 1–3× 2,4 g — bevorzugt bei Hyperkalzämie (calciumfrei)`;
+      } else if (caLow) {
+        binder = `<strong>Calciumacetat</strong>: max. 1.500 mg/d (entspr. ~12 Tbl. à 126 mg Ca²⁺)<br>
+          Cave: generelle Dosisbegrenzung calciumhaltiger Binder!`;
+      } else {
+        binder = `<strong>Lanthanumcarbonat</strong>: Fosrenol® 3× 500–750–1.000 mg (kauen!)<br>
+          oder <strong>Sevelamer</strong>: Renagel® 3× 800 mg / Renvela® 1–3× 2,4 g`;
+      }
+      phDose = 'Phosphatbinder starten (zu den Mahlzeiten!)';
+      phDetail = `Phosphat ${phosphat} mmol/l — dauerhaft erhöht, Therapieindikation.<br>
+        • ${binder}<br>
+        • Phosphatarme Diät weiter (&lt; 1.000 mg/d)<br>
+        • Kontrolle nach 4–6 Wochen<br>
+        • Bei Gyrasehemmern oder Tetrazyklinen: alle Phosphatbinder pausieren!`;
+      phCaveat = 'Cave: Phosphatbinder immer zu den Mahlzeiten — sonst wirkungslos! Sevelamer kann Vitamin EDKA + Folsäure senken.';
+    } else {
+      phColor = 'red';
+      phTitle = '🔴 Phosphat > 2,26 mmol/l — maximale Therapie';
+      phDose  = 'Aluminiumhydroxid kurzzeitig + Sevelamer/Fosrenol';
+      phDetail = `Phosphat ${phosphat} mmol/l (> 7,0 mg/dl) — stark erhöht, KV-Risiko ↑↑.<br>
+        • Kurzzeitig: <strong>Aluminiumhydroxid</strong> (Phosphonorm® 300 mg): 3× 1–2/d für max. 4 Wochen<br>
+        • Dauerhaft: Sevelamer (Renagel® 3× 1.600 mg) + Lanthanumcarbonat (Fosrenol® 3× 1.000 mg)<br>
+        • Strenge Phosphat-Diät (&lt; 800 mg/d)<br>
+        • Bei Dialyse: Dialyseeffizienz / -dauer und Membranauswahl optimieren<br>
+        • Kontrolle nach 2–4 Wochen`;
+      phCaveat = 'Cave: Aluminiumhydroxid nur kurzzeitig (Aluminiumakkumulation)! Sevelamer → HCO₃⁻ mitüberwachen.';
+    }
+    cards += `<div class="dose-card ${phColor}">
+      <h3>${phTitle}</h3>
+      <div class="dose-main">${phDose}</div>
+      <div class="dose-detail">${phDetail}</div>
+      ${phCaveat ? `<div class="dose-caveat">${phCaveat}</div>` : ''}
+    </div>`;
+  }
+
+  // ── 5. PTH & Vitamin D ─────────────────────────────────────────────────────
+  // Normalbereich: 14–72 pg/ml | Ziel CKD: VitD 40–60 ng/ml
+  // ab GFR < 60: IMMER Cholecalciferol (Dekristol® 20.000 IE/Woche)
+  if (pth !== null || vitd !== null) {
+    // Vitamin D card first (always relevant for CKD)
+    if (gfrStage) {
+      const vitdTarget = isDialysis ? 30 : 40; // CKD: 40-60 ng/ml, allgemein: >30
+      const vitdOk = vitd !== null && vitd >= vitdTarget;
+      const vitdMissing = vitd === null;
+      let vdColor = vitdOk ? 'green' : (vitdMissing ? 'grey' : 'orange');
+      let vdDose = '';
+      if (vitdMissing) {
+        vdDose = '25-OH-Vitamin D noch nicht bestimmt — bitte nachmessen!';
+      } else if (vitd < 20) {
+        vdDose = 'Dekristol® 20.000 IE: 2×/Woche für 8 Wochen, dann 1×/Woche Erhaltung';
+      } else if (vitd < vitdTarget) {
+        vdDose = 'Dekristol® 20.000 IE: 1×/Woche (Erhaltung/Auffüllung)';
+      } else {
+        vdDose = 'Dekristol® 20.000 IE: 1×/Woche (Erhaltungsdosis beibehalten)';
+      }
+
+      let vdDetail = `25-OH-Vitamin D: ${vitd !== null ? vitd + ' ng/ml' : 'nicht bestimmt'}<br>
+        Ziel CKD: 40–60 ng/ml | Allgemein: &gt; 30 ng/ml<br>
+        Ab GFR &lt; 60: <strong>immer Vitamin D-Substitution</strong>.<br>
+        ${vitd !== null && vitd < 20 ? '• Mangel: <strong>20.000 IE 2×/Woche × 8 Wochen</strong>, dann 1×/Woche' :
+          vitd !== null && vitd < vitdTarget ? '• Insuffizienz: <strong>20.000 IE 1×/Woche</strong> (3.000 IE/d)' :
+          vitd !== null ? '• Zielbereich — Erhaltungsdosis 20.000 IE/Woche fortführen' :
+          '• Bitte 25-OH-VitD bestimmen!'}`;
+
+      cards += `<div class="dose-card ${vdColor}">
+        <h3>☀️ Vitamin D (25-OH)</h3>
+        <div class="dose-main">${vdDose}</div>
+        <div class="dose-detail">${vdDetail}</div>
+      </div>`;
+    }
+  }
+
+  if (pth !== null) {
+    // PTH staging targets (Normal 14-72 pg/ml, KDIGO)
+    const pthNormalHigh = 72;
+    // Stage-based upper limits for pre-dialysis (pragmatic)
+    const pthStageMax = { G1: 72, G2: 72, G3a: 100, G3b: 150, G4: 300, G5: 300 };
+    const pthMax = pthStageMax[stage] || pthNormalHigh;
+
+    let pthColor, pthTitle, pthDose, pthDetail, pthCaveat = '';
+
+    if (isDialysis) {
+      if (pth < 100) {
+        pthColor = 'orange';
+        pthTitle = '⬇️ PTH — zu niedrig (Dialyse)';
+        pthDose  = 'Aktives Vitamin D reduzieren / Cinacalcet pausieren';
+        pthDetail = `iPTH ${pth} pg/ml — unter Ziel (150–300 pg/ml Dialyse).<br>
+          Cave adynamische Knochenerkrankung (ABD)!<br>
+          • Calcitriol / Alfacalcidol / Paricalcitol pausieren oder Dosis ↓<br>
+          • Cinacalcet pausieren<br>
+          • Gesamt-Betrachtung: Ca, PO₄, AP, ggf. Knochenbiopsie`;
+      } else if (pth <= 300) {
+        pthColor = 'green';
+        pthTitle = '✅ PTH — Zielbereich (Dialyse 150–300)';
+        pthDose  = 'Aktuelle Therapie fortführen';
+        pthDetail = `iPTH ${pth} pg/ml — Ziel 150–300 pg/ml erreicht.<br>
+          Gesamtbetrachtung Ca + PO₄ + PTH. Kontrolle alle 3 Monate.`;
+      } else if (pth <= 600) {
+        pthColor = 'orange';
+        pthTitle = '⚠️ sHPT — erhöht (Dialyse)';
+        pthDose  = 'Cinacalcet (Mimpara®) 30 mg/d, Titration nach 4 Wo';
+        pthDetail = `iPTH ${pth} pg/ml — über Ziel 150–300 pg/ml.<br>
+          Stufentherapie:<br>
+          1. Phosphat + Ca normalisieren<br>
+          2. <strong>Cinacalcet (Mimpara®) 30 mg/d</strong> → Titration: 60 → meist 60 mg/d; bei Ca/PO₄-Anstieg aktives VitD absetzen<br>
+          3. <strong>Etelcalcetid (Parsabiv®)</strong> 5 mg 3×/Woche i.v. am Ende HD (Ca &gt; 2,08 mmol/l!)<br>
+          4. <strong>Paricalcitol (Zemplar®)</strong> 5 µg i.v./HD oder 2 µg po 3×/Wo<br>
+          5. Alfacalcidol (Einsalpha®) 1 µg i.v./HD`;
+        pthCaveat = 'Cave Cinacalcet: Hypokalzämie (UAW), Übelkeit. Etelcalcetid: Ca > 2,08 mmol/l Voraussetzung.';
+      } else {
+        pthColor = 'red';
+        pthTitle = '🔴 sHPT — schwer erhöht (Dialyse)';
+        pthDose  = 'Cinacalcet 60–90 mg/d oder Etelcalcetid 5 mg 3×/Wo i.v.';
+        pthDetail = `iPTH ${pth} pg/ml — stark erhöht, Parathyreoidektomie-Grenze nähert sich!<br>
+          • Maximaldosis Cinacalcet anstreben (60–90–180 mg/d unter Ca-Kontrolle)<br>
+          • Etelcalcetid (Parsabiv®) 5 mg 3×/Woche i.v. als Alternative<br>
+          • Bei iPTH &gt; 800 + therapierefraktär: <strong>Parathyreoidektomie</strong> erwägen<br>
+          • Bildgebung: Halssonographie + Sestamibi-Szintigraphie`;
+        pthCaveat = 'Cave: Parathyreoidektomie bei therapierefraktärem sHPT > 800 pg/ml — Hungry Bone Syndrom post-Op möglich.';
+      }
+    } else {
+      // Prä-Dialyse
+      if (pth <= pthMax) {
+        pthColor = 'green';
+        pthTitle = `✅ PTH — Zielbereich (${stage || 'CKD'})`;
+        pthDose  = 'Keine spezifische PTH-Therapie';
+        pthDetail = `iPTH ${pth} pg/ml — Normalbereich 14–72 pg/ml, tolerierter Bereich für ${stage}: bis ${pthMax} pg/ml.<br>
+          Zuerst Hyperphosphatämie und VitD-Mangel behandeln.<br>
+          Kontrolle alle 6–12 Monate.`;
+      } else {
+        pthColor = 'orange';
+        pthTitle = `⚠️ PTH erhöht — sHPT (${stage || 'CKD'})`;
+        const vitdDeficient = vitd !== null && vitd < 40;
+        const vitdUnknown = vitd === null;
+
+        if (vitdUnknown || vitdDeficient) {
+          pthDose = 'Schritt 1: Cholecalciferol (Dekristol® 20.000) — VitD auffüllen';
+          pthDetail = `iPTH ${pth} pg/ml — über Ziel (${pthMax} pg/ml für ${stage}).<br>
+            ${vitdUnknown ? '<strong>25-OH-Vit D nicht bestimmt — bitte nachmessen!</strong>' : `25-OH-Vit D ${vitd} ng/ml — unzureichend (Ziel 40–60 ng/ml).`}<br>
+            <strong>Stufentherapie:</strong><br>
+            1. <strong>Phosphatarme Diät + Phosphatbinder</strong> (PO₄ normalisieren)<br>
+            2. <strong>Cholecalciferol (Dekristol® 20.000 IE)</strong>:
+              ${vitd !== null && vitd < 20 ? '2×/Woche × 8 Wochen (Mangel), dann 1×/Woche' : '1×/Woche (Erhaltung/Auffüllung)'}<br>
+              Ziel: 25-OH-VitD 40–60 ng/ml<br>
+            3. PTH-Kontrolle nach 3 Monaten<br>
+            4. Bei schwerem/progredientem sHPT dann:<br>
+              <strong>Extended-Release Calcifediol (Rayaldee® 30 µg/d)</strong>, Ziel &gt; 50 ng/ml<br>
+              oder <strong>Calcitriol (Decostriol® 0,25–0,5 µg)</strong> 3×/Woche po`;
+        } else {
+          pthDose = 'Aktives Vitamin D: Calcitriol (Decostriol®) 0,25 µg 3×/Woche';
+          pthDetail = `iPTH ${pth} pg/ml — über Ziel. 25-OH-VitD ${vitd} ng/ml — ausreichend.<br>
+            Aktives Vit D nur bei schwerem oder progredientem sHPT prä-Dialyse!<br>
+            • <strong>Calcitriol (Decostriol®)</strong> 0,25–0,5 µg 3×/Woche po<br>
+            • Alternativ: Extended-Release Calcifediol (Rayaldee®) 30 µg/d<br>
+            • Ca + PO₄ nach 4 Wochen kontrollieren (Hyperkalzämie-Risiko!)<br>
+            • PTH-Kontrolle nach 3 Monaten`;
+        }
+        pthCaveat = 'Cave: Aktives VitD nur wenn Ca < 2,55 mmol/l und Phosphat kontrolliert. Hypercalcämie unbedingt vermeiden!';
+      }
+    }
+    cards += `<div class="dose-card ${pthColor}">
+      <h3>${pthTitle}</h3>
+      <div class="dose-main">${pthDose}</div>
+      <div class="dose-detail">${pthDetail}</div>
+      ${pthCaveat ? `<div class="dose-caveat">${pthCaveat}</div>` : ''}
+    </div>`;
+  }
+
+  panel.innerHTML = `<div class="mbd-grid">${cards}</div>`;
+}
+
+// Initial matrix render
+buildMatrix(-1, -1);
+</script>
+</body>
+</html>
