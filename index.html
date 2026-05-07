@@ -1702,12 +1702,12 @@ window.goHome = function(e){
       <div class="form-row">
         <div class="form-group">
           <label>Kreatinin</label>
-          <input type="number" id="creatinine" placeholder="z.B. 1.8" step="0.01" min="0" oninput="calculate()">
+          <input type="number" id="creatinine" placeholder="z.B. 1.8" step="0.01" min="0" max="20" oninput="calculate()">
           <span class="unit">mg/dl</span>
         </div>
         <div class="form-group">
           <label>Cystatin C</label>
-          <input type="number" id="cystatinc" placeholder="z.B. 1.4" step="0.01" min="0" oninput="calculate()">
+          <input type="number" id="cystatinc" placeholder="z.B. 1.4" step="0.01" min="0" max="15" oninput="calculate()">
           <span class="unit">mg/l (optional)</span>
         </div>
       </div>
@@ -16236,6 +16236,28 @@ function egfrCombined(age, sex, scr, cys) {
   return Math.round(egfr * 10) / 10;
 }
 
+// ===== BIS-FORMELN — Berlin Initiative Study (Schaeffner ES et al., JASN 2012;23:2051–61) =====
+// Validiert für Patienten ≥ 70 Jahre — bei CKD-EPI Überschätzung der GFR im Alter (Sarkopenie)
+// Kreatinin in mg/dl (IDMS), Cystatin C in mg/l, Alter in Jahren
+function egfrBIS1(age, sex, scr) {
+  if (!scr || !age || !sex || age < 70) return null;
+  if (scr <= 0 || scr > 20) return null;
+  // BIS1: 3736 × Krea^(−0.87) × Alter^(−0.95) × [0.82 wenn weiblich]
+  let sexMult = sex === 'female' ? 0.82 : 1.0;
+  let egfr = 3736 * Math.pow(scr, -0.87) * Math.pow(age, -0.95) * sexMult;
+  return Math.round(egfr * 10) / 10;
+}
+
+function egfrBIS2(age, sex, scr, cys) {
+  if (!scr || !cys || !age || !sex || age < 70) return null;
+  if (scr <= 0 || scr > 20) return null;
+  if (cys <= 0 || cys > 15) return null;
+  // BIS2: 767 × CysC^(−0.61) × Krea^(−0.40) × Alter^(−0.57) × [0.87 wenn weiblich]
+  let sexMult = sex === 'female' ? 0.87 : 1.0;
+  let egfr = 767 * Math.pow(cys, -0.61) * Math.pow(scr, -0.40) * Math.pow(age, -0.57) * sexMult;
+  return Math.round(egfr * 10) / 10;
+}
+
 function getGFRStage(egfr) {
   if (egfr === null) return null;
   if (egfr > 105) return { stage: 'G1', sub: '>105', label: 'Normal (hoch)', row: 0 };
@@ -16364,9 +16386,37 @@ function calculate() {
   const eGFR_cr  = egfrCreatinine(age, sex, scr);
   const eGFR_cys = egfrCystatinC(age, sex, cys);
   const eGFR_comb = egfrCombined(age, sex, scr, cys);
+  // BIS-Formeln (Berlin Initiative Study) — nur bei Alter ≥ 70 J.
+  const eGFR_bis1 = egfrBIS1(age, sex, scr);
+  const eGFR_bis2 = egfrBIS2(age, sex, scr, cys);
+  const useBIS = age >= 70;
 
-  // Primary eGFR: combined if cystatin available, else creatinine
-  const primaryEGFR = eGFR_comb || eGFR_cr;
+  // Staging-eGFR: Default = beste verfügbare CKD-EPI; bei ≥70 J. wenn vom User gewählt → BIS2/BIS1
+  // Auswahl aus Dropdown (falls schon gerendert, sonst Default)
+  const stagingChoice = (document.getElementById('staging-egfr-source') || {}).value || 'auto';
+  let primaryEGFR, primaryEGFRSource;
+  if (stagingChoice === 'bis2' && eGFR_bis2 !== null) {
+    primaryEGFR = eGFR_bis2; primaryEGFRSource = 'BIS2';
+  } else if (stagingChoice === 'bis1' && eGFR_bis1 !== null) {
+    primaryEGFR = eGFR_bis1; primaryEGFRSource = 'BIS1';
+  } else if (stagingChoice === 'cr') {
+    primaryEGFR = eGFR_cr; primaryEGFRSource = 'CKD-EPI Krea';
+  } else if (stagingChoice === 'cys' && eGFR_cys !== null) {
+    primaryEGFR = eGFR_cys; primaryEGFRSource = 'CKD-EPI CysC';
+  } else if (stagingChoice === 'comb' && eGFR_comb !== null) {
+    primaryEGFR = eGFR_comb; primaryEGFRSource = 'CKD-EPI Krea+CysC';
+  } else {
+    // auto: bei ≥70 BIS2 bevorzugt (wenn Cys vorhanden), sonst BIS1; sonst CKD-EPI
+    if (useBIS && eGFR_bis2 !== null) {
+      primaryEGFR = eGFR_bis2; primaryEGFRSource = 'BIS2 (auto)';
+    } else if (useBIS && eGFR_bis1 !== null) {
+      primaryEGFR = eGFR_bis1; primaryEGFRSource = 'BIS1 (auto)';
+    } else if (eGFR_comb !== null) {
+      primaryEGFR = eGFR_comb; primaryEGFRSource = 'CKD-EPI Krea+CysC (auto)';
+    } else {
+      primaryEGFR = eGFR_cr; primaryEGFRSource = 'CKD-EPI Krea (auto)';
+    }
+  }
   const gfrStage = getGFRStage(primaryEGFR);
   const albStage = getAlbStage(uacr);
 
@@ -16405,11 +16455,52 @@ function calculate() {
 
   resHTML += '</div>';
 
+  // ── BIS-Formeln (Alter ≥ 70 J., Berlin Initiative Study) ──────────────
+  if (useBIS) {
+    resHTML += `<div class="alert-box" style="background:#e3f2fd;border-left:4px solid #1976d2;color:#0d47a1;margin:8px 0;padding:10px 14px;font-size:.86rem;">
+      <strong>👴 Alter ≥ 70 J. — BIS-Formel empfohlen</strong><br>
+      <span style="font-size:.78rem;color:#37474f;">CKD-EPI überschätzt die GFR im Alter (Sarkopenie, niedriger Muskelanteil). BIS2 (Krea + CysC) ist Goldstandard bei ≥ 70 J.; BIS1 wenn nur Krea verfügbar. Quelle: Schaeffner ES et al., JASN 2012;23:2051–61.</span>
+    </div>`;
+    resHTML += `<div class="egfr-results" style="background:#f3f8fc;border:1px dashed #1976d2;border-radius:8px;padding:8px;margin-bottom:8px;">`;
+    resHTML += `<div class="egfr-box ${eGFR_bis1 !== null ? 'primary' : ''}" style="${eGFR_bis1 !== null ? 'border-color:#1976d2;' : 'opacity:.5;'}">
+      <div class="egfr-value">${eGFR_bis1 !== null ? eGFR_bis1 : '—'}</div>
+      <div class="egfr-label">eGFR BIS1</div>
+      <div class="egfr-sub">Berlin Initiative · Krea</div>
+    </div>`;
+    resHTML += `<div class="egfr-box ${eGFR_bis2 !== null ? 'primary' : ''}" style="${eGFR_bis2 !== null ? 'border-color:#1976d2;background:#e1f5fe;' : 'opacity:.5;'}">
+      <div class="egfr-value">${eGFR_bis2 !== null ? eGFR_bis2 : '—'}</div>
+      <div class="egfr-label">eGFR BIS2 ⭐</div>
+      <div class="egfr-sub">${eGFR_bis2 !== null ? 'Berlin Initiative · Krea+CysC' : 'Cystatin C nicht eingegeben'}</div>
+    </div>`;
+    resHTML += '</div>';
+  }
+
+  // ── Staging-Quelle auswählen ──────────────────────────────────────────
+  resHTML += `<div style="margin:8px 0;padding:8px 12px;background:#fafafa;border-radius:6px;font-size:.82rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+    <span style="font-weight:600;color:#37474f;">Staging-eGFR:</span>
+    <select id="staging-egfr-source" onchange="calculate()" style="padding:4px 8px;border-radius:4px;border:1px solid #b0bec5;font-size:.82rem;">
+      <option value="auto" ${stagingChoice === 'auto' ? 'selected' : ''}>Auto${useBIS ? ' (≥70 → BIS2/BIS1)' : ' (CKD-EPI)'}</option>
+      ${useBIS && eGFR_bis2 !== null ? `<option value="bis2" ${stagingChoice === 'bis2' ? 'selected' : ''}>BIS2 (Krea+CysC)</option>` : ''}
+      ${useBIS && eGFR_bis1 !== null ? `<option value="bis1" ${stagingChoice === 'bis1' ? 'selected' : ''}>BIS1 (Krea)</option>` : ''}
+      <option value="cr" ${stagingChoice === 'cr' ? 'selected' : ''}>CKD-EPI Kreatinin</option>
+      ${eGFR_cys !== null ? `<option value="cys" ${stagingChoice === 'cys' ? 'selected' : ''}>CKD-EPI Cystatin C</option>` : ''}
+      ${eGFR_comb !== null ? `<option value="comb" ${stagingChoice === 'comb' ? 'selected' : ''}>CKD-EPI Krea+CysC</option>` : ''}
+    </select>
+    <span style="color:#607d8b;font-size:.78rem;">→ Aktuell: <strong>${primaryEGFRSource} = ${primaryEGFR ?? '—'} ml/min/1,73 m²</strong></span>
+  </div>`;
+
   // Discordance warning
   if (eGFR_cr && eGFR_cys) {
     let diff = Math.abs(eGFR_cr - eGFR_cys);
     if (diff > 15) {
       resHTML += `<div class="alert-box alert-warning">⚠️ Diskordanz zwischen eGFR<sub>Krea</sub> (${eGFR_cr}) und eGFR<sub>Cys</sub> (${eGFR_cys}) &gt; 15 ml/min — kombinierter Wert bevorzugen. Mögliche Ursachen: Muskelmasse, Ernährung, Schwangerschaft.</div>`;
+    }
+  }
+  // BIS vs. CKD-EPI Diskordanz-Warnung bei ≥ 70 J.
+  if (useBIS && eGFR_bis2 !== null && eGFR_comb !== null) {
+    let bisDiff = Math.abs(eGFR_bis2 - eGFR_comb);
+    if (bisDiff > 10) {
+      resHTML += `<div class="alert-box alert-warning" style="background:#fff3e0;border-left:4px solid #ef6c00;">⚠️ BIS2 (${eGFR_bis2}) und CKD-EPI Krea+CysC (${eGFR_comb}) divergieren um ${bisDiff.toFixed(1)} ml/min — bei Alter ≥ 70 J. ist <strong>BIS2 valider</strong>. CKD-EPI überschätzt typischerweise.</div>`;
     }
   }
 
