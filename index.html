@@ -1653,12 +1653,12 @@ window.goHome = function(e){
       <div class="form-row">
         <div class="form-group">
           <label>Körpergewicht</label>
-          <input type="number" id="weight" placeholder="z.B. 75" min="30" max="250">
+          <input type="number" id="weight" placeholder="z.B. 75" min="30" max="250" oninput="ckdPushLive()">
           <span class="unit">kg (für EPO-Dosierung, BMI)</span>
         </div>
         <div class="form-group">
           <label>Körpergröße</label>
-          <input type="number" id="height" placeholder="z.B. 175" step="1" min="100" max="250">
+          <input type="number" id="height" placeholder="z.B. 175" step="1" min="100" max="250" oninput="ckdPushLive()">
           <span class="unit">cm (für BMI, optional)</span>
         </div>
       </div>
@@ -1720,7 +1720,7 @@ window.goHome = function(e){
         </div>
         <div class="form-group">
           <label>Kalium</label>
-          <input type="number" id="kalium" placeholder="z.B. 4.8" step="0.1" min="1" max="9">
+          <input type="number" id="kalium" placeholder="z.B. 4.8" step="0.1" min="1" max="9" oninput="ckdPushLive()">
           <span class="unit">mmol/l (Finerenon, Spiro, RAAS)</span>
         </div>
       </div>
@@ -1728,12 +1728,12 @@ window.goHome = function(e){
       <div class="form-row">
         <div class="form-group">
           <label>pH (venös/arteriell)</label>
-          <input type="number" id="ph" placeholder="z.B. 7.32" step="0.01" min="6.8" max="7.8">
+          <input type="number" id="ph" placeholder="z.B. 7.32" step="0.01" min="6.8" max="7.8" oninput="ckdPushLive()">
           <span class="unit">pH</span>
         </div>
         <div class="form-group">
           <label>Bikarbonat (HCO₃⁻)</label>
-          <input type="number" id="bicarb" placeholder="z.B. 20" step="0.5" min="0">
+          <input type="number" id="bicarb" placeholder="z.B. 20" step="0.5" min="0" oninput="ckdPushLive()">
           <span class="unit">mmol/l</span>
         </div>
       </div>
@@ -1751,9 +1751,9 @@ window.goHome = function(e){
         <div class="form-group">
           <label>Praxis-RR <span style="font-weight:400; color:#607d8b;">(Office BP)</span></label>
           <div style="display:flex; align-items:center; gap:6px;">
-            <input type="number" id="bp_sys" placeholder="sys" min="60" max="280" style="flex:1;">
+            <input type="number" id="bp_sys" placeholder="sys" min="60" max="280" style="flex:1;" oninput="ckdPushLive()">
             <span style="font-weight:700; color:#455a64; font-size:1.1rem;">/</span>
-            <input type="number" id="bp_dia" placeholder="dia" min="30" max="180" style="flex:1;">
+            <input type="number" id="bp_dia" placeholder="dia" min="30" max="180" style="flex:1;" oninput="ckdPushLive()">
           </div>
           <span class="unit">mmHg</span>
           <div style="font-size:.73rem; color:#78909c; margin-top:3px; line-height:1.4;">
@@ -1763,9 +1763,9 @@ window.goHome = function(e){
         <div class="form-group">
           <label>Heim-RR <span style="font-weight:400; color:#607d8b;">(HBPM)</span> <span style="color:#90a4ae; font-weight:400;">(optional)</span></label>
           <div style="display:flex; align-items:center; gap:6px;">
-            <input type="number" id="bp_home_sys" placeholder="sys" min="60" max="280" style="flex:1;">
+            <input type="number" id="bp_home_sys" placeholder="sys" min="60" max="280" style="flex:1;" oninput="ckdPushLive()">
             <span style="font-weight:700; color:#455a64; font-size:1.1rem;">/</span>
-            <input type="number" id="bp_home_dia" placeholder="dia" min="30" max="180" style="flex:1;">
+            <input type="number" id="bp_home_dia" placeholder="dia" min="30" max="180" style="flex:1;" oninput="ckdPushLive()">
           </div>
           <span class="unit">mmHg</span>
           <div style="font-size:.73rem; color:#78909c; margin-top:3px; line-height:1.4;">
@@ -2084,7 +2084,7 @@ window.goHome = function(e){
       <div class="form-row">
         <div class="form-group">
           <label>Dialysestatus</label>
-          <select id="dialysis_status">
+          <select id="dialysis_status" onchange="ckdPushLive()">
             <option value="praedialysis">Prä-Dialyse</option>
             <option value="haemodialysis">Hämodialyse (HD)</option>
             <option value="peritoneal">Peritonealdialyse (PD)</option>
@@ -2094,13 +2094,13 @@ window.goHome = function(e){
       </div>
 
       <!-- Hidden fields kept for backward-compat with generateCKDMBDPanel -->
-      <input type="hidden" id="hb">
-      <input type="hidden" id="ferritin">
-      <input type="hidden" id="tsat">
-      <input type="hidden" id="pth">
-      <input type="hidden" id="phosphat">
-      <input type="hidden" id="calcium">
-      <input type="hidden" id="vitd">
+      <input type="hidden" id="hb" oninput="ckdPushLive()">
+      <input type="hidden" id="ferritin" oninput="ckdPushLive()">
+      <input type="hidden" id="tsat" oninput="ckdPushLive()">
+      <input type="hidden" id="pth" oninput="ckdPushLive()">
+      <input type="hidden" id="phosphat" oninput="ckdPushLive()">
+      <input type="hidden" id="calcium" oninput="ckdPushLive()">
+      <input type="hidden" id="vitd" oninput="ckdPushLive()">
 
       <div class="form-group" style="margin-bottom:12px;">
         <label>Vordiagnosen <span style="font-weight:400;color:#90a4ae;">(eine pro Zeile — erscheinen nach nephrol. Diagnosen im Arztbrief)</span></label>
@@ -16494,6 +16494,8 @@ function calculate() {
 
   // Generate texts
   generateTexts(age, sex, scr, cys, uacr, bpSys, bpDia, extraInfo, eGFR_cr, eGFR_cys, eGFR_comb, primaryEGFR, gfrStage, albStage, riskInfo, checkedDiseases, { hb, ferritin, tsat, pth, bicarb, phosphat, calcium, kalium, ph }, vordiagnosen);
+  // Live-Sync: Patientendaten in alle anderen Tabs pushen
+  if (typeof window.ckdPushLive === 'function') window.ckdPushLive();
 }
 
 // ===== TEXT GENERATION =====
@@ -18293,6 +18295,55 @@ window.clearAllTabs = clearAllTabs;
      SHARED TAB SWITCHING
      ============================================================ -->
 <script>
+
+// ── Live-Sync: CKD-Tab → alle anderen Tabs ──────────────────
+(function(){
+  var _pushTimer = null;
+  window.ckdPushLive = function() {
+    clearTimeout(_pushTimer);
+    _pushTimer = setTimeout(function() {
+      var fns = [
+        window.diabAutoImport, window.htnAutoImport, window.lipAutoImport,
+        window.mbdAutoImport, window.vhfAutoImport, window.tahAutoImport,
+        window.akAutoImport, window.akiAutoImport, window.gichtAutoImport,
+        window.medcheckAutoImport, window.hiAutoImport, window.abxAutoImport,
+        window.hwiAutoImport, window.sdAutoImport, window.elekAutoImport,
+        window.gnAutoImport, window.nsAutoImport, window.tmaAutoImport
+      ];
+      fns.forEach(function(fn){ if (typeof fn === 'function') { try { fn(); } catch(e){} } });
+    }, 600);
+  };
+})();
+
+window.lipAutoImport = function() {
+  const ckdAge = document.getElementById('age')?.value;
+  const ckdSex = (function(){ var r = document.querySelector('input[name="sex"]:checked'); return r ? r.value : null; })();
+  if (ckdAge) {
+    const el = document.getElementById('lip-age');
+    if (el) el.value = ckdAge;
+  }
+  if (ckdSex) {
+    const el = document.getElementById(ckdSex === 'male' ? 'lip-g-male' : 'lip-g-female');
+    if (el) el.checked = true;
+  }
+  const ckdCreat = document.getElementById('creatinine')?.value;
+  if (ckdCreat) {
+    const el = document.getElementById('lip-creatinine');
+    if (el) {
+      el.value = ckdCreat;
+      if (typeof updateCKDFromCreat === 'function') updateCKDFromCreat();
+    }
+  }
+  const ckdUacr = document.getElementById('uacr')?.value;
+  if (ckdUacr) {
+    const el = document.getElementById('lip-uacr-input');
+    if (el) {
+      el.value = ckdUacr;
+      if (typeof updateAlbuminClass === 'function') updateAlbuminClass();
+    }
+  }
+  if (typeof lipAutoSelectTherapy === 'function') lipAutoSelectTherapy();
+};
 
 function switchToolTab(tabName) {
   document.getElementById('tab-ckd').style.display = tabName === 'ckd' ? 'block' : 'none';
