@@ -4496,15 +4496,18 @@ if (document.readyState === 'loading') {
       <h2>📋 Zielwerte Anämie &amp; MBD</h2>
       <div class="electro-grid">
         <div class="electro-card">
-          <h3>🩸 Hämoglobin</h3>
-          <div class="electro-row"><span>Hb-Ziel (CKD)</span><span class="electro-val normal">10 – 12 g/dl</span></div>
-          <div class="electro-row"><span>ESA starten ab</span><span class="electro-val warning">Hb &lt; 10 g/dl</span><span class="electro-action">Nach Eisenoptimierung</span></div>
-          <div class="electro-row"><span>Eisen i.v. ab</span><span class="electro-val warning">TSAT &lt; 25%</span><span class="electro-action">Ferritin &lt; 300 ng/ml (Dialyse)</span></div>
+          <h3>🩸 Hämoglobin &amp; Eisen — KDIGO 2026</h3>
+          <div class="electro-row"><span>Hb-Ziel (ESA)</span><span class="electro-val normal">10–11,5 g/dl</span><span class="electro-action">max. 11,5 g/dl · Rec 3.3.1 (1D)</span></div>
+          <div class="electro-row"><span>ESA starten (HD/PD)</span><span class="electro-val warning">Hb &le; 9–10 g/dl</span><span class="electro-action">Rec 3.2.1; Non-HD: individualisiert</span></div>
+          <div class="electro-row"><span>Eisen Non-HD: Start</span><span class="electro-val warning">Ferritin &lt;100 (TSAT &lt;40%)</span><span class="electro-action">oder Ferritin 100–300 &amp; TSAT &lt;25%</span></div>
+          <div class="electro-row"><span>Eisen HD: Start</span><span class="electro-val warning">Ferritin &le;500 &amp; TSAT &le;30%</span><span class="electro-action">i.v. Eisen bevorzugt · Rec 2.2</span></div>
+          <div class="electro-row"><span>Eisen Stop</span><span class="electro-val danger">Ferritin &ge;700 oder TSAT &ge;40%</span><span class="electro-action">alle Patienten</span></div>
           <hr style="margin:8px 0;border-color:#f0f0f0;">
           <div style="font-size:.75rem;color:#607d8b;">
-            Ferritin-Ziel prä-Dialyse: 100–500 ng/ml<br>
-            Ferritin-Ziel Dialyse: 200–700 ng/ml (PIVOTAL)<br>
-            TSAT-Ziel: &gt;20% (prä-D) / 30–40% (HD)
+            Ferritin-Ziel (Non-HD): Start bei &lt;100 (TSAT &lt;40%) oder 100–300 (TSAT &lt;25%); Stop &gt;700 ng/ml<br>
+            Ferritin-Ziel HD: Start bei &le;500 (TSAT &le;30%); Stop &gt;700 ng/ml<br>
+            TSAT: &lt;40% (Non-HD) / &le;30% (HD) → Eisengabe; &ge;40% → Stop<br>
+            HIF-PHI bei ESA-Hyporesponsivität (Roxadustat, Daprodustat) · Rec 3.7.2
           </div>
         </div>
         <div class="electro-card">
@@ -16867,7 +16870,7 @@ function generateTexts(age, sex, scr, cys, uacr, bpSys, bpDia, extraInfo,
     // ── KOMPLIKATIONEN (CKD-MBD, Anämie) ────────────────────────────────
     if (stage === 'G3b' || stage === 'G4' || stage === 'G5') {
       recAdd('mbd', 'CKD-MBD: phosphatarme Diät (< 1.000 mg/d); Phosphatbinder bei dauerhafter Erhöhung (> 1,45 mmol/l); Dekristol® 20.000 IE/Woche (ab GFR < 60 immer!)');
-      recAdd('mbd', 'Renale Anämie: Eisenstatus (Ferritin, TSAT) prüfen; Ziel Ferritin 100–500, TSAT > 20%; Ferinject® i.v. bei Mangel; ESA (Darbepoetin alfa) bei Hb < 10 g/dl nach Eisenoptimierung — Ziel Hb 10–11 g/dl');
+      recAdd('mbd', 'Renale Anämie (KDIGO 2026): Eisenstatus prüfen (Ferritin, TSAT); Non-HD: Start Eisen bei Ferritin <100 (TSAT <40%) oder 100–300 (TSAT <25%); Stop bei ≥700 ng/ml oder TSAT ≥40%; ESA individualisiert — Ziel Hb 10–11,5 g/dl (max. 11,5 g/dl, Rec 3.3.1); bei ESA-Hyporesponsivität nach 90d: HIF-PHI erwägen (Rec 3.7.2)');
     }
 
     // ── NIERENERSATZTHERAPIE ────────────────────────────────────────────
@@ -17623,23 +17626,38 @@ function generateCKDMBDPanel({ weight, dialysisSt, hb, ferritin, tsat, pth, bica
   let cardsAcid    = '';
 
   // ── 1. EISEN (Ferinject) ──────────────────────────────────────────────────
-  // Zielwerte: CKD: Ferritin 100-500, TSAT > 20% | Dialyse: Ferritin 200-700, TSAT 30-40%
-  // Safety cutoff PIVOTAL: Ferritin < 700 UND TSAT < 40%
+  // KDIGO 2026 Zielwerte:
+  //   Non-HD/PD: Start bei Ferritin <100 (TSAT <40%) ODER Ferritin 100–300 (TSAT <25%); Stop >700 oder TSAT ≥40%
+  //   HD: Start bei Ferritin ≤500 UND TSAT ≤30%; Stop >700 oder TSAT ≥40%
   if (ferritin !== null || tsat !== null) {
-    // Determine targets based on dialysis status
-    const ferMinTarget  = isDialysis ? 200  : 100;
-    const ferMaxTarget  = isDialysis ? 700  : 500;
-    const tsatMinTarget = isDialysis ? 30   : 20;
-    const tsatMaxTarget = isDialysis ? 40   : 40;
+    // Display targets (for detail texts)
+    const ferMinTarget  = isHD ? 0   : 100;   // HD: "Eisengabe bei ≤500"
+    const ferMaxTarget  = 700;                 // Stop-Schwelle einheitlich
+    const tsatMinTarget = isHD ? 30  : 25;    // Stop-TSAT: ≥40% für alle; Startindikation unterschiedlich
+    const tsatMaxTarget = 40;
 
-    const ferOk    = (ferritin === null || (ferritin >= ferMinTarget && ferritin <= ferMaxTarget)) &&
-                     (tsat === null || tsat >= tsatMinTarget);
+    // ferOver: Safety Cutoff — Ferritin ≥700 ODER TSAT ≥40% (KDIGO 2026, identisch mit PIVOTAL)
     const ferOver  = (ferritin !== null && ferritin >= 700) || (tsat !== null && tsat >= 40);
-    // IV iron indication: Ferritin < 100(200) OR TSAT < 20% AND Ferritin < 300
-    const ivIron   = (ferritin !== null && ferritin < (isDialysis ? 200 : 100)) ||
-                     (tsat !== null && tsat < 20 && (ferritin === null || ferritin < 300));
-    const ivIronHighDose = (ferritin !== null && ferritin < (isDialysis ? 100 : 80)) ||
-                           (tsat !== null && tsat < 15);
+
+    // ivIron: Eisengabe-Indikation nach KDIGO 2026
+    let ivIron;
+    if (isHD) {
+      // HD: Start wenn Ferritin ≤500 UND TSAT ≤30% (Rec 2.2)
+      ivIron = (ferritin !== null && tsat !== null)
+        ? (ferritin <= 500 && tsat <= 30)
+        : (ferritin !== null ? ferritin <= 500 : tsat !== null ? tsat <= 30 : false);
+    } else {
+      // Non-HD / PD: Start wenn (Ferritin <100 UND TSAT <40%) ODER (Ferritin 100–300 UND TSAT <25%) (Rec 2.4)
+      ivIron = (ferritin !== null && tsat !== null)
+        ? ((ferritin < 100 && tsat < 40) || (ferritin >= 100 && ferritin < 300 && tsat < 25))
+        : (ferritin !== null ? ferritin < 100 : tsat !== null ? tsat < 40 : false);
+    }
+
+    // ivIronHighDose: schwerer systemischer Eisenmangel — Ferritin <30 UND TSAT <20%
+    const ivIronHighDose = (ferritin !== null && ferritin < 30) && (tsat !== null && tsat < 20);
+
+    // ferOk: kein Mangel, kein Überschuss
+    const ferOk = !ferOver && !ivIron;
 
     // Iron deficit formula: [Soll-Hb – Ist-Hb] × KG × 2,4 + 500 mg
     let eisenDefizit = null;
@@ -17656,49 +17674,62 @@ function generateCKDMBDPanel({ weight, dialysisSt, hb, ferritin, tsat, pth, bica
     if (ferOver) {
       eisenColor = 'grey';
       eisenTitle = '🚫 Eisen — Safety Cutoff überschritten';
-      eisenDose  = 'Keine Eisengabe (PIVOTAL Safety Cutoff)';
+      eisenDose  = 'Keine Eisengabe (KDIGO 2026 / PIVOTAL Safety Cutoff)';
       eisenDetail = `Ferritin ${ferritin ?? '?'} ng/ml / TSAT ${tsat ?? '?'}%<br>
-        Safety Cutoff [PIVOTAL-Studie]: Ferritin ≥ 700 ng/ml oder TSAT ≥ 40%.<br>
-        Keine weitere Eisenzufuhr — Überladungsrisiko, oxidativer Stress, kardiotoxisch.`;
-    } else if (!ivIron && ferOk) {
+        Safety Cutoff [KDIGO 2026 / PIVOTAL]: Ferritin &ge; 700 ng/ml oder TSAT &ge; 40%.<br>
+        Keine weitere Eisenzufuhr — Überladungsrisiko, oxidativer Stress, kardiotoxisch.<br>
+        Kontrolle Ferritin + TSAT: ${isHD ? 'alle 1–3 Monate (HD)' : 'alle 3 Monate'}.`;
+    } else if (ferOk) {
       eisenColor = 'green';
       eisenTitle = '✅ Eisen — Zielbereich erreicht';
       eisenDose  = 'Keine Eisengabe erforderlich';
-      eisenDetail = `Ferritin ${ferritin ?? '?'} ng/ml / TSAT ${tsat ?? '?'}%<br>
-        Ziel ${isDialysis ? 'Dialyse' : 'CKD prä-Dialyse'}: Ferritin ${ferMinTarget}–${ferMaxTarget} ng/ml, TSAT > ${tsatMinTarget}%.<br>
-        Kontrolle alle 3 Monate.`;
+      eisenDetail = isHD
+        ? `Ferritin ${ferritin ?? '?'} ng/ml / TSAT ${tsat ?? '?'}% — kein Eisengabekriterium erfüllt.<br>
+        Eisengabe-Indikation HD (KDIGO 2026 Rec 2.2): Ferritin &le; 500 ng/ml <em>und</em> TSAT &le; 30%.<br>
+        Stop-Schwelle: Ferritin &ge; 700 ng/ml oder TSAT &ge; 40%.<br>
+        Kontrolle Ferritin + TSAT alle 1–3 Monate.`
+        : `Ferritin ${ferritin ?? '?'} ng/ml / TSAT ${tsat ?? '?'}% — kein Eisengabekriterium erfüllt.<br>
+        Eisengabe-Indikation Non-HD/PD (KDIGO 2026 Rec 2.4):<br>
+        &nbsp;• Ferritin &lt; 100 ng/ml <em>und</em> TSAT &lt; 40%, <em>oder</em><br>
+        &nbsp;• Ferritin 100–300 ng/ml <em>und</em> TSAT &lt; 25%.<br>
+        Stop-Schwelle: Ferritin &ge; 700 ng/ml oder TSAT &ge; 40%.<br>
+        Kontrolle Hb + Ferritin + TSAT alle 3 Monate.`;
     } else if (ivIronHighDose) {
       eisenColor = 'red';
-      eisenTitle = '❗ Ferinject — schwerer Eisenmangel';
+      eisenTitle = '❗ Ferinject — schwerer systemischer Eisenmangel';
       eisenDose  = 'Ferinject® (Eisencarboxymaltose) 1.000 mg i.v.';
-      eisenDetail = `Ferritin ${ferritin ?? '?'} ng/ml / TSAT ${tsat ?? '?'}% — schwerer Mangel.${defizitText}<br>
+      eisenDetail = `Ferritin ${ferritin ?? '?'} ng/ml / TSAT ${tsat ?? '?'}% — schwerer systemischer Eisenmangel (Ferritin &lt; 30 &amp; TSAT &lt; 20%).${defizitText}<br>
         • <strong>Ferinject® 1.000 mg</strong>: 100 ml NaCl 0,9%, über 15 Min i.v. (Sonderrezept)<br>
         • Max. 1.000 mg/Infusion; max. 20 mg/kg KG<br>
         • Keine Testdosis erforderlich<br>
         • Überwachung während und 30 Min nach Infusion (Kounis-Syndrom!)<br>
         • Kontrolle Ferritin + TSAT nach 4–8 Wochen<br>
-        • Bei anhaltender Indikation: 2. Gabe 500 mg nach 4 Wochen`;
+        • Bei anhaltender Indikation: 2. Gabe 500 mg nach 4 Wochen<br>
+        • Route: i.v. bevorzugt (KDIGO 2026 Rec 2.2/2.4)`;
       eisenCaveat = 'Cave: Bei aktiver Infektion Eisengabe zurückstellen (Hepcidin ↑ hemmt Resorption). Keine parallele orale Eisengabe.';
     } else if (ivIron) {
       eisenColor = 'orange';
-      eisenTitle = '⚠️ Ferinject — Eisenmangel';
-      eisenDose  = 'Ferinject® (Eisencarboxymaltose) 500 mg i.v.';
-      eisenDetail = `Ferritin ${ferritin ?? '?'} ng/ml / TSAT ${tsat ?? '?'}%.${defizitText}<br>
-        • <strong>Ferinject® 500 mg</strong>: 100 ml NaCl 0,9%, über 6 Min i.v.<br>
+      eisenTitle = isHD ? '⚠️ Ferinject — Eisenmangel (HD)' : '⚠️ Eisen — Eisenmangel (Non-HD/PD)';
+      eisenDose  = isHD
+        ? 'Ferinject® (Eisencarboxymaltose) 500–1.000 mg i.v. (HD-Route bevorzugt)'
+        : 'Ferinject® 500 mg i.v. oder orales Eisen (nach Präferenz)';
+      eisenDetail = isHD
+        ? `Ferritin ${ferritin ?? '?'} ng/ml / TSAT ${tsat ?? '?'}% — HD-Eisengabe-Kriterium erfüllt (≤ 500 ng/ml und ≤ 30%).${defizitText}<br>
+        • <strong>i.v. Eisen bevorzugt</strong> bei Hämodialyse (KDIGO 2026 Rec 2.2)<br>
+        • <strong>Ferinject® 500 mg</strong>: 100 ml NaCl 0,9%, über 6 Min i.v. (oder direkt in Dialyseschlauch)<br>
         • Überwachung während und 30 Min nach Infusion<br>
-        • Kontrolle Ferritin + TSAT nach 4–8 Wochen<br>
-        • Bei TSAT weiter &lt; 20%: Wiederholung 500 mg<br>
-        <em>Alternativ bei mildem Mangel + normalem CRP:</em><br>
-        • Ferro sanol duodenal® 100 mg: 1–0–0, jeden 2. Tag, 1 h vor dem Essen`;
-      eisenCaveat = 'Cave: Hepcidin bei Inflammation erhöht → orale Resorption blockiert → i.v. bevorzugen.';
-    } else {
-      // Ferritin ok but TSAT borderline
-      eisenColor = 'orange';
-      eisenTitle = '👁 Eisen — engmaschige Kontrolle';
-      eisenDose  = 'Eisen momentan nicht indiziert';
-      eisenDetail = `Ferritin ${ferritin ?? '?'} ng/ml / TSAT ${tsat ?? '?'}% — Grenzbereich.<br>
-        Ziel ${isDialysis ? 'Dialyse' : 'CKD'}: Ferritin ${ferMinTarget}–${ferMaxTarget} ng/ml, TSAT > ${tsatMinTarget}%.<br>
-        Kontrolle in 4–6 Wochen; bei weiterer Verschlechterung Ferinject® 500 mg erwägen.`;
+        • Kontrolle Ferritin + TSAT alle 1–3 Monate<br>
+        • Stop bei Ferritin &ge; 700 ng/ml oder TSAT &ge; 40%`
+        : `Ferritin ${ferritin ?? '?'} ng/ml / TSAT ${tsat ?? '?'}% — Non-HD/PD-Eisengabe-Kriterium erfüllt.${defizitText}<br>
+        • <strong>Oral oder i.v. je nach Patientenpräferenz</strong> (KDIGO 2026 Rec 2.4)<br>
+        • <em>i.v.:</em> <strong>Ferinject® 500 mg</strong>: 100 ml NaCl 0,9%, über 6 Min i.v.<br>
+        • <em>Oral:</em> Ferro sanol duodenal® 100 mg: 1–0–0, jeden 2. Tag, 1 h vor dem Essen<br>
+        • Überwachung bei i.v.-Gabe während und 30 Min nach Infusion<br>
+        • Kontrolle Hb + Ferritin + TSAT alle 3 Monate<br>
+        • Stop bei Ferritin &ge; 700 ng/ml oder TSAT &ge; 40%`;
+      eisenCaveat = isHD
+        ? 'Cave: Hepcidin bei Inflammation erhöht → bei aktiver Infektion Eisengabe zurückstellen. i.v. Eisen bei HD bevorzugt (KDIGO 2026).'
+        : 'Cave: Hepcidin bei Inflammation erhöht → orale Resorption blockiert → dann i.v. bevorzugen. KDIGO 2026 Rec 2.4: Wahl nach Präferenz, Verträglichkeit und Adhärenz.';
     }
 
     cardsAnaemie += `<div class="dose-card ${eisenColor}">
@@ -17710,34 +17741,46 @@ function generateCKDMBDPanel({ weight, dialysisSt, hb, ferritin, tsat, pth, bica
   }
 
   // ── 2. Erythropoetin (Erythropoese-stimulierendes Agens) ──────────────────
+  // KDIGO 2026: Hb-Ziel 10–11,5 g/dl (max. 11,5 g/dl); nicht >11,5 targeten (Rec 3.3.1, 1D)
+  // ESA Start Dialyse: Hb ≤9,0–10,0 g/dl (Rec 3.2.1); Non-Dialyse: individualisiert
+  // HIF-PHI bei ESA-Hyporesponsivität (KDIGO 2026 Rec 3.7.2)
   if (hb !== null) {
     let epoColor, epoTitle, epoDose, epoDetail, epoCaveat = '';
-    const ironAdequate = ferritin !== null ? ferritin >= (isDialysis ? 200 : 100) : true;
-    const tsatAdequate = tsat !== null ? tsat >= (isDialysis ? 30 : 20) : true;
+    // Iron adequacy: align with KDIGO 2026 iron thresholds
+    const ironAdequate = ferritin !== null
+      ? (isHD ? ferritin > 500 : ferritin >= 100)
+      : true;
+    const tsatAdequate = tsat !== null
+      ? (isHD ? tsat > 30 : tsat >= 25)
+      : true;
     const ironOk = ironAdequate && tsatAdequate;
 
     if (hb > 13) {
       epoColor = 'red';
       epoTitle = '🛑 Erythropoetin — Hb zu hoch → PAUSE';
       epoDose  = 'Erythropoetin sofort pausieren';
-      epoDetail = `Hb ${hb} g/dl — deutlich über Ziel (10–11 g/dl).<br>
-        <strong>Hb > 13: Erythropoetin stoppen</strong> (TREAT-Studie: erhöhtes kardiovaskuläres Risiko!).<br>
-        • Pausieren bis Hb &lt; 11 g/dl, dann Wiederanfang mit 50% der Dosis<br>
-        • Kontrolle Hb nach 4 Wochen`;
-    } else if (hb > 11) {
+      epoDetail = `Hb ${hb} g/dl — deutlich über Ziel (10–11,5 g/dl).<br>
+        <strong>Hb &gt; 13: Erythropoetin stoppen</strong> (TREAT-Studie: erhöhtes kardiovaskuläres Risiko!).<br>
+        • Pausieren bis Hb &lt; 11,5 g/dl, dann Wiederanfang mit 50% der Dosis<br>
+        • Kontrolle Hb nach 4 Wochen<br>
+        • Hb-Ziel: 10–11,5 g/dl (max. 11,5 g/dl) — KDIGO 2026 Rec 3.3.1`;
+    } else if (hb > 11.5) {
       epoColor = 'orange';
       epoTitle = '⬇️ Erythropoetin — Hb zu hoch → Dosis −25%';
       epoDose  = 'Erythropoetin-Dosis um 25% reduzieren';
-      epoDetail = `Hb ${hb} g/dl — über Ziel (10–11 g/dl).<br>
+      epoDetail = `Hb ${hb} g/dl — über Zielobergrenze (max. 11,5 g/dl, KDIGO 2026 Rec 3.3.1).<br>
         • Dosis um 25% reduzieren<br>
-        • Hb-Kontrolle nach 4 Wochen<br>
-        • Bei Hb > 13: sofort stoppen`;
+        • Hb-Kontrolle alle 2–4 Wochen in Adjustierungsphase<br>
+        • Bei Hb-Anstieg &gt; 2 g/dl in 4 Wochen → Dosis −25%<br>
+        • Bei Hb &gt; 13: sofort stoppen`;
     } else if (hb >= 10) {
       epoColor = 'green';
       epoTitle = '✅ Erythropoetin — Ziel-Hb erreicht';
       epoDose  = 'Erhaltungsdosis beibehalten';
-      epoDetail = `Hb ${hb} g/dl — im Zielbereich (10–11 g/dl).<br>
-        Aktuelle Dosis weiterführen. Hb-Kontrolle alle 4 Wochen.`;
+      epoDetail = `Hb ${hb} g/dl — im Zielbereich (10–11,5 g/dl, KDIGO 2026 Rec 3.3.1).<br>
+        Aktuelle Dosis weiterführen.<br>
+        • Hb-Kontrolle alle 2–4 Wochen in Auftitrationsphase, dann alle 3 Monate<br>
+        • Hb-Ziel: 10–11,5 g/dl (max. 11,5 g/dl) — niemals &gt; 11,5 targeten`;
     } else if (hb >= 9) {
       if (!ironOk && (ferritin !== null || tsat !== null)) {
         epoColor = 'orange';
@@ -17745,15 +17788,17 @@ function generateCKDMBDPanel({ weight, dialysisSt, hb, ferritin, tsat, pth, bica
         epoDose  = 'Ferinject® zuerst, dann Erythropoetin-Entscheidung';
         epoDetail = `Hb ${hb} g/dl, aber Eisenmangel (Ferritin ${ferritin ?? '?'} / TSAT ${tsat ?? '?'}%).<br>
           <strong>„Iron first"</strong>: Eisenoptimierung zuerst, Hb-Kontrolle nach 4–8 Wochen.<br>
-          Erythropoetin erst nach Korrektur des Eisenmangels beginnen.`;
+          Erythropoetin erst nach Korrektur des Eisenmangels beginnen.<br>
+          Hb-Ziel nach ESA-Start: 10–11,5 g/dl (max. 11,5 g/dl) — KDIGO 2026 Rec 3.3.1`;
       } else {
         epoColor = 'blue';
         epoTitle = '⬆️ Erythropoetin — Dosis +25%';
         epoDose  = 'Aktuelle Dosis um 25% erhöhen';
-        epoDetail = `Hb ${hb} g/dl — unter Ziel (10–11 g/dl).<br>
+        epoDetail = `Hb ${hb} g/dl — unter Ziel (10–11,5 g/dl).<br>
           • Dosis um 25% steigern<br>
-          • Hb-Kontrolle nach 4 Wochen<br>
-          • Eisenstatus prüfen: Ferritin + TSAT`;
+          • Hb-Kontrolle alle 2–4 Wochen (Auftitrationsphase)<br>
+          • Eisenstatus prüfen: Ferritin + TSAT<br>
+          • Hb-Ziel: 10–11,5 g/dl (max. 11,5 g/dl) — KDIGO 2026 Rec 3.3.1`;
       }
     } else if (hb >= 8) {
       if (!ironOk && (ferritin !== null || tsat !== null)) {
@@ -17762,8 +17807,9 @@ function generateCKDMBDPanel({ weight, dialysisSt, hb, ferritin, tsat, pth, bica
         epoDose  = 'Ferinject® + Erythropoetin +50%';
         epoDetail = `Hb ${hb} g/dl — deutlich unter Ziel mit Eisenmangel.<br>
           • Ferinject® i.v. (s. Eisen-Empfehlung)<br>
-          • Erythropoetin-Dosis +50% (nach > 90 Tagen ohne Ansprechen)<br>
-          • Erythrozytenkonzentrat (EK) bei Symptomen evaluieren`;
+          • Erythropoetin-Dosis +50% (nach &gt; 90 Tagen ohne Ansprechen)<br>
+          • Erythrozytenkonzentrat (EK) bei Symptomen evaluieren<br>
+          • Bei ausbleibendem ESA-Ansprechen nach 90 d (&lt; 1 g/dl Hb-Anstieg) → HIF-PHI (z.B. Roxadustat) erwägen (KDIGO 2026 Rec 3.7.2)`;
       } else {
         epoColor = 'blue';
         if (!isDialysis) {
@@ -17777,12 +17823,15 @@ function generateCKDMBDPanel({ weight, dialysisSt, hb, ferritin, tsat, pth, bica
           }
           epoTitle = '⬆️ Darbepoetin alfa (Aranesp®) — Startdosis';
           epoDose  = weight ? `Aranesp® ${darboDose} s.c. 1×/2 Wochen` : 'Aranesp® ~50 µg s.c. 1×/2 Wochen';
-          epoDetail = `Hb ${hb} g/dl — Startdosis oder Eskalation (+50% nach > 90d).<br>
+          epoDetail = `Hb ${hb} g/dl — Startdosis oder Eskalation (+50% nach &gt; 90d).<br>
+            • Non-Dialyse: ESA-Start individualisiert nach Symptomen (KDIGO 2026 Rec 3.2.1)<br>
             • Startdosis: 0,75 µg/kg alle 2 Wochen s.c.${darboCalc}<br>
             • Ampullengrößen: 10, 15, 20, 30, 40, 50, 60, 80, 100, 150 µg<br>
             • Äquivalenz: 6.000 IE Epoetin = 30 µg Darbepoetin/Woche<br>
-            • Hb-Kontrolle nach 4 Wochen`;
-          epoCaveat = 'Cave: Vor Start Malignomausschluss, RR-Kontrolle, Eisenstatus optimieren.';
+            • Hb-Kontrolle alle 2–4 Wochen in Auftitrationsphase, dann alle 3 Monate<br>
+            • Bei Hb-Anstieg &gt; 1 g/dl in 2–4 Wochen nach Start → Dosis −25–50%<br>
+            • Bei ausbleibendem Ansprechen nach 90 d → HIF-PHI erwägen (KDIGO 2026 Rec 3.7.2)`;
+          epoCaveat = 'Cave: Vor Start Malignomausschluss, RR-Kontrolle, Eisenstatus optimieren. Hb-Ziel: 10–11,5 g/dl (max. 11,5 g/dl) — KDIGO 2026 Rec 3.3.1';
         } else if (isHD) {
           let epoAlfaDose = '—', epoCalc = '';
           if (weight) {
@@ -17792,11 +17841,13 @@ function generateCKDMBDPanel({ weight, dialysisSt, hb, ferritin, tsat, pth, bica
           }
           epoTitle = '💉 Epoetin alfa (Erypo®) — Hämodialyse';
           epoDose  = weight ? `Erypo® ${epoAlfaDose} i.v. 3×/Woche post-HD` : 'Epoetin alfa 2.000–4.000 IE i.v. 3×/Woche';
-          epoDetail = `Hb ${hb} g/dl — Startdosis.${epoCalc}<br>
+          epoDetail = `Hb ${hb} g/dl — Startdosis (HD: Hb ≤ 9,0–10,0 g/dl → ESA starten, KDIGO 2026 Rec 3.2.1).${epoCalc}<br>
             • 50 IE/kg 3×/Woche i.v. nach Dialyse (ca. 2.000–4.000 IE)<br>
             • Äquivalenz: 6.000 IE/Wo Epoetin ≈ 30 µg/Wo Darbepoetin<br>
-            • Hb-Kontrolle monatlich; kein Anstieg nach 90d → +50%`;
-          epoCaveat = 'Cave: Hb > 11 → −25%; Hb > 13 → STOP. Ziel: 10–11 g/dl.';
+            • Hb-Kontrolle alle 2–4 Wochen (Auftitrationsphase), dann alle 1–3 Monate<br>
+            • Bei Hb-Anstieg &gt; 1 g/dl in 2–4 Wochen → Dosis −25–50%<br>
+            • Bei ausbleibendem Ansprechen nach 90 d → HIF-PHI erwägen (KDIGO 2026 Rec 3.7.2)`;
+          epoCaveat = 'Cave: Hb &gt; 11,5 → −25%; Hb &gt; 13 → STOP. Hb-Ziel: 10–11,5 g/dl (max. 11,5 g/dl) — KDIGO 2026 Rec 3.3.1';
         } else {
           let darboDose = '—';
           if (weight) {
@@ -17807,8 +17858,9 @@ function generateCKDMBDPanel({ weight, dialysisSt, hb, ferritin, tsat, pth, bica
           epoTitle = '💉 Darbepoetin alfa (Aranesp®) — Peritonealdialyse';
           epoDose  = `Aranesp® ${darboDose || '~50 µg'} s.c. 1×/2 Wochen`;
           epoDetail = `PD-Patient: s.c.-Gabe bevorzugt. Startdosis 0,75 µg/kg alle 2 Wochen.<br>
-            Kontrolle nach 4 Wochen, Ziel Hb 10–11 g/dl.`;
-          epoCaveat = 'Cave: Eisenstatus optimieren vor Start.';
+            Kontrolle alle 2–4 Wochen (Auftitration), dann alle 3 Monate. Ziel Hb 10–11,5 g/dl (max. 11,5 g/dl) — KDIGO 2026 Rec 3.3.1.<br>
+            Bei ausbleibendem Ansprechen nach 90 d → HIF-PHI (z.B. Roxadustat) erwägen (KDIGO 2026 Rec 3.7.2).`;
+          epoCaveat = 'Cave: Eisenstatus optimieren vor Start. Hb-Ziel: 10–11,5 g/dl (max. 11,5 g/dl) — KDIGO 2026 Rec 3.3.1';
         }
       }
     } else {
@@ -17816,9 +17868,10 @@ function generateCKDMBDPanel({ weight, dialysisSt, hb, ferritin, tsat, pth, bica
       epoTitle = '🚨 Hb < 8 g/dl — Transfusion evaluieren';
       epoDose  = 'Erythrozytenkonzentrat (EK) evaluieren + Erythropoetin';
       epoDetail = `Hb ${hb} g/dl — EK bei symptomatischer Anämie (Dyspnoe, Angina, Bewusstseinstrübung).<br>
-        • Erythropoetin-Dosis +50% (nach > 90 Tagen ohne Ansprechen)<br>
+        • Erythropoetin-Dosis +50% (nach &gt; 90 Tagen ohne Ansprechen)<br>
         • Eisenstatus optimieren<br>
-        • Ursache fehlenden Ansprechens klären: Infektion, Inflammation, B12/Folsäure-Mangel?`;
+        • Ursache fehlenden Ansprechens klären: Infektion, Inflammation, B12/Folsäure-Mangel?<br>
+        • Bei ESA-Hyporesponsivität (Hb-Anstieg &lt; 1 g/dl nach 90d): HIF-PHI (z.B. Roxadustat, Daprodustat) erwägen — KDIGO 2026 Rec 3.7.2`;
     }
 
     cardsAnaemie += `<div class="dose-card ${epoColor}">
