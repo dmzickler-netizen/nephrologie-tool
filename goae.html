@@ -1286,52 +1286,6 @@ window.goaeCopyAuftrag = function(btn) {
 goaeSetCtx('ambulanz', document.querySelector('.goae-ctx-btn[data-ctx="ambulanz"]'));
 goaeRender();
 
-// Modal-HTML dynamisch einfügen, damit der Markup-Block am Skript-Ende lebt
-(function buildAbdomenModal(){
-  const organChecks = ABD_ORGANE.map(function(o){
-    return '<label><input type="checkbox" name="abd-organ" value="'+o.key+'" onchange="goaeAbdomenUpdate()"> '+o.label+'</label>';
-  }).join('');
-  const ctxChecks = ABD_KONTEXT.map(function(c){
-    return '<label><input type="checkbox" name="abd-ctx" value="'+c.label.replace(/"/g,'&quot;')+'" onchange="goaeAbdomenUpdate()"> '+c.label+'</label>';
-  }).join('');
-  const html =
-    '<div class="abd-modal-bg" id="goae-abd-modal" onclick="if(event.target===this) goaeAbdomenClose()">' +
-      '<div class="abd-modal">' +
-        '<div class="abd-modal-head"><h3>🫁 Abdomensonographie — Konfigurator</h3>' +
-          '<button class="abd-modal-close" type="button" onclick="goaeAbdomenClose()">Schließen</button>' +
-        '</div>' +
-        '<div class="abd-modal-body">' +
-          '<fieldset class="abd-fieldset"><legend>B-Bild Organe</legend>' +
-            '<div class="abd-checks">'+organChecks+'</div>' +
-            '<div class="abd-hint">1. Organ → Nr. 410 · weitere Organe → Nr. 420 (max. 3×)</div>' +
-          '</fieldset>' +
-          '<fieldset class="abd-fieldset"><legend>Doppler- / Duplexverfahren</legend>' +
-            '<div class="abd-checks">' +
-              '<label><input type="checkbox" id="goae-abd-farb" onchange="goaeAbdomenUpdate()"> Farbduplex (Nr. 401)</label>' +
-              '<label><input type="checkbox" id="goae-abd-spek" onchange="goaeAbdomenUpdate()"> PW-Doppler mit Spektralanalyse (Nr. 404)</label>' +
-            '</div>' +
-            '<div class="abd-doppler-hint">Bilddokumentation mit Spektralkurve / Farbduplex-Standbild erforderlich.</div>' +
-          '</fieldset>' +
-          '<fieldset class="abd-fieldset"><legend>Patientenkontext (Steigerungsfaktor-Begründung)</legend>' +
-            '<div class="abd-checks">'+ctxChecks+'</div>' +
-            '<div class="abd-doppler-hint">Aktiviert Faktor 2,3 als Vorschlag + Begründungs-Platzhalter.</div>' +
-          '</fieldset>' +
-          '<div class="abd-preview-box">' +
-            '<div style="font-size:.78rem;font-weight:700;color:#00695c;margin-bottom:6px;">Abrechnungsvorschlag</div>' +
-            '<div id="goae-abd-preview"></div>' +
-          '</div>' +
-          '<div class="abd-total-row"><span class="abd-total-label">Summe (Faktor wie eingestellt)</span><span class="abd-total-amt" id="goae-abd-total">0,00 €</span></div>' +
-        '</div>' +
-        '<div class="abd-modal-foot">' +
-          '<button class="abd-btn abd-btn-cancel" type="button" onclick="goaeAbdomenClose()">Abbrechen</button>' +
-          '<button class="abd-btn abd-btn-primary" type="button" onclick="goaeAbdomenApply()">In Abrechnung übernehmen</button>' +
-        '</div>' +
-      '</div>' +
-    '</div>';
-  const wrap = document.createElement('div');
-  wrap.innerHTML = html;
-  document.body.appendChild(wrap.firstChild);
-})();
 
 // =========================================================================
 //  ABDOMEN-SONO KONFIGURATOR
@@ -1477,6 +1431,53 @@ window.goaeAbdomenApply = function() {
   goaeAbdomenClose();
   goaeRender();
 };
+
+// Modal-HTML dynamisch einfügen — läuft AM ENDE, nachdem ABD_ORGANE/KONTEXT initialisiert sind
+(function buildAbdomenModal(){
+  const organChecks = ABD_ORGANE.map(function(o){
+    return '<label><input type="checkbox" name="abd-organ" value="'+o.key+'" onchange="goaeAbdomenUpdate()"> '+o.label+'</label>';
+  }).join('');
+  const ctxChecks = ABD_KONTEXT.map(function(c){
+    return '<label><input type="checkbox" name="abd-ctx" value="'+c.label.replace(/"/g,'&quot;')+'" onchange="goaeAbdomenUpdate()"> '+c.label+'</label>';
+  }).join('');
+  const html =
+    '<div class="abd-modal-bg" id="goae-abd-modal" onclick="if(event.target===this) goaeAbdomenClose()">' +
+      '<div class="abd-modal">' +
+        '<div class="abd-modal-head"><h3>🫁 Abdomensonographie — Konfigurator</h3>' +
+          '<button class="abd-modal-close" type="button" onclick="goaeAbdomenClose()">Schließen</button>' +
+        '</div>' +
+        '<div class="abd-modal-body">' +
+          '<fieldset class="abd-fieldset"><legend>B-Bild Organe</legend>' +
+            '<div class="abd-checks">'+organChecks+'</div>' +
+            '<div class="abd-doppler-hint">1. Organ → Nr. 410 · weitere Organe → Nr. 420 (max. 3×)</div>' +
+          '</fieldset>' +
+          '<fieldset class="abd-fieldset"><legend>Doppler- / Duplexverfahren</legend>' +
+            '<div class="abd-checks">' +
+              '<label><input type="checkbox" id="goae-abd-farb" onchange="goaeAbdomenUpdate()"> Farbduplex (Nr. 401)</label>' +
+              '<label><input type="checkbox" id="goae-abd-spek" onchange="goaeAbdomenUpdate()"> PW-Doppler mit Spektralanalyse (Nr. 404)</label>' +
+            '</div>' +
+            '<div class="abd-doppler-hint">Bilddokumentation mit Spektralkurve / Farbduplex-Standbild erforderlich.</div>' +
+          '</fieldset>' +
+          '<fieldset class="abd-fieldset"><legend>Patientenkontext (Steigerungsfaktor-Begründung)</legend>' +
+            '<div class="abd-checks">'+ctxChecks+'</div>' +
+            '<div class="abd-doppler-hint">Aktiviert Faktor 2,3 als Vorschlag + Begründungs-Platzhalter.</div>' +
+          '</fieldset>' +
+          '<div class="abd-preview-box">' +
+            '<div style="font-size:.78rem;font-weight:700;color:#00695c;margin-bottom:6px;">Abrechnungsvorschlag</div>' +
+            '<div id="goae-abd-preview"></div>' +
+          '</div>' +
+          '<div class="abd-total-row"><span class="abd-total-label">Summe (Faktor wie eingestellt)</span><span class="abd-total-amt" id="goae-abd-total">0,00 €</span></div>' +
+        '</div>' +
+        '<div class="abd-modal-foot">' +
+          '<button class="abd-btn abd-btn-cancel" type="button" onclick="goaeAbdomenClose()">Abbrechen</button>' +
+          '<button class="abd-btn abd-btn-primary" type="button" onclick="goaeAbdomenApply()">In Abrechnung übernehmen</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  const wrap = document.createElement('div');
+  wrap.innerHTML = html;
+  document.body.appendChild(wrap.firstChild);
+})();
 </script>
 </body>
 </html>
