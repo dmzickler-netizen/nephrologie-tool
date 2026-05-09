@@ -310,6 +310,7 @@ var goaeDB = [
   { nr:15,  name:'Betreuung chronisch Kranker',           short:'Chronisch Kranke (≥3 Konsult.)',kat:'Beratung & Untersuchung', typ:'P', p:80,   excl:[],       voraus:'≥3 Konsultationen/Jahr für dieselbe chronische Erkrankung.', doku:'Grunderkrankung + Betreuungsverlauf.', haeufig:'3×/Jahr je Erkrankung', tip:'Bei ≥3 Konsultationen/Jahr für dieselbe Grunderkrankung (CKD, HTN, Diabetes). Zusätzlich neben Nr. 1 oder 3 ansetzbar.' },
   { nr:558, name:'Muskelfunktionsprüfung',                 short:'Muskuläre Untersuchung',       kat:'Klinische Untersuchung',  typ:'P', p:80,   excl:[],       voraus:'Prüfung Muskelkraft/-funktion.', doku:'Muskelkraftgrade, befallene Muskelgruppen.', haeufig:'je Untersuchung', tip:'Prüfung Muskelkraft/-funktion; relevant bei CKD-Sarkopenie, neuromuskulären Begleiterkrankungen, Myopathie unter Statinen/Steroiden.' },
   { nr:800, name:'Neurologische Untersuchung (eingehend)', short:'Neurol. Untersuchung',          kat:'Klinische Untersuchung',  typ:'P', p:206,  excl:[],       voraus:'Eingehende neurologische Untersuchung.', doku:'Vollst. neurol. Status (Kraft, Reflexe, Sensibilität).', haeufig:'1×/Tag', tip:'Vollständige neurologische Untersuchung; z.B. urämische Neuropathie, Enzephalopathie, Shunt-bedingte Steal-Syndrome.' },
+  { nr:4100,display:'410+420×3', name:'Sono Abdomen komplett (Bundle)', short:'Abdomen-Sono komplett (1-Klick)', kat:'Sonographie', typ:'T', p:440, virtual:true, excl:[], voraus:'Standard-Oberbauchsono — 4 Organe (z.B. Leber, Galle, Pankreas, Niere). Wird intern als 1× Nr. 410 + 3× Nr. 420 abgerechnet (max. 4 Organe nach GOÄ).', doku:'Alle 4 Organe einzeln im Befund nennen + Bildarchiv.', haeufig:'1×/Tag', tip:'Bundle-Klick: legt automatisch Nr. 410 + Nr. 420 mit Count 3× an. Für individuelle Organauswahl, Doppler oder Patientenkontext: Konfigurator oben verwenden.' },
   { nr:410, name:'Sonographie 1. Organ',                  short:'Sono 1. Organ',               kat:'Sonographie',             typ:'T', p:200,  excl:[],       voraus:'B-Mode-Sonographie eines Organs (z.B. Niere bds., Leber, Schilddrüse, Pleura, Harnblase, Herz, Pankreas).', doku:'Befund + Bildarchiv.', haeufig:'1×/Tag', tip:'Erstes Organ — Grund-Sono. Bei Abdomen-Sono komplett: zusätzlich 3× Nr. 420 für die weiteren Organe (z.B. Leber + Galle + Pankreas + Niere = 1×410 + 3×420).' },
   { nr:420, name:'Sono jedes weitere Organ (Zuschlag)',    short:'Sono +1 Organ (Zuschlag)',     kat:'Sonographie',             typ:'T', p:80,   excl:[],       voraus:'Zuschlag zu Nr. 410 — bei Untersuchung eines weiteren Organs in derselben Sitzung.', doku:'Jedes Organ einzeln im Befund nennen + dokumentieren.', haeufig:'max. 3× pro Sitzung', tip:'Nicht mit Duplex verwechseln! Nr. 420 ist der ZUSCHLAG für weitere Organe bei B-Mode-Sono. Max. 3× pro Sitzung → max. 4 Organe gesamt (1×410 + 3×420). Bei ≥5 Organen Faktor bis 3,5 begründbar (Adipositas, Notfall, Tumor-Screening).' },
   { nr:413, name:'Sono Hüftgelenke Säugling (pädiatr.)',   short:'Hüftgelenke Säugling',        kat:'Sonographie',             typ:'T', p:250,  excl:[],       voraus:'Säugling/Kleinkind bis vollendetes 2. LJ — Hüftgelenks-Sonographie nach Graf.', doku:'Klassifikation nach Graf, beidseits.', haeufig:'U2/U3-Vorsorge', tip:'⚠ Pädiatrische Leistung — in der Erwachsenen-Nephrologie NICHT verwendbar. Wer Abdomen-Sono abrechnen will: 1× Nr. 410 + 3× Nr. 420 (max. 4 Organe).' },
@@ -764,7 +765,27 @@ function goaeGetConflicts() {
   return c;
 }
 
+// Bundle-Helfer: ist das Bundle (Nr. 4100 = 410+3×420) aktuell aktiv?
+function goaeIsBundleActive(nr) {
+  if (nr === 4100) return goaeSelected.has(410) && goaeSelected.has(420) && goaeCount[420] === 3;
+  return false;
+}
+
 function goaeToggle(nr) {
+  // Virtuelles Bundle: schaltet die Bestandteile zusammen
+  if (nr === 4100) {
+    if (goaeIsBundleActive(4100)) {
+      goaeSelected.delete(410);
+      goaeSelected.delete(420);
+      delete goaeCount[420];
+      delete goaeFactorOverride[410]; delete goaeFactorOverride[420];
+      delete goaeBegruendung[410];   delete goaeBegruendung[420];
+      goaeRender();
+    } else {
+      window.goaeAbdomenQuick();   // räumt auf + setzt 410 + 420×3
+    }
+    return;
+  }
   if (goaeSelected.has(nr)) {
     goaeSelected.delete(nr);
     delete goaeFactorOverride[nr];
@@ -1053,13 +1074,16 @@ function goaeRender() {
     var positions = cats[kat];
     var catTotal = 0;
     positions.forEach(function(pos){
+      // Virtuelle Bundle-Einträge nicht doppelt zählen — die echten Bestandteile (z.B. 410+420) sind bereits in selected
+      if (pos.virtual) return;
       if (goaeSelected.has(pos.nr) && !conflicts.has(pos.nr)) catTotal += goaeFee(pos, fP, fT);
     });
     leftHtml += '<div class="goae-cat"><div class="goae-cat-head">' + kat;
     if (catTotal > 0) leftHtml += '<span class="goae-cat-sum">' + catTotal.toFixed(2).replace('.', ',') + ' €</span>';
     leftHtml += '</div><div class="goae-cat-body">';
     positions.forEach(function(pos) {
-      var isSel = goaeSelected.has(pos.nr), isConfl = conflicts.has(pos.nr);
+      var isSel = pos.virtual ? goaeIsBundleActive(pos.nr) : goaeSelected.has(pos.nr);
+      var isConfl = conflicts.has(pos.nr);
       var isOpen = goaeDetailOpen.has(pos.nr);
       var fee = goaeFee(pos, fP, fT);
       var rowCls = isConfl ? ' conflict' : isSel ? ' selected' : '';
