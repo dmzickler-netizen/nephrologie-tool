@@ -86,6 +86,82 @@ body { background: #f4f6f8; font-family: -apple-system, BlinkMacSystemFont, "Seg
 /* Disclaimer */
 .goae-disc { background: #fff8e1; border: 1px solid #ffe082; border-radius: 8px; padding: 9px 14px; margin-top: 12px; font-size: .75rem; color: #5d4037; }
 
+/* Abdomen-Sono Konfigurator (Modal) */
+.abd-modal-bg {
+  position:fixed; inset:0; background:rgba(15,23,42,.55);
+  display:none; align-items:flex-start; justify-content:center;
+  z-index:1000; padding:24px 12px; overflow-y:auto;
+}
+.abd-modal {
+  background:#fff; border-radius:14px; max-width:680px; width:100%;
+  box-shadow:0 20px 50px rgba(0,0,0,.35);
+  overflow:hidden;
+}
+.abd-modal-head {
+  background:linear-gradient(135deg,#00897b,#00695c); color:#fff;
+  padding:14px 20px; display:flex; justify-content:space-between; align-items:center;
+}
+.abd-modal-head h3 { margin:0; font-size:1.05rem; }
+.abd-modal-close {
+  background:rgba(255,255,255,.2); border:1px solid rgba(255,255,255,.3); color:#fff;
+  border-radius:6px; padding:4px 12px; cursor:pointer; font-size:.85rem;
+}
+.abd-modal-body { padding:18px 20px 16px; }
+.abd-fieldset {
+  border:1px solid #e0e0e0; border-radius:8px; padding:10px 14px; margin-bottom:12px;
+}
+.abd-fieldset legend {
+  padding:0 8px; font-size:.78rem; font-weight:700; color:#00695c; letter-spacing:.02em;
+}
+.abd-checks {
+  display:grid; grid-template-columns:1fr 1fr; gap:6px 14px;
+}
+@media (max-width:520px) { .abd-checks { grid-template-columns:1fr; } }
+.abd-checks label {
+  display:flex; align-items:center; gap:8px; font-size:.85rem; color:#37474f;
+  padding:4px 6px; border-radius:5px; cursor:pointer;
+}
+.abd-checks label:hover { background:#f5f5f5; }
+.abd-checks input[type=checkbox] { accent-color:#00897b; }
+.abd-doppler-hint, .abd-checks .abd-hint {
+  font-size:.72rem; color:#888; font-style:italic; margin-left:24px;
+}
+.abd-preview-box {
+  background:#f0fdf4; border:1px solid #86efac; border-radius:8px;
+  padding:10px 14px; margin-top:6px;
+}
+.abd-prev-row {
+  display:flex; justify-content:space-between; align-items:baseline;
+  font-size:.82rem; padding:3px 0; border-bottom:1px dashed #cfd8dc;
+}
+.abd-prev-row:last-child { border-bottom:none; }
+.abd-info {
+  margin-top:6px; padding:6px 10px; background:#e0f7fa; border-left:3px solid #00838f;
+  border-radius:4px; font-size:.76rem; color:#006064;
+}
+.abd-warn {
+  margin-top:6px; padding:6px 10px; background:#fff3e0; border-left:3px solid #ef6c00;
+  border-radius:4px; font-size:.76rem; color:#bf360c;
+}
+.abd-total-row {
+  display:flex; justify-content:space-between; align-items:center;
+  background:#e8eaf6; border-top:2px solid #3949ab; padding:10px 14px; margin-top:10px;
+  border-radius:6px;
+}
+.abd-total-label { font-size:.82rem; font-weight:700; color:#1a237e; }
+.abd-total-amt { font-size:1.3rem; font-weight:800; color:#1a237e; }
+.abd-modal-foot {
+  display:flex; gap:10px; justify-content:flex-end;
+  padding:14px 20px 18px; background:#fafafa; border-top:1px solid #e0e0e0;
+}
+.abd-btn {
+  padding:9px 18px; border-radius:6px; cursor:pointer; font-size:.85rem; font-weight:700; border:none;
+}
+.abd-btn-primary { background:#00695c; color:#fff; }
+.abd-btn-primary:hover { background:#004d40; }
+.abd-btn-cancel { background:#fff; color:#555; border:1px solid #cfd8dc; }
+.abd-btn-cancel:hover { background:#f5f5f5; }
+
 /* Detail-Panel (Voraussetzung/Doku/Häufigkeit) */
 .goae-info-btn { background:#fff; border:1.5px solid #bdbdbd; color:#666; border-radius:50%; width:22px; height:22px; font-size:.72rem; cursor:pointer; flex-shrink:0; font-weight:800; padding:0; line-height:1; display:flex; align-items:center; justify-content:center; }
 .goae-info-btn:hover { background:#e8eaf6; border-color:#3949ab; color:#3949ab; }
@@ -149,6 +225,11 @@ body { background: #f4f6f8; font-family: -apple-system, BlinkMacSystemFont, "Seg
     <button class="goae-ctx-btn" data-ctx="its" onclick="goaeSetCtx('its',this)">🚨 Intensivmedizin</button>
   </div>
   <div class="goae-ctx-note" id="goae-ctx-note">Privatambulanz · volle GOÄ-Abrechnung · Steigerung pers. bis 2,3× ohne Begründung</div>
+
+  <!-- Konfigurator-Buttons -->
+  <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+    <button id="goae-abd-btn" type="button" onclick="goaeAbdomenOpen()" style="padding:8px 16px;background:linear-gradient(135deg,#00897b,#00695c);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:.85rem;font-weight:700;box-shadow:0 2px 4px rgba(0,0,0,.15);">🫁 Abdomen-Sono Konfigurator</button>
+  </div>
 
   <!-- Besuchstyp-Presets (dynamisch per goaeSetCtx) -->
   <div class="goae-presets" id="goae-presets"></div>
@@ -564,7 +645,14 @@ var goaeSelected = new Set();
 var goaeDetailOpen = new Set();
 var goaeFactorOverride = {};   // {nr: factor} — überschreibt globalen Default
 var goaeBegruendung = {};      // {nr: string} — Pflicht-Begründung pro Position bei Faktor > Schwelle
+var goaeCount = {};            // {nr: count} — Mehrfach-Ansatz (z.B. Nr. 420 bis 3×); Default 1 wenn leer
 var GOAE_BEG_MIN = 20;         // Mindestlänge Begründung in Zeichen
+function goaeGetCount(nr) { return goaeCount[nr] || 1; }
+window.goaeSetCount = function(nr, val) {
+  var n = parseInt(val, 10) || 1;
+  if (n <= 1) delete goaeCount[nr]; else goaeCount[nr] = n;
+  goaeRender();
+};
 
 // Kategorie-Config nach § 5 GOÄ: min/max/Schwellenwert je Leistungstyp
 var GOAE_CAT = {
@@ -663,7 +751,7 @@ function goaeBegHtml(pos) {
 }
 
 function goaeFee(pos, fP, fT) {
-  return pos.p * PKTW * goaeGetFactor(pos, fP, fT);
+  return pos.p * PKTW * goaeGetFactor(pos, fP, fT) * goaeGetCount(pos.nr);
 }
 
 function goaeGetConflicts() {
@@ -680,6 +768,7 @@ function goaeToggle(nr) {
     goaeSelected.delete(nr);
     delete goaeFactorOverride[nr];
     delete goaeBegruendung[nr];
+    delete goaeCount[nr];
   } else {
     // Letzter Klick gewinnt: Konflikte automatisch entfernen
     var pos = goaeDB.find(function(p){ return p.nr===nr; });
@@ -871,12 +960,18 @@ function goaeSetCtx(ctx, btn) {
 
 function goaeClear() {
   goaeSelected.clear();
+  goaeCount = {};
+  goaeFactorOverride = {};
+  goaeBegruendung = {};
   document.querySelectorAll('.goae-preset-btn').forEach(function(b){ b.classList.remove('active'); });
   goaeRender();
 }
 
 function goaePreset(type, btn) {
   goaeSelected.clear();
+  goaeCount = {};
+  goaeFactorOverride = {};
+  goaeBegruendung = {};
   document.querySelectorAll('.goae-preset-btn').forEach(function(b){ b.classList.remove('active'); });
   if (btn) btn.classList.add('active');
   var map = {
@@ -1009,8 +1104,22 @@ function goaeRender() {
     var step = cat.step;
     var decs = step < 0.1 ? 2 : 1;
     var hf = pos.haeufig || pos.freq;
+    var cnt = goaeGetCount(pos.nr);
+    var countCtl = '';
+    if (pos.nr === 420) {
+      // Mehrfach-Ansatz nur für Nr. 420 (max 3× neben Nr. 410)
+      countCtl = '<span style="display:inline-flex;align-items:center;gap:3px;font-size:.72rem;color:#37474f;">' +
+        '<select onchange="goaeSetCount(' + pos.nr + ',this.value)" onclick="event.stopPropagation()" style="padding:2px 4px;border:1.5px solid #cfd8dc;border-radius:5px;font-size:.78rem;font-weight:600;">' +
+        '<option value="1"' + (cnt===1?' selected':'') + '>× 1</option>' +
+        '<option value="2"' + (cnt===2?' selected':'') + '>× 2</option>' +
+        '<option value="3"' + (cnt===3?' selected':'') + '>× 3</option>' +
+        '</select></span>';
+    } else if (cnt > 1) {
+      countCtl = '<span style="font-size:.72rem;color:#1a237e;font-weight:700;background:#e8eaf6;padding:1px 6px;border-radius:5px;">× ' + cnt + '</span>';
+    }
     itemsHtml += '<div class="goae-res-row" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">';
     itemsHtml += '<span class="goae-res-label" style="flex:1;min-width:140px;">Nr. ' + (pos.display||pos.nr) + ' ' + pos.short + ' <small>(' + pos.p + 'P · ' + cat.label + ')</small></span>';
+    if (countCtl) itemsHtml += countCtl;
     itemsHtml += '<span style="display:inline-flex;align-items:center;gap:4px;font-size:.72rem;color:#37474f;">×<input type="number" min="' + cat.min + '" max="' + cat.max + '" step="' + step + '" value="' + fEff.toFixed(decs) + '" onchange="goaeSetFactor(' + pos.nr + ',this.value)" onclick="event.stopPropagation()" style="width:52px;padding:2px 4px;border:1.5px solid ' + inpBorder + ';background:' + inpBg + ';border-radius:5px;font-size:.78rem;font-weight:' + (isOver?'700':'500') + ';text-align:center;color:#263238;" title="Rahmen ' + cat.min.toFixed(decs).replace('.', ',') + '–' + cat.max.toFixed(decs).replace('.', ',') + '× · ohne Begründung bis ' + maxNoBeg.toFixed(decs).replace('.', ',') + '×"><small style="color:#78909c;font-size:.65rem;">Schwelle ' + maxNoBeg.toFixed(decs).replace('.', ',') + '×</small>' + (needsBeg?' <small style="color:' + (begMissing?'#c62828':'#e65100') + ';font-weight:700;" title="Begründung erforderlich">⚠</small>':'') + '</span>';
     itemsHtml += '<span class="goae-res-amt">' + fee.toFixed(2).replace('.', ',') + ' €</span>';
     itemsHtml += '</div>';
@@ -1176,6 +1285,198 @@ window.goaeCopyAuftrag = function(btn) {
 
 goaeSetCtx('ambulanz', document.querySelector('.goae-ctx-btn[data-ctx="ambulanz"]'));
 goaeRender();
+
+// Modal-HTML dynamisch einfügen, damit der Markup-Block am Skript-Ende lebt
+(function buildAbdomenModal(){
+  const organChecks = ABD_ORGANE.map(function(o){
+    return '<label><input type="checkbox" name="abd-organ" value="'+o.key+'" onchange="goaeAbdomenUpdate()"> '+o.label+'</label>';
+  }).join('');
+  const ctxChecks = ABD_KONTEXT.map(function(c){
+    return '<label><input type="checkbox" name="abd-ctx" value="'+c.label.replace(/"/g,'&quot;')+'" onchange="goaeAbdomenUpdate()"> '+c.label+'</label>';
+  }).join('');
+  const html =
+    '<div class="abd-modal-bg" id="goae-abd-modal" onclick="if(event.target===this) goaeAbdomenClose()">' +
+      '<div class="abd-modal">' +
+        '<div class="abd-modal-head"><h3>🫁 Abdomensonographie — Konfigurator</h3>' +
+          '<button class="abd-modal-close" type="button" onclick="goaeAbdomenClose()">Schließen</button>' +
+        '</div>' +
+        '<div class="abd-modal-body">' +
+          '<fieldset class="abd-fieldset"><legend>B-Bild Organe</legend>' +
+            '<div class="abd-checks">'+organChecks+'</div>' +
+            '<div class="abd-hint">1. Organ → Nr. 410 · weitere Organe → Nr. 420 (max. 3×)</div>' +
+          '</fieldset>' +
+          '<fieldset class="abd-fieldset"><legend>Doppler- / Duplexverfahren</legend>' +
+            '<div class="abd-checks">' +
+              '<label><input type="checkbox" id="goae-abd-farb" onchange="goaeAbdomenUpdate()"> Farbduplex (Nr. 401)</label>' +
+              '<label><input type="checkbox" id="goae-abd-spek" onchange="goaeAbdomenUpdate()"> PW-Doppler mit Spektralanalyse (Nr. 404)</label>' +
+            '</div>' +
+            '<div class="abd-doppler-hint">Bilddokumentation mit Spektralkurve / Farbduplex-Standbild erforderlich.</div>' +
+          '</fieldset>' +
+          '<fieldset class="abd-fieldset"><legend>Patientenkontext (Steigerungsfaktor-Begründung)</legend>' +
+            '<div class="abd-checks">'+ctxChecks+'</div>' +
+            '<div class="abd-doppler-hint">Aktiviert Faktor 2,3 als Vorschlag + Begründungs-Platzhalter.</div>' +
+          '</fieldset>' +
+          '<div class="abd-preview-box">' +
+            '<div style="font-size:.78rem;font-weight:700;color:#00695c;margin-bottom:6px;">Abrechnungsvorschlag</div>' +
+            '<div id="goae-abd-preview"></div>' +
+          '</div>' +
+          '<div class="abd-total-row"><span class="abd-total-label">Summe (Faktor wie eingestellt)</span><span class="abd-total-amt" id="goae-abd-total">0,00 €</span></div>' +
+        '</div>' +
+        '<div class="abd-modal-foot">' +
+          '<button class="abd-btn abd-btn-cancel" type="button" onclick="goaeAbdomenClose()">Abbrechen</button>' +
+          '<button class="abd-btn abd-btn-primary" type="button" onclick="goaeAbdomenApply()">In Abrechnung übernehmen</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  const wrap = document.createElement('div');
+  wrap.innerHTML = html;
+  document.body.appendChild(wrap.firstChild);
+})();
+
+// =========================================================================
+//  ABDOMEN-SONO KONFIGURATOR
+// =========================================================================
+//
+//  Interaktiver Modus zur korrekten GOÄ-Abrechnung der Abdomensonographie:
+//  - Organ-Checkliste (1. Organ → Nr. 410, weitere → Nr. 420 max. 3×)
+//  - Doppler/Duplex (Nr. 401 = Farbduplex, Nr. 404 = Frequenzspektrum-Analyse)
+//  - Patientenkontext → Steigerungsfaktor 2,3 als Vorschlag
+//
+//  Quellen GOÄ-Nrn: deutschesarztportal.de, abrechnungsstelle.com,
+//  Bundesärztekammer GOÄ-Ratgeber (Abschn. C IV).
+//
+const ABD_ORGANE = [
+  { key:'leber',          label:'Leber' },
+  { key:'galle',          label:'Gallenblase + Gallenwege' },
+  { key:'pankreas',       label:'Pankreas' },
+  { key:'milz',           label:'Milz' },
+  { key:'nieren',         label:'Nieren (beidseits)' },
+  { key:'harnblase',      label:'Harnblase' },
+  { key:'retroperitoneum',label:'Retroperitoneum / Aorta / V. cava' },
+  { key:'nebennieren',    label:'Nebennieren (separat dargestellt)' }
+];
+const ABD_KONTEXT = [
+  { key:'geriatrisch', label:'Geriatrischer Patient (>75 J.) mit Mobilitätseinschränkung' },
+  { key:'ckd',         label:'CKD G3–G5 / Dialysepatient' },
+  { key:'adipositas',  label:'Adipositas (BMI >30) / erschwerte Schallbedingungen' },
+  { key:'its',         label:'ITS-Patient / Beatmung / Drainagen' },
+  { key:'vexus',       label:'Volumenstatusbeurteilung (VExUS-Konzept)' }
+];
+
+window.goaeAbdomenOpen = function() {
+  document.getElementById('goae-abd-modal').style.display = 'flex';
+  goaeAbdomenUpdate();
+};
+window.goaeAbdomenClose = function() {
+  document.getElementById('goae-abd-modal').style.display = 'none';
+};
+window.goaeAbdomenUpdate = function() {
+  const checked = function(sel) {
+    return Array.from(document.querySelectorAll(sel)).filter(function(c){ return c.checked; });
+  };
+  const organe = checked('#goae-abd-modal input[name="abd-organ"]').map(function(c){ return c.value; });
+  const farbduplex = document.getElementById('goae-abd-farb').checked;
+  const spektral   = document.getElementById('goae-abd-spek').checked;
+  const ctxAktiv   = checked('#goae-abd-modal input[name="abd-ctx"]').length > 0;
+
+  const fT = parseFloat(document.getElementById('goae-fT').value) || 1.8;
+  const PKT = 0.058287;
+
+  let html = '';
+  let total = 0;
+  let warn = '';
+
+  if (organe.length === 0) {
+    html = '<div style="color:#888;font-style:italic;">Mind. 1 Organ auswählen, um Vorschlag zu sehen.</div>';
+  } else {
+    // 1. Organ → Nr. 410
+    const fee410 = 200 * PKT * fT;
+    total += fee410;
+    html += '<div class="abd-prev-row"><span><b>Nr. 410</b> Sono 1. Organ</span><span>' + fee410.toFixed(2).replace('.',',') + ' €</span></div>';
+
+    // weitere Organe → Nr. 420 (max 3×)
+    const weitere = organe.length - 1;
+    const cnt420 = Math.min(3, weitere);
+    if (cnt420 > 0) {
+      const fee420 = 80 * PKT * fT * cnt420;
+      total += fee420;
+      html += '<div class="abd-prev-row"><span><b>Nr. 420</b> Zuschlag jedes weitere Organ × ' + cnt420 + '</span><span>' + fee420.toFixed(2).replace('.',',') + ' €</span></div>';
+    }
+    if (weitere > 3) {
+      warn += '<div class="abd-warn">⚠ Nr. 420 ist max. 3× ansetzbar. Die zusätzlichen ' + (weitere-3) + ' Organe sind dokumentationspflichtig, aber nicht separat abrechenbar (ggf. Faktor bis 3,5 begründen: Adipositas, Notfall, Tumor-Screening).</div>';
+    }
+
+    // Doppler-Zuschläge
+    if (farbduplex) {
+      const fee401 = 80 * PKT * fT;
+      total += fee401;
+      html += '<div class="abd-prev-row"><span><b>Nr. 401</b> Zuschlag Duplex-Verfahren (Farbduplex)</span><span>' + fee401.toFixed(2).replace('.',',') + ' €</span></div>';
+    }
+    if (spektral) {
+      const fee404 = 80 * PKT * fT;
+      total += fee404;
+      html += '<div class="abd-prev-row"><span><b>Nr. 404</b> Zuschlag Frequenzspektrum-Analyse (PW)</span><span>' + fee404.toFixed(2).replace('.',',') + ' €</span></div>';
+    }
+    if (farbduplex && spektral) {
+      html += '<div class="abd-info">ℹ Nr. 401 + 404 nebeneinander ansatzfähig, sofern beide Verfahren eigenständig durchgeführt und befundet sind. Bilddokumentation mit Spektralkurve erforderlich.</div>';
+    }
+
+    if (ctxAktiv) {
+      html += '<div class="abd-info">💡 Bei aktiviertem Patientenkontext wird Faktor <b>2,3</b> empfohlen (statt 1,8). Begründung wird automatisch als Platzhalter eingetragen.</div>';
+    }
+  }
+
+  document.getElementById('goae-abd-preview').innerHTML = html + warn;
+  document.getElementById('goae-abd-total').textContent = total.toFixed(2).replace('.',',') + ' €';
+};
+
+window.goaeAbdomenApply = function() {
+  const checked = function(sel) {
+    return Array.from(document.querySelectorAll(sel)).filter(function(c){ return c.checked; });
+  };
+  const organe = checked('#goae-abd-modal input[name="abd-organ"]').map(function(c){ return c.value; });
+  const farbduplex = document.getElementById('goae-abd-farb').checked;
+  const spektral   = document.getElementById('goae-abd-spek').checked;
+  const ctxAktivList = checked('#goae-abd-modal input[name="abd-ctx"]').map(function(c){ return c.value; });
+
+  if (organe.length === 0) { alert('Mindestens 1 Organ auswählen.'); return; }
+
+  // Bestehende Sono-Positionen entfernen, damit der Konfigurator als Quelle der Wahrheit gilt
+  [410, 420, 4011, 4014, 413, 401].forEach(function(nr){
+    goaeSelected.delete(nr);
+    delete goaeCount[nr];
+    delete goaeFactorOverride[nr];
+    delete goaeBegruendung[nr];
+  });
+
+  // Nr. 410
+  goaeSelected.add(410);
+
+  // Nr. 420 mit Count
+  const cnt420 = Math.min(3, organe.length - 1);
+  if (cnt420 > 0) {
+    goaeSelected.add(420);
+    goaeCount[420] = cnt420;
+  }
+
+  // Doppler
+  if (farbduplex) goaeSelected.add(4011);
+  if (spektral)   goaeSelected.add(4014);
+
+  // Kontext → Faktor 2,3 setzen wenn aktiviert
+  if (ctxAktivList.length > 0) {
+    const begText = 'Erschwerte Schallbedingungen / erhöhter Aufwand: ' + ctxAktivList.join(', ') + '. Detaillierte Befundung aller Organe inkl. Bildarchiv.';
+    [410, 420, 4011, 4014].forEach(function(nr){
+      if (goaeSelected.has(nr)) {
+        goaeFactorOverride[nr] = 2.3;
+        goaeBegruendung[nr] = begText;
+      }
+    });
+  }
+
+  goaeAbdomenClose();
+  goaeRender();
+};
 </script>
 </body>
 </html>
