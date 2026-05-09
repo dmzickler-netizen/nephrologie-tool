@@ -228,7 +228,8 @@ body { background: #f4f6f8; font-family: -apple-system, BlinkMacSystemFont, "Seg
 
   <!-- Konfigurator-Buttons -->
   <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
-    <button id="goae-abd-btn" type="button" onclick="goaeAbdomenOpen()" style="padding:8px 16px;background:linear-gradient(135deg,#00897b,#00695c);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:.85rem;font-weight:700;box-shadow:0 2px 4px rgba(0,0,0,.15);">🫁 Abdomen-Sono Konfigurator</button>
+    <button id="goae-abd-quick-btn" type="button" onclick="goaeAbdomenQuick()" title="Sofort: 1× Nr. 410 + 3× Nr. 420 (Standard-Abdomen-Sono — 4 Organe)" style="padding:8px 16px;background:linear-gradient(135deg,#00897b,#00695c);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:.85rem;font-weight:700;box-shadow:0 2px 4px rgba(0,0,0,.15);">🫁 Komplette Abdomen-Sono (1-Klick)</button>
+    <button id="goae-abd-btn" type="button" onclick="goaeAbdomenOpen()" style="padding:8px 16px;background:#fff;color:#00695c;border:2px solid #00695c;border-radius:8px;cursor:pointer;font-size:.85rem;font-weight:700;">⚙ Konfigurator (Doppler/Kontext)</button>
   </div>
 
   <!-- Besuchstyp-Presets (dynamisch per goaeSetCtx) -->
@@ -1011,6 +1012,21 @@ function goaePreset(type, btn) {
     kath_infekt:   [200,250,3500,45,76]
   };
   (map[type]||[]).forEach(function(n){ goaeSelected.add(n); });
+  // Per-Preset Mehrfach-Counts (z.B. Nr. 420 bei Komplett-Abdomen-Sono = 3×)
+  var presetCounts = {
+    sono:        { 420: 3 },
+    erst:        { 420: 3 },
+    folge:       { 420: 3 },
+    htn:         { 420: 3 },
+    hypertensio: { 420: 3 },
+    its_aufnahme:{ 420: 3 },
+    its_ecu:     { 420: 1 }   // ITS-Echo: nur 1 weiteres Organ relevant
+  };
+  if (presetCounts[type]) {
+    Object.keys(presetCounts[type]).forEach(function(nrStr){
+      goaeCount[parseInt(nrStr,10)] = presetCounts[type][nrStr];
+    });
+  }
   goaeRender();
 }
 
@@ -1430,6 +1446,35 @@ window.goaeAbdomenApply = function() {
 
   goaeAbdomenClose();
   goaeRender();
+};
+
+// 1-Klick Quick-Apply: typische Komplett-Abdomen-Sono (1× Nr. 410 + 3× Nr. 420)
+window.goaeAbdomenQuick = function() {
+  // Bestehende Sono-Positionen entfernen
+  [410, 420, 4011, 4014, 413, 401].forEach(function(nr){
+    goaeSelected.delete(nr);
+    delete goaeCount[nr];
+    delete goaeFactorOverride[nr];
+    delete goaeBegruendung[nr];
+  });
+  // Standard-Abdomen: Nr. 410 (1. Organ z.B. Leber) + 3× Nr. 420 (Galle, Pankreas, Niere)
+  goaeSelected.add(410);
+  goaeSelected.add(420);
+  goaeCount[420] = 3;
+  goaeRender();
+  // Visuelles Feedback am Button
+  const btn = document.getElementById('goae-abd-quick-btn');
+  if (btn && !btn.dataset.feedback) {
+    btn.dataset.feedback = '1';
+    const oldHtml = btn.innerHTML;
+    btn.innerHTML = '✓ Übernommen — Nr. 410 + 3× Nr. 420';
+    btn.style.background = 'linear-gradient(135deg,#43a047,#2e7d32)';
+    setTimeout(function(){
+      btn.innerHTML = oldHtml;
+      btn.style.background = 'linear-gradient(135deg,#00897b,#00695c)';
+      delete btn.dataset.feedback;
+    }, 1800);
+  }
 };
 
 // Modal-HTML dynamisch einfügen — läuft AM ENDE, nachdem ABD_ORGANE/KONTEXT initialisiert sind
