@@ -272,6 +272,67 @@
   .checkbox-item input[type="checkbox"] { width: 16px; height: 16px; accent-color: #3949ab; }
   .checkbox-item.checked { border-color: #3949ab; background: #e8eaf6; font-weight: 600; }
 
+  /* ── Empfehlungs-Generator (Checkbox-System im Empfehlungs-Tab) ── */
+  .empf-blockhead {
+    display:flex; align-items:baseline; gap:8px;
+    font-size: 0.82rem; font-weight: 700; color: #1a237e;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin: 12px 0 6px;
+    padding: 4px 0 4px 0;
+    border-bottom: 1.5px solid #c5cae9;
+  }
+  .empf-blocknum {
+    background:#1a237e; color:#fff; border-radius:4px;
+    padding:2px 6px; font-size:0.7rem; font-weight:800;
+  }
+  .empf-blocksub { font-size:0.7rem; font-weight:400; color:#90a4ae; text-transform:none; letter-spacing:0; }
+  .empf-grid {
+    display:grid; grid-template-columns: 1fr 1fr; gap:6px;
+    margin-bottom: 4px;
+  }
+  @media(max-width:720px) { .empf-grid { grid-template-columns: 1fr; } }
+  .empf-item {
+    display:flex; align-items:flex-start; gap:8px;
+    padding: 7px 9px;
+    border: 1.5px solid #e0e0e0; border-radius: 7px;
+    font-size: 0.82rem; cursor: pointer; transition: all 0.15s;
+    background: #fff;
+  }
+  .empf-item:hover:not(.disabled) { border-color:#3949ab; background:#f5f6fb; }
+  .empf-item input[type="checkbox"] { width:15px; height:15px; accent-color:#3949ab; cursor:pointer; margin-top:1px; flex:0 0 auto; }
+  .empf-item.active { border-color:#3949ab; background:#e8eaf6; }
+  .empf-item.disabled { background:#fafafa; color:#9e9e9e; cursor:not-allowed; opacity:0.65; }
+  .empf-item.disabled input { cursor:not-allowed; }
+  .empf-label { font-weight:600; line-height:1.3; }
+  .empf-hint { display:block; font-size:0.68rem; color:#90a4ae; font-style:italic; margin-top:2px; font-weight:400; }
+  .empf-item.active .empf-label { color:#1a237e; }
+
+  .btn-empf-apply {
+    padding: 9px 16px;
+    background: linear-gradient(135deg, #1a237e, #3949ab);
+    color: white; border: none; border-radius: 8px;
+    font-size: 0.85rem; font-weight: 700; cursor: pointer;
+    box-shadow: 0 2px 5px rgba(26,35,126,0.25);
+    transition: all 0.15s;
+  }
+  .btn-empf-apply:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(26,35,126,0.35); }
+  .btn-empf-reset {
+    padding: 7px 12px;
+    background: #f5f5f5; color: #455a64;
+    border: 1px solid #cfd8dc; border-radius: 6px;
+    font-size: 0.78rem; font-weight: 600; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-empf-reset:hover { background:#e8eaf6; border-color:#3949ab; color:#1a237e; }
+  .empf-feedback {
+    font-size: 0.78rem; color: #2e7d32; font-weight: 600;
+    margin-left: 6px; opacity:0; transition: opacity 0.3s;
+  }
+  .empf-feedback.show { opacity:1; }
+
+  /* Arztbrief-Textarea: Arial für saubere Word-Übernahme */
+  #text-empfehlung { font-family: Arial, Helvetica, sans-serif; }
+
   .btn-calc {
     width: 100%;
     padding: 14px;
@@ -2211,7 +2272,31 @@ window.goHome = function(e){
         <button class="btn-copy" onclick="copyText('text-befund')">📋 Kopieren</button>
       </div>
       <div id="tab-empfehlung" class="tab-content">
-        <textarea class="arztbrief-area" id="text-empfehlung" readonly placeholder="Wird nach Berechnung generiert …"></textarea>
+        <!-- Checkbox-gesteuerter Generator -->
+        <div id="empf-checks" style="margin-bottom:12px;">
+          <div class="empf-blockhead">
+            <span class="empf-blocknum">A</span>
+            Spezifische Empfehlungen
+            <span class="empf-blocksub">— eingabe-adaptiv, automatisch (de-)aktiviert</span>
+          </div>
+          <div class="empf-grid" id="empf-block-a"></div>
+
+          <div class="empf-blockhead">
+            <span class="empf-blocknum">B</span>
+            Allgemeine Empfehlungen
+          </div>
+          <div class="empf-grid" id="empf-block-b"></div>
+
+          <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px;">
+            <button class="btn-empf-apply" onclick="empfApplyChecks()">📄 Empfehlungen in Arztbrief übernehmen</button>
+            <button class="btn-empf-reset" onclick="empfResetToAuto()" title="Zurück zum automatisch generierten Text">↺ Automatik</button>
+            <button class="btn-empf-reset" onclick="empfToggleAll(true)" title="Alle aktivierbaren Empfehlungen anhaken">☑ Alle</button>
+            <button class="btn-empf-reset" onclick="empfToggleAll(false)" title="Alle abwählen">☐ Keine</button>
+            <span id="empf-feedback" class="empf-feedback"></span>
+          </div>
+        </div>
+
+        <textarea class="arztbrief-area" id="text-empfehlung" readonly placeholder="Wird nach Berechnung oder über Checkbox-Generator gefüllt …"></textarea>
         <button class="btn-copy" onclick="copyText('text-empfehlung')">📋 Kopieren</button>
       </div>
       <div style="border-top:1px solid #e8eaf6;margin-top:12px;padding-top:10px;display:flex;flex-wrap:wrap;align-items:center;gap:12px;">
@@ -23527,6 +23612,353 @@ window.tahToggleStentCard  = tahToggleStentCard;
 window.tahToggleOAC        = tahToggleOAC;
 window.tahUpdateEgfr       = tahUpdateEgfr;
 
+})();
+</script>
+
+<!-- ════════════════════════════════════════════════════════════
+     EMPFEHLUNGS-GENERATOR (Checkbox-System für Arztbrief-Empfehlungen)
+     - 13 Empfehlungen (Block A: spezifisch, Block B: allgemein)
+     - Bedingungs-adaptiv: nur erfüllbare Checkboxen sind aktiv
+     - Generator schreibt formatierten Text in #text-empfehlung
+     - Re-evaluiert bei Feld-Änderungen (auch nach OCR)
+     ════════════════════════════════════════════════════════════ -->
+<script>
+(function(){
+'use strict';
+
+function num(id){
+  const el = document.getElementById(id);
+  if (!el) return null;
+  const v = parseFloat(String(el.value || el.textContent || '').replace(',', '.'));
+  return isFinite(v) ? v : null;
+}
+function readVals(){
+  return {
+    eGFR:     num('egfr-result-val'),
+    uacr:     num('uacr'),
+    bpSys:    num('bp_sys'),
+    bpDia:    num('bp_dia'),
+    smoker:   (document.querySelector('input[name="ckd-smoke"]:checked') || {}).value || '',
+    hb:       num('hb'),
+    ferritin: num('ferritin'),
+    tsat:     num('tsat'),
+    phosphat: num('phosphat'),
+    calcium:  num('calcium'),
+    pth:      num('pth'),
+    vitd:     num('vitd'),
+    bicarb:   num('bicarb'),
+    ph:       num('ph'),
+    isDiab:   !!(document.querySelector('#disease-checkboxes input[value="diabetisch"]') || {}).checked
+  };
+}
+
+function stageFromGFR(g){
+  if (g === null) return null;
+  if (g >= 90) return 'G1';
+  if (g >= 60) return 'G2';
+  if (g >= 45) return 'G3a';
+  if (g >= 30) return 'G3b';
+  if (g >= 15) return 'G4';
+  return 'G5';
+}
+
+// ───── 13 Empfehlungen mit Bedingungen + Text-Generatoren ─────
+const RECS = [
+  // ── BLOCK A: SPEZIFISCH ──────────────────────────────────────
+  {
+    id:'bp', block:'A', label:'Blutdruckziel',
+    cond:  v => v.bpSys !== null,
+    hint:  'Kein Praxis-RR eingegeben',
+    text:  v => `Zielblutdruck < 130/80 mmHg (ESC 2024 / KDIGO 2021). Aktueller Praxis-RR: ${v.bpSys}/${v.bpDia !== null ? v.bpDia : '?'} mmHg. Bevorzugt ACE-Hemmer oder ARB. Heimblutdruckmessung empfohlen (Mittelung über 7 Tage, morgens + abends).`
+  },
+  {
+    id:'ras', block:'A', label:'RAS-Blockade',
+    cond:  v => (v.uacr !== null && v.uacr >= 30) || (v.bpSys !== null && v.bpSys > 130),
+    hint:  'ACR < 30 mg/g und RR systolisch ≤ 130 mmHg',
+    text:  v => `RAS-Blockade (ACE-Hemmer oder AT1-Antagonist) in maximal tolerierter Dosis. Ziel: ACR-Reduktion ≥ 30 %. Kreatinin- und Kaliumkontrolle 1–2 Wochen nach Beginn oder Dosissteigerung.`
+  },
+  {
+    id:'sglt2', block:'A', label:'SGLT2-Inhibitor',
+    cond:  v => v.eGFR !== null && v.eGFR >= 20 && ((v.uacr !== null && v.uacr >= 200) || v.isDiab),
+    hint:  'eGFR < 20 oder kein ACR ≥ 200 / keine diab. Nephropathie',
+    text:  v => `SGLT2-Inhibitor (Dapagliflozin 10 mg oder Empagliflozin 10 mg) — nephroprotektiv und kardioprotektiv (DAPA-CKD, EMPA-KIDNEY). Weiterführung bis eGFR < 20 ml/min unter Verlaufskontrolle.`
+  },
+  {
+    id:'anaemie', block:'A', label:'Renale Anämie',
+    cond:  v => v.hb !== null,
+    hint:  'Kein Hb-Wert eingegeben (Anämie-Tab)',
+    text:  v => {
+      const fer = v.ferritin !== null ? `${v.ferritin} ng/ml` : 'nicht bestimmt';
+      const tsa = v.tsat !== null ? `${v.tsat} %` : 'nicht bestimmt';
+      if (v.hb < 10) {
+        let therapie;
+        if ((v.ferritin !== null && v.ferritin < 300) || (v.tsat !== null && v.tsat < 25)) {
+          therapie = 'Eisen i.v. (Ferritin < 300 oder TSAT < 25 %), danach ESA bei persistierendem Hb < 10 g/dl';
+        } else {
+          therapie = 'ESA-Therapie individualisiert (Ziel Hb 10–11,5 g/dl)';
+        }
+        return `Renale Anämie (Hb ${v.hb} g/dl). Eisenstatus: Ferritin ${fer}, TSAT ${tsa}. Therapie gemäß KDIGO 2026: ${therapie}. Hb-Ziel 10–11,5 g/dl, max. 11,5 g/dl.`;
+      } else if (v.hb <= 11.5) {
+        return `Renale Anämie (Hb ${v.hb} g/dl, im Zielbereich). Eisenstatus: Ferritin ${fer}, TSAT ${tsa} — Verlaufskontrolle fortführen.`;
+      } else {
+        const fLow = v.ferritin !== null && v.ferritin < 100;
+        const tLow = v.tsat !== null && v.tsat < 20;
+        if (fLow || tLow) {
+          return `Hb im Normbereich (${v.hb} g/dl), aber Eisenstatus grenzwertig (Ferritin ${fer}, TSAT ${tsa}) — Verlaufskontrolle, ggf. Eisensubstitution.`;
+        }
+        return `Hb ${v.hb} g/dl — keine renale Anämie. Verlaufskontrolle gemäß CKD-Stadium.`;
+      }
+    }
+  },
+  {
+    id:'mbd', block:'A', label:'CKD-MBD / Mineralstoffwechsel',
+    cond:  v => v.phosphat !== null || v.pth !== null || v.vitd !== null,
+    hint:  'Kein Phosphat, PTH oder Vitamin D eingegeben',
+    text:  v => {
+      const parts = [];
+      if (v.phosphat !== null && v.phosphat > 1.45) {
+        parts.push(`Hyperphosphatämie (Phosphat ${v.phosphat} mmol/l). Phosphatarme Diät (< 1.000 mg/d). Phosphatbinder bei persistierender Erhöhung.`);
+      }
+      if (v.pth !== null && v.pth > 65) {
+        parts.push(`Sekundärer Hyperparathyreoidismus (iPTH ${v.pth} pg/ml). Verlaufskontrolle; aktives Vitamin D nur bei schwerem oder progredientem sHPT (KDIGO 2017).`);
+      }
+      if (v.vitd !== null && v.vitd < 30) {
+        parts.push(`Vitamin-D-Substitution: Dekristol® 20.000 IE/Woche (Ziel 25-OH-Vit-D ≥ 30 ng/ml). Aktuell: ${v.vitd} ng/ml.`);
+      }
+      if (parts.length === 0) {
+        return `CKD-MBD-Parameter im Normbereich — Verlaufskontrolle gemäß Stadium.`;
+      }
+      return parts.join(' ');
+    }
+  },
+  {
+    id:'azidose', block:'A', label:'Metabolische Azidose',
+    cond:  v => (v.bicarb !== null && v.bicarb < 22) || (v.ph !== null && v.ph < 7.35),
+    hint:  'HCO₃⁻ ≥ 22 mmol/l und pH ≥ 7,35',
+    text:  v => {
+      const bic = v.bicarb !== null ? `${v.bicarb} mmol/l` : 'nicht bestimmt';
+      const phS = v.ph !== null ? `, pH ${v.ph}` : '';
+      return `Metabolische Azidose (HCO₃⁻ ${bic}${phS}). Orale Bikarbonatsubstitution (Natriumbikarbonat / Nephrotrans® 1–3 g/d p.o.). Ziel HCO₃⁻ 22–26 mmol/l.`;
+    }
+  },
+  {
+    id:'monitoring', block:'A', label:'Labormonitoring',
+    cond:  () => true,
+    text:  v => {
+      const st = stageFromGFR(v.eGFR);
+      const eg = v.eGFR !== null ? ` (eGFR ${v.eGFR} ml/min)` : '';
+      if (st === 'G3a' || st === 'G3b') return `Nephrologische Kontrolle alle 3 Monate${eg}. ACR-Verlauf alle 3–6 Monate.`;
+      if (st === 'G4') return `Nephrologische Kontrolle alle 1–3 Monate${eg}. Vorbereitung Nierenersatzverfahren prüfen.`;
+      if (st === 'G5') return `Nephrologische Kontrolle monatlich${eg}. Vorbereitung Nierenersatztherapie evaluieren (Shuntanlage, PD-Katheter, präemptive Transplantation).`;
+      if (st === 'G2') return `Nephrologische Kontrolle alle 6–12 Monate${eg}. Risikofaktoren-Management.`;
+      if (st === 'G1') return `Nephrologische Kontrolle jährlich${eg}. Albuminurie-Screening.`;
+      return `Nephrologische Verlaufskontrolle gemäß CKD-Stadium.`;
+    }
+  },
+
+  // ── BLOCK B: ALLGEMEIN ───────────────────────────────────────
+  {
+    id:'rauchen', block:'B', label:'Raucherentwöhnung',
+    cond:  v => v.smoker === 'current',
+    hint:  'Patient ist nicht aktiver Raucher',
+    text:  v => `Strukturierte Raucherentwöhnung empfohlen. Rauchen beschleunigt die CKD-Progression und erhöht die kardiovaskuläre Mortalität erheblich.`
+  },
+  {
+    id:'bewegung', block:'B', label:'Körperliche Aktivität',
+    cond:  () => true,
+    text:  v => `Ausdauersport ≥ 150 min/Woche moderater Intensität (Gehen, Radfahren, Schwimmen) oder ≥ 75 min intensiv (KDIGO 2024). Reduziert kardiovaskuläres Risiko und CKD-Progressionsrate.`
+  },
+  {
+    id:'eiweiss', block:'B', label:'Eiweißrestriktion',
+    cond:  v => v.eGFR !== null && v.eGFR < 60,
+    hint:  'eGFR ≥ 60 ml/min (kein Stadium G3+)',
+    text:  v => `Eiweißrestriktion 0,6–0,8 g/kg KG/d (KDIGO 2024) — verlangsamt die CKD-Progression. Regelmäßige Kontrolle des Ernährungsstatus (Albumin, Körpergewicht).`
+  },
+  {
+    id:'salz', block:'B', label:'Kochsalzrestriktion',
+    cond:  () => true,
+    text:  v => `Kochsalzrestriktion < 5 g NaCl/d (< 2 g Natrium/d) — blutdrucksenkend und nephroprotektiv.`
+  },
+  {
+    id:'toxika', block:'B', label:'Nephrotoxika meiden',
+    cond:  () => true,
+    text:  v => `Nephrotoxika konsequent meiden: NSAR kontraindiziert ab CKD G3+. Kontrastmittel nur bei strenger Indikation mit Hydrierung (NaCl 0,9 %) und Kreatininkontrolle nach 48 h. Aminoglykoside nur mit Spiegelkontrolle.`
+  },
+  {
+    id:'impf', block:'B', label:'Impfstatus',
+    cond:  () => true,
+    text:  v => `Impfstatus prüfen und komplettieren: Pneumokokken, Influenza (jährlich), Hepatitis B, COVID-19.`
+  }
+];
+
+// ───── UI rendern ─────
+function renderUI(){
+  const aHost = document.getElementById('empf-block-a');
+  const bHost = document.getElementById('empf-block-b');
+  if (!aHost || !bHost) return;
+  aHost.innerHTML = ''; bHost.innerHTML = '';
+  RECS.forEach(rec => {
+    const host = rec.block === 'A' ? aHost : bHost;
+    const label = document.createElement('label');
+    label.className = 'empf-item';
+    label.id = 'empf-item-' + rec.id;
+    label.innerHTML =
+      '<input type="checkbox" id="empf-' + rec.id + '" class="empf-cb">' +
+      '<span><span class="empf-label">' + rec.label + '</span>' +
+      '<span class="empf-hint" id="empf-hint-' + rec.id + '"></span></span>';
+    const cb = label.querySelector('input');
+    cb.addEventListener('change', () => {
+      cb.dataset.userTouched = '1';
+      label.classList.toggle('active', cb.checked);
+    });
+    host.appendChild(label);
+  });
+  evaluate();
+}
+
+// ───── Bedingungen evaluieren / Checkbox-Zustände updaten ─────
+function evaluate(){
+  const v = readVals();
+  RECS.forEach(rec => {
+    const cb = document.getElementById('empf-' + rec.id);
+    const item = document.getElementById('empf-item-' + rec.id);
+    const hint = document.getElementById('empf-hint-' + rec.id);
+    if (!cb || !item) return;
+    const enabled = !!rec.cond(v);
+    cb.disabled = !enabled;
+    if (!enabled) {
+      cb.checked = false;
+    } else if (!cb.dataset.userTouched) {
+      cb.checked = true;
+    }
+    item.classList.toggle('disabled', !enabled);
+    item.classList.toggle('active', enabled && cb.checked);
+    if (hint) hint.textContent = enabled ? '' : (rec.hint || '');
+  });
+}
+
+// ───── Textbaustein-Generator ─────
+function generateText(){
+  const v = readVals();
+  let out = '';
+  const aActive = RECS.filter(r => r.block==='A' && document.getElementById('empf-'+r.id)?.checked);
+  const bActive = RECS.filter(r => r.block==='B' && document.getElementById('empf-'+r.id)?.checked);
+  if (aActive.length){
+    out += 'SPEZIFISCHE EMPFEHLUNGEN\n\n';
+    aActive.forEach(r => { out += r.text(v) + '\n\n'; });
+  }
+  if (bActive.length){
+    out += 'ALLGEMEINE EMPFEHLUNGEN\n\n';
+    bActive.forEach(r => { out += r.text(v) + '\n\n'; });
+  }
+  return out.trim();
+}
+
+// ───── calculate() wrappen: nach jedem Run re-evaluieren + manuellen Text schützen ─────
+let _calcPatched = false;
+function patchCalculate(){
+  if (_calcPatched) return true;
+  const orig = window.calculate;
+  if (typeof orig !== 'function') return false;
+  _calcPatched = true;
+  window.calculate = function(){
+    const ta = document.getElementById('text-empfehlung');
+    const manual = ta && ta.dataset.manualEmpf === '1' ? ta.value : null;
+    const r = orig.apply(this, arguments);
+    if (manual !== null && ta) ta.value = manual;
+    // Checkboxes neu evaluieren — egfr-result-val wurde ggf. neu erstellt
+    try { evaluate(); } catch(e){}
+    return r;
+  };
+  return true;
+}
+
+window.empfApplyChecks = function(){
+  evaluate();
+  const text = generateText();
+  const ta = document.getElementById('text-empfehlung');
+  if (!ta) return;
+  if (!text){
+    ta.value = '';
+    delete ta.dataset.manualEmpf;
+    flashFeedback('Keine Empfehlung angehakt — Feld geleert', '#b71c1c');
+    return;
+  }
+  ta.value = text;
+  ta.dataset.manualEmpf = '1';
+  patchCalculate();
+  flashFeedback('✓ In Arztbrief übernommen', '#2e7d32');
+};
+
+window.empfResetToAuto = function(){
+  const ta = document.getElementById('text-empfehlung');
+  if (!ta) return;
+  delete ta.dataset.manualEmpf;
+  if (typeof window.calculate === 'function') {
+    try { window.calculate(); } catch(e){}
+  }
+  flashFeedback('Automatik wiederhergestellt', '#1a237e');
+};
+
+window.empfToggleAll = function(state){
+  RECS.forEach(rec => {
+    const cb = document.getElementById('empf-' + rec.id);
+    if (cb && !cb.disabled){
+      cb.checked = !!state;
+      cb.dataset.userTouched = '1';
+      const item = document.getElementById('empf-item-' + rec.id);
+      if (item) item.classList.toggle('active', !!state);
+    }
+  });
+};
+
+function flashFeedback(msg, color){
+  const fb = document.getElementById('empf-feedback');
+  if (!fb) return;
+  fb.textContent = msg;
+  fb.style.color = color || '#2e7d32';
+  fb.classList.add('show');
+  clearTimeout(flashFeedback._t);
+  flashFeedback._t = setTimeout(() => fb.classList.remove('show'), 2400);
+}
+
+// ───── Re-eval bei Feld-Änderungen (auch nach OCR) ─────
+function wireListeners(){
+  const ids = ['uacr','bp_sys','bp_dia','hb','ferritin','tsat','phosphat','calcium','pth','vitd','bicarb','ph','creatinine'];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('input', evaluate);
+      el.addEventListener('change', evaluate);
+    }
+  });
+  document.querySelectorAll('input[name="ckd-smoke"]').forEach(r => r.addEventListener('change', evaluate));
+  document.querySelectorAll('#disease-checkboxes input').forEach(r => r.addEventListener('change', evaluate));
+  // eGFR-Ergebnis (computed span text) via MutationObserver
+  const eg = document.getElementById('egfr-result-val');
+  if (eg) {
+    new MutationObserver(evaluate).observe(eg, {childList:true, characterData:true, subtree:true});
+  }
+}
+
+// ───── Init nach DOM ready (oder sofort wenn schon geladen) ─────
+function init(){
+  if (!document.getElementById('empf-block-a')) return;
+  renderUI();
+  wireListeners();
+  // calculate() patchen (möglich verzögert, falls Hauptscript noch nicht geladen)
+  if (!patchCalculate()) {
+    let tries = 0;
+    const iv = setInterval(() => {
+      if (patchCalculate() || ++tries > 40) clearInterval(iv);
+    }, 150);
+  }
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
 })();
 </script>
 
