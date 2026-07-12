@@ -16316,7 +16316,7 @@ function egfrCombined(age, sex, scr, cys) {
   let scrRatio = scr / kappa;
   let cysRatio = cys / 0.8;
   let scrPow = scrRatio <= 1 ? Math.pow(scrRatio, scrAlpha) : Math.pow(scrRatio, scrBeta);
-  let cysPow = cysRatio <= 1 ? Math.pow(cysRatio, -0.323) : Math.pow(cysRatio, -1.132);
+  let cysPow = cysRatio <= 1 ? Math.pow(cysRatio, -0.323) : Math.pow(cysRatio, -0.778);
   let egfr = 135 * scrPow * cysPow * Math.pow(0.9961, age) * sexMult;
   return Math.round(egfr * 10) / 10;
 }
