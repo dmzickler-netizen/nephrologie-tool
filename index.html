@@ -11480,7 +11480,7 @@ window.gichtAutoImport = function() {
 
       <!-- FLOWCHART RESULTS -->
       <div id="sab-flowchart">
-        <div class="sab-hint" id="sab-hint-main">pH eingeben (+ HCO₃⁻ oder pCO₂), um die Analyse zu starten.</div>
+        <div class="sab-hint">pH eingeben (+ HCO₃⁻ oder pCO₂), um die Analyse zu starten.</div>
       </div>
     </div>
 
@@ -11901,7 +11901,7 @@ window.gichtAutoImport = function() {
     var fc = document.getElementById('sab-flowchart');
 
     if (!isset(ph)) {
-      fc.innerHTML = '<div class="sab-hint" id="sab-hint-main">pH eingeben (+ HCO\u2083\u207b oder pCO\u2082), um die Analyse zu starten.</div>';
+      fc.innerHTML = '<div class="sab-hint">pH eingeben (+ HCO\u2083\u207b oder pCO\u2082), um die Analyse zu starten.</div>';
       return;
     }
 
@@ -11917,7 +11917,7 @@ window.gichtAutoImport = function() {
     var hasPco2 = isset(pco2);
 
     if (!hasHco3 && !hasPco2) {
-      fc.innerHTML = '<div class="sab-hint" id="sab-hint-main">pH eingeben (+ HCO\u2083\u207b oder pCO\u2082), um die Analyse zu starten.</div>';
+      fc.innerHTML = '<div class="sab-hint">pH eingeben (+ HCO\u2083\u207b oder pCO\u2082), um die Analyse zu starten.</div>';
       return;
     }
 
