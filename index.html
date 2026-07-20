@@ -122,6 +122,7 @@
 #tab-abx { display: none; }
 #tab-hwi { display: none; }
 #tab-medcheck { display: none; }
+#tab-ckm { display: none; }
 .gicht-section { padding:10px 12px; border-radius:10px; margin-bottom:0; }
 .gicht-section-title { font-size:.75rem; font-weight:800; text-transform:uppercase; letter-spacing:.5px; color:#455a64; margin-bottom:8px; }
 .gicht-akut { background:#fff3e0; border:1.5px solid #ffb74d; }
@@ -1607,6 +1608,7 @@ window.goHome = function(e){
   <button class="nav-tab-btn" data-tab="mbd" onclick="switchToolTab('mbd')">🩸 Anämie / Ca-Phosphat</button>
   <button class="nav-tab-btn" data-tab="lipid" onclick="switchToolTab('lipid')">💊 Lipidtherapie</button>
   <button class="nav-tab-btn" data-tab="diabetes" onclick="switchToolTab('diabetes')">🩺 Diabetes</button>
+  <button class="nav-tab-btn" data-tab="ckm" onclick="switchToolTab('ckm')">🫀 CKM-Syndrom</button>
   <button class="nav-tab-btn" data-tab="sd" onclick="switchToolTab('sd')">🦋 Schilddrüse</button>
   <button class="nav-tab-btn" data-tab="htn" onclick="switchToolTab('htn')">❤️‍🩹 Hypertonie</button>
   <button class="nav-tab-btn" data-tab="hi" onclick="switchToolTab('hi')">💔 Herzinsuffizienz</button>
@@ -16259,6 +16261,748 @@ document.querySelectorAll('#tab-medcheck input[type="checkbox"]').forEach(functi
 </script>
 </div><!-- end tab-medcheck -->
 
+<!-- ============================================================
+     CKM-SYNDROM TOOL
+     2026 AHA/ACC/ADA/ASN CKM Guideline
+     ============================================================ -->
+<div id="tab-ckm">
+<style>
+#tab-ckm .diab-container { max-width: 960px; }
+#tab-ckm .diab-card h2 { color: #00695c; border-bottom-color: #b2dfdb; }
+#tab-ckm .diab-calc-btn { background: linear-gradient(135deg, #00695c, #00796b); box-shadow: 0 3px 10px rgba(0,105,92,.3); }
+#tab-ckm .diab-calc-btn:hover { background: linear-gradient(135deg, #00796b, #00897b); box-shadow: 0 5px 14px rgba(0,105,92,.4); }
+#tab-ckm input[type="number"], #tab-ckm input[type="text"], #tab-ckm select {
+  width: 100%; padding: 8px 10px; border: 1.5px solid #cfd8dc; border-radius: 6px;
+  font-size: .9rem; font-family: 'Segoe UI', Arial, sans-serif; background: #fafafa;
+  color: #004d40; transition: border-color .2s; box-sizing: border-box;
+}
+#tab-ckm input[type="number"]:focus, #tab-ckm select:focus { outline: none; border-color: #00897b; background: white; }
+#tab-ckm .diab-toggle-group input[type="radio"]:checked + label { background: #00695c; border-color: #00695c; }
+#tab-ckm .diab-toggle-group label:hover { border-color: #00695c; color: #004d40; }
+.ckm-stage-banner { border-radius: 12px; padding: 18px 22px; margin-bottom: 16px; color: #fff; }
+.ckm-stage-num { font-size: 2.4rem; font-weight: 800; line-height: 1; }
+.ckm-stage-name { font-size: 1rem; font-weight: 700; margin-top: 4px; }
+.ckm-crit { font-size: .84rem; line-height: 1.55; padding: 3px 0 3px 18px; position: relative; }
+.ckm-crit::before { content: "▸"; position: absolute; left: 4px; }
+.ckm-risk-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 6px; }
+@media (max-width: 600px) { .ckm-risk-grid { grid-template-columns: 1fr; } }
+.ckm-risk-box { background: #f5f5f5; border-radius: 8px; padding: 12px 14px; text-align: center; }
+.ckm-risk-val { font-size: 1.6rem; font-weight: 800; line-height: 1.1; }
+.ckm-risk-lbl { font-size: .72rem; color: #607d8b; text-transform: uppercase; letter-spacing: .4px; margin-top: 3px; }
+.ckm-rec { border-left: 4px solid #00897b; background: #e0f2f1; padding: 10px 14px; margin-bottom: 8px; border-radius: 0 6px 6px 0; font-size: .86rem; line-height: 1.5; }
+.ckm-rec-t { font-weight: 700; color: #004d40; }
+.ckm-cor { display: inline-block; font-size: .68rem; font-weight: 700; padding: 1px 6px; border-radius: 3px; background: #00695c; color: #fff; margin-left: 6px; vertical-align: middle; }
+.ckm-xref { border-left: 4px solid #90a4ae; background: #f5f5f5; padding: 10px 14px; margin-bottom: 8px; border-radius: 0 6px 6px 0; font-size: .84rem; line-height: 1.5; }
+.ckm-xref a { color: #00695c; font-weight: 600; cursor: pointer; text-decoration: underline; }
+</style>
+<div class="diab-container">
+
+  <div id="ckm-import-banner" style="display:none;" class="diab-import-banner">
+    <span style="font-size:1.1rem;">📥</span><span id="ckm-import-text"></span>
+  </div>
+
+  <div class="diab-card">
+    <h2>🫀 CKM-Syndrom — Stadien 0–4</h2>
+    <p style="font-size:.82rem;color:#607d8b;margin:-6px 0 12px;line-height:1.5;">
+      Kardio-renal-metabolisches Syndrom nach der <strong>2026 AHA/ACC/ADA/ASN CKM-Leitlinie</strong>.
+      Ordnet Adipositas, Metabolik, Nierenfunktion und kardiovaskulären Status in ein gemeinsames
+      Stadienmodell ein und leitet daraus Screening-Intervalle und die nierenprotektive
+      Therapiekaskade ab.
+    </p>
+    <div class="diab-row">
+      <div class="diab-field">
+        <label>Alter</label>
+        <input type="number" id="ckm-age" min="18" max="110"><span class="diab-unit">Jahre</span>
+      </div>
+      <div class="diab-field">
+        <label>Geschlecht</label>
+        <div class="diab-toggle-group">
+          <input type="radio" name="ckm-sex" id="ckm-sex-m" value="m"><label for="ckm-sex-m">Mann</label>
+          <input type="radio" name="ckm-sex" id="ckm-sex-f" value="f"><label for="ckm-sex-f">Frau</label>
+        </div>
+      </div>
+    </div>
+    <div class="diab-check-item" style="margin-top:6px;">
+      <input type="checkbox" id="ckm-asian">
+      <label for="ckm-asian">Asiatische Abstammung <small>— niedrigere Grenzwerte für BMI (≥23) und Bauchumfang (≥80/90 cm)</small></label>
+    </div>
+  </div>
+
+  <div class="diab-card">
+    <h2>⚖️ Adipositas (Stadium 1)</h2>
+    <div class="diab-row">
+      <div class="diab-field">
+        <label>Körpergewicht</label>
+        <input type="number" id="ckm-weight" step="0.1" min="25" max="300" oninput="ckmCalcBMI()"><span class="diab-unit">kg</span>
+      </div>
+      <div class="diab-field">
+        <label>Körpergröße</label>
+        <input type="number" id="ckm-height" min="120" max="230" oninput="ckmCalcBMI()"><span class="diab-unit">cm</span>
+      </div>
+    </div>
+    <div class="diab-row">
+      <div class="diab-field">
+        <label>BMI <span class="diab-optional">— automatisch</span></label>
+        <input type="number" id="ckm-bmi" step="0.1" min="12" max="80"><span class="diab-unit">kg/m²</span>
+      </div>
+      <div class="diab-field">
+        <label>Bauchumfang <span class="diab-optional">— optional</span></label>
+        <input type="number" id="ckm-waist" min="40" max="200"><span class="diab-unit">cm</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="diab-card">
+    <h2>🧪 Metabolik &amp; Blutdruck (Stadium 2)</h2>
+    <div class="diab-row">
+      <div class="diab-field">
+        <label>Nüchternglukose</label>
+        <input type="number" id="ckm-fpg" min="40" max="600"><span class="diab-unit">mg/dl</span>
+      </div>
+      <div class="diab-field">
+        <label>HbA1c</label>
+        <input type="number" id="ckm-hba1c" step="0.1" min="3" max="20"><span class="diab-unit">%</span>
+      </div>
+    </div>
+    <div class="diab-row">
+      <div class="diab-field">
+        <label>Triglyzeride</label>
+        <input type="number" id="ckm-tg" min="20" max="3000"><span class="diab-unit">mg/dl</span>
+      </div>
+      <div class="diab-field">
+        <label>HDL-Cholesterin</label>
+        <input type="number" id="ckm-hdl" min="10" max="150"><span class="diab-unit">mg/dl</span>
+      </div>
+    </div>
+    <div class="diab-row">
+      <div class="diab-field">
+        <label>Gesamtcholesterin</label>
+        <input type="number" id="ckm-tc" min="60" max="600"><span class="diab-unit">mg/dl — für PREVENT</span>
+      </div>
+      <div class="diab-field">
+        <label>Blutdruck systolisch / diastolisch</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="number" id="ckm-sbp" min="60" max="280" style="flex:1;">
+          <span style="color:#90a4ae;font-weight:400;">/</span>
+          <input type="number" id="ckm-dbp" min="30" max="180" style="flex:1;">
+        </div>
+        <span class="diab-unit">mmHg — konventionelle Praxismessung</span>
+      </div>
+    </div>
+    <div class="diab-med-grid" style="margin-top:10px;">
+      <div class="diab-check-item"><input type="checkbox" id="ckm-t2d"><label for="ckm-t2d">Diabetes mellitus bekannt</label></div>
+      <div class="diab-check-item"><input type="checkbox" id="ckm-smoker"><label for="ckm-smoker">Aktueller Raucher</label></div>
+      <div class="diab-check-item"><input type="checkbox" id="ckm-antihtn"><label for="ckm-antihtn">Antihypertensiva</label></div>
+      <div class="diab-check-item"><input type="checkbox" id="ckm-statin"><label for="ckm-statin">Statin</label></div>
+    </div>
+  </div>
+
+  <div class="diab-card">
+    <h2>🫘 Nierenfunktion (Stadium 2 / 3 / 4b)</h2>
+    <div class="diab-row">
+      <div class="diab-field">
+        <label>eGFR</label>
+        <input type="number" id="ckm-egfr" step="0.1" min="1" max="200"><span class="diab-unit">ml/min/1,73 m²</span>
+      </div>
+      <div class="diab-field">
+        <label>uACR</label>
+        <input type="number" id="ckm-uacr" step="0.1" min="0" max="20000"><span class="diab-unit">mg/g</span>
+      </div>
+    </div>
+    <div class="diab-row">
+      <div class="diab-field">
+        <label>Kalium <span class="diab-optional">— optional</span></label>
+        <input type="number" id="ckm-kalium" step="0.1" min="2" max="9"><span class="diab-unit">mmol/l</span>
+      </div>
+      <div class="diab-field" style="justify-content:flex-end;">
+        <div class="diab-check-item"><input type="checkbox" id="ckm-krt"><label for="ckm-krt">Chronische Nierenersatztherapie</label></div>
+      </div>
+    </div>
+    <div class="diab-med-grid" style="margin-top:6px;">
+      <div class="diab-check-item"><input type="checkbox" id="ckm-med-rasi"><label for="ckm-med-rasi">ACE-Hemmer / ARB</label></div>
+      <div class="diab-check-item"><input type="checkbox" id="ckm-med-sglt2"><label for="ckm-med-sglt2">SGLT2-Inhibitor</label></div>
+      <div class="diab-check-item"><input type="checkbox" id="ckm-med-nsmra"><label for="ckm-med-nsmra">Finerenon (nsMRA)</label></div>
+      <div class="diab-check-item"><input type="checkbox" id="ckm-med-glp1"><label for="ckm-med-glp1">GLP-1-RA</label></div>
+    </div>
+  </div>
+
+  <div class="diab-card">
+    <h2>❤️ Kardiovaskulärer Status (Stadium 3 / 4)</h2>
+    <p style="font-size:.79rem;color:#607d8b;margin:-6px 0 10px;">Subklinische Marker — nur ausfüllen, wenn erhoben.</p>
+    <div class="diab-row">
+      <div class="diab-field">
+        <label>CAC-Score <span class="diab-optional">— Agatston</span></label>
+        <input type="number" id="ckm-cac" min="0" max="10000"><span class="diab-unit">Stadium 3 ab ≥100</span>
+      </div>
+      <div class="diab-field">
+        <label>NT-proBNP</label>
+        <input type="number" id="ckm-ntprobnp" min="0" max="100000"><span class="diab-unit">pg/ml — Prä-HI ab ≥125</span>
+      </div>
+    </div>
+    <div class="diab-row">
+      <div class="diab-field">
+        <label>hs-Troponin T</label>
+        <input type="number" id="ckm-hstnt" step="0.1" min="0" max="10000"><span class="diab-unit">ng/l — ♀ ≥14 · ♂ ≥22</span>
+      </div>
+      <div class="diab-field">
+        <label>hs-Troponin I</label>
+        <input type="number" id="ckm-hstni" step="0.1" min="0" max="10000"><span class="diab-unit">ng/l — ♀ ≥10 · ♂ ≥12</span>
+      </div>
+    </div>
+    <div class="diab-check-item" style="margin-top:4px;">
+      <input type="checkbox" id="ckm-abi"><label for="ckm-abi">Erniedrigter ABI ohne Claudicatio <small>— zählt als subklinische ASCVD</small></label>
+    </div>
+    <div style="border-top:1px solid #eceff1;margin:12px 0 10px;padding-top:10px;">
+      <div style="font-size:.77rem;font-weight:700;color:#37474f;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Manifeste kardiovaskuläre Erkrankung → Stadium 4</div>
+      <div class="diab-med-grid">
+        <div class="diab-check-item"><input type="checkbox" id="ckm-cvd-khk"><label for="ckm-cvd-khk">KHK / Z.n. Myokardinfarkt</label></div>
+        <div class="diab-check-item"><input type="checkbox" id="ckm-cvd-hi"><label for="ckm-cvd-hi">Herzinsuffizienz</label></div>
+        <div class="diab-check-item"><input type="checkbox" id="ckm-cvd-stroke"><label for="ckm-cvd-stroke">Schlaganfall / TIA</label></div>
+        <div class="diab-check-item"><input type="checkbox" id="ckm-cvd-pavk"><label for="ckm-cvd-pavk">pAVK</label></div>
+        <div class="diab-check-item"><input type="checkbox" id="ckm-cvd-vhf"><label for="ckm-cvd-vhf">Vorhofflimmern</label></div>
+      </div>
+    </div>
+  </div>
+
+  <button class="diab-calc-btn" onclick="ckmCalculate()">🫀 CKM-Stadium &amp; Therapie berechnen</button>
+  <div id="ckm-results" style="margin-top:20px;"></div>
+
+  <div class="diab-disclaimer">
+    ⚕️ <strong>Hinweis:</strong> Stadien, Screening-Intervalle und Therapiekaskade nach
+    <strong>2026 AHA/ACC/ADA/ASN Guideline for the Prevention, Detection, Evaluation, and Management of
+    Cardiovascular-Kidney-Metabolic Syndrome</strong> (Ndumele CE et al., <em>J Am Coll Cardiol</em>
+    2026;87(22S):e1889–e2007 · <em>Circulation</em>, doi:10.1161/CIR.0000000000001453).
+    Risikoschätzung mit den <strong>PREVENT</strong>-Gleichungen (Khan SS et al., <em>Circulation</em>
+    2024;149:430–449). Es existiert <strong>keine deutsche Leitlinie und kein DGK-/DGfN-Positionspapier
+    zum CKM-Syndrom</strong>. Alle Angaben ohne Gewähr.
+  </div>
+
+</div><!-- end diab-container -->
+
+<script>
+(function(){
+  'use strict';
+
+  /* ==========================================================
+     PREVENT-Risikogleichungen (AHA)
+     Khan SS et al. Circulation. 2024;149(6):430-449.
+     doi:10.1161/CIRCULATIONAHA.123.067626
+
+     Basismodelle ohne die optionalen Add-ons uACR / HbA1c / SDI.
+
+     KOEFFIZIENTENQUELLE: programmatisch extrahiert aus dem R-Paket
+     `preventr` (MIT-Lizenz), Datei R/sysdata.rda, Objekte base_10yr
+     und base_30yr; `preventr` importiert diese Werte seinerseits
+     direkt aus der supplementaeren Excel-Datei des Originalartikels
+     (Tabellen S12A-S12J). Kein Wert wurde manuell abgetippt.
+
+     VALIDIERUNG: gegen Tabelle S25 des Supplements geprueft
+     (Frau 50 J) — max. Abweichung 0,044 Prozentpunkte ueber alle
+     10 Endpunkte. Fuer den Maennerpfad existiert kein publizierter
+     Ankerwert; er ist strukturell abgesichert (Spaltennamen aus der
+     Binaerdatei, identische Intercept-Logik), sollte aber vor
+     klinischem Verlass einmal gegen den offiziellen AHA-Rechner
+     auf professional.heart.org gegengeprueft werden.
+
+     BEKANNTE KORREKTUR: im Original-Supplement ist der
+     Alter-x-HDL-Interaktionsterm falsch beschriftet ("per 1 mmol/L"
+     statt "per 0.3 mmol/L"). Rein typografisch, Zahlenwert
+     unveraendert; die korrigierte Lesart ist uebernommen.
+
+     BMI geht ausschliesslich in die Herzinsuffizienz-Modelle ein —
+     in Total-CVD, ASCVD, KHK und Schlaganfall ist der Koeffizient
+     exakt 0. Programmatisch verifiziert.
+     ========================================================== */
+
+  var P10 = {
+    terms: ["age","non_hdl_c","hdl_c","sbp_lt_110","sbp_gte_110","dm","smoking","bmi_lt_30","bmi_gte_30","egfr_lt_60","egfr_gte_60","bp_tx","statin","bp_tx_sbp_gte_110","statin_non_hdl_c","age_non_hdl_c","age_hdl_c","age_sbp_gte_110","age_dm","age_smoking","age_bmi_gte_30","age_egfr_lt_60","constant"],
+    female_ascvd:[0.719883,0.1176967,-0.151185,-0.0835358,0.3592852,0.8348585,0.4831078,0,0,0.4864619,0.0397779,0.2265309,-0.0592374,-0.0395762,0.0844423,-0.0567839,0.0325692,-0.1035985,-0.2417542,-0.0791142,0,-0.1671492,-3.819975],
+    female_heart_failure:[0.8998235,0,0,-0.4559771,0.3576505,1.038346,0.583916,-0.0072294,0.2997706,0.7451638,0.0557087,0.3534442,0,-0.0981511,0,0,0,-0.0946663,-0.3581041,-0.1159453,-0.003878,-0.1884289,-4.310409],
+    female_total_cvd:[0.7939329,0.0305239,-0.1606857,-0.2394003,0.3600781,0.8667604,0.5360739,0,0,0.6045917,0.0433769,0.3151672,-0.1477655,-0.0663612,0.1197879,-0.0819715,0.0306769,-0.0946348,-0.27057,-0.078715,0,-0.1637806,-3.307728],
+    male_ascvd:[0.7099847,0.1658663,-0.1144285,-0.2837212,0.3239977,0.7189597,0.3956973,0,0,0.3690075,0.0203619,0.2036522,-0.0865581,-0.0322916,0.114563,-0.0300005,0.0232747,-0.0927024,-0.2018525,-0.0970527,0,-0.1217081,-3.500655],
+    male_heart_failure:[0.8972642,0,0,-0.6811466,0.3634461,0.923776,0.5023736,-0.0485841,0.3726929,0.6926917,0.0251827,0.2980922,0,-0.0497731,0,0,0,-0.1289201,-0.3040924,-0.1401688,0.0068126,-0.1797778,-3.946391],
+    male_total_cvd:[0.7688528,0.0736174,-0.0954431,-0.4347345,0.3362658,0.7692857,0.4386871,0,0,0.5378979,0.0164827,0.288879,-0.1337349,-0.0475924,0.150273,-0.0517874,0.0191169,-0.1049477,-0.2251948,-0.0895067,0,-0.1543702,-3.031168]
+  };
+
+  var P30 = {
+    terms: ["age","age_squared","non_hdl_c","hdl_c","sbp_lt_110","sbp_gte_110","dm","smoking","bmi_lt_30","bmi_gte_30","egfr_lt_60","egfr_gte_60","bp_tx","statin","bp_tx_sbp_gte_110","statin_non_hdl_c","age_non_hdl_c","age_hdl_c","age_sbp_gte_110","age_dm","age_smoking","age_bmi_gte_30","age_egfr_lt_60","constant"],
+    female_ascvd:[0.4669202,-0.0893118,0.1256901,-0.1542255,-0.0018093,0.322949,0.6296707,0.268292,0,0,0.100106,0.0499663,0.1875292,0.0152476,-0.0276123,0.0736147,-0.0521962,0.0316918,-0.1046101,-0.2727793,-0.1530907,0,-0.1299149,-1.974074],
+    female_heart_failure:[0.6254374,-0.0983038,0,0,-0.3919241,0.3142295,0.8330787,0.3438651,0.0594874,0.2525536,0.2981642,0.0667159,0.333921,0,-0.0893177,0,0,0,-0.0974299,-0.404855,-0.1982991,-0.0035619,-0.1564215,-2.205379],
+    female_total_cvd:[0.5503079,-0.0928369,0.0409794,-0.1663306,-0.1628654,0.3299505,0.6793894,0.3196112,0,0,0.1857101,0.0553528,0.2894,-0.075688,-0.056367,0.1071019,-0.0751438,0.0301786,-0.0998776,-0.3206166,-0.1607862,0,-0.1450788,-1.318827],
+    male_ascvd:[0.3994099,-0.0937484,0.1744643,-0.120203,-0.0665117,0.2753037,0.4790257,0.1782635,0,0,-0.0218789,0.0602553,0.1421182,0.0135996,-0.0218265,0.1013148,-0.0312619,0.020673,-0.0920935,-0.2159947,-0.1548811,0,-0.0712547,-1.736444],
+    male_heart_failure:[0.5681541,-0.1048388,0,0,-0.4761564,0.30324,0.6840338,0.2656273,0.0833107,0.26999,0.2541805,0.0638923,0.2583631,0,-0.0391938,0,0,0,-0.1269124,-0.3273572,-0.2043019,-0.0182831,-0.1342618,-1.95751],
+    male_total_cvd:[0.4627309,-0.0984281,0.0836088,-0.1029824,-0.2140352,0.2904325,0.5331276,0.2141914,0,0,0.1155556,0.0603775,0.232714,-0.0272112,-0.0384488,0.134192,-0.0511759,0.0165865,-0.1101437,-0.2585943,-0.1566406,0,-0.1166776,-1.148204]
+  };
+
+  function preventTerms(o) {
+    var age = (o.age - 55) / 10;
+    var tcM = o.tc * 0.02586, hdlM = o.hdl * 0.02586;
+    var nonHdl = (tcM - hdlM) - 3.5;
+    var hdl = (hdlM - 1.3) / 0.3;
+    var sbpGte = (Math.max(o.sbp, 110) - 130) / 20;
+    var dm = o.dm ? 1 : 0, sm = o.smoker ? 1 : 0;
+    var hasBmi = (typeof o.bmi === 'number' && isFinite(o.bmi));
+    var bmiGte = hasBmi ? (Math.max(o.bmi, 30) - 30) / 5 : 0;
+    var egfrLt = (Math.min(o.egfr, 60) - 60) / -15;
+    var bpTx = o.bpTx ? 1 : 0, st = o.statin ? 1 : 0;
+    return {
+      age: age, age_squared: age * age, non_hdl_c: nonHdl, hdl_c: hdl,
+      sbp_lt_110: (Math.min(o.sbp, 110) - 110) / 20, sbp_gte_110: sbpGte,
+      dm: dm, smoking: sm,
+      bmi_lt_30: hasBmi ? (Math.min(o.bmi, 30) - 25) / 5 : 0, bmi_gte_30: bmiGte,
+      egfr_lt_60: egfrLt, egfr_gte_60: (Math.max(o.egfr, 60) - 90) / -15,
+      bp_tx: bpTx, statin: st,
+      bp_tx_sbp_gte_110: bpTx * sbpGte, statin_non_hdl_c: st * nonHdl,
+      age_non_hdl_c: age * nonHdl, age_hdl_c: age * hdl,
+      age_sbp_gte_110: age * sbpGte, age_dm: age * dm, age_smoking: age * sm,
+      age_bmi_gte_30: age * bmiGte, age_egfr_lt_60: age * egfrLt,
+      constant: 1
+    };
+  }
+
+  function preventLogit(model, col, t) {
+    var names = model.terms, beta = model[col], lo = 0;
+    for (var i = 0; i < names.length; i++) { lo += beta[i] * t[names[i]]; }
+    return Math.exp(lo) / (1 + Math.exp(lo)) * 100;
+  }
+
+  /* Rueckgabe in Prozent; null wenn ausserhalb des Gueltigkeitsbereichs. */
+  function preventCalc(o) {
+    var r = { cvd10:null, ascvd10:null, hf10:null, cvd30:null, ascvd30:null, hf30:null };
+    if (!o || (o.sex !== 'm' && o.sex !== 'f')) { return r; }
+    var need = ['age','tc','hdl','sbp','egfr'];
+    for (var i = 0; i < need.length; i++) {
+      var v = o[need[i]];
+      if (typeof v !== 'number' || !isFinite(v)) { return r; }
+    }
+    var p = (o.sex === 'm') ? 'male_' : 'female_';
+    var hasBmi = (typeof o.bmi === 'number' && isFinite(o.bmi));
+    if (o.age >= 30 && o.age <= 79) {
+      var t = preventTerms(o);
+      r.cvd10 = preventLogit(P10, p + 'total_cvd', t);
+      r.ascvd10 = preventLogit(P10, p + 'ascvd', t);
+      if (hasBmi) { r.hf10 = preventLogit(P10, p + 'heart_failure', t); }
+    }
+    if (o.age >= 30 && o.age <= 59) {
+      var t3 = preventTerms(o);
+      r.cvd30 = preventLogit(P30, p + 'total_cvd', t3);
+      r.ascvd30 = preventLogit(P30, p + 'ascvd', t3);
+      if (hasBmi) { r.hf30 = preventLogit(P30, p + 'heart_failure', t3); }
+    }
+    return r;
+  }
+
+  /* ==========================================================
+     KDIGO-Risikokategorie — Fussnote zu Tabelle 4 der
+     CKM-Leitlinie 2026 (3-stufige Albuminurie A1/A2/A3).
+     Deckungsgleich mit getAlbStage() im CKD-Tab.
+     ========================================================== */
+  function ckmKdigo(egfr, uacr) {
+    if (egfr === null || uacr === null) { return null; }
+    var g = egfr >= 90 ? 'G1' : egfr >= 60 ? 'G2' : egfr >= 45 ? 'G3a'
+          : egfr >= 30 ? 'G3b' : egfr >= 15 ? 'G4' : 'G5';
+    var a = uacr < 30 ? 'A1' : uacr < 300 ? 'A2' : 'A3';
+    var risk;
+    if (g === 'G4' || g === 'G5') { risk = 'veryhigh'; }
+    else if (g === 'G3a' && a === 'A3') { risk = 'veryhigh'; }
+    else if (g === 'G3b' && (a === 'A2' || a === 'A3')) { risk = 'veryhigh'; }
+    else if ((g === 'G1' || g === 'G2') && (a === 'A2' || a === 'A3')) { risk = 'modhigh'; }
+    else if (g === 'G3a') { risk = 'modhigh'; }
+    else if (g === 'G3b') { risk = 'modhigh'; }
+    else { risk = 'low'; }
+    return { g: g, a: a, risk: risk };
+  }
+
+  function num(id) {
+    var el = document.getElementById(id);
+    if (!el || el.value === '' || el.value === null) { return null; }
+    var v = parseFloat(String(el.value).replace(',', '.'));
+    return isFinite(v) ? v : null;
+  }
+  function chk(id) { var el = document.getElementById(id); return el ? el.checked : false; }
+
+  window.ckmCalcBMI = function() {
+    var w = num('ckm-weight'), h = num('ckm-height');
+    if (w && h && h > 0) {
+      document.getElementById('ckm-bmi').value = (w / Math.pow(h / 100, 2)).toFixed(1);
+    }
+  };
+
+  /* ==========================================================
+     STADIENZUORDNUNG — Tabelle 4, CKM-Leitlinie 2026
+     ========================================================== */
+  function ckmStage(D) {
+    var crit = { s1: [], s2: [], s3: [], s4: [] };
+
+    // ---- Stadium 4: manifeste kardiovaskulaere Erkrankung ----
+    if (D.khk)    { crit.s4.push('KHK / Z.n. Myokardinfarkt'); }
+    if (D.hi)     { crit.s4.push('Herzinsuffizienz'); }
+    if (D.stroke) { crit.s4.push('Schlaganfall / TIA'); }
+    if (D.pavk)   { crit.s4.push('pAVK'); }
+    if (D.vhf)    { crit.s4.push('Vorhofflimmern'); }
+
+    // ---- Stadium 3: subklinische CVD oder Risikoaequivalent ----
+    if (D.cac !== null && D.cac >= 100) { crit.s3.push('CAC-Score ' + D.cac + ' (≥100 = subklinische Koronaratherosklerose)'); }
+    if (D.abi) { crit.s3.push('Erniedrigter ABI ohne Claudicatio'); }
+    if (D.ntprobnp !== null && D.ntprobnp >= 125) { crit.s3.push('NT-proBNP ' + D.ntprobnp + ' pg/ml (≥125 = Prä-Herzinsuffizienz)'); }
+    var tntCut = D.sex === 'f' ? 14 : 22;
+    if (D.hstnt !== null && D.hstnt >= tntCut) { crit.s3.push('hs-Troponin T ' + D.hstnt + ' ng/l (≥' + tntCut + ' = Prä-Herzinsuffizienz)'); }
+    var tniCut = D.sex === 'f' ? 10 : 12;
+    if (D.hstni !== null && D.hstni >= tniCut) { crit.s3.push('hs-Troponin I ' + D.hstni + ' ng/l (≥' + tniCut + ' = Prä-Herzinsuffizienz)'); }
+    if (D.kdigo && D.kdigo.risk === 'veryhigh') { crit.s3.push('CKD ' + D.kdigo.g + D.kdigo.a + ' — sehr hohes KDIGO-Risiko (Risikoäquivalent)'); }
+    if (D.cvd10 !== null && D.cvd10 >= 20) { crit.s3.push('PREVENT-CVD 10-Jahres-Risiko ' + D.cvd10.toFixed(1) + ' % (≥20 % = Risikoäquivalent)'); }
+
+    // ---- Stadium 2: metabolische Risikofaktoren und/oder CKD ----
+    var htn = (D.sbp !== null && D.sbp >= 130) || (D.dbp !== null && D.dbp >= 80) || D.antihtn;
+    if (htn) {
+      crit.s2.push('Hypertonie' + (D.antihtn ? ' (unter Antihypertensiva)'
+        : ' (' + (D.sbp !== null ? D.sbp : '?') + '/' + (D.dbp !== null ? D.dbp : '?') + ' mmHg, ≥130 bzw. ≥80)'));
+    }
+    if (D.tg !== null && D.tg >= 150) { crit.s2.push('Hypertriglyzeridämie ' + D.tg + ' mg/dl (≥150)'); }
+    var isT2D = D.t2d || (D.fpg !== null && D.fpg >= 126) || (D.hba1c !== null && D.hba1c >= 6.5);
+    if (isT2D) {
+      crit.s2.push('Diabetes mellitus' + (D.t2d ? ' (anamnestisch)'
+        : (D.hba1c !== null && D.hba1c >= 6.5 ? ' (HbA1c ' + D.hba1c + ' %, ≥6,5)' : ' (Nü-Glukose ' + D.fpg + ' mg/dl, ≥126)')));
+    }
+    // Metabolisches Syndrom: >=3 von 5 (AHA/NHLBI)
+    var msC = [], waistCut = D.asian ? (D.sex === 'f' ? 80 : 90) : (D.sex === 'f' ? 88 : 102);
+    if (D.waist !== null && D.waist >= waistCut) { msC.push('Bauchumfang ≥' + waistCut + ' cm'); }
+    if (D.hdl !== null && ((D.sex === 'm' && D.hdl < 40) || (D.sex === 'f' && D.hdl < 50))) { msC.push('HDL erniedrigt'); }
+    if (D.tg !== null && D.tg >= 150) { msC.push('Triglyzeride ≥150'); }
+    if (htn) { msC.push('RR ≥130/80 bzw. Antihypertensiva'); }
+    if (D.fpg !== null && D.fpg >= 100) { msC.push('Nü-Glukose ≥100'); }
+    if (msC.length >= 3) { crit.s2.push('Metabolisches Syndrom (' + msC.length + '/5: ' + msC.join(', ') + ')'); }
+    if (D.kdigo && (D.kdigo.risk === 'modhigh' || D.kdigo.risk === 'veryhigh')) {
+      crit.s2.push('CKD ' + D.kdigo.g + D.kdigo.a + ' — ' + (D.kdigo.risk === 'veryhigh' ? 'sehr hohes' : 'moderat bis hohes') + ' KDIGO-Risiko');
+    }
+
+    // ---- Stadium 1: Adipositas / dysfunktionales Fettgewebe ----
+    var bmiCut = D.asian ? 23 : 25;
+    if (D.bmi !== null && D.bmi >= bmiCut) { crit.s1.push('BMI ' + D.bmi.toFixed(1) + ' kg/m² (≥' + bmiCut + ')'); }
+    if (D.waist !== null && D.waist >= waistCut) { crit.s1.push('Bauchumfang ' + D.waist + ' cm (≥' + waistCut + ')'); }
+    if (D.fpg !== null && D.fpg >= 100 && D.fpg <= 125) { crit.s1.push('Gestörte Nüchternglukose ' + D.fpg + ' mg/dl (100–125)'); }
+    if (D.hba1c !== null && D.hba1c >= 5.7 && D.hba1c <= 6.4) { crit.s1.push('Prädiabetes HbA1c ' + D.hba1c + ' % (5,7–6,4)'); }
+
+    var stage, sub = '';
+    if (crit.s4.length) {
+      stage = 4;
+      var kidneyFailure = D.krt || (D.egfr !== null && D.egfr < 15);
+      sub = kidneyFailure ? 'b' : 'a';
+    }
+    else if (crit.s3.length) { stage = 3; }
+    else if (crit.s2.length) { stage = 2; }
+    else if (crit.s1.length) { stage = 1; }
+    else { stage = 0; }
+    return { stage: stage, sub: sub, crit: crit, isT2D: isT2D, htn: htn };
+  }
+
+  var STAGE_META = {
+    0: { name: 'Keine CKM-Risikofaktoren', color: '#2e7d32' },
+    1: { name: 'Exzessives / dysfunktionales Fettgewebe', color: '#9e9d24' },
+    2: { name: 'Metabolische Risikofaktoren und/oder CKD', color: '#ef6c00' },
+    3: { name: 'Subklinische kardiovaskuläre Erkrankung', color: '#d84315' },
+    4: { name: 'Manifeste kardiovaskuläre Erkrankung', color: '#b71c1c' }
+  };
+
+  function fmtPct(v) { return v === null ? '—' : v.toFixed(1) + ' %'; }
+
+  window.ckmCalculate = function() {
+    var sexEl = document.querySelector('input[name="ckm-sex"]:checked');
+    var D = {
+      age: num('ckm-age'), sex: sexEl ? sexEl.value : null, asian: chk('ckm-asian'),
+      bmi: num('ckm-bmi'), waist: num('ckm-waist'),
+      fpg: num('ckm-fpg'), hba1c: num('ckm-hba1c'), tg: num('ckm-tg'),
+      hdl: num('ckm-hdl'), tc: num('ckm-tc'), sbp: num('ckm-sbp'), dbp: num('ckm-dbp'),
+      t2d: chk('ckm-t2d'), smoker: chk('ckm-smoker'), antihtn: chk('ckm-antihtn'), statin: chk('ckm-statin'),
+      egfr: num('ckm-egfr'), uacr: num('ckm-uacr'), kalium: num('ckm-kalium'), krt: chk('ckm-krt'),
+      medRasi: chk('ckm-med-rasi'), medSglt2: chk('ckm-med-sglt2'),
+      medNsmra: chk('ckm-med-nsmra'), medGlp1: chk('ckm-med-glp1'),
+      cac: num('ckm-cac'), ntprobnp: num('ckm-ntprobnp'),
+      hstnt: num('ckm-hstnt'), hstni: num('ckm-hstni'), abi: chk('ckm-abi'),
+      khk: chk('ckm-cvd-khk'), hi: chk('ckm-cvd-hi'), stroke: chk('ckm-cvd-stroke'),
+      pavk: chk('ckm-cvd-pavk'), vhf: chk('ckm-cvd-vhf')
+    };
+    D.kdigo = ckmKdigo(D.egfr, D.uacr);
+
+    var hasCVD = D.khk || D.hi || D.stroke || D.pavk || D.vhf;
+    var pv = { cvd10:null, ascvd10:null, hf10:null, cvd30:null, ascvd30:null, hf30:null };
+    var pvNote = null;
+    if (hasCVD) {
+      pvNote = 'PREVENT ist ausschließlich für die <strong>Primärprävention</strong> validiert. Bei manifester kardiovaskulärer Erkrankung wird keine Risikoschätzung ausgegeben.';
+    } else {
+      pv = preventCalc({
+        sex: D.sex, age: D.age, tc: D.tc, hdl: D.hdl, sbp: D.sbp, egfr: D.egfr,
+        bmi: D.bmi, dm: D.t2d || (D.hba1c !== null && D.hba1c >= 6.5) || (D.fpg !== null && D.fpg >= 126),
+        smoker: D.smoker, bpTx: D.antihtn, statin: D.statin
+      });
+      if (pv.cvd10 === null) {
+        var miss = [];
+        if (!D.sex) { miss.push('Geschlecht'); }
+        if (D.age === null) { miss.push('Alter'); }
+        else if (D.age < 30 || D.age > 79) { miss.push('Alter außerhalb 30–79 Jahre (PREVENT nicht validiert)'); }
+        if (D.tc === null) { miss.push('Gesamtcholesterin'); }
+        if (D.hdl === null) { miss.push('HDL'); }
+        if (D.sbp === null) { miss.push('systolischer Blutdruck'); }
+        if (D.egfr === null) { miss.push('eGFR'); }
+        pvNote = 'PREVENT nicht berechenbar — fehlt: ' + miss.join(', ') + '.';
+      } else if (pv.hf10 === null) {
+        pvNote = 'Für PREVENT-HF wird zusätzlich der BMI benötigt (er geht ausschließlich in das Herzinsuffizienz-Modell ein).';
+      }
+    }
+    D.cvd10 = pv.cvd10;
+
+    var S = ckmStage(D);
+    var meta = STAGE_META[S.stage];
+    var h = '';
+
+    // ---------- Stadien-Banner ----------
+    h += '<div class="ckm-stage-banner" style="background:linear-gradient(135deg,' + meta.color + ',' + meta.color + 'dd);">' +
+         '<div class="ckm-stage-num">Stadium ' + S.stage + S.sub + '</div>' +
+         '<div class="ckm-stage-name">' + meta.name +
+         (S.sub === 'a' ? ' — ohne Nierenversagen' : S.sub === 'b' ? ' — mit Nierenversagen (eGFR &lt;15 oder Nierenersatztherapie)' : '') +
+         '</div></div>';
+
+    // ---------- Erfuellte Kriterien ----------
+    h += '<div class="diab-result-card" style="border-left:5px solid ' + meta.color + ';">' +
+         '<h3 style="color:' + meta.color + ';margin-bottom:10px;">Erfüllte Kriterien</h3>';
+    var order = [
+      { k: 's4', t: 'Stadium 4 — manifeste kardiovaskuläre Erkrankung' },
+      { k: 's3', t: 'Stadium 3 — subklinische CVD / Risikoäquivalent' },
+      { k: 's2', t: 'Stadium 2 — metabolische Risikofaktoren / CKD' },
+      { k: 's1', t: 'Stadium 1 — Adipositas / dysfunktionales Fettgewebe' }
+    ];
+    var anyCrit = false;
+    for (var oi = 0; oi < order.length; oi++) {
+      var grp = S.crit[order[oi].k];
+      if (!grp.length) { continue; }
+      anyCrit = true;
+      h += '<div style="font-size:.75rem;font-weight:700;color:#607d8b;text-transform:uppercase;letter-spacing:.5px;margin:10px 0 4px;">' + order[oi].t + '</div>';
+      for (var ci = 0; ci < grp.length; ci++) { h += '<div class="ckm-crit">' + grp[ci] + '</div>'; }
+    }
+    if (!anyCrit) {
+      h += '<div style="font-size:.86rem;color:#2e7d32;line-height:1.55;">Keines der Kriterien für Stadium 1–4 erfüllt. ' +
+           'Voraussetzung für Stadium 0 ist zusätzlich ein normales Lipidprofil und das Fehlen einer CKD — ' +
+           'bitte prüfen, ob alle relevanten Werte erhoben wurden.</div>';
+    }
+    h += '</div>';
+
+    // ---------- PREVENT ----------
+    h += '<div class="diab-result-card" style="border-left:5px solid #00695c;">' +
+         '<h3 style="color:#00695c;margin-bottom:4px;">PREVENT-Risikoschätzung</h3>' +
+         '<div style="font-size:.76rem;color:#90a4ae;margin-bottom:10px;">Khan SS et al., Circulation 2024;149:430–449 — Basismodelle</div>';
+    if (pv.cvd10 !== null) {
+      var cvdCol = pv.cvd10 >= 20 ? '#b71c1c' : pv.cvd10 >= 7.5 ? '#ef6c00' : '#2e7d32';
+      var asCol = pv.ascvd10 >= 10 ? '#b71c1c' : pv.ascvd10 >= 5 ? '#ef6c00' : pv.ascvd10 >= 3 ? '#f9a825' : '#2e7d32';
+      var hfCol = (pv.hf10 !== null && pv.hf10 >= 5) ? '#ef6c00' : '#2e7d32';
+      h += '<div class="ckm-risk-grid">' +
+           '<div class="ckm-risk-box"><div class="ckm-risk-val" style="color:' + cvdCol + ';">' + fmtPct(pv.cvd10) + '</div><div class="ckm-risk-lbl">Total CVD · 10 J</div></div>' +
+           '<div class="ckm-risk-box"><div class="ckm-risk-val" style="color:' + asCol + ';">' + fmtPct(pv.ascvd10) + '</div><div class="ckm-risk-lbl">ASCVD · 10 J</div></div>' +
+           '<div class="ckm-risk-box"><div class="ckm-risk-val" style="color:' + hfCol + ';">' + fmtPct(pv.hf10) + '</div><div class="ckm-risk-lbl">Herzinsuff. · 10 J</div></div>' +
+           '</div>';
+      if (pv.cvd30 !== null) {
+        h += '<div class="ckm-risk-grid" style="margin-top:8px;">' +
+             '<div class="ckm-risk-box"><div class="ckm-risk-val" style="font-size:1.25rem;color:#455a64;">' + fmtPct(pv.cvd30) + '</div><div class="ckm-risk-lbl">Total CVD · 30 J</div></div>' +
+             '<div class="ckm-risk-box"><div class="ckm-risk-val" style="font-size:1.25rem;color:#455a64;">' + fmtPct(pv.ascvd30) + '</div><div class="ckm-risk-lbl">ASCVD · 30 J</div></div>' +
+             '<div class="ckm-risk-box"><div class="ckm-risk-val" style="font-size:1.25rem;color:#455a64;">' + fmtPct(pv.hf30) + '</div><div class="ckm-risk-lbl">Herzinsuff. · 30 J</div></div>' +
+             '</div>';
+      }
+      h += '<div style="font-size:.8rem;color:#546e7a;line-height:1.6;margin-top:12px;">' +
+           '<strong>Schwellenwerte der CKM-Leitlinie 2026:</strong><br>' +
+           '• Total CVD ≥20 % → Stadium 3 (Risikoäquivalent)' + (pv.cvd10 >= 20 ? ' <strong style="color:#b71c1c;">— erreicht</strong>' : '') + '<br>' +
+           '• Total CVD ≥7,5 % → Priorisierung von SGLT2i und/oder GLP-1' + (pv.cvd10 >= 7.5 ? ' <strong style="color:#ef6c00;">— erreicht</strong>' : '') + '<br>' +
+           '• HF ≥5 % → Prä-HI-Biomarker (BNP/NT-proBNP, hs-Troponin) erwägen <span class="ckm-cor">2a B-NR</span>' + ((pv.hf10 !== null && pv.hf10 >= 5) ? ' <strong style="color:#ef6c00;">— erreicht</strong>' : '') + '<br>' +
+           '• ASCVD 5–&lt;10 % (bzw. 3–&lt;5 % in Einzelfällen) → CAC-Messung erwägen <span class="ckm-cor">2a B-NR</span>' +
+           ((pv.ascvd10 >= 3 && pv.ascvd10 < 10) ? ' <strong style="color:#ef6c00;">— erreicht</strong>' : '') +
+           '</div>';
+      if (D.uacr !== null || D.hba1c !== null) {
+        h += '<div style="font-size:.78rem;color:#90a4ae;line-height:1.5;margin-top:10px;">' +
+             'Hinweis: Es sind die <strong>Basismodelle</strong> implementiert. Die optionalen Add-ons ' +
+             '(uACR, HbA1c, sozialer Deprivationsindex) erhöhen die Diskrimination laut Originalarbeit nur ' +
+             'marginal (ΔC 0,004–0,005) und sind bewusst nicht enthalten.</div>';
+      }
+    }
+    if (pvNote) {
+      h += '<div style="font-size:.83rem;color:#546e7a;background:#f5f5f5;border-left:4px solid #90a4ae;padding:10px 14px;border-radius:0 6px 6px 0;line-height:1.55;' +
+           (pv.cvd10 !== null ? 'margin-top:12px;' : '') + '">' + pvNote + '</div>';
+    }
+    h += '</div>';
+
+    // ---------- Nierenprotektive Therapiekaskade ----------
+    var hasCKD = (D.egfr !== null && D.egfr < 60) || (D.uacr !== null && D.uacr >= 30);
+    if (hasCKD) {
+      h += '<div class="diab-result-card" style="border-left:5px solid #00695c;">' +
+           '<h3 style="color:#00695c;margin-bottom:4px;">Nierenprotektive Therapiekaskade</h3>' +
+           '<div style="font-size:.76rem;color:#90a4ae;margin-bottom:12px;">CKM-Leitlinie 2026, Abschnitt 5.5.4 — sequenziell, nicht simultan</div>';
+
+      var recs = [];
+      // RASi
+      if (D.egfr !== null && D.egfr >= 30 && (S.isT2D || (D.uacr !== null && D.uacr >= 30))) {
+        recs.push(D.medRasi
+          ? { t: '✅ ACE-Hemmer / ARB — bereits verordnet', b: 'Weiterführen in maximal tolerierter Dosis.', c: '1 B-R' }
+          : { t: '💊 ACE-Hemmer / ARB — empfohlen', b: 'CKD mit Diabetes bzw. uACR ≥30 mg/g bei eGFR ≥30: RASi in <strong>maximal tolerierter Dosis</strong>.', c: '1 B-R' });
+      }
+      // SGLT2i
+      if (D.egfr !== null && D.egfr >= 20 && (S.isT2D || (D.uacr !== null && D.uacr >= 200))) {
+        recs.push(D.medSglt2
+          ? { t: '✅ SGLT2-Inhibitor — bereits verordnet', b: 'Weiterführen. Bei Absinken der eGFR unter die Initiierungsschwelle Fortführung sinnvoll — Nutzen auch in CKD G4–G5 belegt. <span class="ckm-cor">2a B-R</span>', c: '1 A' }
+          : { t: '💊 SGLT2-Inhibitor — empfohlen', b: 'CKD mit Diabetes bzw. uACR ≥200 mg/g bei eGFR ≥20: verlangsamt den Nierenfunktionsverlust, senkt HI-Hospitalisierung und kardiovaskuläre Mortalität.', c: '1 A' });
+      } else if (!S.isT2D && D.uacr !== null && D.uacr >= 30 && D.uacr < 200 && D.egfr !== null && D.egfr >= 20 && !D.medSglt2) {
+        recs.push({ t: '💊 SGLT2-Inhibitor — kann erwogen werden', b: 'CKD ohne Diabetes mit uACR 30–199 mg/g.', c: '2a B-R' });
+      }
+      // nsMRA
+      if (S.isT2D && D.egfr !== null && D.egfr >= 25 && D.uacr !== null && D.uacr >= 30 && !D.medNsmra) {
+        var kBlock = (D.kalium !== null && D.kalium > 5.0);
+        if (D.medRasi && D.medSglt2) {
+          recs.push(kBlock
+            ? { t: '⚠️ Finerenon (nsMRA) — Kalium beachten', b: 'Indikation erfüllt, aber Kalium ' + D.kalium + ' mmol/l >5,0 — <strong>nicht initiieren</strong>. Nach Korrektur erneut prüfen.', c: '1 A' }
+            : { t: '💊 Finerenon (nsMRA) — empfohlen', b: 'T2D + CKD, uACR ≥30 mg/g trotz RASi und SGLT2i, eGFR ≥25.' + (D.kalium !== null ? ' Kalium ' + D.kalium + ' mmol/l — Initiierung möglich.' : ' Kalium vor Beginn bestimmen: nicht initiieren bei >5,0 mmol/l.'), c: '1 A' });
+        } else {
+          recs.push({ t: '⚙️ Finerenon (nsMRA) — Vorstufe offen', b: 'Die Leitlinie sieht nsMRA erst <strong>nach</strong> RASi und SGLT2i vor. Offen: ' +
+            (!D.medRasi ? 'ACE-Hemmer/ARB' : '') + (!D.medRasi && !D.medSglt2 ? ' und ' : '') + (!D.medSglt2 ? 'SGLT2-Inhibitor' : '') + '.', c: '1 A' });
+        }
+      }
+      // GLP-1
+      if (S.isT2D && D.uacr !== null && D.uacr >= 100 && !D.medGlp1) {
+        if (D.medRasi && D.medSglt2) {
+          recs.push({ t: '💊 GLP-1-RA — empfohlen', b: 'T2D + CKD, uACR ≥100 mg/g trotz RASi und SGLT2i. Semaglutid ist derzeit der einzige GLP-1-RA mit belegtem Nutzen auf Nieren- <em>und</em> kardiovaskuläre Endpunkte bei T2D und albuminurischer CKD (FLOW).' +
+            ((D.bmi !== null && D.bmi >= 30) ? ' <strong>Adipositas (BMI ' + D.bmi.toFixed(1) + ') spricht für GLP-1 vor nsMRA.</strong>' : ''), c: '1 B-R' });
+        } else {
+          recs.push({ t: '⚙️ GLP-1-RA — Vorstufe offen', b: 'Vorgesehen erst nach RASi und SGLT2i.', c: '1 B-R' });
+        }
+      }
+      if (!recs.length) {
+        recs.push({ t: 'ℹ️ Keine zusätzliche Stufe der Kaskade indiziert', b: 'Auf Basis der eingegebenen Werte ist keine weitere Eskalation der nierenprotektiven Therapie ausgelöst.', c: '' });
+      }
+      for (var ri = 0; ri < recs.length; ri++) {
+        h += '<div class="ckm-rec"><span class="ckm-rec-t">' + recs[ri].t + '</span>' +
+             (recs[ri].c ? '<span class="ckm-cor">COR ' + recs[ri].c + '</span>' : '') +
+             '<div style="margin-top:4px;">' + recs[ri].b + '</div></div>';
+      }
+      h += '<div class="ckm-rec" style="border-left-color:#f0ad4e;background:#fff3cd;">' +
+           '<span class="ckm-rec-t">🔬 Monitoring</span><span class="ckm-cor" style="background:#e65100;">COR 2a B-R</span>' +
+           '<div style="margin-top:4px;">eGFR und Kalium <strong>2–4 Wochen</strong> nach Beginn oder Dosisänderung eines RAAS-wirksamen Medikaments. ' +
+           'Albuminurie <strong>3–6 Monate</strong> nach Beginn der nierenprotektiven Therapie erneut bestimmen — sie steuert die nächste Stufe der Kaskade.</div></div>';
+      h += '</div>';
+    }
+
+    // ---------- Screening ----------
+    h += '<div class="diab-result-card" style="border-left:5px solid #00695c;">' +
+         '<h3 style="color:#00695c;margin-bottom:4px;">Screening-Intervalle</h3>' +
+         '<div style="font-size:.76rem;color:#90a4ae;margin-bottom:12px;">CKM-Leitlinie 2026, Abschnitt 3.1 — alle COR 1, LOE B-NR</div>';
+    var scr = ['<strong>BMI und Bauchumfang mindestens jährlich</strong> — bei allen Erwachsenen mit oder mit Risiko für CKM.'];
+    if (S.stage === 0) {
+      scr.push('Lipide, Glukosestoffwechsel und eGFR <strong>mindestens alle 5 Jahre</strong>.');
+      scr.push('Blutdruck <strong>jährlich</strong>.');
+    } else if (S.stage === 1) {
+      scr.push('Lipide, Glukosestoffwechsel und eGFR <strong>mindestens alle 2–3 Jahre</strong>.');
+      scr.push('Blutdruck <strong>jährlich</strong>.');
+    } else {
+      scr.push('Lipide, Glukosestoffwechsel und Blutdruck <strong>mindestens jährlich</strong>.');
+      scr.push('<strong>eGFR und uACR mindestens jährlich</strong> — ab Stadium 2 sind beide Parameter gefordert, nicht nur die eGFR.');
+    }
+    if (S.isT2D || S.stage >= 2) {
+      scr.push('<strong>FIB-4 alle 1–2 Jahre</strong> zum MASLD-Screening bei CKM mit Diabetes oder ≥2 kardiometabolischen Risikofaktoren.');
+    } else if (S.stage === 1 && ((D.fpg !== null && D.fpg >= 100 && D.fpg <= 125) || (D.hba1c !== null && D.hba1c >= 5.7 && D.hba1c <= 6.4))) {
+      scr.push('<strong>FIB-4 alle 2–3 Jahre</strong> bei Stadium 1 aufgrund eines Prädiabetes <span class="ckm-cor">2a C-LD</span>.');
+    }
+    if (D.bmi !== null && D.bmi >= 30) {
+      scr.push('<strong>Jährliches Screening auf obstruktive Schlafapnoe</strong> mit validiertem Instrument bei CKM und Adipositas <span class="ckm-cor">2a C-LD</span>.');
+    }
+    scr.push('<strong>Sozialdeterminanten der Gesundheit</strong> routinemäßig mit validiertem Instrument erfassen.');
+    for (var si = 0; si < scr.length; si++) { h += '<div class="ckm-crit">' + scr[si] + '</div>'; }
+    h += '</div>';
+
+    // ---------- Abgrenzung zu anderen Tabs ----------
+    h += '<div class="diab-result-card" style="border-left:5px solid #90a4ae;">' +
+         '<h3 style="color:#455a64;margin-bottom:4px;">Blutdruck- und Lipidziele — bewusst nicht hier</h3>' +
+         '<div style="font-size:.76rem;color:#90a4ae;margin-bottom:12px;">Warum dieser Tab keine eigenen Zielwerte nennt</div>' +
+         '<div style="font-size:.85rem;color:#455a64;line-height:1.6;margin-bottom:12px;">' +
+         'Die CKM-Leitlinie 2026 enthält <strong>keinen eigenen Blutdruck-Zielwert und keine eigene Statin-Schwelle</strong>. ' +
+         'Sie ersetzt die Adipositas-Leitlinie 2013 und verweist für Hypertonie und Dyslipidämie ausdrücklich auf die ' +
+         'jeweiligen Fachleitlinien. Dieser Tab bildet das genauso ab — damit keine widersprüchlichen Zielwerte entstehen.' +
+         '</div>';
+    h += '<div class="ckm-xref"><strong>Blutdruck</strong> → <a onclick="switchToolTab(\'htn\')">Tab Hypertonie</a> ' +
+         '(ESC 2024, mit der AOBP-Umrechnung für das KDIGO-Ziel &lt;120 mmHg bei CKD). ' +
+         (S.htn ? 'Hypertonie-Kriterium hier erfüllt — dort den Zielwert bestimmen.' : '') + '</div>';
+    h += '<div class="ckm-xref"><strong>Lipide</strong> → <a onclick="switchToolTab(\'lipid\')">Tab Lipidtherapie</a> ' +
+         '(ACC/AHA 2026 Dyslipidemia Guideline).' +
+         (pv.ascvd10 !== null ? ' Der oben berechnete PREVENT-ASCVD-Wert von <strong>' + fmtPct(pv.ascvd10) + '</strong> ist die Größe, ' +
+          'auf der die Risikostrata dieser Leitlinie beruhen (&lt;3 % niedrig · 3–&lt;5 % grenzwertig · 5–&lt;10 % intermediär · ≥10 % hoch).' : '') + '</div>';
+    if (S.isT2D) {
+      h += '<div class="ckm-xref"><strong>Glykämische Führung, Metformin, Dosierungen</strong> → <a onclick="switchToolTab(\'diabetes\')">Tab Diabetes</a> (ADA 2026 / KDIGO 2026).</div>';
+    }
+    h += '<div class="ckm-xref"><strong>KDIGO-Risikomatrix, eGFR-Berechnung, Arztbrief</strong> → <a onclick="switchToolTab(\'ckd\')">Tab CKD-Staging</a>.</div>';
+    if (S.stage === 4 && S.sub === 'b') {
+      h += '<div class="ckm-rec" style="border-left-color:#b71c1c;background:#ffebee;margin-top:10px;">' +
+           '<span class="ckm-rec-t">⚠️ Stadium 4b — Evidenzlücke</span>' +
+           '<div style="margin-top:4px;">Die CKM-Leitlinie weist ausdrücklich darauf hin, dass für Nierenversagen wegen der geringen ' +
+           'Repräsentation in den Zulassungsstudien nur eingeschränkte Daten vorliegen. Speziell für Statine gilt: ' +
+           'unter Dialyse <strong>nicht neu beginnen</strong> (KDIGO 2013 Rec. 2.3.1, Grad 2A — 4D und AURORA ohne Wirksamkeitsnachweis), ' +
+           'eine bei Dialysebeginn bestehende Therapie aber <strong>fortführen</strong> (Rec. 2.3.2, Grad 2C).</div></div>';
+    }
+    h += '</div>';
+
+    var el = document.getElementById('ckm-results');
+    el.innerHTML = h;
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  /* ==========================================================
+     AUTO-IMPORT aus CKD- / Lipid- / Diabetes-Tab
+     ========================================================== */
+  function ckmAutoImport() {
+    var imported = [];
+    function setIf(srcId, dstId, label) {
+      var s = document.getElementById(srcId), d = document.getElementById(dstId);
+      if (s && d && s.value !== '' && s.value !== null) { d.value = s.value; imported.push(label); }
+    }
+    setIf('age', 'ckm-age', 'Alter');
+    setIf('weight', 'ckm-weight', 'Gewicht');
+    setIf('uacr', 'ckm-uacr', 'uACR');
+    setIf('kalium', 'ckm-kalium', 'Kalium');
+    setIf('bp_sys', 'ckm-sbp', 'RR systolisch');
+    setIf('bp_dia', 'ckm-dbp', 'RR diastolisch');
+    setIf('lip-hdl', 'ckm-hdl', 'HDL');
+
+    var sexR = document.querySelector('input[name="sex"]:checked');
+    if (sexR) {
+      var t = document.getElementById(sexR.value === 'male' ? 'ckm-sex-m' : 'ckm-sex-f');
+      if (t) { t.checked = true; imported.push('Geschlecht'); }
+    }
+
+    // eGFR dreistufig — identisch zum Vorgehen im Hypertonie-Tab
+    var egfrVal = null;
+    if (typeof currentEGFR === 'number' && isFinite(currentEGFR)) { egfrVal = currentEGFR; }
+    if (egfrVal === null) {
+      var e1 = document.getElementById('egfr-result-val');
+      if (e1) { var p1 = parseFloat(String(e1.textContent).replace(',', '.')); if (isFinite(p1)) { egfrVal = p1; } }
+    }
+    if (egfrVal === null) {
+      var e2 = document.getElementById('current-egfr-display');
+      if (e2) { var p2 = parseFloat(String(e2.textContent).replace(',', '.')); if (isFinite(p2)) { egfrVal = p2; } }
+    }
+    if (egfrVal !== null) { document.getElementById('ckm-egfr').value = egfrVal; imported.push('eGFR'); }
+
+    var dmBox = document.querySelector('#disease-checkboxes input[value="diabetisch"]');
+    if (dmBox && dmBox.checked) { document.getElementById('ckm-t2d').checked = true; imported.push('Diabetes'); }
+
+    window.ckmCalcBMI();
+
+    var banner = document.getElementById('ckm-import-banner');
+    if (imported.length > 0) {
+      document.getElementById('ckm-import-text').textContent = 'Importiert aus CKD-/Lipid-Tab: ' + imported.join(' · ');
+      banner.style.display = 'flex';
+    } else {
+      banner.style.display = 'none';
+    }
+  }
+
+  // ── EXPOSE ──────────────────────────────────────────────────
+  window.ckmAutoImport = ckmAutoImport;
+})();
+</script>
+</div><!-- end tab-ckm -->
+
 <div class="shared-footer">
   ⚕️ Nur zur ärztlichen Unterstützung — kein Ersatz für klinisches Urteil &bull;
   CKD: KDIGO 2024 &bull; CKD-EPI 2021 &bull;
@@ -18537,7 +19281,8 @@ window.clearAllTabs = clearAllTabs;
         window.akAutoImport, window.akiAutoImport, window.gichtAutoImport,
         window.medcheckAutoImport, window.hiAutoImport, window.abxAutoImport,
         window.hwiAutoImport, window.sdAutoImport, window.elekAutoImport,
-        window.gnAutoImport, window.nsAutoImport, window.tmaAutoImport
+        window.gnAutoImport, window.nsAutoImport, window.tmaAutoImport,
+        window.ckmAutoImport
       ];
       fns.forEach(function(fn){ if (typeof fn === 'function') { try { fn(); } catch(e){} } });
     }, 600);
@@ -18663,6 +19408,9 @@ function switchToolTab(tabName) {
 
   document.getElementById('tab-medcheck').style.display = tabName === 'medcheck' ? 'block' : 'none';
   if (tabName === 'medcheck' && window.medcheckAutoImport) { window.medcheckAutoImport(); }
+
+  document.getElementById('tab-ckm').style.display = tabName === 'ckm' ? 'block' : 'none';
+  if (tabName === 'ckm' && window.ckmAutoImport) { window.ckmAutoImport(); }
 }
 
 // ============================================================
@@ -20820,7 +21568,7 @@ function diabCalculate(opts) {
           detail: `Dosierung: ${dose}. Kalium-Kontrolle regelmäßig nach Initiierung (KDIGO 2026 PP 4.4.3). Nicht starten bei K⁺ >5,0 mmol/l. ` +
                   'SGLT2i + nsMRA können simultan gestartet werden (KDIGO 2026 PP 4.4.2). ' +
                   (DS.hf && DS.hfType !== 'hfref' ? 'Bei HF mit EF ≥40%: nsMRA zusätzlich empfohlen (KDIGO 2026 PP 4.4.5). ' : '') +
-                  (DS.egfr !== null && DS.egfr >= 20 && DS.uacr !== null && DS.uacr >= 100
+                  (DS.egfr !== null && DS.egfr >= 30 && DS.egfr <= 90 && DS.uacr !== null && DS.uacr >= 100
                     ? 'Bei uACR ≥100 mg/g + eGFR 30–90: SGLT2i + Finerenon-Kombination empfohlen (ADA 2026 Rec. 11.9).' : '') });
       } else {
         const missing = [];
@@ -20891,7 +21639,7 @@ function diabCalculate(opts) {
   screenings.push('Blutdruck: bei jeder Konsultation');
   screenings.push('Nüchternlipide: jährlich; 4–12 Wochen nach Statin-Start');
   screenings.push('FIB-4 (MASLD-Screening): jährlich bei T2D');
-  if (DS.medMetformin) screenings.push('Vitamin B12: prüfen nach >5 Jahren Metformin-Einnahme');
+  if (DS.medMetformin) screenings.push('Vitamin B12: prüfen nach >4 Jahren Metformin-Einnahme (KDIGO 2026 PP 4.6.4)');
   if (isT1D) {
     screenings.push('TSH (Schilddrüse): bei T1D jährlich');
     screenings.push('Zöliakie-Antikörper: bei Symptomen');

@@ -1,0 +1,24 @@
+# Claude Code — lokale Konfiguration (kann Zugangsdaten enthalten!)
+.claude/settings.local.json
+.claude/worktrees/
+.claude/.DS_Store
+
+# macOS
+.DS_Store
+**/.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+
+# Temporäre Dateien
+*.tmp
+*.log
+*.bak
+*~
+
+# Zugangsdaten — niemals einchecken
+.env
+.env.*
+*.pem
+*.key
+id_rsa*

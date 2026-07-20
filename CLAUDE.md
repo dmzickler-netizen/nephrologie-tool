@@ -72,6 +72,28 @@ Alle Berechnungen laufen clientseitig — kein Backend, kein Build-Schritt, kein
 | `tah` | `tab-tah` | 🔴 | Antiaggregation: KHK, Stent, ACS, Stroke, pAVK |
 | `antikoag` | `tab-antikoag` | 💉 | NMH/UFH Antikoagulation: Prophylaxe, Therapie, UFH-Perfusor, HIT II |
 | `aki` | `tab-aki` | 🚨 | AKI-Staging, Ätiologie, Management |
+| `ckm` | `tab-ckm` | 🫀 | CKM-Syndrom: Stadien 0–4, PREVENT-Rechner, nierenprotektive Therapiekaskade, Screening-Intervalle |
+
+> ⚠️ **Diese Tabelle ist unvollständig.** `index.html` enthält tatsächlich **20 Tabs** (Stand 07/2026).
+> Nicht dokumentiert sind u.a.: `sd` (Schilddrüse), `hi` (Herzinsuffizienz), `gicht`, `tma` (TTP/HUS/HELLP),
+> `gn` (Glomerulonephritis), `ns` (Nephrotisches Syndrom), `elektrolyte`, `abx`, `hwi`, `medcheck`.
+
+### CKM-Tab — Detail
+
+**Quelle:** 2026 AHA/ACC/ADA/ASN CKM Guideline (Ndumele CE et al., *JACC* 2026;87(22S):e1889–e2007;
+*Circulation* doi:10.1161/CIR.0000000000001453). Verifiziert über den offiziellen AHA-Foliensatz —
+der Volltext ist paywalled.
+
+**Bewusste Designentscheidung:** Die CKM-Leitlinie enthält **keinen eigenen Blutdruck-Zielwert und
+keine eigene Statin-Schwelle** — sie verweist auf die Hypertonie- (2025) und Dyslipidämie-Leitlinie (2026).
+Der Tab bildet das ab und verlinkt per `switchToolTab()` auf den HTN- und Lipid-Tab, statt eigene
+Zielwerte zu nennen. **So entstehen keine Widersprüche zu den bestehenden Tabs — das bitte beibehalten.**
+
+**PREVENT-Gleichungen** (Khan SS et al., *Circulation* 2024;149:430–449) sind vollständig implementiert
+(Basismodelle, 10 + 30 Jahre, Total CVD / ASCVD / HF). Koeffizienten programmatisch aus dem R-Paket
+`preventr` (MIT) extrahiert, validiert gegen Supplement-Tabelle S25 — max. Abweichung 0,044 Prozentpunkte.
+**BMI geht ausschließlich in die HF-Modelle ein**, in ASCVD/Total-CVD ist der Koeffizient exakt 0.
+Der Männerpfad hat keinen publizierten Ankerwert und sollte einmal gegen den AHA-Rechner geprüft werden.
 
 **Reihenfolge in der Navigationsleiste:**
 CKD → Anämie/Ca-P → Lipid → Diabetes → Hypertonie → VHF → Antiaggregation → Antikoagulation → AKI
