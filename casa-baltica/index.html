@@ -39,6 +39,7 @@
   --accent: #c4956a;
   --accent-light: #dbb896;
   --sky: #e8f1f5;
+  --serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, 'Times New Roman', serif;
 }
 
 html { scroll-behavior: smooth; }
@@ -49,6 +50,8 @@ body {
   background: var(--sand);
   line-height: 1.6;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* ===== NAVIGATION ===== */
@@ -526,6 +529,69 @@ footer a:hover { color: var(--white); }
   transition: opacity 0.7s ease, transform 0.7s ease;
 }
 .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+/* ===== ELEGANCE ENHANCEMENTS ===== */
+/* Serif headlines for a warmer, more premium feel */
+.hero-content h1,
+.section-header h2,
+.about-text h2 {
+  font-family: var(--serif);
+  letter-spacing: 0.5px;
+}
+.hero-content h1 { letter-spacing: 1px; }
+
+/* Decorative accent line under section headings */
+.section-header h2::after {
+  content: ''; display: block;
+  width: 54px; height: 3px; margin: 1rem auto 0;
+  background: var(--accent); border-radius: 3px; opacity: 0.85;
+}
+
+/* Slow, subtle hero zoom (Ken Burns) */
+.hero-bg { transform: scale(1.02); animation: heroZoom 18s ease-out forwards; }
+@keyframes heroZoom { to { transform: scale(1.1); } }
+
+/* Softer, layered card & tile shadows */
+.gallery-item {
+  box-shadow: 0 4px 16px rgba(15,47,66,0.08);
+}
+.gallery-item:hover { box-shadow: 0 12px 34px rgba(15,47,66,0.18); }
+.gallery-item .gi-label { letter-spacing: 0.2px; }
+/* Reveal captions on hover — but only where hover exists; on touch they stay visible */
+@media (hover: hover) {
+  .gallery-item .gi-label {
+    transform: translateY(4px); opacity: 0;
+    transition: transform 0.35s ease, opacity 0.35s ease;
+  }
+  .gallery-item:hover .gi-label { transform: translateY(0); opacity: 1; }
+}
+
+/* Buttons: a touch more refinement */
+.btn, .btn-cta { letter-spacing: 0.3px; }
+
+/* Visible keyboard focus for accessibility */
+a:focus-visible,
+button:focus-visible,
+.btn:focus-visible,
+.gallery-item:focus-visible,
+.gallery-tab:focus-visible,
+.lang-btn:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+.lb-close:focus-visible, .lb-nav:focus-visible {
+  outline: 3px solid rgba(255,255,255,0.85); outline-offset: 2px;
+}
+
+/* Respect reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .hero-bg { animation: none; transform: none; }
+  .fade-in { transition: none; }
+  .scroll-hint { animation: none; }
+  html { scroll-behavior: auto; }
+  .gallery-item .gi-label { transform: none; opacity: 1; transition: none; }
+}
 </style>
 </head>
 <body>
@@ -542,10 +608,10 @@ footer a:hover { color: var(--white); }
       <li><a href="#buchen" data-i18n="nav.buchen">Buchen</a></li>
     </ul>
     <div style="display:flex;align-items:center;gap:0.5rem;">
-      <div class="lang-switcher">
-        <button class="lang-btn active" onclick="switchLang('de')">🇩🇪</button>
-        <button class="lang-btn" onclick="switchLang('en')">🇬🇧</button>
-        <button class="lang-btn" onclick="switchLang('es')">🇪🇸</button>
+      <div class="lang-switcher" role="group" aria-label="Sprache wählen / Choose language">
+        <button class="lang-btn active" data-lang="de" onclick="switchLang('de')" lang="de" aria-label="Deutsch" title="Deutsch">🇩🇪</button>
+        <button class="lang-btn" data-lang="en" onclick="switchLang('en')" lang="en" aria-label="English" title="English">🇬🇧</button>
+        <button class="lang-btn" data-lang="es" onclick="switchLang('es')" lang="es" aria-label="Español" title="Español">🇪🇸</button>
       </div>
       <button class="nav-burger" id="navBurger" aria-label="Menü öffnen">
         <span></span><span></span><span></span>
@@ -639,92 +705,104 @@ footer a:hover { color: var(--white); }
 
   <div class="gallery-grid fade-in" id="galleryGrid">
     <!-- Wohnen -->
-    <div class="gallery-item" data-cat="wohnen" onclick="openLightbox(0)">
-      <img src="img/wohnzimmer-tv.jpg" alt="Wohnzimmer mit großem Fernseher" loading="lazy">
+    <div class="gallery-item" data-cat="wohnen" onclick="openLightbox(0)" tabindex="0" role="button">
+      <img src="img/wohnzimmer-tv.jpg" alt="Wohnzimmer mit großem Fernseher" loading="lazy" width="640" height="428">
       <div class="gi-label" data-i18n="img.tv">Wohnzimmer mit 65" TV</div>
     </div>
-    <div class="gallery-item" data-cat="wohnen" onclick="openLightbox(1)">
-      <img src="img/wohnzimmer-sofa.jpg" alt="Gemütliches Sofa und Essbereich" loading="lazy">
+    <div class="gallery-item" data-cat="wohnen" onclick="openLightbox(1)" tabindex="0" role="button">
+      <img src="img/wohnzimmer-sofa.jpg" alt="Gemütliches Sofa und Essbereich" loading="lazy" width="640" height="428">
       <div class="gi-label" data-i18n="img.sofa">Sofa & Essbereich</div>
     </div>
-    <div class="gallery-item" data-cat="wohnen" onclick="openLightbox(2)">
-      <img src="img/wohnkueche-ueberblick.jpg" alt="Offene Wohnküche" loading="lazy">
+    <div class="gallery-item" data-cat="wohnen" onclick="openLightbox(2)" tabindex="0" role="button">
+      <img src="img/wohnkueche-ueberblick.jpg" alt="Offene Wohnküche" loading="lazy" width="640" height="895">
       <div class="gi-label" data-i18n="img.kueche_offen">Offene Wohnküche</div>
     </div>
 
     <!-- Schlafen -->
-    <div class="gallery-item" data-cat="schlafen" onclick="openLightbox(3)">
-      <img src="img/schlafzimmer-doppelbett.jpg" alt="Schlafzimmer mit Boxspring-Doppelbett" loading="lazy">
+    <div class="gallery-item" data-cat="schlafen" onclick="openLightbox(3)" tabindex="0" role="button">
+      <img src="img/schlafzimmer-doppelbett.jpg" alt="Schlafzimmer mit Boxspring-Doppelbett" loading="lazy" width="640" height="845">
       <div class="gi-label" data-i18n="img.doppelbett">Boxspring-Doppelbett 180x200</div>
     </div>
-    <div class="gallery-item" data-cat="schlafen" onclick="openLightbox(4)">
-      <img src="img/schlafzimmer-schrank.jpg" alt="Schlafzimmer mit Kleiderschrank" loading="lazy">
+    <div class="gallery-item" data-cat="schlafen" onclick="openLightbox(4)" tabindex="0" role="button">
+      <img src="img/schlafzimmer-schrank.jpg" alt="Schlafzimmer mit Kleiderschrank" loading="lazy" width="640" height="857">
       <div class="gi-label" data-i18n="img.schrank">Schlafzimmer mit Kleiderschrank</div>
     </div>
-    <div class="gallery-item" data-cat="schlafen" onclick="openLightbox(5)">
-      <img src="img/schlafzimmer-einzelbetten.jpg" alt="Zweites Schlafzimmer mit Einzelbetten" loading="lazy">
+    <div class="gallery-item" data-cat="schlafen" onclick="openLightbox(5)" tabindex="0" role="button">
+      <img src="img/schlafzimmer-einzelbetten.jpg" alt="Zweites Schlafzimmer mit Einzelbetten" loading="lazy" width="640" height="445">
       <div class="gi-label" data-i18n="img.einzelbetten">2. Schlafzimmer — Einzelbetten</div>
     </div>
 
     <!-- Küche & Bad -->
-    <div class="gallery-item" data-cat="kueche" onclick="openLightbox(6)">
-      <img src="img/kueche-detail.jpg" alt="Küche mit Cerankochfeld und Backofen" loading="lazy">
+    <div class="gallery-item" data-cat="kueche" onclick="openLightbox(6)" tabindex="0" role="button">
+      <img src="img/kueche-detail.jpg" alt="Küche mit Cerankochfeld und Backofen" loading="lazy" width="640" height="508">
       <div class="gi-label" data-i18n="img.kueche">Komplett ausgestattete Küche</div>
     </div>
-    <div class="gallery-item" data-cat="kueche" onclick="openLightbox(7)">
-      <img src="img/bad-waschbecken.jpg" alt="Badezimmer" loading="lazy">
+    <div class="gallery-item" data-cat="kueche" onclick="openLightbox(7)" tabindex="0" role="button">
+      <img src="img/bad-waschbecken.jpg" alt="Badezimmer mit Waschbecken und Spiegelschrank" loading="lazy" width="640" height="957">
       <div class="gi-label" data-i18n="img.bad">Badezimmer</div>
     </div>
-    <div class="gallery-item" data-cat="kueche" onclick="openLightbox(8)">
-      <img src="img/bad-dusche.jpg" alt="Dusche" loading="lazy">
+    <div class="gallery-item" data-cat="kueche" onclick="openLightbox(8)" tabindex="0" role="button">
+      <img src="img/bad-dusche.jpg" alt="Dusche mit Glaskabine" loading="lazy" width="640" height="957">
       <div class="gi-label" data-i18n="img.dusche">Dusche</div>
     </div>
-    <div class="gallery-item" data-cat="kueche" onclick="openLightbox(9)">
-      <img src="img/flur-garderobe.jpg" alt="Flur und Garderobe" loading="lazy">
+    <div class="gallery-item" data-cat="kueche" onclick="openLightbox(9)" tabindex="0" role="button">
+      <img src="img/flur-garderobe.jpg" alt="Flur und Garderobe im Eingangsbereich" loading="lazy" width="640" height="1021">
       <div class="gi-label" data-i18n="img.flur">Eingangsbereich</div>
     </div>
 
     <!-- Terrasse & Garten -->
-    <div class="gallery-item" data-cat="aussen" onclick="openLightbox(10)">
-      <img src="img/terrasse-sitzgruppe.jpg" alt="Terrasse mit Sitzgruppe" loading="lazy">
+    <div class="gallery-item" data-cat="aussen" onclick="openLightbox(10)" tabindex="0" role="button">
+      <img src="img/terrasse-sitzgruppe.jpg" alt="Terrasse mit Sitzgruppe" loading="lazy" width="1600" height="1200">
       <div class="gi-label" data-i18n="img.terrasse">Terrasse mit Sitzgruppe</div>
     </div>
-    <div class="gallery-item" data-cat="aussen" onclick="openLightbox(11)">
-      <img src="img/terrasse-moebel.jpg" alt="Überdachte Terrasse" loading="lazy">
+    <div class="gallery-item" data-cat="aussen" onclick="openLightbox(11)" tabindex="0" role="button">
+      <img src="img/terrasse-essplatz.jpg" alt="Terrasse mit Essplatz für sechs Personen unter der Markise" loading="lazy" width="1600" height="1200">
+      <div class="gi-label" data-i18n="img.essplatz">Terrasse mit Essplatz für 6</div>
+    </div>
+    <div class="gallery-item" data-cat="aussen" onclick="openLightbox(12)" tabindex="0" role="button">
+      <img src="img/terrasse-moebel.jpg" alt="Überdachte Terrasse mit Grill" loading="lazy" width="1200" height="1600">
       <div class="gi-label" data-i18n="img.terrasse2">Überdachte Terrasse</div>
     </div>
-    <div class="gallery-item" data-cat="aussen" onclick="openLightbox(12)">
-      <img src="img/terrasse-laptop.jpg" alt="Homeoffice auf der Terrasse" loading="lazy">
+    <div class="gallery-item" data-cat="aussen" onclick="openLightbox(13)" tabindex="0" role="button">
+      <img src="img/terrasse-laptop.jpg" alt="Homeoffice auf der Terrasse" loading="lazy" width="1200" height="1600">
       <div class="gi-label" data-i18n="img.homeoffice">Homeoffice mit Meerluft</div>
     </div>
-    <div class="gallery-item" data-cat="aussen" onclick="openLightbox(13)">
-      <img src="img/garten-sonnig.jpg" alt="Sonniger Garten" loading="lazy">
+    <div class="gallery-item" data-cat="aussen" onclick="openLightbox(14)" tabindex="0" role="button">
+      <img src="img/garten-sonnig.jpg" alt="Sonniger Garten" loading="lazy" width="1600" height="1200">
       <div class="gi-label" data-i18n="img.garten">Garten bei Sonnenschein</div>
     </div>
-    <div class="gallery-item" data-cat="aussen" onclick="openLightbox(14)">
-      <img src="img/haus-aussen-liegen.jpg" alt="Außenansicht mit Sonnenliegen" loading="lazy">
+    <div class="gallery-item" data-cat="aussen" onclick="openLightbox(15)" tabindex="0" role="button">
+      <img src="img/haus-aussen-liegen.jpg" alt="Außenansicht mit Sonnenliegen" loading="lazy" width="1600" height="1200">
       <div class="gi-label" data-i18n="img.liegen">Sonnenliegen im Garten</div>
+    </div>
+    <div class="gallery-item" data-cat="aussen" onclick="openLightbox(16)" tabindex="0" role="button">
+      <img src="img/anlage-liegen.jpg" alt="Ruhige, begrünte Wohnanlage mit Sonnenliegen im Garten" loading="lazy" width="1600" height="1200">
+      <div class="gi-label" data-i18n="img.anlage">Ruhige Gartenanlage</div>
     </div>
 
     <!-- Strand & Meer -->
-    <div class="gallery-item" data-cat="strand" onclick="openLightbox(15)">
-      <img src="img/strandwiese-meerblick.jpg" alt="Strandwiese mit Meerblick" loading="lazy">
+    <div class="gallery-item" data-cat="strand" onclick="openLightbox(17)" tabindex="0" role="button">
+      <img src="img/strandwiese-meerblick.jpg" alt="Strandwiese mit Meerblick" loading="lazy" width="1200" height="1600">
       <div class="gi-label" data-i18n="img.meer">Nur wenige Schritte zum Meer</div>
     </div>
-    <div class="gallery-item" data-cat="strand" onclick="openLightbox(16)">
-      <img src="img/strand-panorama.jpg" alt="Ostsee-Panorama" loading="lazy">
+    <div class="gallery-item" data-cat="strand" onclick="openLightbox(18)" tabindex="0" role="button">
+      <img src="img/strand-panorama.jpg" alt="Ostsee-Panorama" loading="lazy" width="1600" height="1200">
       <div class="gi-label" data-i18n="img.panorama">Ostsee-Panorama</div>
     </div>
-    <div class="gallery-item" data-cat="strand" onclick="openLightbox(17)">
-      <img src="img/strand-sonnenuntergang.jpg" alt="Sonnenuntergang am Strand" loading="lazy">
+    <div class="gallery-item" data-cat="strand" onclick="openLightbox(19)" tabindex="0" role="button">
+      <img src="img/strand-strandkorb.jpg" alt="Strandkorb am Ostseestrand mit Blick aufs Meer" loading="lazy" width="1600" height="1200">
+      <div class="gi-label" data-i18n="img.strandkorb">Strandkorb an der Ostsee</div>
+    </div>
+    <div class="gallery-item" data-cat="strand" onclick="openLightbox(20)" tabindex="0" role="button">
+      <img src="img/strand-sonnenuntergang.jpg" alt="Sonnenuntergang am Strand" loading="lazy" width="1200" height="1600">
       <div class="gi-label" data-i18n="img.sunset">Sonnenuntergang</div>
     </div>
-    <div class="gallery-item" data-cat="strand" onclick="openLightbox(18)">
-      <img src="img/strand-abendstimmung.jpg" alt="Abendstimmung am Strand" loading="lazy">
+    <div class="gallery-item" data-cat="strand" onclick="openLightbox(21)" tabindex="0" role="button">
+      <img src="img/strand-abendstimmung.jpg" alt="Abendstimmung am Strand" loading="lazy" width="1600" height="1200">
       <div class="gi-label" data-i18n="img.abend">Abendstimmung</div>
     </div>
-    <div class="gallery-item" data-cat="strand" onclick="openLightbox(19)">
-      <img src="img/strand-winter-panorama.jpg" alt="Winterstrand" loading="lazy">
+    <div class="gallery-item" data-cat="strand" onclick="openLightbox(22)" tabindex="0" role="button">
+      <img src="img/strand-winter-panorama.jpg" alt="Winterstrand an der Ostsee" loading="lazy" width="1600" height="1200">
       <div class="gi-label" data-i18n="img.winter">Winterzauber an der Ostsee</div>
     </div>
   </div>
@@ -981,8 +1059,8 @@ footer a:hover { color: var(--white); }
       'img.doppelbett':'Boxspring-Doppelbett 180x200','img.schrank':'Schlafzimmer mit Kleiderschrank','img.einzelbetten':'2. Schlafzimmer — Einzelbetten',
       'img.kueche':'Komplett ausgestattete Küche','img.bad':'Badezimmer','img.dusche':'Dusche','img.flur':'Eingangsbereich',
       'img.terrasse':'Terrasse mit Sitzgruppe','img.terrasse2':'Überdachte Terrasse','img.homeoffice':'Homeoffice mit Meerluft',
-      'img.garten':'Garten bei Sonnenschein','img.liegen':'Sonnenliegen im Garten',
-      'img.meer':'Nur wenige Schritte zum Meer','img.panorama':'Ostsee-Panorama','img.sunset':'Sonnenuntergang','img.abend':'Abendstimmung','img.winter':'Winterzauber an der Ostsee',
+      'img.garten':'Garten bei Sonnenschein','img.liegen':'Sonnenliegen im Garten','img.essplatz':'Terrasse mit Essplatz für 6','img.anlage':'Ruhige Gartenanlage',
+      'img.meer':'Nur wenige Schritte zum Meer','img.panorama':'Ostsee-Panorama','img.strandkorb':'Strandkorb an der Ostsee','img.sunset':'Sonnenuntergang','img.abend':'Abendstimmung','img.winter':'Winterzauber an der Ostsee',
       'feat.title':'Alles da, was man <strong>braucht</strong>','feat.sub':'Liebevoll eingerichtet für einen entspannten Urlaub an der Ostsee',
       'feat.wohn':'Wohnbereich','feat.w1':'Gemütliches Sofa','feat.w2':'65-Zoll-Flachbild-TV','feat.w3':'Esstisch für 4 Personen','feat.w4':'Bluetooth-Lautsprecher','feat.w5':'Kostenfreies Glasfaser-WLAN',
       'feat.kueche':'Küche','feat.k1':'Cerankochfeld & Backofen','feat.k2':'Kühl-/Gefrierkombination','feat.k3':'Geschirrspüler','feat.k4':'Mikrowelle & Air Fryer','feat.k5':'Kaffeemaschine & Wasserkocher',
@@ -1023,8 +1101,8 @@ footer a:hover { color: var(--white); }
       'img.doppelbett':'Box-spring double bed 180x200','img.schrank':'Bedroom with wardrobe','img.einzelbetten':'2nd bedroom — twin beds',
       'img.kueche':'Fully equipped kitchen','img.bad':'Bathroom','img.dusche':'Shower','img.flur':'Entrance hall',
       'img.terrasse':'Terrace with seating','img.terrasse2':'Covered terrace','img.homeoffice':'Home office with sea air',
-      'img.garten':'Garden in sunshine','img.liegen':'Sun loungers in the garden',
-      'img.meer':'Just a few steps to the sea','img.panorama':'Baltic Sea panorama','img.sunset':'Sunset','img.abend':'Evening mood','img.winter':'Winter magic at the Baltic Sea',
+      'img.garten':'Garden in sunshine','img.liegen':'Sun loungers in the garden','img.essplatz':'Terrace dining for 6','img.anlage':'Quiet garden grounds',
+      'img.meer':'Just a few steps to the sea','img.panorama':'Baltic Sea panorama','img.strandkorb':'Beach chair at the Baltic Sea','img.sunset':'Sunset','img.abend':'Evening mood','img.winter':'Winter magic at the Baltic Sea',
       'feat.title':'Everything you <strong>need</strong>','feat.sub':'Lovingly furnished for a relaxing holiday by the Baltic Sea',
       'feat.wohn':'Living area','feat.w1':'Comfortable sofa','feat.w2':'65-inch flat-screen TV','feat.w3':'Dining table for 4','feat.w4':'Bluetooth speaker','feat.w5':'Free fibre-optic Wi-Fi',
       'feat.kueche':'Kitchen','feat.k1':'Ceramic hob & oven','feat.k2':'Fridge-freezer','feat.k3':'Dishwasher','feat.k4':'Microwave & air fryer','feat.k5':'Coffee machine & kettle',
@@ -1065,8 +1143,8 @@ footer a:hover { color: var(--white); }
       'img.doppelbett':'Cama doble box-spring 180x200','img.schrank':'Dormitorio con armario','img.einzelbetten':'2.° dormitorio — camas individuales',
       'img.kueche':'Cocina completamente equipada','img.bad':'Baño','img.dusche':'Ducha','img.flur':'Entrada',
       'img.terrasse':'Terraza con muebles','img.terrasse2':'Terraza cubierta','img.homeoffice':'Teletrabajo con brisa marina',
-      'img.garten':'Jardín soleado','img.liegen':'Tumbonas en el jardín',
-      'img.meer':'A pocos pasos del mar','img.panorama':'Panorama del Báltico','img.sunset':'Puesta de sol','img.abend':'Atardecer','img.winter':'Magia invernal en el Báltico',
+      'img.garten':'Jardín soleado','img.liegen':'Tumbonas en el jardín','img.essplatz':'Terraza con comedor para 6','img.anlage':'Zona ajardinada tranquila',
+      'img.meer':'A pocos pasos del mar','img.panorama':'Panorama del Báltico','img.strandkorb':'Silla de playa junto al Báltico','img.sunset':'Puesta de sol','img.abend':'Atardecer','img.winter':'Magia invernal en el Báltico',
       'feat.title':'Todo lo que <strong>necesitas</strong>','feat.sub':'Equipado con cariño para unas vacaciones relajantes junto al mar Báltico',
       'feat.wohn':'Zona de estar','feat.w1':'Sofá cómodo','feat.w2':'TV de pantalla plana de 65"','feat.w3':'Mesa de comedor para 4','feat.w4':'Altavoz Bluetooth','feat.w5':'Wi-Fi gratuito',
       'feat.kueche':'Cocina','feat.k1':'Vitrocerámica y horno','feat.k2':'Frigorífico con congelador','feat.k3':'Lavavajillas','feat.k4':'Microondas y freidora de aire','feat.k5':'Cafetera y hervidor',
@@ -1100,7 +1178,7 @@ footer a:hover { color: var(--white); }
     document.documentElement.lang = lang;
     // update buttons
     document.querySelectorAll('.lang-btn').forEach(function(b){
-      b.classList.toggle('active', b.textContent.trim().toLowerCase() === lang);
+      b.classList.toggle('active', b.getAttribute('data-lang') === lang);
     });
     // update all translatable elements
     var dict = T[lang];
@@ -1231,6 +1309,15 @@ footer a:hover { color: var(--white); }
   }, { threshold: 0.1 });
 
   fadeEls.forEach(function(el){ observer.observe(el); });
+
+  // ============================================================
+  // === KEYBOARD ACCESS FOR GALLERY TILES ===
+  // ============================================================
+  document.querySelectorAll('.gallery-item').forEach(function(item){
+    item.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); item.click(); }
+    });
+  });
 
 })();
 </script>
