@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Willkommen in der Casa Baltica — Gäste-Info</title>
+<meta name="description" content="Alle wichtigen Infos für Ihren Aufenthalt in der Casa Baltica: Anfahrt, Grillen, Waschsalon, Freizeittipps für Familien und mehr.">
+<meta name="robots" content="noindex, nofollow">
+
+<style>
+/* ===== RESET & BASE (identisch zur Hauptseite) ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --sand: #f5f0e8;
+  --sand-dark: #e8dfd2;
+  --ocean: #2b6a8e;
+  --ocean-light: #3d8bb5;
+  --ocean-dark: #1a4d6b;
+  --deep: #0f2f42;
+  --white: #ffffff;
+  --warm-gray: #6b6560;
+  --text: #2c2c2c;
+  --accent: #c4956a;
+  --accent-light: #dbb896;
+  --sky: #e8f1f5;
+  --serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, 'Times New Roman', serif;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  color: var(--text);
+  background: var(--sand);
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ===== NAVIGATION ===== */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+  background: rgba(15, 47, 66, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 0 2rem;
+  transition: box-shadow 0.3s;
+}
+nav.scrolled { box-shadow: 0 2px 20px rgba(0,0,0,0.3); }
+.nav-inner {
+  max-width: 1000px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 60px; gap: 0.8rem;
+}
+.nav-logo {
+  font-size: 1.3rem; font-weight: 700; color: var(--white);
+  text-decoration: none; letter-spacing: 0.5px; white-space: nowrap;
+}
+.nav-logo span { color: var(--accent-light); }
+.nav-right { display: flex; align-items: center; gap: 0.6rem; }
+.nav-back {
+  color: rgba(255,255,255,0.8); text-decoration: none;
+  padding: 0.4rem 0.9rem; border-radius: 6px; font-size: 0.85rem;
+  border: 1px solid rgba(255,255,255,0.25); transition: all 0.2s; white-space: nowrap;
+}
+.nav-back:hover { color: var(--white); background: rgba(255,255,255,0.1); }
+
+/* ===== LANGUAGE SWITCHER ===== */
+.lang-switcher { display: flex; gap: 4px; }
+.lang-btn {
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.25);
+  color: rgba(255,255,255,0.7); padding: 0.25rem 0.5rem; border-radius: 4px;
+  font-size: 1.1rem; cursor: pointer; transition: all 0.2s; line-height: 1;
+}
+.lang-btn:hover { background: rgba(255,255,255,0.2); color: var(--white); }
+.lang-btn.active { background: var(--accent); border-color: var(--accent); color: var(--white); }
+
+/* ===== EDITOR-HINWEIS (vor dem Versand löschen) ===== */
+.editor-note {
+  max-width: 900px; margin: 84px auto 0; padding: 1.2rem 1.5rem;
+  background: #fff8e1; border: 2px dashed #e0a800; border-radius: 12px;
+  color: #6b5200; font-size: 0.9rem;
+}
+.editor-note strong { color: #8a6d00; }
+.editor-note ul { margin: 0.5rem 0 0 1.2rem; }
+.editor-note li { margin: 0.2rem 0; }
+
+/* ===== HERO ===== */
+.hero {
+  position: relative; min-height: 46vh;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden; padding: 6rem 2rem 3rem;
+}
+.hero-bg {
+  position: absolute; inset: 0;
+  background: url('img/strand-abendstimmung.jpg') center/cover no-repeat;
+}
+.hero-bg::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(to bottom, rgba(15,47,66,0.55), rgba(15,47,66,0.65));
+}
+.hero-content {
+  position: relative; z-index: 1; text-align: center;
+  color: var(--white); max-width: 720px;
+}
+.hero-content h1 {
+  font-family: var(--serif);
+  font-size: clamp(1.9rem, 5vw, 3rem);
+  font-weight: 400; letter-spacing: 0.5px;
+  text-shadow: 0 2px 20px rgba(0,0,0,0.3); margin-bottom: 0.6rem;
+}
+.hero-content h1 strong { font-weight: 700; }
+.hero-content p {
+  font-size: clamp(1rem, 2.2vw, 1.2rem); opacity: 0.92;
+  text-shadow: 0 1px 8px rgba(0,0,0,0.3);
+}
+
+/* ===== QUICK-NAV CHIPS ===== */
+.quicknav {
+  background: var(--ocean-dark);
+  padding: 1.1rem 1.5rem;
+  display: flex; flex-wrap: wrap; gap: 0.6rem;
+  justify-content: center; position: sticky; top: 60px; z-index: 900;
+}
+.quicknav a {
+  color: rgba(255,255,255,0.9); text-decoration: none;
+  background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+  padding: 0.45rem 1rem; border-radius: 50px; font-size: 0.88rem;
+  transition: all 0.2s; white-space: nowrap;
+}
+.quicknav a:hover { background: var(--accent); border-color: var(--accent); }
+
+/* ===== SECTIONS ===== */
+section { padding: 3.5rem 1.5rem; scroll-margin-top: 130px; }
+.container { max-width: 900px; margin: 0 auto; }
+.section-title {
+  font-family: var(--serif);
+  display: flex; align-items: center; gap: 0.7rem;
+  font-size: clamp(1.5rem, 4vw, 2rem); color: var(--ocean-dark);
+  font-weight: 400; margin-bottom: 1.5rem; letter-spacing: 0.3px;
+}
+.section-title strong { font-weight: 700; }
+.section-title .st-emoji { font-size: 1.8rem; }
+.lead { color: var(--warm-gray); font-size: 1.05rem; margin-bottom: 1.5rem; }
+
+/* ===== CARDS ===== */
+.card {
+  background: var(--white); border-radius: 16px; padding: 1.8rem;
+  box-shadow: 0 2px 12px rgba(15,47,66,0.06); margin-bottom: 1.3rem;
+}
+.card h3 {
+  color: var(--ocean-dark); font-size: 1.15rem; margin-bottom: 0.8rem;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.card p { color: var(--text); margin-bottom: 0.7rem; }
+.card p:last-child { margin-bottom: 0; }
+
+/* ===== INFO PHOTOS ===== */
+.info-photo {
+  width: 100%; height: auto; border-radius: 12px; display: block;
+  box-shadow: 0 3px 14px rgba(15,47,66,0.1); margin: 0.6rem 0 0.3rem;
+}
+.photo-cap { font-size: 0.82rem; color: var(--warm-gray); margin: 0.3rem 0 0.2rem; }
+.photo-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.9rem; margin: 0.6rem 0 0.3rem;
+}
+.photo-grid figure { margin: 0; }
+.photo-grid .info-photo { margin: 0 0 0.3rem; }
+
+/* ===== ALERT / WICHTIG ===== */
+.alert {
+  background: #fdeee4; border-left: 5px solid var(--accent);
+  border-radius: 10px; padding: 1.1rem 1.3rem; margin-bottom: 1.3rem;
+}
+.alert strong { color: var(--accent); }
+
+/* ===== STEP LIST ===== */
+.steps { list-style: none; counter-reset: step; margin-top: 0.5rem; }
+.steps li {
+  position: relative; padding: 0.6rem 0 0.6rem 2.6rem;
+  border-bottom: 1px solid var(--sand); color: var(--text);
+}
+.steps li:last-child { border-bottom: none; }
+.steps li::before {
+  counter-increment: step; content: counter(step);
+  position: absolute; left: 0; top: 0.55rem;
+  width: 1.8rem; height: 1.8rem; border-radius: 50%;
+  background: var(--ocean); color: var(--white);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.9rem; font-weight: 700;
+}
+
+/* ===== CHECK / RULE LIST ===== */
+.checklist { list-style: none; }
+.checklist li {
+  padding: 0.35rem 0 0.35rem 1.7rem; position: relative;
+  color: var(--text); font-size: 0.97rem;
+}
+.checklist li::before {
+  content: '✓'; position: absolute; left: 0; top: 0.35rem;
+  color: var(--ocean); font-weight: 700;
+}
+.rules { list-style: none; }
+.rules li {
+  padding: 0.35rem 0 0.35rem 1.7rem; position: relative;
+  color: var(--text); font-size: 0.97rem;
+}
+.rules li::before {
+  content: '⚠️'; position: absolute; left: 0; top: 0.3rem; font-size: 0.85rem;
+}
+
+/* ===== MAP + ROUTE BUTTON ===== */
+.map-box {
+  border-radius: 14px; overflow: hidden; aspect-ratio: 16/10;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin: 1.2rem 0;
+}
+.map-box iframe { width: 100%; height: 100%; border: 0; }
+
+/* ===== BUTTONS ===== */
+.btn {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.85rem 1.8rem; background: var(--ocean); color: var(--white);
+  text-decoration: none; border-radius: 50px; font-weight: 600;
+  transition: all 0.3s; border: 2px solid transparent; font-size: 1rem;
+}
+.btn:hover { background: var(--ocean-light); transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+.btn-accent { background: var(--accent); }
+.btn-accent:hover { background: var(--accent-light); }
+.btn-row { display: flex; flex-wrap: wrap; gap: 0.8rem; margin-top: 0.5rem; }
+
+/* ===== ACTIVITY GRID ===== */
+.activity-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.2rem; align-items: start;
+}
+.activity-card {
+  background: var(--white); border-radius: 16px; overflow: hidden;
+  box-shadow: 0 2px 12px rgba(15,47,66,0.06);
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex; flex-direction: column;
+}
+.activity-card:hover { transform: translateY(-4px); box-shadow: 0 8px 30px rgba(15,47,66,0.1); }
+.activity-card .ac-img {
+  width: 100%; height: auto; aspect-ratio: 4/3; object-fit: cover; display: block;
+}
+.activity-card .ac-head {
+  background: var(--ocean-dark); color: var(--white);
+  padding: 1rem 1.3rem; font-weight: 600; font-size: 1.05rem;
+  display: flex; align-items: center; gap: 0.6rem;
+}
+.activity-card .ac-body { padding: 1.2rem 1.3rem; flex: 1; }
+.activity-card .ac-body p { font-size: 0.95rem; color: var(--text); margin-bottom: 0.6rem; }
+.activity-card .ac-meta {
+  font-size: 0.85rem; color: var(--warm-gray); margin-top: 0.6rem;
+  display: flex; flex-wrap: wrap; gap: 0.4rem 1rem;
+}
+.activity-card .ac-meta span { display: inline-flex; align-items: center; gap: 0.3rem; }
+.activity-card .ac-body a { color: var(--ocean); font-weight: 600; text-decoration: none; }
+.activity-card .ac-body a:hover { text-decoration: underline; }
+
+.tag {
+  display: inline-block; background: var(--sky); color: var(--ocean-dark);
+  padding: 0.15rem 0.7rem; border-radius: 50px; font-size: 0.78rem;
+  font-weight: 600; margin: 0 0.3rem 0.3rem 0;
+}
+.tag-family { background: #eaf6ea; color: #2e7d32; }
+.tag-rain { background: #eef1f6; color: #455a94; }
+
+/* ===== REVIEW CTA ===== */
+#bewertung {
+  background: linear-gradient(135deg, var(--ocean-dark), var(--ocean));
+  color: var(--white); text-align: center;
+}
+#bewertung .section-title { color: var(--white); justify-content: center; }
+#bewertung .lead { color: rgba(255,255,255,0.9); max-width: 620px; margin: 0 auto 1.8rem; }
+.stars { font-size: 2rem; letter-spacing: 0.2rem; margin-bottom: 1rem; }
+.review-btns { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; }
+.btn-white { background: var(--white); color: var(--ocean-dark); }
+.btn-white:hover { background: var(--sand); }
+.btn-ghost { background: rgba(255,255,255,0.15); color: var(--white); border: 2px solid rgba(255,255,255,0.4); }
+.btn-ghost:hover { background: rgba(255,255,255,0.25); }
+
+/* ===== EDIT MARKER ===== */
+mark.todo {
+  background: #fff2b8; color: #6b5200; padding: 0.05rem 0.35rem;
+  border-radius: 4px; font-weight: 600;
+}
+
+/* ===== CONTACT STRIP ===== */
+.contact-strip {
+  background: var(--sand-dark); text-align: center; padding: 2.5rem 1.5rem;
+}
+.contact-strip h3 { color: var(--ocean-dark); margin-bottom: 0.5rem; font-family: var(--serif); }
+.contact-strip p { color: var(--warm-gray); }
+.contact-strip a { color: var(--ocean); font-weight: 600; text-decoration: none; }
+
+/* ===== FOOTER ===== */
+footer {
+  background: var(--deep); color: rgba(255,255,255,0.6);
+  padding: 2.5rem 2rem; text-align: center; font-size: 0.85rem;
+}
+footer a { color: rgba(255,255,255,0.8); text-decoration: none; }
+footer a:hover { color: var(--white); }
+
+/* ===== FOCUS (Barrierefreiheit) ===== */
+a:focus-visible, button:focus-visible, .btn:focus-visible, .lang-btn:focus-visible {
+  outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 6px;
+}
+
+@media (max-width: 700px) {
+  nav { padding: 0 1rem; }
+  .nav-logo { font-size: 1.1rem; }
+  section { padding: 2.8rem 1.1rem; }
+  .card { padding: 1.4rem; }
+  .quicknav { top: 60px; }
+  /* Kompakter Zurück-Button auf dem Smartphone (nur Pfeil) */
+  .nav-back { padding: 0.4rem 0.6rem; }
+  .nav-back-label { display: none; }
+  .nav-back-arrow { font-size: 1.1rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .activity-card, .btn { transition: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== NAVIGATION ===== -->
+<nav id="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">Casa <span>Baltica</span></a>
+    <div class="nav-right">
+      <div class="lang-switcher" role="group" aria-label="Sprache wählen / Choose language">
+        <button class="lang-btn active" data-lang="de" onclick="switchLang('de')" lang="de" aria-label="Deutsch" title="Deutsch">🇩🇪</button>
+        <button class="lang-btn" data-lang="en" onclick="switchLang('en')" lang="en" aria-label="English" title="English">🇬🇧</button>
+        <button class="lang-btn" data-lang="es" onclick="switchLang('es')" lang="es" aria-label="Español" title="Español">🇪🇸</button>
+      </div>
+      <a href="index.html" class="nav-back" aria-label="Zur Startseite / Back to home"><span class="nav-back-arrow" aria-hidden="true">←</span> <span class="nav-back-label" data-i18n="nav.back">Zur Startseite</span></a>
+    </div>
+  </div>
+</nav>
+
+<!-- ===== HERO ===== -->
+<section class="hero" style="scroll-margin-top:0;">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <h1 data-i18n="hero.title">Herzlich willkommen in der <strong>Casa Baltica</strong></h1>
+    <p data-i18n="hero.sub">Schön, dass Sie kommen! Hier finden Sie vorab alles Wichtige für einen entspannten Aufenthalt an der Ostsee.</p>
+  </div>
+</section>
+
+<!-- ===== QUICK-NAV ===== -->
+<div class="quicknav">
+  <a href="#anfahrt" data-i18n="qn.anfahrt">🚗 Anfahrt &amp; Parken</a>
+  <a href="#ankommen" data-i18n="qn.ankommen">🔑 Ankommen</a>
+  <a href="#grillen" data-i18n="qn.grillen">🔥 Grillen</a>
+  <a href="#waschsalon" data-i18n="qn.waschen">🧺 Waschsalon</a>
+  <a href="#einkaufen" data-i18n="qn.shop">🛒 Einkaufen</a>
+  <a href="#familie" data-i18n="qn.familie">👨‍👩‍👧‍👦 Für Familien</a>
+  <a href="#ausflug" data-i18n="qn.ausflug">🎡 Ausflugstipps</a>
+  <a href="#veranstaltungen" data-i18n="qn.events">📅 Veranstaltungen</a>
+  <a href="#abreise" data-i18n="qn.abreise">🧳 Vor der Abreise</a>
+  <a href="#bewertung" data-i18n="qn.bewertung">⭐ Bewertung</a>
+</div>
+
+<!-- ===== ANFAHRT ===== -->
+<section id="anfahrt">
+  <div class="container">
+    <h2 class="section-title"><span class="st-emoji">🚗</span> <span data-i18n="anf.title">So finden Sie <strong>zu uns</strong></span></h2>
+    <p class="lead" data-i18n="anf.lead">
+      Ein kleiner Tipp vorweg, weil unsere Wohnung in einer ruhigen Wohnanlage in zweiter Reihe liegt:
+      Geben Sie ins Navi bitte die <strong>Hausadresse</strong> ein — nicht nur „Schönberger Strand" oder die Tourist-Info.
+    </p>
+
+    <div class="alert">
+      <strong data-i18n="anf.alert.h">Bitte ins Navigationsgerät eingeben:</strong><br>
+      Kiefernweg 18 · 24217 Schönberg <span data-i18n="anf.alert.ot">(Ortsteil Schönberger Strand)</span><br>
+      <span style="font-size:0.9rem; color:var(--warm-gray);" data-i18n="anf.alert.app">Ziel ist <strong>App. 4</strong> im Erdgeschoss.</span>
+    </div>
+
+    <div class="map-box">
+      <iframe
+        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2352.8!2d10.383!3d54.415!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47b2582c38d8e8d1%3A0x4218e79e3c44e0!2sKiefernweg%2018%2C%2024217%20Sch%C3%B6nberg!5e0!3m2!1sde!2sde!4v1700000000000"
+        allowfullscreen="" loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade"
+        title="Standort Casa Baltica">
+      </iframe>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn" href="https://www.google.com/maps/dir/?api=1&destination=Kiefernweg+18,+24217+Sch%C3%B6nberg" target="_blank" rel="noopener" data-i18n="anf.route.g">🧭 Route in Google Maps öffnen</a>
+      <a class="btn btn-accent" href="https://maps.apple.com/?address=Kiefernweg+18,+24217+Sch%C3%B6nberg" target="_blank" rel="noopener" data-i18n="anf.route.a"> Route in Apple Karten</a>
+    </div>
+
+    <div class="card" style="margin-top:1.5rem;">
+      <h3>📍 <span data-i18n="anf.wb.h">Wegbeschreibung ab der Tourist-Info Schönberger Strand</span></h3>
+      <p data-i18n="anf.wb.p">Die Schlüsselübergabe erfolgt an der Tourist-Info (Käptn's Gang 1). Von dort sind es nur wenige hundert Meter zu uns — am einfachsten folgen Sie der Route:</p>
+      <div class="btn-row">
+        <a class="btn" href="https://www.google.com/maps/dir/Tourist-Service+Ostseebad+Sch%C3%B6nberg,+K%C3%A4ptn's+Gang+1,+24217+Sch%C3%B6nberg+(Holstein)-Sch%C3%B6nberger+Strand/54.414559,10.411351/@54.4129842,10.4100715,512m/data=!3m2!1e3!4b1!4m10!4m9!1m5!1m1!1s0x47b2f412872e9f6b:0x24244c3a84ce6787!2m2!1d10.4149139!2d54.4125498!1m1!4e1!3e0" target="_blank" rel="noopener" data-i18n="anf.wb.btn">🧭 Route ab Tourist-Info öffnen</a>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:1.5rem;">
+      <h3>🪧 <span data-i18n="anf.turn.h">Die letzte Abbiegung: in den Kiefernweg</span></h3>
+      <p data-i18n="anf.turn.p">Kurz vor dem Ziel biegen Sie vom <strong>Korshagener Redder</strong> in die Straße <strong>„Am Golfplatz"</strong> ab — dem Wegweiser <strong>„Kiefernweg →"</strong> folgend. Das Schild <strong>„Keine Durchfahrt zum Strand"</strong> stimmt — Sie sind trotzdem richtig; hier geht es zu unserer Wohnanlage. Fast am Ende der Straße biegen Sie dann <strong>links in den Kiefernweg</strong> ein.</p>
+      <div class="photo-grid">
+        <figure>
+          <img class="info-photo" src="img/anfahrt-ecke.jpg" alt="Einmündung von der Hauptstraße Richtung Kiefernweg, mit großem Baum und Hecke" loading="lazy" width="1400" height="1050">
+          <figcaption class="photo-cap" data-i18n="anf.turn.cap1">Die Einmündung vom Korshagener Redder.</figcaption>
+        </figure>
+        <figure>
+          <img class="info-photo" src="img/anfahrt-schild.jpg" alt="Wegweiser „Am Golfplatz" mit Pfeil zum Kiefernweg und Sackgassen-Schild" loading="lazy" width="1400" height="1050">
+          <figcaption class="photo-cap" data-i18n="anf.turn.cap2">Dem Wegweiser „Kiefernweg →" folgen.</figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>🚧 <span data-i18n="anf.schranke.h">Schranke am Eingang</span></h3>
+      <p data-i18n="anf.schranke.p">Die Zufahrt zum Gelände ist mit einer Schranke gesichert. Für eine komfortable Nutzung liegt im
+      <strong>Flurbereich der Wohnung ein schwarzer, rechteckiger Transponder</strong> für Sie bereit.</p>
+      <ul class="checklist">
+        <li data-i18n="anf.schranke.l1">Damit öffnen Sie die Schranke bequem direkt aus dem Auto heraus — sie schließt sich anschließend automatisch wieder</li>
+        <li data-i18n="anf.schranke.l3">Alternativ lässt sich die Schranke auch mit dem <strong>Haustürschlüssel</strong> öffnen</li>
+        <li data-i18n="anf.schranke.l2">Bitte legen Sie den Transponder bei der Abreise unbedingt wieder an <strong>denselben Platz</strong> in der Wohnung zurück</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>🅿️ <span data-i18n="anf.park.h">Parken &amp; Stellplatz finden</span></h3>
+      <p data-i18n="anf.park.p1">Zur Wohnung gehört ein <strong>kostenloser PKW-Stellplatz</strong>. So finden Sie ihn:</p>
+      <ol class="steps">
+        <li data-i18n="anf.park.s1">Direkt <strong>hinter der Schranke die erste Möglichkeit links</strong> abbiegen.</li>
+        <li data-i18n="anf.park.s2">Dem Weg zwischen Haus und Schuppen <strong>ganz bis zum Ende</strong> folgen.</li>
+        <li data-i18n="anf.park.s3">Am Ende liegt <strong>links der Parkplatz</strong>. Ihr Stellplatz ist mit dem Schild <strong>„Wohnung 4"</strong> gekennzeichnet.</li>
+      </ol>
+      <div class="photo-grid">
+        <figure>
+          <img class="info-photo" src="img/info-schranke.jpg" alt="Schranke am Eingang; direkt dahinter geht es die erste Möglichkeit links" loading="lazy" width="1400" height="1050">
+          <figcaption class="photo-cap" data-i18n="anf.park.cap1">1. Hinter der Schranke die erste links.</figcaption>
+        </figure>
+        <figure>
+          <img class="info-photo" src="img/info-zufahrt.jpg" alt="Weg zwischen Haus und Holzschuppen, dem man bis zum Ende folgt" loading="lazy" width="1400" height="1050">
+          <figcaption class="photo-cap" data-i18n="anf.park.cap2">2. Dem Weg bis zum Ende folgen.</figcaption>
+        </figure>
+        <figure>
+          <img class="info-photo" src="img/info-parkplatz.jpg" alt="Schild „Wohnung 4“ am Stellplatz, an der Backsteinwand neben der Hecke" loading="lazy" width="1050" height="1400">
+          <figcaption class="photo-cap" data-i18n="anf.park.cap3">3. Links der Stellplatz „Wohnung 4".</figcaption>
+        </figure>
+      </div>
+      <p style="margin-top:1rem;" data-i18n="anf.wb.s4">Casa Baltica ist <strong>App. 4</strong> im Erdgeschoss mit eigener Terrasse zur Gartenseite. Der Zugang zur Wohnung erfolgt ausschließlich über den <strong>Haupteingang (Tür)</strong>.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== ANKOMMEN ===== -->
+<section id="ankommen" style="background:var(--white);">
+  <div class="container">
+    <h2 class="section-title"><span class="st-emoji">🔑</span> <span data-i18n="ank.title">Ankommen &amp; <strong>Einchecken</strong></span></h2>
+
+    <div class="card">
+      <h3>🕒 <span data-i18n="ank.cio.h">Check-in &amp; Check-out</span></h3>
+      <ul class="checklist">
+        <li data-i18n="ank.cio.l1">Check-in: ab 15:00 Uhr</li>
+        <li data-i18n="ank.cio.l2">Check-out: bis 10:00 Uhr</li>
+        <li data-i18n="ank.cio.l3">Schlüsselübergabe &amp; -rückgabe: über die Zentrale Zimmervermittlung / den Tourist-Service Ostseebad Schönberg (Käptn's Gang 1) — Ablauf wie vereinbart</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>📶 <span data-i18n="ank.wlan.h">WLAN</span></h3>
+      <p data-i18n="ank.wlan.p">Kostenfreies Glasfaser-WLAN ist vorhanden.</p>
+      <ul class="checklist">
+        <li><span data-i18n="ank.wlan.ssid">Netzwerk (SSID):</span> <strong>TNGBOX3939657</strong></li>
+        <li><span data-i18n="ank.wlan.pw">Passwort:</span> <span data-i18n="ank.wlan.pwnote">erhalten Sie bei der Ankunft — am schnellsten verbinden Sie sich per QR-Code am Router</span></li>
+        <li data-i18n="ank.wlan.qr">Zum schnellen Verbinden gibt es einen QR-Code auf der Rückseite des Routers</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>ℹ️ <span data-i18n="ank.gzw.h">Gut zu wissen</span></h3>
+      <ul class="checklist">
+        <li data-i18n="ank.gzw.l1">Nichtraucherwohnung — Rauchen bitte nur draußen</li>
+        <li data-i18n="ank.gzw.l2">Keine Haustiere</li>
+        <li data-i18n="ank.gzw.l3">Ruhige Wohnanlage — bitte auf die Nachtruhe (22–7 Uhr) achten</li>
+        <li data-i18n="ank.gzw.l4">Mülltrennung: Container im Eingangsbereich hinter der Schranke — Details in der Karte „Müll &amp; Recycling"</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>🏠 <span data-i18n="ank.wohnung.h">In der Wohnung</span></h3>
+      <ul class="checklist">
+        <li data-i18n="ank.wohnung.l1"><strong>Kühlschrank:</strong> bitte einschalten (Regler auf die gewünschte Stufe, empfohlen Stufe 3–4). Er braucht ca. 2–3 Stunden bis zur optimalen Temperatur.</li>
+        <li data-i18n="ank.wohnung.l2"><strong>Esstisch:</strong> lässt sich vergrößern. Die Verlängerungsplatte steht hinter dem Fernsehschrank neben der Terrassentür — Sicherung unter dem Tisch (rechts &amp; links) öffnen und die Platte einsetzen.</li>
+        <li data-i18n="ank.wohnung.l3"><strong>Technische Geräte:</strong> die Bedienungsanleitungen finden Sie im Schrank unter dem Fernseher.</li>
+        <li data-i18n="ank.wohnung.l4"><strong>Kaffee:</strong> In der Küche stehen eine <strong>Nespresso-Kapselmaschine (De’Longhi)</strong> und eine <strong>normale Filterkaffeemaschine</strong> bereit. Passende Nespresso-Kapseln bringen Sie bitte selbst mit oder kaufen sie vor Ort.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>🗑️ <span data-i18n="ank.muell.h">Müll &amp; Recycling</span></h3>
+      <p data-i18n="ank.muell.p">Die Müllcontainer stehen im Eingangsbereich des Geländes, direkt hinter der Schranke. Die Holztüren zu den
+      Containern öffnen Sie mit dem <strong>Haustürschlüssel</strong>. Bitte trennen Sie Ihren Müll und schließen Sie
+      anschließend die Holztüren sowie die Schranke wieder sorgfältig ab.</p>
+      <div class="photo-grid">
+        <figure>
+          <img class="info-photo" src="img/info-muell.jpg" alt="Reihe der Holzschuppen am Eingang, in denen die Mülltonnen stehen" loading="lazy" width="1400" height="1050">
+          <figcaption class="photo-cap" data-i18n="ank.muell.cap1">Die Müllschuppen liegen gleich hinter der Schranke.</figcaption>
+        </figure>
+        <figure>
+          <img class="info-photo" src="img/info-muell-schluessel.jpg" alt="Nahaufnahme der Schuppentür mit Schloss — der Haustürschlüssel passt" loading="lazy" width="1400" height="1050">
+          <figcaption class="photo-cap" data-i18n="ank.muell.cap2">Die Holztüren öffnen Sie mit dem Haustürschlüssel.</figcaption>
+        </figure>
+      </div>
+      <ul class="checklist">
+        <li data-i18n="ank.muell.l1"><strong>Braun</strong> — Bioabfall</li>
+        <li data-i18n="ank.muell.l2"><strong>Grau</strong> — Restmüll</li>
+        <li data-i18n="ank.muell.l3"><strong>Gelb</strong> — Plastik / Verpackungen</li>
+        <li data-i18n="ank.muell.l4"><strong>Grün</strong> — Papier</li>
+        <li data-i18n="ank.muell.l5"><strong>Glas</strong> — bitte separat entsorgen (nicht in die graue, gelbe, grüne oder braune Tonne)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ===== GRILLEN ===== -->
+<section id="grillen">
+  <div class="container">
+    <h2 class="section-title"><span class="st-emoji">🔥</span> <span data-i18n="gr.title">Der <strong>Grill</strong></span></h2>
+    <p class="lead" data-i18n="gr.lead">Ein Abend auf der Terrasse mit Grill gehört zum Ostsee-Urlaub dazu. Damit alles klappt und sicher bleibt:</p>
+
+    <div class="card">
+      <h3>🍔 <span data-i18n="gr.how.h">So funktioniert's</span></h3>
+      <p data-i18n="gr.how.p">Bei uns steht ein <strong>Gasgrill</strong> auf der Terrasse bereit.</p>
+      <figure>
+        <img class="info-photo" src="img/info-grill.jpg" alt="Gasgrill auf der Terrasse, bereit zum Grillen" loading="lazy" width="1050" height="1400" style="max-width:420px;">
+        <figcaption class="photo-cap" data-i18n="gr.how.cap">Unser Gasgrill auf der Terrasse.</figcaption>
+      </figure>
+      <ol class="steps">
+        <li data-i18n="gr.how.s1">Vor dem Grillen bei Bedarf die <strong>Gasflasche wiegen</strong>, um zu prüfen, ob noch genügend Gas vorhanden ist. Die <strong>Kofferwaage (rosa)</strong> liegt im Flurschrank (Garderobe) in der Schublade.</li>
+        <li data-i18n="gr.how.s2">Vom gemessenen Gewicht das auf der Flasche angegebene <strong>Tara-Gewicht</strong> (Leergewicht) abziehen — die Differenz ist die verbleibende Gasmenge.</li>
+        <li data-i18n="gr.how.s3">Gasflasche aufdrehen, den Grill gemäß Anleitung zünden und ca. 10–15 Min. vorheizen.</li>
+        <li data-i18n="gr.how.s4">Nach dem Grillen: Gas an der Flasche wieder zudrehen und den Grill vollständig auskühlen lassen.</li>
+        <li data-i18n="gr.how.s5">Anschließend bitte den Rost mit der <strong>Drahtbürste abbürsten</strong> — so ist er für die nächsten Gäste wieder einsatzbereit.</li>
+      </ol>
+      <p style="margin-top:0.8rem;" data-i18n="gr.how.gas">Sollte das Gas einmal nicht ausreichen, können Sie die Flasche beim
+      <strong>Hagebaumarkt in Schönberg</strong> austauschen lassen (auf der Flasche liegt ein Pfand). Den ausgelegten
+      Betrag erstatten wir Ihnen selbstverständlich gegen Vorlage des Kassenbons zurück.</p>
+      <div class="photo-grid" style="margin-top:1rem;">
+        <figure>
+          <img class="info-photo" src="img/info-grill-betrieb-1.jpg" alt="Gasgrill in Betrieb mit Burgern und Bratwürsten auf dem Rost" loading="lazy" width="1400" height="1050">
+          <figcaption class="photo-cap" data-i18n="gr.cap.1">Der Gasgrill in Betrieb — Burger &amp; Bratwurst auf dem Rost.</figcaption>
+        </figure>
+        <figure>
+          <img class="info-photo" src="img/info-grill-teller.jpg" alt="Fertig angerichteter Burger mit Bratwurst auf dem Teller im Garten" loading="lazy" width="1050" height="1400">
+          <figcaption class="photo-cap" data-i18n="gr.cap.teller">Fertig angerichtet im Garten.</figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>✅ <span data-i18n="gr.safe.h">Bitte beachten</span></h3>
+      <ul class="rules">
+        <li data-i18n="gr.safe.l1">Grill nur im Freien und mit ausreichend Abstand zu Haus, Möbeln und Markise betreiben</li>
+        <li data-i18n="gr.safe.l2">Den Grill während des Betriebs nie unbeaufsichtigt lassen — besonders mit Kindern</li>
+        <li data-i18n="gr.safe.l3">Einen Feuerlöscher oder Wasser griffbereit halten</li>
+        <li data-i18n="gr.safe.l4">Gasflasche nach Gebrauch immer wieder zudrehen</li>
+        <li data-i18n="gr.safe.l5">Bitte den Grill nach Gebrauch gereinigt hinterlassen — so freut sich der nächste Gast 🙏</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ===== WASCHSALON ===== -->
+<section id="waschsalon" style="background:var(--white);">
+  <div class="container">
+    <h2 class="section-title"><span class="st-emoji">🧺</span> <span data-i18n="wa.title">Der <strong>Waschsalon</strong></span></h2>
+    <p class="lead" data-i18n="wa.lead">Für längere Aufenthalte gibt es einen Münz-Waschsalon in der Nachbarschaft — mit Miele-Wasch- und Trockenmaschinen.</p>
+
+    <div class="card">
+      <h3>🧺 <span data-i18n="wa.how.h">So funktioniert's</span></h3>
+      <ul class="checklist">
+        <li data-i18n="wa.how.l1">Der Waschsalon <strong>„Holmer Münzwaschcenter"</strong> liegt im benachbarten Ostseebad Kalifornien / Ortsteil Holm — im Erdgeschoss des flachen Gebäudes <strong>direkt links neben dem markanten Hochhaus</strong> (Ostsee-Ferienpark Holm) und ist <strong>mit dem Auto oder Fahrrad</strong> gut zu erreichen.</li>
+        <li data-i18n="wa.how.l2">Waschen und Trocknen laufen über <strong>Münzeinwurf</strong> — bitte bringen Sie ausreichend <strong>Kleingeld</strong> mit.</li>
+        <li data-i18n="wa.how.l3">Preise: <strong>Waschmaschine 5,00 € je Maschine</strong>, <strong>Trockner 1,00 € je 15 Minuten</strong>. Die Programme sind an den Geräten beschrieben.</li>
+        <li data-i18n="wa.how.l4">Öffnungszeiten: <strong>täglich 8.30–20.00 Uhr</strong></li>
+      </ul>
+      <div class="photo-grid">
+        <figure>
+          <img class="info-photo" src="img/info-waschsalon-gebaeude.jpg" alt="Markantes Hochhaus des Ostsee-Ferienparks Holm; der Waschsalon liegt im Gebäude links daneben" loading="lazy" width="1400" height="1050">
+          <figcaption class="photo-cap" data-i18n="wa.cap.gebaeude">Das markante Hochhaus als Orientierung — der Waschsalon liegt links daneben.</figcaption>
+        </figure>
+        <figure>
+          <img class="info-photo" src="img/info-waschsalon-eingang.jpg" alt="Eingangstür des Holmer Münzwaschcenters mit dem Schild täglich geöffnet 8.30 bis 20.00 Uhr" loading="lazy" width="1400" height="1050">
+          <figcaption class="photo-cap" data-i18n="wa.cap.eingang">Eingang — täglich 8.30–20.00 Uhr geöffnet.</figcaption>
+        </figure>
+        <figure>
+          <img class="info-photo" src="img/info-waschsalon.jpg" alt="Zwei Miele-Waschmaschinen mit Münzautomat" loading="lazy" width="1400" height="1050">
+          <figcaption class="photo-cap" data-i18n="wa.cap.maschinen">Miele-Waschmaschinen mit Münzautomat.</figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>🧭 <span data-i18n="wa.route.h">So kommen Sie hin</span></h3>
+      <ol class="steps">
+        <li data-i18n="wa.route.s1">Von der Casa Baltica an der Küste entlang Richtung Süden ins benachbarte <strong>Ostseebad Kalifornien / Ortsteil Holm</strong> fahren.</li>
+        <li data-i18n="wa.route.s2">Dort ist ein <strong>markantes Hochhaus</strong> von Weitem gut zu sehen — der Waschsalon liegt aber <strong>nicht im Hochhaus selbst</strong>, sondern im flachen Gebäude <strong>direkt links daneben</strong> (Erdgeschoss).</li>
+        <li data-i18n="wa.route.s3">Adresse: <strong>Osterwisch 2, 24217 Holm</strong> (Ostsee-Ferienpark Holm). Geöffnet <strong>täglich 8.30–20.00 Uhr</strong>.</li>
+      </ol>
+      <div class="btn-row">
+        <a class="btn" href="https://www.google.com/maps/dir/Kiefernweg+18,+24217+Sch%C3%B6nberg+(Holstein)-Sch%C3%B6nberger+Strand/Holmer+M%C3%BCnzwaschcenter,+Osterwisch+2,+24217+Sch%C3%B6nberg+(Holstein)-Holm/@54.4181046,10.3704634,14z/data=!3m1!4b1!4m13!4m12!1m5!1m1!1s0x47b2f40de076e843:0xecbd1c6de4c5dc2!2m2!1d10.4113031!2d54.4145796!1m5!1m1!1s0x47b2f749d41d7c7d:0x32679603b8464b0a!2m2!1d10.3696376!2d54.422436" target="_blank" rel="noopener" data-i18n="wa.route.btn">🧭 Route zum Waschsalon öffnen</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== EINKAUFEN ===== -->
+<section id="einkaufen">
+  <div class="container">
+    <h2 class="section-title"><span class="st-emoji">🛒</span> <span data-i18n="ek.title">Einkaufen</span></h2>
+
+    <div class="card">
+      <h3>🛒 <span data-i18n="ek.edeka.h">Edeka an der Tourist-Info</span></h3>
+      <p data-i18n="ek.edeka.p">Direkt an der Tourist-Info (Käptn's Gang 3) gibt es einen <strong>Edeka</strong> — bequem zu Fuß erreichbar.</p>
+      <ul class="checklist">
+        <li data-i18n="ek.edeka.sb">Auch abends per Selbstbedienung ohne Personal einkaufen — nach unserer Kenntnis bis ca. 20 Uhr.</li>
+      </ul>
+      <div class="alert" data-i18n="ek.edeka.warn"><strong>Achtung:</strong> Der Parkplatz dort ist teils kostenpflichtig und wird kontrolliert.</div>
+      <div class="btn-row">
+        <a class="btn" href="https://www.google.com/maps/search/?api=1&amp;query=K%C3%A4ptn%27s+Gang+3,+24217+Sch%C3%B6nberg" target="_blank" rel="noopener" data-i18n="ek.edeka.btn">🧭 Edeka in Google Maps</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>🥩 <span data-i18n="ek.schoenberg.h">Frischtheke &amp; mehr in Schönberg</span></h3>
+      <p data-i18n="ek.schoenberg.p">Für die <strong>Frischtheke</strong> (Fleisch, Käse) und größere Einkäufe fahren Sie am besten nach <strong>Schönberg</strong> — dort gibt es alles, auch einen <strong>Rossmann</strong> (Drogerie).</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FÜR FAMILIEN ===== -->
+<section id="familie">
+  <div class="container">
+    <h2 class="section-title"><span class="st-emoji">👨‍👩‍👧‍👦</span> <span data-i18n="fam.title">Für <strong>Familien</strong> — direkt bei uns</span></h2>
+    <p class="lead" data-i18n="fam.lead">Damit keine Langeweile aufkommt, finden Sie in der Wohnung einiges zum Ausleihen und Mitnehmen:</p>
+
+    <div class="card">
+      <h3>🎒 <span data-i18n="fam.haus.h">Das ist im Haus vorhanden</span></h3>
+      <ul class="checklist">
+        <li data-i18n="fam.haus.l5">Bluetooth-Lautsprecher und 65-Zoll-TV — Netflix &amp; Co. sind startklar (bitte am Ende von Ihren Konten abmelden)</li>
+        <li data-i18n="fam.haus.l6">Für eine mitgebrachte Nintendo Switch liegt ein passendes HDMI-Kabel bereit</li>
+      </ul>
+    </div>
+
+    <div class="activity-grid">
+
+      <!-- SPIELPLATZ -->
+      <div class="activity-card">
+        <img class="ac-img" src="img/tipp-spielplatz.jpg" alt="Spielplatz mit Kletter- und Spielgeräten im Sand, nahe Edeka" loading="lazy" width="1600" height="1200">
+        <div class="ac-head">🛝 <span data-i18n="fam.spielplatz.h">Spielplätze</span></div>
+        <div class="ac-body">
+          <span class="tag tag-family" data-i18n="tag.family">Familie</span>
+          <p data-i18n="fam.spielplatz.p">Ein schöner Spielplatz mit Klettergeräten liegt gleich in der Nähe (beim Edeka, wenige Minuten zu Fuß). Weitere Spielplätze in der Umgebung:</p>
+          <ul class="checklist">
+            <li data-i18n="fam.spielplatz.abenteuer"><strong>Abenteuerspielplatz</strong> — Strandstraße 300, Neuschönberg (<a href="https://www.google.com/maps/search/?api=1&amp;query=Abenteuerspielplatz+Strandstra%C3%9Fe+300+24217+Sch%C3%B6nberg" target="_blank" rel="noopener">Karte</a>)</li>
+            <li data-i18n="fam.spielplatz.holm"><strong>Spielplatz Holm</strong> — unser Favorit, etwas weiter entfernt (<a href="https://www.google.com/maps/search/?api=1&amp;query=Spielplatz+Holm+24217+Sch%C3%B6nberg" target="_blank" rel="noopener">Karte</a>)</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- BOULE -->
+      <div class="activity-card">
+        <img class="ac-img" src="img/tipp-boule.jpg" alt="Boulebahn am gepflasterten Promenadenweg" loading="lazy" width="1200" height="1600">
+        <div class="ac-head">🍥 <span data-i18n="fam.boule.h">Boulebahn</span></div>
+        <div class="ac-body">
+          <span class="tag tag-family" data-i18n="tag.family">Familie</span><span class="tag" data-i18n="tag.aktiv">Aktiv</span>
+          <p data-i18n="fam.boule.p">Direkt am Promenadenweg (beim Edeka) gibt es eine Boulebahn — Kugeln mitnehmen und loslegen.</p>
+        </div>
+      </div>
+
+      <!-- TENNIS -->
+      <div class="activity-card">
+        <div class="ac-head">🎾 <span data-i18n="fam.tennis.h">Tennis</span></div>
+        <div class="ac-body">
+          <span class="tag tag-family" data-i18n="tag.family">Familie</span><span class="tag" data-i18n="tag.aktiv">Aktiv</span>
+          <p data-i18n="fam.tennis.p">In der Nähe können Sie Tennis spielen — im Sommer im Freien beim <strong>SSV Marina Wendtorf</strong> oder ganzjährig in der <strong>Tennishalle Heikendorf</strong>.</p>
+          <p data-i18n="fam.tennis.info">Buchung &amp; Infos: <a href="https://ssv-marina-wendtorf.de/Unsere-Sparten/Tennis" target="_blank" rel="noopener">SSV Marina Wendtorf (Tennis)</a> · <a href="https://www.bookandplay.de/cgi-bin/WebObjects/BookAndPlay.woa/wa/directAccess?id=TSH-2077" target="_blank" rel="noopener">Tennishalle Heikendorf (online buchen)</a>.</p>
+        </div>
+      </div>
+
+      <!-- MINIGOLF -->
+      <div class="activity-card">
+        <div class="ac-head">⛳ <span data-i18n="fam.minigolf.h">Minigolf Kalifornien</span></div>
+        <div class="ac-body">
+          <span class="tag tag-family" data-i18n="tag.family">Familie</span>
+          <p data-i18n="fam.minigolf.p">Der Klassiker für Groß und Klein: <strong>Minigolf &amp; Fahrradvermietung Gnutzmann</strong> im benachbarten Ostseebad <strong>Kalifornien</strong> — perfekt für einen Nachmittag mit den Kindern. Dort kann man auch Fahrräder leihen.</p>
+          <div class="ac-meta">
+            <span>📍 <span data-i18n="fam.minigolf.m1">Ortsteil Kalifornien</span></span>
+            <span>🚗 <span data-i18n="fam.minigolf.m2">wenige Minuten</span></span>
+          </div>
+          <p style="margin-top:0.6rem;"><a href="https://www.google.com/maps/search/?api=1&amp;query=Minigolf+und+Fahrradvermietung+Gnutzmann+Kalifornien" target="_blank" rel="noopener" data-i18n="fam.minigolf.link">In Google Maps ansehen →</a></p>
+        </div>
+      </div>
+
+      <!-- HANSAPARK -->
+      <div class="activity-card">
+        <div class="ac-head">🎢 <span data-i18n="fam.hansa.h">Hansa-Park</span></div>
+        <div class="ac-body">
+          <span class="tag tag-family" data-i18n="tag.family">Familie</span><span class="tag tag-rain" data-i18n="tag.ganztags">Ganztags</span>
+          <p data-i18n="fam.hansa.p">Deutschlands einziger Freizeitpark direkt an der Ostsee — in Sierksdorf. Achterbahnen, Fahrgeschäfte und Shows für einen ganzen Tagesausflug.</p>
+          <div class="ac-meta">
+            <span>📍 Sierksdorf</span>
+            <span>🚗 <span data-i18n="fam.hansa.m">ca.</span> 45–60 Min</span>
+          </div>
+          <p style="margin-top:0.6rem;"><a href="https://www.hansapark.de" target="_blank" rel="noopener">hansapark.de →</a></p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===== AUSFLUGSTIPPS ===== -->
+<section id="ausflug" style="background:var(--white);">
+  <div class="container">
+    <h2 class="section-title"><span class="st-emoji">🎡</span> <span data-i18n="au.title">Weitere <strong>Ausflugstipps</strong></span></h2>
+    <p class="lead" data-i18n="au.lead">Rund um Schönberg und in der Kieler Bucht gibt es viel zu entdecken — auch bei Regenwetter.</p>
+
+    <div class="activity-grid">
+
+      <!-- BAUERNHOF HEUER (Café + Bauerngolf + Maislabyrinth) -->
+      <div class="activity-card">
+        <img class="ac-img" src="img/tipp-heuers-cafe.jpg" alt="Bauernhof Heuer — reetgedecktes Café mit Außenbereich und Fahrrädern" loading="lazy" width="1600" height="1200">
+        <div class="ac-head">☕ <span data-i18n="au.heuers.h">Bauernhof Heuer</span></div>
+        <div class="ac-body">
+          <span class="tag" data-i18n="tag.genuss">Genuss</span><span class="tag tag-family" data-i18n="tag.family">Familie</span>
+          <p data-i18n="au.heuers.p">Café, Bauerngolf und Mais-Labyrinth an einem Ort: Das gemütliche, reetgedeckte <strong>Heuer's Café</strong> für Kaffee &amp; Kuchen und (saisonal) <strong>Bauerngolf</strong> sowie ein <strong>Mais-Labyrinth</strong> — gut mit dem Rad erreichbar.</p>
+          <div class="ac-meta"><span>🕒 <span data-i18n="au.heuers.m">Café laut Aushang Di–So, 13–18 Uhr</span></span></div>
+          <p><a href="https://bauernhof-heuer.de/Bauerngolf-Maislabyrinth" target="_blank" rel="noopener" data-i18n="au.heuers.link">bauernhof-heuer.de →</a></p>
+        </div>
+      </div>
+
+      <!-- QUADBAHN -->
+      <div class="activity-card">
+        <img class="ac-img" src="img/tipp-quadbahn.jpg" alt="Schild der Quadbahn Schönberg an der Landstraße" loading="lazy" width="1600" height="1200">
+        <div class="ac-head">🏁 <span data-i18n="au.quad.h">Quadbahn</span></div>
+        <div class="ac-body">
+          <span class="tag tag-family" data-i18n="tag.family">Familie</span><span class="tag" data-i18n="tag.aktiv">Aktiv</span>
+          <p data-i18n="au.quad.p">Action für ältere Kinder und Erwachsene: die Quadbahn <strong>Kiddy-Quad</strong> in der Nähe von Schönberg. Alternativ gibt es <strong>E-Karting bei evoKART in Kiel</strong>.</p>
+          <p data-i18n="au.quad.link"><a href="https://kiddy-quad.de/" target="_blank" rel="noopener">kiddy-quad.de</a> · <a href="https://evokart-kiel.de/" target="_blank" rel="noopener">evokart-kiel.de (Kiel)</a></p>
+        </div>
+      </div>
+
+      <!-- STRANDKORB -->
+      <div class="activity-card">
+        <img class="ac-img" src="img/strand-strandkorb.jpg" alt="Strandkorb am Ostseestrand mit Blick aufs Meer" loading="lazy" width="1600" height="1200">
+        <div class="ac-head">🏖️ <span data-i18n="au.korb.h">Strandkorb am Strand</span></div>
+        <div class="ac-body">
+          <span class="tag" data-i18n="tag.genuss">Genuss</span>
+          <p data-i18n="au.korb.p">Der Ostseestrand ist nur wenige Schritte entfernt. In der Saison lassen sich Strandkörbe mieten — der klassische, windgeschützte Logenplatz am Meer. Buchen Sie am besten vorab über die App <strong>BeachNow</strong>; die Körbe sind heiß begehrt und oft schon vergeben.</p>
+          <p data-i18n="au.korb.link"><a href="https://apps.apple.com/de/app/beachnow/id1663447719" target="_blank" rel="noopener">BeachNow im App Store →</a></p>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="activity-grid" style="margin-top:1.2rem;">
+
+      <!-- MUSEUMSBAHN -->
+      <div class="activity-card">
+        <div class="ac-head">🚋 <span data-i18n="au.bahn.h">Museums- &amp; Straßenbahn</span></div>
+        <div class="ac-body">
+          <span class="tag tag-family" data-i18n="tag.family">Familie</span>
+          <p data-i18n="au.bahn.p">Der Verein VVM betreibt am Schönberger Strand eine historische <strong>Museumsbahn</strong> und ein <strong>Straßenbahnmuseum</strong> — nostalgische Fahrten und alte Bahnen, die Kindern viel Freude machen.</p>
+          <p data-i18n="au.bahn.link"><a href="https://www.vvm-museumsbahn.de/ix/ix-start/ix-start.php?id=214" target="_blank" rel="noopener">vvm-museumsbahn.de →</a></p>
+        </div>
+      </div>
+
+      <!-- KINDHEITSMUSEUM -->
+      <div class="activity-card">
+        <div class="ac-head">🧸 <span data-i18n="au.kindheit.h">Kindheitsmuseum</span></div>
+        <div class="ac-body">
+          <span class="tag tag-family" data-i18n="tag.family">Familie</span><span class="tag tag-rain" data-i18n="tag.rain">Schlechtwetter</span>
+          <p data-i18n="au.kindheit.p">Das Kindheitsmuseum am Schönberger Strand nimmt Groß und Klein mit auf eine Reise in vergangene Kindheitstage — ein schönes Ziel für Familien, auch bei Regen. <a href="https://kindheitsmuseum.de/ausstellung" target="_blank" rel="noopener">kindheitsmuseum.de →</a></p>
+        </div>
+      </div>
+
+      <!-- PROBSTEI-MUSEUM -->
+      <div class="activity-card">
+        <div class="ac-head">🌾 <span data-i18n="au.museum.h">Probstei-Museum</span></div>
+        <div class="ac-body">
+          <span class="tag tag-rain" data-i18n="tag.rain">Schlechtwetter</span>
+          <p data-i18n="au.museum.p">Regionalmuseum in Schönberg zur Geschichte und Tracht der Probstei — ideal für einen verregneten Vormittag.</p>
+        </div>
+      </div>
+
+      <!-- KIEL -->
+      <div class="activity-card">
+        <div class="ac-head">⚓ <span data-i18n="au.kiel.h">Kiel</span></div>
+        <div class="ac-body">
+          <span class="tag tag-rain" data-i18n="tag.rain">Schlechtwetter</span><span class="tag" data-i18n="tag.stadt">Stadt</span>
+          <p data-i18n="au.kiel.p">Landeshauptstadt mit Hafen, Museen, Aquarium (GEOMAR) und Shopping — rund 25 km entfernt.</p>
+          <div class="ac-meta"><span>🚗 <span data-i18n="au.kiel.m">ca. 30 Min</span></span></div>
+        </div>
+      </div>
+
+      <!-- KIRCHE SCHÖNBERG -->
+      <div class="activity-card">
+        <div class="ac-head">⛪ <span data-i18n="au.kirche.h">Kirche Schönberg</span></div>
+        <div class="ac-body">
+          <span class="tag tag-family" data-i18n="tag.family">Familie</span>
+          <p data-i18n="au.kirche.p">Die Kirche in Schönberg lädt zu Gottesdiensten und zur Besichtigung ein — inklusive <strong>Turmbesteigung</strong> mit Blick über die Probstei. Ein besonderes Highlight sind die <strong>Strandgottesdienste</strong> direkt am Meer.</p>
+          <p data-i18n="au.kirche.link"><a href="https://kirche-schoenberg.squarespace.com/kalender-1" target="_blank" rel="noopener">Termine &amp; Kalender →</a></p>
+        </div>
+      </div>
+
+      <!-- ESSEN -->
+      <div class="activity-card">
+        <div class="ac-head">🍽️ <span data-i18n="au.essen.h">Essen gehen</span></div>
+        <div class="ac-body">
+          <span class="tag" data-i18n="tag.genuss">Genuss</span>
+          <p data-i18n="au.essen.p">Restaurants, Cafés und Fischbrötchenbuden erreichen Sie in wenigen Gehminuten an der Promenade.</p>
+          <p data-i18n="au.essen.tips">Unsere Empfehlungen: <strong>Fisch Ehlers</strong> (frischer Fisch &amp; Fischbrötchen, <a href="https://www.fisch-ehlers.de/" target="_blank" rel="noopener">fisch-ehlers.de</a>) und das Restaurant <strong>Filou</strong> (<a href="https://filou-ostsee.de/" target="_blank" rel="noopener">filou-ostsee.de</a>).</p>
+        </div>
+      </div>
+
+      <!-- RADTOUREN -->
+      <div class="activity-card">
+        <div class="ac-head">🚴 <span data-i18n="au.rad.h">Radtouren</span></div>
+        <div class="ac-body">
+          <span class="tag tag-family" data-i18n="tag.family">Familie</span>
+          <p data-i18n="au.rad.p">Der Ostseeküsten-Radweg beginnt praktisch vor der Tür — flach und familienfreundlich entlang der Küste.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===== VERANSTALTUNGEN ===== -->
+<section id="veranstaltungen">
+  <div class="container">
+    <h2 class="section-title"><span class="st-emoji">📅</span> <span data-i18n="va.title">Veranstaltungen <strong>in der Nähe</strong></span></h2>
+    <div class="card">
+      <p data-i18n="va.lead">Feste, Märkte, Konzerte und mehr: Was während Ihres Aufenthalts in der Probstei los ist, sehen Sie im offiziellen Veranstaltungskalender.</p>
+      <div class="btn-row" style="margin-top:0.3rem;">
+        <a class="btn" href="https://www.probstei.de/veranstaltungskalender" target="_blank" rel="noopener" data-i18n="va.btn">📅 Zum Veranstaltungskalender</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== VOR DER ABREISE ===== -->
+<section id="abreise">
+  <div class="container">
+    <h2 class="section-title"><span class="st-emoji">🧳</span> <span data-i18n="ab.title">Vor der <strong>Abreise</strong></span></h2>
+    <p class="lead" data-i18n="ab.lead">Check-out ist bis <strong>10:00 Uhr</strong>. Damit bei der Abreise alles glatt läuft, hier eine kurze Checkliste:</p>
+
+    <div class="card">
+      <h3>📺 <span data-i18n="ab.tv.h">Fernsehgerät</span></h3>
+      <ul class="checklist">
+        <li data-i18n="ab.tv.l1">Von allen persönlichen Konten abmelden (Netflix, Amazon Prime, YouTube etc.)</li>
+        <li data-i18n="ab.tv.l2">Fernsehgerät ausschalten</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>🧹 <span data-i18n="ab.clean.h">Reinigung</span></h3>
+      <ul class="checklist">
+        <li data-i18n="ab.clean.l1">Wohnung und Terrasse besenrein hinterlassen</li>
+        <li data-i18n="ab.clean.l2">Müll getrennt in den dafür vorgesehenen Behältern entsorgen</li>
+        <li data-i18n="ab.clean.l3">Benutztes Geschirr abspülen und einräumen</li>
+        <li data-i18n="ab.clean.l4">Alle Terrassenmöbel aufstapeln</li>
+        <li data-i18n="ab.clean.l5">Kaffeemaschine entleeren und ausschalten</li>
+        <li data-i18n="ab.clean.l6">Kühlschrank: verderbliche Lebensmittel entfernen</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>✅ <span data-i18n="ab.check.h">Abschlusskontrolle</span></h3>
+      <ul class="checklist">
+        <li data-i18n="ab.check.l1">Alle persönlichen Gegenstände mitgenommen?</li>
+        <li data-i18n="ab.check.l2">Transponder für die Schranke wieder an seinem Platz in der Wohnung hinterlassen</li>
+        <li data-i18n="ab.check.l3">Alle Fenster schließen</li>
+        <li data-i18n="ab.check.l4">Alle Türen abschließen (Schlüssel nicht vergessen)</li>
+        <li data-i18n="ab.check.l5">Alle Lichter ausschalten</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>🔑 <span data-i18n="ab.key.h">Schlüsselrückgabe</span></h3>
+      <p data-i18n="ab.key.p">Bitte geben Sie den Schlüssel wie vereinbart zurück (über die Zentrale Zimmervermittlung / den Tourist-Service Ostseebad Schönberg).</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== BEWERTUNG ===== -->
+<section id="bewertung">
+  <div class="container">
+    <div class="stars">⭐⭐⭐⭐⭐</div>
+    <h2 class="section-title"><span data-i18n="bw.title"><strong>Ihre Meinung</strong>&nbsp;zählt</span></h2>
+    <p class="lead" data-i18n="bw.lead">
+      Wir hoffen, Sie haben sich in der Casa Baltica rundum wohlgefühlt!
+      Wenn es Ihnen gefallen hat, würden wir uns riesig über eine kurze Bewertung freuen —
+      das hilft uns sehr und anderen Gästen bei der Auswahl. Ein paar Sätze genügen. Vielen Dank! 🙏
+    </p>
+    <div class="review-btns">
+      <a class="btn btn-white" href="https://www.google.com/maps?cid=497904584037165095" target="_blank" rel="noopener" data-i18n="bw.btn1">⭐ Bei Google bewerten</a>
+      <a class="btn btn-ghost" href="https://www.ostsee-ferienwohnungen.de/schoenberg-hohenfelde-hohwachter-bucht/schoenberger-strand/quot-casa-baltica-quot-kiefernweg-18-app-4-o26118" target="_blank" rel="noopener" data-i18n="bw.btn2">🌊 Auf dem Buchungsportal</a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== KONTAKT ===== -->
+<div class="contact-strip">
+  <h3 data-i18n="ct.h">Noch Fragen?</h3>
+  <p data-i18n="ct.p1">Melden Sie sich jederzeit — wir helfen gern weiter.</p>
+  <p style="margin-top:0.8rem;"><span data-i18n="ct.p2">Bei Fragen steht Ihnen die <strong>Zentrale Zimmervermittlung · Tourist-Service Ostseebad Schönberg</strong> zur Verfügung:</span><br>
+  Käptn's Gang 1, 24217 Schönberger Strand · Tel. <a href="tel:+49434441410">04344 4141-0</a></p>
+</div>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <p><a href="index.html" data-i18n="ft.back">← Zurück zur Startseite</a></p>
+  <p style="margin-top:0.8rem;">&copy; 2025 Casa Baltica — <span data-i18n="ft.tag">Ferienwohnung am Schönberger Strand</span></p>
+  <p style="margin-top:0.4rem; font-size:0.8rem; opacity:0.5;">Kiefernweg 18, App. 4 · 24217 Schönberger Strand · Schleswig-Holstein</p>
+</footer>
+
+<script>
+(function(){
+  'use strict';
+
+  // ============================================================
+  // === I18N TRANSLATIONS (DE / EN / ES) ===
+  // ============================================================
+  var T = {
+    de: {
+      'nav.back':'Zur Startseite',
+      'hero.title':'Herzlich willkommen in der <strong>Casa Baltica</strong>',
+      'hero.sub':'Schön, dass Sie kommen! Hier finden Sie vorab alles Wichtige für einen entspannten Aufenthalt an der Ostsee.',
+      'qn.anfahrt':'🚗 Anfahrt & Parken','qn.ankommen':'🔑 Ankommen','qn.grillen':'🔥 Grillen','qn.waschen':'🧺 Waschsalon','qn.shop':'🛒 Einkaufen',
+      'ek.title':'Einkaufen','ek.edeka.h':'Edeka an der Tourist-Info','ek.edeka.p':'Direkt an der Tourist-Info (Käptn’s Gang 3) gibt es einen <strong>Edeka</strong> — bequem zu Fuß erreichbar.','ek.edeka.sb':'Auch abends per Selbstbedienung ohne Personal einkaufen — nach unserer Kenntnis bis ca. 20 Uhr.','ek.edeka.warn':'<strong>Achtung:</strong> Der Parkplatz dort ist teils kostenpflichtig und wird kontrolliert.','ek.edeka.btn':'🧭 Edeka in Google Maps','ek.schoenberg.h':'Frischtheke & mehr in Schönberg','ek.schoenberg.p':'Für die <strong>Frischtheke</strong> (Fleisch, Käse) und größere Einkäufe fahren Sie am besten nach <strong>Schönberg</strong> — dort gibt es alles, auch einen <strong>Rossmann</strong> (Drogerie).',
+      'qn.familie':'👨‍👩‍👧‍👦 Für Familien','qn.ausflug':'🎡 Ausflugstipps','qn.events':'📅 Veranstaltungen','qn.abreise':'🧳 Vor der Abreise','qn.bewertung':'⭐ Bewertung',
+      'va.title':'Veranstaltungen <strong>in der Nähe</strong>','va.lead':'Feste, Märkte, Konzerte und mehr: Was während Ihres Aufenthalts in der Probstei los ist, sehen Sie im offiziellen Veranstaltungskalender.','va.btn':'📅 Zum Veranstaltungskalender',
+      'tag.family':'Familie','tag.aktiv':'Aktiv','tag.rain':'Schlechtwetter','tag.ganztags':'Ganztags','tag.stadt':'Stadt','tag.genuss':'Genuss',
+      'anf.title':'So finden Sie <strong>zu uns</strong>',
+      'anf.lead':'Ein kleiner Tipp vorweg, weil unsere Wohnung in einer ruhigen Wohnanlage in zweiter Reihe liegt: Geben Sie ins Navi bitte die <strong>Hausadresse</strong> ein — nicht nur „Schönberger Strand" oder die Tourist-Info.',
+      'anf.alert.h':'Bitte ins Navigationsgerät eingeben:','anf.alert.ot':'(Ortsteil Schönberger Strand)','anf.alert.app':'Ziel ist <strong>App. 4</strong> im Erdgeschoss.',
+      'anf.route.g':'🧭 Route in Google Maps öffnen','anf.route.a':' Route in Apple Karten',
+      'anf.turn.h':'Die letzte Abbiegung: in den Kiefernweg',
+      'anf.turn.p':'Kurz vor dem Ziel biegen Sie vom <strong>Korshagener Redder</strong> in die Straße <strong>„Am Golfplatz"</strong> ab — dem Wegweiser <strong>„Kiefernweg →"</strong> folgend. Das Schild <strong>„Keine Durchfahrt zum Strand"</strong> stimmt — Sie sind trotzdem richtig; hier geht es zu unserer Wohnanlage. Fast am Ende der Straße biegen Sie dann <strong>links in den Kiefernweg</strong> ein.',
+      'anf.turn.cap1':'Die Einmündung vom Korshagener Redder.','anf.turn.cap2':'Dem Wegweiser „Kiefernweg →" folgen.',
+      'anf.wb.h':'Wegbeschreibung ab der Tourist-Info Schönberger Strand','anf.wb.p':'Die Schlüsselübergabe erfolgt an der Tourist-Info (Käptn’s Gang 1). Von dort sind es nur wenige hundert Meter zu uns — am einfachsten folgen Sie der Route:','anf.wb.btn':'🧭 Route ab Tourist-Info öffnen',
+      'anf.wb.s4':'Casa Baltica ist <strong>App. 4</strong> im Erdgeschoss mit eigener Terrasse zur Gartenseite. Der Zugang zur Wohnung erfolgt ausschließlich über den <strong>Haupteingang (Tür)</strong>.',
+      'anf.park.h':'Parken & Stellplatz finden','anf.park.p1':'Zur Wohnung gehört ein <strong>kostenloser PKW-Stellplatz</strong>. So finden Sie ihn:',
+      'anf.park.s1':'Direkt <strong>hinter der Schranke die erste Möglichkeit links</strong> abbiegen.',
+      'anf.park.s2':'Dem Weg zwischen Haus und Schuppen <strong>ganz bis zum Ende</strong> folgen.',
+      'anf.park.s3':'Am Ende liegt <strong>links der Parkplatz</strong>. Ihr Stellplatz ist mit dem Schild <strong>„Wohnung 4"</strong> gekennzeichnet.',
+      'anf.park.cap1':'1. Hinter der Schranke die erste links.','anf.park.cap2':'2. Dem Weg bis zum Ende folgen.','anf.park.cap3':'3. Links der Stellplatz „Wohnung 4".',
+      'anf.schranke.h':'Schranke am Eingang','anf.schranke.p':'Die Zufahrt zum Gelände ist mit einer Schranke gesichert. Für eine komfortable Nutzung liegt im <strong>Flurbereich der Wohnung ein schwarzer, rechteckiger Transponder</strong> für Sie bereit.',
+      'anf.schranke.cap1':'Die Schranke an der Einfahrt (Kiefernweg).','anf.schranke.cap2':'Der Weg auf dem Gelände zu den Wohnungen.',
+      'anf.schranke.l1':'Damit öffnen Sie die Schranke bequem direkt aus dem Auto heraus — sie schließt sich anschließend automatisch wieder',
+      'anf.schranke.l3':'Alternativ lässt sich die Schranke auch mit dem <strong>Haustürschlüssel</strong> öffnen',
+      'anf.schranke.l2':'Bitte legen Sie den Transponder bei der Abreise unbedingt wieder an <strong>denselben Platz</strong> in der Wohnung zurück',
+      'ank.title':'Ankommen & <strong>Einchecken</strong>',
+      'ank.cio.h':'Check-in & Check-out','ank.cio.l1':'Check-in: ab 15:00 Uhr','ank.cio.l2':'Check-out: bis 10:00 Uhr',
+      'ank.cio.l3':'Schlüsselübergabe & -rückgabe: über die Zentrale Zimmervermittlung / den Tourist-Service Ostseebad Schönberg (Käptn’s Gang 1) — Ablauf wie vereinbart',
+      'ank.wlan.h':'WLAN','ank.wlan.p':'Kostenfreies Glasfaser-WLAN ist vorhanden.','ank.wlan.ssid':'Netzwerk (SSID):','ank.wlan.pw':'Passwort:','ank.wlan.pwnote':'erhalten Sie bei der Ankunft — am schnellsten verbinden Sie sich per QR-Code am Router','ank.wlan.qr':'Zum schnellen Verbinden gibt es einen QR-Code auf der Rückseite des Routers',
+      'ank.gzw.h':'Gut zu wissen','ank.gzw.l1':'Nichtraucherwohnung — Rauchen bitte nur draußen','ank.gzw.l2':'Keine Haustiere','ank.gzw.l3':'Ruhige Wohnanlage — bitte auf die Nachtruhe (22–7 Uhr) achten','ank.gzw.l4':'Mülltrennung: Container im Eingangsbereich hinter der Schranke — Details in der Karte „Müll & Recycling"',
+      'ank.wohnung.h':'In der Wohnung',
+      'ank.wohnung.l1':'<strong>Kühlschrank:</strong> bitte einschalten (Regler auf die gewünschte Stufe, empfohlen Stufe 3–4). Er braucht ca. 2–3 Stunden bis zur optimalen Temperatur.',
+      'ank.wohnung.l2':'<strong>Esstisch:</strong> lässt sich vergrößern. Die Verlängerungsplatte steht hinter dem Fernsehschrank neben der Terrassentür — Sicherung unter dem Tisch (rechts & links) öffnen und die Platte einsetzen.',
+      'ank.wohnung.l3':'<strong>Technische Geräte:</strong> die Bedienungsanleitungen finden Sie im Schrank unter dem Fernseher.',
+      'ank.wohnung.l4':'<strong>Kaffee:</strong> In der Küche stehen eine <strong>Nespresso-Kapselmaschine (De’Longhi)</strong> und eine <strong>normale Filterkaffeemaschine</strong> bereit. Passende Nespresso-Kapseln bringen Sie bitte selbst mit oder kaufen sie vor Ort.',
+      'ank.muell.h':'Müll & Recycling',
+      'ank.muell.p':'Die Müllcontainer stehen im Eingangsbereich des Geländes, direkt hinter der Schranke. Die Holztüren zu den Containern öffnen Sie mit dem <strong>Haustürschlüssel</strong>. Bitte trennen Sie Ihren Müll und schließen Sie anschließend die Holztüren sowie die Schranke wieder sorgfältig ab.',
+      'ank.muell.cap1':'Die Müllschuppen liegen gleich hinter der Schranke.','ank.muell.cap2':'Die Holztüren öffnen Sie mit dem Haustürschlüssel.',
+      'ank.muell.l1':'<strong>Braun</strong> — Bioabfall','ank.muell.l2':'<strong>Grau</strong> — Restmüll','ank.muell.l3':'<strong>Gelb</strong> — Plastik / Verpackungen','ank.muell.l4':'<strong>Grün</strong> — Papier','ank.muell.l5':'<strong>Glas</strong> — bitte separat entsorgen (nicht in die graue, gelbe, grüne oder braune Tonne)',
+      'gr.title':'Der <strong>Grill</strong>','gr.lead':'Ein Abend auf der Terrasse mit Grill gehört zum Ostsee-Urlaub dazu. Damit alles klappt und sicher bleibt:',
+      'gr.how.h':'So funktioniert’s','gr.how.p':'Bei uns steht ein <strong>Gasgrill</strong> auf der Terrasse bereit.','gr.how.cap':'Unser Gasgrill auf der Terrasse.',
+      'gr.how.s1':'Vor dem Grillen bei Bedarf die <strong>Gasflasche wiegen</strong>, um zu prüfen, ob noch genügend Gas vorhanden ist. Die <strong>Kofferwaage (rosa)</strong> liegt im Flurschrank (Garderobe) in der Schublade.',
+      'gr.how.s2':'Vom gemessenen Gewicht das auf der Flasche angegebene <strong>Tara-Gewicht</strong> (Leergewicht) abziehen — die Differenz ist die verbleibende Gasmenge.',
+      'gr.how.s3':'Gasflasche aufdrehen, den Grill gemäß Anleitung zünden und ca. 10–15 Min. vorheizen.',
+      'gr.how.s4':'Nach dem Grillen: Gas an der Flasche wieder zudrehen und den Grill vollständig auskühlen lassen.',
+      'gr.how.s5':'Anschließend bitte den Rost mit der <strong>Drahtbürste abbürsten</strong> — so ist er für die nächsten Gäste wieder einsatzbereit.',
+      'gr.how.gas':'Sollte das Gas einmal nicht ausreichen, können Sie die Flasche beim <strong>Hagebaumarkt in Schönberg</strong> austauschen lassen (auf der Flasche liegt ein Pfand). Den ausgelegten Betrag erstatten wir Ihnen selbstverständlich gegen Vorlage des Kassenbons zurück.',
+      'gr.cap.1':'Der Gasgrill in Betrieb — Burger & Bratwurst auf dem Rost.','gr.cap.teller':'Fertig angerichtet im Garten.',
+      'gr.safe.h':'Bitte beachten','gr.safe.l1':'Grill nur im Freien und mit ausreichend Abstand zu Haus, Möbeln und Markise betreiben','gr.safe.l2':'Den Grill während des Betriebs nie unbeaufsichtigt lassen — besonders mit Kindern','gr.safe.l3':'Einen Feuerlöscher oder Wasser griffbereit halten','gr.safe.l4':'Gasflasche nach Gebrauch immer wieder zudrehen','gr.safe.l5':'Bitte den Grill nach Gebrauch gereinigt hinterlassen — so freut sich der nächste Gast 🙏',
+      'wa.title':'Der <strong>Waschsalon</strong>','wa.lead':'Für längere Aufenthalte gibt es in der Nachbarschaft das „Holmer Münzwaschcenter" — ein Münz-Waschsalon mit Miele-Wasch- und Trockenmaschinen.',
+      'wa.how.h':'So funktioniert’s','wa.how.cap':'Miele-Waschmaschinen im „Holmer Münzwaschcenter" — Bedienung per Münzeinwurf.',
+      'wa.how.l1':'Der Waschsalon <strong>„Holmer Münzwaschcenter"</strong> liegt im benachbarten Ostseebad Kalifornien / Ortsteil Holm — im Erdgeschoss des flachen Gebäudes <strong>direkt links neben dem markanten Hochhaus</strong> (Ostsee-Ferienpark Holm) und ist <strong>mit dem Auto oder Fahrrad</strong> gut zu erreichen.',
+      'wa.how.l2':'Waschen und Trocknen laufen über <strong>Münzeinwurf</strong> — bitte bringen Sie ausreichend <strong>Kleingeld</strong> mit.',
+      'wa.how.l3':'Preise: <strong>Waschmaschine 5,00 € je Maschine</strong>, <strong>Trockner 1,00 € je 15 Minuten</strong>. Die Programme sind an den Geräten beschrieben.',
+      'wa.how.l4':'Öffnungszeiten: <strong>täglich 8.30–20.00 Uhr</strong>',
+      'wa.cap.gebaeude':'Das markante Hochhaus als Orientierung — der Waschsalon liegt links daneben.','wa.cap.eingang':'Eingang — täglich 8.30–20.00 Uhr geöffnet.','wa.cap.maschinen':'Miele-Waschmaschinen mit Münzautomat.','wa.cap.innen':'Innenraum mit Bedienungsanleitungen.','wa.cap.preise':'Preisaushang: Waschen 5 €, Trockner 1 € / 15 Min.',
+      'wa.route.h':'So kommen Sie hin',
+      'wa.route.s1':'Von der Casa Baltica mit dem <strong>Auto oder Fahrrad</strong> ins benachbarte <strong>Ostseebad Kalifornien / Ortsteil Holm</strong> fahren.',
+      'wa.route.s2':'Dort ist ein <strong>markantes Hochhaus</strong> von Weitem gut zu sehen — der Waschsalon liegt aber <strong>nicht im Hochhaus selbst</strong>, sondern im flachen Gebäude <strong>direkt links daneben</strong> (Erdgeschoss).',
+      'wa.route.s3':'Adresse: <strong>Osterwisch 2, 24217 Holm</strong> (Ostsee-Ferienpark Holm). Geöffnet <strong>täglich 8.30–20.00 Uhr</strong>.',
+      'wa.route.btn':'🧭 Route zum Waschsalon öffnen',
+      'fam.title':'Für <strong>Familien</strong> — direkt bei uns','fam.lead':'Damit keine Langeweile aufkommt, finden Sie in der Wohnung einiges zum Ausleihen und Mitnehmen:',
+      'fam.haus.h':'Das ist im Haus vorhanden',
+      'fam.haus.l5':'Bluetooth-Lautsprecher und 65-Zoll-TV — Netflix & Co. sind startklar (bitte am Ende von Ihren Konten abmelden)',
+      'fam.haus.l6':'Für eine mitgebrachte Nintendo Switch liegt ein passendes HDMI-Kabel bereit',
+      'fam.spielplatz.h':'Spielplätze','fam.spielplatz.p':'Ein schöner Spielplatz mit Klettergeräten liegt gleich in der Nähe (beim Edeka, wenige Minuten zu Fuß). Weitere Spielplätze in der Umgebung:','fam.spielplatz.abenteuer':'<strong>Abenteuerspielplatz</strong> — Strandstraße 300, Neuschönberg (<a href="https://www.google.com/maps/search/?api=1&amp;query=Abenteuerspielplatz+Strandstra%C3%9Fe+300+24217+Sch%C3%B6nberg" target="_blank" rel="noopener">Karte</a>)','fam.spielplatz.holm':'<strong>Spielplatz Holm</strong> — unser Favorit, etwas weiter entfernt (<a href="https://www.google.com/maps/search/?api=1&amp;query=Spielplatz+Holm+24217+Sch%C3%B6nberg" target="_blank" rel="noopener">Karte</a>)',
+      'fam.boule.h':'Boulebahn','fam.boule.p':'Direkt am Promenadenweg (beim Edeka) gibt es eine Boulebahn — Kugeln mitnehmen und loslegen.',
+      'fam.tennis.h':'Tennis','fam.tennis.p':'In der Nähe können Sie Tennis spielen — im Sommer im Freien beim <strong>SSV Marina Wendtorf</strong> oder ganzjährig in der <strong>Tennishalle Heikendorf</strong>.',
+      'fam.tennis.info':'Buchung &amp; Infos: <a href="https://ssv-marina-wendtorf.de/Unsere-Sparten/Tennis" target="_blank" rel="noopener">SSV Marina Wendtorf (Tennis)</a> · <a href="https://www.bookandplay.de/cgi-bin/WebObjects/BookAndPlay.woa/wa/directAccess?id=TSH-2077" target="_blank" rel="noopener">Tennishalle Heikendorf (online buchen)</a>.',
+      'fam.minigolf.h':'Minigolf Kalifornien','fam.minigolf.p':'Der Klassiker für Groß und Klein: <strong>Minigolf &amp; Fahrradvermietung Gnutzmann</strong> im benachbarten Ostseebad <strong>Kalifornien</strong> — perfekt für einen Nachmittag mit den Kindern. Dort kann man auch Fahrräder leihen.','fam.minigolf.m1':'Ortsteil Kalifornien','fam.minigolf.m2':'wenige Minuten','fam.minigolf.link':'In Google Maps ansehen →',
+      'fam.hansa.h':'Hansa-Park','fam.hansa.p':'Deutschlands einziger Freizeitpark direkt an der Ostsee — in Sierksdorf. Achterbahnen, Fahrgeschäfte und Shows für einen ganzen Tagesausflug.','fam.hansa.m':'ca.',
+      'au.title':'Weitere <strong>Ausflugstipps</strong>','au.lead':'Rund um Schönberg und in der Kieler Bucht gibt es viel zu entdecken — auch bei Regenwetter.',
+      'au.heuers.h':'Bauernhof Heuer','au.heuers.p':'Café, Bauerngolf und Mais-Labyrinth an einem Ort: Das gemütliche, reetgedeckte <strong>Heuer’s Café</strong> für Kaffee & Kuchen und (saisonal) <strong>Bauerngolf</strong> sowie ein <strong>Mais-Labyrinth</strong> — gut mit dem Rad erreichbar.','au.heuers.m':'Café laut Aushang Di–So, 13–18 Uhr','au.heuers.link':'bauernhof-heuer.de →',
+      'au.mais.h':'Bauerngolf & Mais-Labyrinth','au.mais.p':'Saisonaler Spaß auf dem Feld beim Café: Bauerngolf und ein Mais-Labyrinth zum Verlaufen und Wiederfinden.',
+      'au.quad.h':'Quadbahn','au.quad.p':'Action für ältere Kinder und Erwachsene: die Quadbahn <strong>Kiddy-Quad</strong> in der Nähe von Schönberg. Alternativ gibt es <strong>E-Karting bei evoKART in Kiel</strong>.','au.quad.link':'<a href="https://kiddy-quad.de/" target="_blank" rel="noopener">kiddy-quad.de</a> · <a href="https://evokart-kiel.de/" target="_blank" rel="noopener">evokart-kiel.de (Kiel)</a>',
+      'au.korb.h':'Strandkorb am Strand','au.korb.p':'Der Ostseestrand ist nur wenige Schritte entfernt. In der Saison lassen sich Strandkörbe mieten — der klassische, windgeschützte Logenplatz am Meer. Buchen Sie am besten vorab über die App <strong>BeachNow</strong>; die Körbe sind heiß begehrt und oft schon vergeben.','au.korb.link':'<a href="https://apps.apple.com/de/app/beachnow/id1663447719" target="_blank" rel="noopener">BeachNow im App Store →</a>',
+      'au.bahn.h':'Museums- & Straßenbahn','au.bahn.p':'Der Verein VVM betreibt am Schönberger Strand eine historische <strong>Museumsbahn</strong> und ein <strong>Straßenbahnmuseum</strong> — nostalgische Fahrten und alte Bahnen, die Kindern viel Freude machen.','au.bahn.link':'<a href="https://www.vvm-museumsbahn.de/ix/ix-start/ix-start.php?id=214" target="_blank" rel="noopener">vvm-museumsbahn.de →</a>',
+      'au.kindheit.h':'Kindheitsmuseum','au.kindheit.p':'Das Kindheitsmuseum am Schönberger Strand nimmt Groß und Klein mit auf eine Reise in vergangene Kindheitstage — ein schönes Ziel für Familien, auch bei Regen. <a href="https://kindheitsmuseum.de/ausstellung" target="_blank" rel="noopener">kindheitsmuseum.de →</a>',
+      'au.museum.h':'Probstei-Museum','au.museum.p':'Regionalmuseum in Schönberg zur Geschichte und Tracht der Probstei — ideal für einen verregneten Vormittag.',
+      'au.kiel.h':'Kiel','au.kiel.p':'Landeshauptstadt mit Hafen, Museen, Aquarium (GEOMAR) und Shopping — rund 25 km entfernt.','au.kiel.m':'ca. 30 Min',
+      'au.kirche.h':'Kirche Schönberg','au.kirche.p':'Die Kirche in Schönberg lädt zu Gottesdiensten und zur Besichtigung ein — inklusive <strong>Turmbesteigung</strong> mit Blick über die Probstei. Ein besonderes Highlight sind die <strong>Strandgottesdienste</strong> direkt am Meer.','au.kirche.link':'<a href="https://kirche-schoenberg.squarespace.com/kalender-1" target="_blank" rel="noopener">Termine & Kalender →</a>',
+      'au.bad.h':'Schwimmbad / Wellness',
+      'au.essen.h':'Essen gehen','au.essen.p':'Restaurants, Cafés und Fischbrötchenbuden erreichen Sie in wenigen Gehminuten an der Promenade.',
+      'au.essen.tips':'Unsere Empfehlungen: <strong>Fisch Ehlers</strong> (frischer Fisch &amp; Fischbrötchen, <a href="https://www.fisch-ehlers.de/" target="_blank" rel="noopener">fisch-ehlers.de</a>) und das Restaurant <strong>Filou</strong> (<a href="https://filou-ostsee.de/" target="_blank" rel="noopener">filou-ostsee.de</a>).',
+      'au.rad.h':'Radtouren','au.rad.p':'Der Ostseeküsten-Radweg beginnt praktisch vor der Tür — flach und familienfreundlich entlang der Küste.',
+      'ab.title':'Vor der <strong>Abreise</strong>','ab.lead':'Check-out ist bis <strong>10:00 Uhr</strong>. Damit bei der Abreise alles glatt läuft, hier eine kurze Checkliste:',
+      'ab.tv.h':'Fernsehgerät','ab.tv.l1':'Von allen persönlichen Konten abmelden (Netflix, Amazon Prime, YouTube etc.)','ab.tv.l2':'Fernsehgerät ausschalten',
+      'ab.clean.h':'Reinigung','ab.clean.l1':'Wohnung und Terrasse besenrein hinterlassen','ab.clean.l2':'Müll getrennt in den dafür vorgesehenen Behältern entsorgen','ab.clean.l3':'Benutztes Geschirr abspülen und einräumen','ab.clean.l4':'Alle Terrassenmöbel aufstapeln','ab.clean.l5':'Kaffeemaschine entleeren und ausschalten','ab.clean.l6':'Kühlschrank: verderbliche Lebensmittel entfernen',
+      'ab.check.h':'Abschlusskontrolle','ab.check.l1':'Alle persönlichen Gegenstände mitgenommen?','ab.check.l2':'Transponder für die Schranke wieder an seinem Platz in der Wohnung hinterlassen','ab.check.l3':'Alle Fenster schließen','ab.check.l4':'Alle Türen abschließen (Schlüssel nicht vergessen)','ab.check.l5':'Alle Lichter ausschalten',
+      'ab.key.h':'Schlüsselrückgabe','ab.key.p':'Bitte geben Sie den Schlüssel wie vereinbart zurück (über die Zentrale Zimmervermittlung / den Tourist-Service Ostseebad Schönberg).',
+      'bw.title':'<strong>Ihre Meinung</strong>&nbsp;zählt','bw.lead':'Wir hoffen, Sie haben sich in der Casa Baltica rundum wohlgefühlt! Wenn es Ihnen gefallen hat, würden wir uns riesig über eine kurze Bewertung freuen — das hilft uns sehr und anderen Gästen bei der Auswahl. Ein paar Sätze genügen. Vielen Dank! 🙏',
+      'bw.btn1':'⭐ Bei Google bewerten','bw.btn2':'🌊 Auf dem Buchungsportal',
+      'ct.h':'Noch Fragen?','ct.p1':'Melden Sie sich jederzeit — wir helfen gern weiter.','ct.p2':'Bei Fragen steht Ihnen die <strong>Zentrale Zimmervermittlung · Tourist-Service Ostseebad Schönberg</strong> zur Verfügung:',
+      'ft.back':'← Zurück zur Startseite','ft.tag':'Ferienwohnung am Schönberger Strand'
+    },
+    en: {
+      'nav.back':'Back to home',
+      'hero.title':'Welcome to <strong>Casa Baltica</strong>',
+      'hero.sub':'We’re glad you’re coming! Here you’ll find everything you need for a relaxing stay by the Baltic Sea.',
+      'qn.anfahrt':'🚗 Directions & Parking','qn.ankommen':'🔑 Arrival','qn.grillen':'🔥 Barbecue','qn.waschen':'🧺 Laundry','qn.shop':'🛒 Shopping',
+      'ek.title':'Shopping','ek.edeka.h':'Edeka by the tourist office','ek.edeka.p':'Right by the tourist office (Käptn’s Gang 3) there is an <strong>Edeka</strong> supermarket — within easy walking distance.','ek.edeka.sb':'Also open in the evening as a self-service store (no staff) — as far as we know until around 8 PM.','ek.edeka.warn':'<strong>Please note:</strong> The car park there is partly paid and is monitored.','ek.edeka.btn':'🧭 Edeka on Google Maps','ek.schoenberg.h':'Fresh counter & more in Schönberg','ek.schoenberg.p':'For the <strong>fresh counter</strong> (meat, cheese) and larger shops, it’s best to drive to <strong>Schönberg</strong> — you’ll find everything there, including a <strong>Rossmann</strong> drugstore.',
+      'qn.familie':'👨‍👩‍👧‍👦 For Families','qn.ausflug':'🎡 Day Trips','qn.events':'📅 Events','qn.abreise':'🧳 Before Departure','qn.bewertung':'⭐ Review',
+      'va.title':'Events <strong>nearby</strong>','va.lead':'Festivals, markets, concerts and more: see what’s happening in the Probstei region during your stay in the official events calendar.','va.btn':'📅 To the events calendar',
+      'tag.family':'Family','tag.aktiv':'Active','tag.rain':'Rainy day','tag.ganztags':'Full day','tag.stadt':'City','tag.genuss':'Treat',
+      'anf.title':'How to <strong>find us</strong>',
+      'anf.lead':'One quick tip first, since our apartment is in a quiet residential complex in the second row: please enter the <strong>street address</strong> into your sat-nav — not just „Schönberger Strand" or the tourist office.',
+      'anf.alert.h':'Please enter into your sat-nav:','anf.alert.ot':'(district of Schönberger Strand)','anf.alert.app':'Your destination is <strong>Apt. 4</strong> on the ground floor.',
+      'anf.route.g':'🧭 Open route in Google Maps','anf.route.a':' Route in Apple Maps',
+      'anf.turn.h':'The final turn: into Kiefernweg',
+      'anf.turn.p':'Shortly before your destination, turn off <strong>Korshagener Redder</strong> into <strong>„Am Golfplatz"</strong>, following the sign <strong>„Kiefernweg →"</strong>. The sign <strong>„Keine Durchfahrt zum Strand" (no through-road to the beach)</strong> is correct — you’re still on the right track; this leads to our residential complex. Near the end of that street, turn <strong>left into Kiefernweg</strong>.',
+      'anf.turn.cap1':'The turn-off from Korshagener Redder.','anf.turn.cap2':'Follow the sign „Kiefernweg →".',
+      'anf.wb.h':'Directions from the Schönberger Strand tourist office','anf.wb.p':'The keys are handed over at the tourist office (Käptn’s Gang 1). From there it’s only a few hundred metres to us — the easiest way is to follow the route:','anf.wb.btn':'🧭 Open route from the tourist office',
+      'anf.wb.s4':'Casa Baltica is <strong>Apt. 4</strong> on the ground floor, with its own terrace facing the garden. The apartment is entered only via the <strong>main entrance (door)</strong>.',
+      'anf.park.h':'Parking & finding your space','anf.park.p1':'The apartment comes with a <strong>free parking space</strong>. Here’s how to find it:',
+      'anf.park.s1':'Right <strong>after the barrier, take the first left</strong>.',
+      'anf.park.s2':'Follow the path between the building and the sheds <strong>all the way to the end</strong>.',
+      'anf.park.s3':'At the end, the <strong>car park is on the left</strong>. Your space is marked with the sign <strong>„Wohnung 4" (Apartment 4)</strong>.',
+      'anf.park.cap1':'1. After the barrier, first left.','anf.park.cap2':'2. Follow the path to the end.','anf.park.cap3':'3. Space „Wohnung 4" on the left.',
+      'anf.schranke.h':'Barrier at the entrance','anf.schranke.p':'The entrance to the grounds is secured by a barrier. For convenience, a <strong>black rectangular transponder</strong> is ready for you in the apartment’s hallway.',
+      'anf.schranke.cap1':'The barrier at the entrance (Kiefernweg).','anf.schranke.cap2':'The path across the grounds to the apartments.',
+      'anf.schranke.l1':'Use it to open the barrier conveniently from your car — it closes again automatically afterwards',
+      'anf.schranke.l3':'Alternatively, the barrier can also be opened with the <strong>front-door key</strong>',
+      'anf.schranke.l2':'On departure, please put the transponder back in the <strong>same spot</strong> in the apartment',
+      'ank.title':'Arrival & <strong>Check-in</strong>',
+      'ank.cio.h':'Check-in & Check-out','ank.cio.l1':'Check-in: from 3:00 PM','ank.cio.l2':'Check-out: by 10:00 AM',
+      'ank.cio.l3':'Key handover & return: via the central room agency / Tourist Service Ostseebad Schönberg (Käptn’s Gang 1) — as arranged',
+      'ank.wlan.h':'Wi-Fi','ank.wlan.p':'Free fibre-optic Wi-Fi is available.','ank.wlan.ssid':'Network (SSID):','ank.wlan.pw':'Password:','ank.wlan.pwnote':'you’ll receive it on arrival — the quickest way to connect is the QR code on the router','ank.wlan.qr':'For a quick connection there is a QR code on the back of the router',
+      'ank.gzw.h':'Good to know','ank.gzw.l1':'Non-smoking apartment — please smoke outside only','ank.gzw.l2':'No pets','ank.gzw.l3':'Quiet residential complex — please observe quiet hours (10 PM–7 AM)','ank.gzw.l4':'Waste separation: containers at the entrance behind the barrier — details in the „Waste & Recycling" card',
+      'ank.wohnung.h':'Inside the apartment',
+      'ank.wohnung.l1':'<strong>Fridge:</strong> please switch it on (dial to the desired level, level 3–4 recommended). It takes about 2–3 hours to reach the ideal temperature.',
+      'ank.wohnung.l2':'<strong>Dining table:</strong> can be extended. The extension leaf is behind the TV cabinet next to the terrace door — release the catch under the table (left & right) and insert the leaf.',
+      'ank.wohnung.l3':'<strong>Appliances:</strong> the instruction manuals are in the cabinet under the TV.',
+      'ank.wohnung.l4':'<strong>Coffee:</strong> The kitchen has a <strong>Nespresso capsule machine (De’Longhi)</strong> and a <strong>regular filter coffee machine</strong>. Please bring your own compatible Nespresso capsules or buy them locally.',
+      'ank.muell.h':'Waste & Recycling',
+      'ank.muell.p':'The waste containers are at the entrance to the grounds, right behind the barrier. Open the wooden doors to the containers with your <strong>front-door key</strong>. Please separate your waste and carefully close the wooden doors and the barrier again afterwards.',
+      'ank.muell.cap1':'The waste sheds are right behind the barrier.','ank.muell.cap2':'Open the wooden doors with your front-door key.',
+      'ank.muell.l1':'<strong>Brown</strong> — organic waste','ank.muell.l2':'<strong>Grey</strong> — residual waste','ank.muell.l3':'<strong>Yellow</strong> — plastic / packaging','ank.muell.l4':'<strong>Green</strong> — paper','ank.muell.l5':'<strong>Glass</strong> — please dispose of separately (not in the grey, yellow, green or brown bin)',
+      'gr.title':'The <strong>Barbecue</strong>','gr.lead':'An evening on the terrace with the barbecue is part of a Baltic holiday. So everything runs smoothly and safely:',
+      'gr.how.h':'How it works','gr.how.p':'A <strong>gas barbecue</strong> is ready for you on the terrace.','gr.how.cap':'Our gas barbecue on the terrace.',
+      'gr.how.s1':'Before grilling, weigh the <strong>gas bottle</strong> if needed to check there’s enough gas. The <strong>luggage scale (pink)</strong> is in the hallway wardrobe drawer.',
+      'gr.how.s2':'Subtract the <strong>tare weight</strong> (empty weight) printed on the bottle from the measured weight — the difference is the remaining gas.',
+      'gr.how.s3':'Open the gas bottle, light the barbecue as instructed and preheat for about 10–15 min.',
+      'gr.how.s4':'After grilling: close the gas at the bottle again and let the barbecue cool down completely.',
+      'gr.how.s5':'Then please brush the grill grate with the <strong>wire brush</strong> — so it’s ready for the next guests.',
+      'gr.how.gas':'If the gas runs low, you can exchange the bottle at the <strong>Hagebaumarkt in Schönberg</strong> (there is a deposit on the bottle). We will of course refund the amount on presentation of the receipt.',
+      'gr.cap.1':'The gas barbecue in action — burgers & sausages on the grill.','gr.cap.teller':'Served in the garden.',
+      'gr.safe.h':'Please note','gr.safe.l1':'Only use the barbecue outdoors and at a safe distance from the house, furniture and awning','gr.safe.l2':'Never leave the barbecue unattended while in use — especially with children','gr.safe.l3':'Keep a fire extinguisher or water within reach','gr.safe.l4':'Always close the gas bottle again after use','gr.safe.l5':'Please leave the barbecue clean after use — the next guest will thank you 🙏',
+      'wa.title':'The <strong>Laundry</strong>','wa.lead':'For longer stays there is the „Holmer Münzwaschcenter" nearby — a coin-operated launderette with Miele washers and dryers.',
+      'wa.how.h':'How it works','wa.how.cap':'Miele washing machines at the „Holmer Münzwaschcenter" — operated by coins.',
+      'wa.how.l1':'The launderette <strong>„Holmer Münzwaschcenter"</strong> is in the neighbouring seaside resort of Kalifornien / district of Holm — on the ground floor of the low building <strong>directly to the left of the prominent high-rise</strong> (Ostsee-Ferienpark Holm), easy to reach <strong>by car or bike</strong>.',
+      'wa.how.l2':'Washing and drying are <strong>coin-operated</strong> — please bring enough <strong>coins/change</strong>.',
+      'wa.how.l3':'Prices: <strong>washing machine €5.00 per load</strong>, <strong>dryer €1.00 per 15 minutes</strong>. The programmes are described on the machines.',
+      'wa.how.l4':'Opening hours: <strong>daily 8:30 AM – 8:00 PM</strong>',
+      'wa.cap.gebaeude':'The prominent high-rise as a landmark — the launderette is just to its left.','wa.cap.eingang':'Entrance — open daily 8:30 AM–8:00 PM.','wa.cap.maschinen':'Miele washing machines with coin meter.','wa.cap.innen':'Interior with operating instructions on the machines.','wa.cap.preise':'Price sign: wash €5, dryer €1 / 15 min.',
+      'wa.route.h':'How to get there',
+      'wa.route.s1':'From Casa Baltica, go to the neighbouring <strong>seaside resort of Kalifornien / district of Holm</strong> by <strong>car or bike</strong>.',
+      'wa.route.s2':'There you’ll spot a <strong>prominent high-rise</strong> from afar — but the launderette is <strong>not in the high-rise itself</strong>; it’s in the low building <strong>directly to its left</strong> (ground floor).',
+      'wa.route.s3':'Address: <strong>Osterwisch 2, 24217 Holm</strong> (Ostsee-Ferienpark Holm). Open <strong>daily 8:30 AM–8:00 PM</strong>.',
+      'wa.route.btn':'🧭 Open route to the launderette',
+      'fam.title':'For <strong>Families</strong> — right here','fam.lead':'To keep boredom at bay, you’ll find plenty to borrow and take along in the apartment:',
+      'fam.haus.h':'Available in the apartment',
+      'fam.haus.l5':'Bluetooth speaker and 65-inch TV — Netflix & co. are ready to go (please log out of your accounts at the end)',
+      'fam.haus.l6':'A matching HDMI cable is ready for a Nintendo Switch you bring along',
+      'fam.spielplatz.h':'Playgrounds','fam.spielplatz.p':'A lovely playground with climbing equipment is right nearby (by the Edeka, a few minutes on foot). More playgrounds in the area:','fam.spielplatz.abenteuer':'<strong>Adventure playground</strong> — Strandstraße 300, Neuschönberg (<a href="https://www.google.com/maps/search/?api=1&amp;query=Abenteuerspielplatz+Strandstra%C3%9Fe+300+24217+Sch%C3%B6nberg" target="_blank" rel="noopener">map</a>)','fam.spielplatz.holm':'<strong>Spielplatz Holm</strong> — our favourite, a little further away (<a href="https://www.google.com/maps/search/?api=1&amp;query=Spielplatz+Holm+24217+Sch%C3%B6nberg" target="_blank" rel="noopener">map</a>)',
+      'fam.boule.h':'Boules court','fam.boule.p':'Right on the promenade path (by the Edeka) there is a boules/pétanque court — bring the balls and get started.',
+      'fam.tennis.h':'Tennis','fam.tennis.p':'You can play tennis nearby — outdoors in summer at <strong>SSV Marina Wendtorf</strong> or year-round at the <strong>Heikendorf indoor tennis hall</strong>.',
+      'fam.tennis.info':'Booking &amp; details: <a href="https://ssv-marina-wendtorf.de/Unsere-Sparten/Tennis" target="_blank" rel="noopener">SSV Marina Wendtorf (tennis)</a> · <a href="https://www.bookandplay.de/cgi-bin/WebObjects/BookAndPlay.woa/wa/directAccess?id=TSH-2077" target="_blank" rel="noopener">Heikendorf indoor hall (book online)</a>.',
+      'fam.minigolf.h':'Mini-golf Kalifornien','fam.minigolf.p':'The classic for young and old: <strong>Minigolf &amp; bike rental Gnutzmann</strong> in the neighbouring seaside resort of <strong>Kalifornien</strong> — perfect for an afternoon with the kids. You can also rent bikes there.','fam.minigolf.m1':'Kalifornien district','fam.minigolf.m2':'a few minutes','fam.minigolf.link':'View on Google Maps →',
+      'fam.hansa.h':'Hansa-Park','fam.hansa.p':'Germany’s only amusement park right by the Baltic Sea — in Sierksdorf. Roller coasters, rides and shows for a full day out.','fam.hansa.m':'approx.',
+      'au.title':'More <strong>day-trip ideas</strong>','au.lead':'There’s plenty to discover around Schönberg and in the Kiel Bay — even in rainy weather.',
+      'au.heuers.h':'Bauernhof Heuer','au.heuers.p':'Café, farmers’ golf and maize maze in one place: the cosy thatched-roof <strong>Heuer’s Café</strong> for coffee & cake, plus (seasonal) <strong>farmers’ golf</strong> and a <strong>maize maze</strong> — easily reached by bike.','au.heuers.m':'café per the sign: Tue–Sun, 1–6 PM','au.heuers.link':'bauernhof-heuer.de →',
+      'au.mais.h':'Farmers’ golf & maize maze','au.mais.p':'Seasonal fun in the field by the café: farmers’ golf and a maize maze to get lost in and find your way out.',
+      'au.quad.h':'Quad track','au.quad.p':'Action for older kids and adults: the <strong>Kiddy-Quad</strong> quad track near Schönberg. Alternatively, there’s <strong>e-karting at evoKART in Kiel</strong>.','au.quad.link':'<a href="https://kiddy-quad.de/" target="_blank" rel="noopener">kiddy-quad.de</a> · <a href="https://evokart-kiel.de/" target="_blank" rel="noopener">evokart-kiel.de (Kiel)</a>',
+      'au.korb.h':'Beach chair at the beach','au.korb.p':'The Baltic beach is just a few steps away. In season you can rent traditional roofed beach chairs (Strandkörbe) — the classic, wind-sheltered front-row seat by the sea. It’s best to book ahead via the <strong>BeachNow</strong> app; they’re in high demand and often already taken.','au.korb.link':'<a href="https://apps.apple.com/de/app/beachnow/id1663447719" target="_blank" rel="noopener">BeachNow on the App Store →</a>',
+      'au.bahn.h':'Museum railway & trams','au.bahn.p':'The VVM association runs a historic <strong>museum railway</strong> and a <strong>tram museum</strong> at Schönberger Strand — nostalgic rides and vintage trains that kids love.','au.bahn.link':'<a href="https://www.vvm-museumsbahn.de/ix/ix-start/ix-start.php?id=214" target="_blank" rel="noopener">vvm-museumsbahn.de →</a>',
+      'au.kindheit.h':'Museum of Childhood','au.kindheit.p':'The Museum of Childhood at Schönberger Strand takes young and old on a journey into bygone childhood days — a lovely destination for families, even in the rain. <a href="https://kindheitsmuseum.de/ausstellung" target="_blank" rel="noopener">kindheitsmuseum.de →</a>',
+      'au.museum.h':'Probstei Museum','au.museum.p':'Regional museum in Schönberg on the history and traditional costume of the Probstei — ideal for a rainy morning.',
+      'au.kiel.h':'Kiel','au.kiel.p':'The state capital with harbour, museums, aquarium (GEOMAR) and shopping — about 25 km away.','au.kiel.m':'approx. 30 min',
+      'au.kirche.h':'Schönberg church','au.kirche.p':'The church in Schönberg welcomes you for services and visits — including a <strong>climb up the tower</strong> with views over the Probstei. A special highlight are the <strong>beach services</strong> right by the sea.','au.kirche.link':'<a href="https://kirche-schoenberg.squarespace.com/kalender-1" target="_blank" rel="noopener">Dates & calendar →</a>',
+      'au.bad.h':'Swimming pool / Wellness',
+      'au.essen.h':'Eating out','au.essen.p':'Restaurants, cafés and fish-roll stalls are just a few minutes’ walk away on the promenade.',
+      'au.essen.tips':'Our recommendations: <strong>Fisch Ehlers</strong> (fresh fish &amp; fish rolls, <a href="https://www.fisch-ehlers.de/" target="_blank" rel="noopener">fisch-ehlers.de</a>) and the <strong>Filou</strong> restaurant (<a href="https://filou-ostsee.de/" target="_blank" rel="noopener">filou-ostsee.de</a>).',
+      'au.rad.h':'Cycling tours','au.rad.p':'The Baltic Coast cycle path starts practically on the doorstep — flat and family-friendly along the coast.',
+      'ab.title':'Before <strong>Departure</strong>','ab.lead':'Check-out is by <strong>10:00 AM</strong>. To make departure smooth, here’s a short checklist:',
+      'ab.tv.h':'Television','ab.tv.l1':'Log out of all personal accounts (Netflix, Amazon Prime, YouTube etc.)','ab.tv.l2':'Switch off the television',
+      'ab.clean.h':'Cleaning','ab.clean.l1':'Leave the apartment and terrace swept clean','ab.clean.l2':'Dispose of waste separately in the designated bins','ab.clean.l3':'Rinse used dishes and put them away','ab.clean.l4':'Stack all terrace furniture','ab.clean.l5':'Empty and switch off the coffee machine','ab.clean.l6':'Fridge: remove perishable food',
+      'ab.check.h':'Final check','ab.check.l1':'Taken all your personal belongings?','ab.check.l2':'Leave the barrier transponder back in its place in the apartment','ab.check.l3':'Close all windows','ab.check.l4':'Lock all doors (don’t forget the key)','ab.check.l5':'Switch off all lights',
+      'ab.key.h':'Returning the key','ab.key.p':'Please return the key as arranged (via the central room agency / Tourist Service Ostseebad Schönberg).',
+      'bw.title':'<strong>Your opinion</strong>&nbsp;matters','bw.lead':'We hope you felt completely at home in Casa Baltica! If you enjoyed your stay, we’d be delighted with a short review — it helps us a lot and other guests when choosing. A few sentences are enough. Thank you! 🙏',
+      'bw.btn1':'⭐ Review on Google','bw.btn2':'🌊 On the booking portal',
+      'ct.h':'Any questions?','ct.p1':'Get in touch any time — we’re happy to help.','ct.p2':'For any questions, the <strong>central room agency · Tourist Service Ostseebad Schönberg</strong> is at your disposal:',
+      'ft.back':'← Back to home','ft.tag':'Holiday apartment at Schönberger Strand'
+    },
+    es: {
+      'nav.back':'A la página de inicio',
+      'hero.title':'Bienvenidos a la <strong>Casa Baltica</strong>',
+      'hero.sub':'¡Nos alegra que vengan! Aquí encontrará de antemano todo lo importante para una estancia relajada junto al mar Báltico.',
+      'qn.anfahrt':'🚗 Cómo llegar y aparcar','qn.ankommen':'🔑 Llegada','qn.grillen':'🔥 Barbacoa','qn.waschen':'🧺 Lavandería','qn.shop':'🛒 Compras',
+      'ek.title':'Compras','ek.edeka.h':'Edeka junto a la oficina de turismo','ek.edeka.p':'Justo al lado de la oficina de turismo (Käptn’s Gang 3) hay un <strong>Edeka</strong> — a poca distancia a pie.','ek.edeka.sb':'También por la tarde como tienda de autoservicio (sin personal) — que sepamos, hasta las 20:00 aprox.','ek.edeka.warn':'<strong>Atención:</strong> El aparcamiento allí es en parte de pago y está vigilado.','ek.edeka.btn':'🧭 Edeka en Google Maps','ek.schoenberg.h':'Mostrador de frescos y más en Schönberg','ek.schoenberg.p':'Para el <strong>mostrador de frescos</strong> (carne, queso) y compras más grandes, lo mejor es ir a <strong>Schönberg</strong> — allí hay de todo, incluida una droguería <strong>Rossmann</strong>.',
+      'qn.familie':'👨‍👩‍👧‍👦 Para familias','qn.ausflug':'🎡 Excursiones','qn.events':'📅 Eventos','qn.abreise':'🧳 Antes de salir','qn.bewertung':'⭐ Valoración',
+      'va.title':'Eventos <strong>cercanos</strong>','va.lead':'Fiestas, mercados, conciertos y más: consulte en el calendario oficial de eventos qué ocurre en la región de Probstei durante su estancia.','va.btn':'📅 Ver el calendario de eventos',
+      'tag.family':'Familia','tag.aktiv':'Activo','tag.rain':'Día de lluvia','tag.ganztags':'Día completo','tag.stadt':'Ciudad','tag.genuss':'Placer',
+      'anf.title':'Cómo <strong>encontrarnos</strong>',
+      'anf.lead':'Un pequeño consejo primero, ya que nuestro apartamento está en un complejo residencial tranquilo en segunda línea: introduzca en el navegador la <strong>dirección exacta</strong> — no solo „Schönberger Strand" ni la oficina de turismo.',
+      'anf.alert.h':'Por favor, introduzca en el navegador:','anf.alert.ot':'(barrio de Schönberger Strand)','anf.alert.app':'El destino es el <strong>Apto. 4</strong> en la planta baja.',
+      'anf.route.g':'🧭 Abrir ruta en Google Maps','anf.route.a':' Ruta en Apple Mapas',
+      'anf.turn.h':'El último giro: hacia el Kiefernweg',
+      'anf.turn.p':'Poco antes de llegar, gire desde <strong>Korshagener Redder</strong> hacia la calle <strong>„Am Golfplatz"</strong> siguiendo el cartel <strong>„Kiefernweg →"</strong>. El cartel <strong>„Keine Durchfahrt zum Strand" (sin paso a la playa)</strong> es correcto — aun así va bien; por aquí se llega a nuestro complejo. Casi al final de esa calle, gire <strong>a la izquierda hacia el Kiefernweg</strong>.',
+      'anf.turn.cap1':'El desvío desde Korshagener Redder.','anf.turn.cap2':'Siga el cartel „Kiefernweg →".',
+      'anf.wb.h':'Cómo llegar desde la oficina de turismo de Schönberger Strand','anf.wb.p':'La entrega de llaves se realiza en la oficina de turismo (Käptn’s Gang 1). Desde allí solo hay unos cientos de metros hasta nosotros — lo más fácil es seguir la ruta:','anf.wb.btn':'🧭 Abrir la ruta desde la oficina de turismo',
+      'anf.wb.s4':'La Casa Baltica es el <strong>Apto. 4</strong> en la planta baja, con terraza propia hacia el jardín. Se accede al apartamento únicamente por la <strong>entrada principal (puerta)</strong>.',
+      'anf.park.h':'Aparcar y encontrar su plaza','anf.park.p1':'El apartamento incluye una <strong>plaza de aparcamiento gratuita</strong>. Así la encuentra:',
+      'anf.park.s1':'Justo <strong>después de la barrera, gire a la primera a la izquierda</strong>.',
+      'anf.park.s2':'Siga el camino entre el edificio y los cobertizos <strong>hasta el final</strong>.',
+      'anf.park.s3':'Al final, el <strong>aparcamiento está a la izquierda</strong>. Su plaza está señalizada con el cartel <strong>„Wohnung 4" (apartamento 4)</strong>.',
+      'anf.park.cap1':'1. Tras la barrera, primera izquierda.','anf.park.cap2':'2. Siga el camino hasta el final.','anf.park.cap3':'3. La plaza „Wohnung 4" a la izquierda.',
+      'anf.schranke.h':'Barrera en la entrada','anf.schranke.p':'El acceso al recinto está protegido por una barrera. Para su comodidad, en el <strong>recibidor del apartamento hay un transpondedor negro rectangular</strong> a su disposición.',
+      'anf.schranke.cap1':'La barrera en la entrada (Kiefernweg).','anf.schranke.cap2':'El camino por el recinto hasta los apartamentos.',
+      'anf.schranke.l1':'Con él abre la barrera cómodamente desde el coche — luego se cierra de nuevo automáticamente',
+      'anf.schranke.l3':'Como alternativa, la barrera también se puede abrir con la <strong>llave de la puerta de casa</strong>',
+      'anf.schranke.l2':'Al marcharse, vuelva a dejar el transpondedor en el <strong>mismo lugar</strong> del apartamento',
+      'ank.title':'Llegada y <strong>registro</strong>',
+      'ank.cio.h':'Entrada y salida','ank.cio.l1':'Entrada: a partir de las 15:00','ank.cio.l2':'Salida: hasta las 10:00',
+      'ank.cio.l3':'Entrega y devolución de llaves: a través de la central de alojamiento / el Tourist-Service Ostseebad Schönberg (Käptn’s Gang 1) — según lo acordado',
+      'ank.wlan.h':'Wi-Fi','ank.wlan.p':'Hay Wi-Fi de fibra óptica gratuito.','ank.wlan.ssid':'Red (SSID):','ank.wlan.pw':'Contraseña:','ank.wlan.pwnote':'la recibirá a su llegada — lo más rápido es conectarse con el código QR del router','ank.wlan.qr':'Para conectarse rápido hay un código QR en la parte trasera del router',
+      'ank.gzw.h':'Bueno saber','ank.gzw.l1':'Apartamento para no fumadores — fume solo fuera, por favor','ank.gzw.l2':'No se admiten mascotas','ank.gzw.l3':'Complejo residencial tranquilo — respete el descanso nocturno (22–7 h)','ank.gzw.l4':'Separación de residuos: contenedores en la entrada detrás de la barrera — detalles en la tarjeta „Basura y reciclaje"',
+      'ank.wohnung.h':'En el apartamento',
+      'ank.wohnung.l1':'<strong>Nevera:</strong> enciéndala, por favor (regulador al nivel deseado, se recomienda el nivel 3–4). Necesita unas 2–3 horas para alcanzar la temperatura óptima.',
+      'ank.wohnung.l2':'<strong>Mesa de comedor:</strong> se puede ampliar. La tabla de extensión está detrás del mueble del televisor, junto a la puerta de la terraza — abra el seguro bajo la mesa (derecha e izquierda) e inserte la tabla.',
+      'ank.wohnung.l3':'<strong>Aparatos:</strong> los manuales de instrucciones están en el armario bajo el televisor.',
+      'ank.wohnung.l4':'<strong>Café:</strong> En la cocina hay una <strong>cafetera de cápsulas Nespresso (De’Longhi)</strong> y una <strong>cafetera de filtro normal</strong>. Traiga sus propias cápsulas Nespresso compatibles o cómprelas en la zona.',
+      'ank.muell.h':'Basura y reciclaje',
+      'ank.muell.p':'Los contenedores están en la entrada del recinto, justo detrás de la barrera. Las puertas de madera de los contenedores se abren con la <strong>llave de la puerta de casa</strong>. Separe su basura y cierre después con cuidado las puertas de madera y la barrera.',
+      'ank.muell.cap1':'Los cobertizos de basura están justo detrás de la barrera.','ank.muell.cap2':'Las puertas de madera se abren con la llave de casa.',
+      'ank.muell.l1':'<strong>Marrón</strong> — residuos orgánicos','ank.muell.l2':'<strong>Gris</strong> — resto','ank.muell.l3':'<strong>Amarillo</strong> — plástico / envases','ank.muell.l4':'<strong>Verde</strong> — papel','ank.muell.l5':'<strong>Vidrio</strong> — deposítelo por separado (no en el cubo gris, amarillo, verde ni marrón)',
+      'gr.title':'La <strong>barbacoa</strong>','gr.lead':'Una tarde en la terraza con la barbacoa es parte de las vacaciones en el Báltico. Para que todo salga bien y seguro:',
+      'gr.how.h':'Cómo funciona','gr.how.p':'En la terraza hay una <strong>barbacoa de gas</strong> lista para usar.','gr.how.cap':'Nuestra barbacoa de gas en la terraza.',
+      'gr.how.s1':'Antes de asar, si hace falta, <strong>pese la bombona de gas</strong> para comprobar si queda suficiente. La <strong>báscula de maleta (rosa)</strong> está en el cajón del armario del recibidor.',
+      'gr.how.s2':'Reste del peso medido la <strong>tara</strong> (peso vacío) indicada en la bombona — la diferencia es el gas restante.',
+      'gr.how.s3':'Abra la bombona, encienda la barbacoa según las instrucciones y precaliéntela unos 10–15 min.',
+      'gr.how.s4':'Después de asar: cierre de nuevo el gas en la bombona y deje que la barbacoa se enfríe por completo.',
+      'gr.how.s5':'Luego cepille la parrilla con el <strong>cepillo de alambre</strong> — así queda lista para los siguientes huéspedes.',
+      'gr.how.gas':'Si el gas se agota, puede cambiar la bombona en el <strong>Hagebaumarkt de Schönberg</strong> (la bombona tiene depósito). Por supuesto le reembolsamos el importe presentando el tique.',
+      'gr.cap.1':'La barbacoa de gas en marcha — hamburguesas y salchichas en la parrilla.','gr.cap.teller':'Servido en el jardín.',
+      'gr.safe.h':'Tenga en cuenta','gr.safe.l1':'Use la barbacoa solo al aire libre y a suficiente distancia de la casa, los muebles y el toldo','gr.safe.l2':'No deje nunca la barbacoa sin vigilancia mientras funciona — especialmente con niños','gr.safe.l3':'Tenga a mano un extintor o agua','gr.safe.l4':'Cierre siempre la bombona de gas después de usarla','gr.safe.l5':'Deje la barbacoa limpia tras usarla — el próximo huésped lo agradecerá 🙏',
+      'wa.title':'La <strong>lavandería</strong>','wa.lead':'Para estancias más largas, en las cercanías está el „Holmer Münzwaschcenter" — una lavandería con monedas, con lavadoras y secadoras Miele.',
+      'wa.how.h':'Cómo funciona','wa.how.cap':'Lavadoras Miele en el „Holmer Münzwaschcenter" — funcionan con monedas.',
+      'wa.how.l1':'La lavandería <strong>„Holmer Münzwaschcenter"</strong> está en el vecino balneario de Kalifornien / barrio de Holm — en la planta baja del edificio bajo <strong>justo a la izquierda del edificio alto</strong> (Ostsee-Ferienpark Holm), fácil de alcanzar <strong>en coche o bici</strong>.',
+      'wa.how.l2':'Lavar y secar funciona <strong>con monedas</strong> — traiga suficiente <strong>cambio/monedas</strong>, por favor.',
+      'wa.how.l3':'Precios: <strong>lavadora 5,00 € por carga</strong>, <strong>secadora 1,00 € por 15 minutos</strong>. Los programas están descritos en las máquinas.',
+      'wa.how.l4':'Horario: <strong>todos los días de 8:30 a 20:00</strong>',
+      'wa.cap.gebaeude':'El edificio alto como referencia — la lavandería está justo a su izquierda.','wa.cap.eingang':'Entrada — abierto a diario de 8:30 a 20:00.','wa.cap.maschinen':'Lavadoras Miele con máquina de monedas.','wa.cap.innen':'Interior con instrucciones de uso en las máquinas.','wa.cap.preise':'Cartel de precios: lavado 5 €, secadora 1 € / 15 min.',
+      'wa.route.h':'Cómo llegar',
+      'wa.route.s1':'Desde la Casa Baltica, vaya al vecino <strong>balneario de Kalifornien / barrio de Holm</strong> en <strong>coche o bici</strong>.',
+      'wa.route.s2':'Allí verá desde lejos un <strong>edificio alto</strong> — pero la lavandería <strong>no está en el edificio alto</strong>, sino en el edificio bajo <strong>justo a su izquierda</strong> (planta baja).',
+      'wa.route.s3':'Dirección: <strong>Osterwisch 2, 24217 Holm</strong> (Ostsee-Ferienpark Holm). Abierto <strong>todos los días de 8:30 a 20:00</strong>.',
+      'wa.route.btn':'🧭 Abrir la ruta a la lavandería',
+      'fam.title':'Para <strong>familias</strong> — aquí mismo','fam.lead':'Para que no haya aburrimiento, en el apartamento encontrará varias cosas para usar y llevar:',
+      'fam.haus.h':'Disponible en el apartamento',
+      'fam.haus.l5':'Altavoz Bluetooth y TV de 65 pulgadas — Netflix y compañía están listos (cierre sus cuentas al final, por favor)',
+      'fam.haus.l6':'Hay un cable HDMI adecuado para una Nintendo Switch que traiga',
+      'fam.spielplatz.h':'Parques infantiles','fam.spielplatz.p':'Cerca hay un bonito parque infantil con juegos para trepar (junto al Edeka, a pocos minutos a pie). Más parques en la zona:','fam.spielplatz.abenteuer':'<strong>Parque de aventuras</strong> — Strandstraße 300, Neuschönberg (<a href="https://www.google.com/maps/search/?api=1&amp;query=Abenteuerspielplatz+Strandstra%C3%9Fe+300+24217+Sch%C3%B6nberg" target="_blank" rel="noopener">mapa</a>)','fam.spielplatz.holm':'<strong>Spielplatz Holm</strong> — nuestro favorito, algo más lejos (<a href="https://www.google.com/maps/search/?api=1&amp;query=Spielplatz+Holm+24217+Sch%C3%B6nberg" target="_blank" rel="noopener">mapa</a>)',
+      'fam.boule.h':'Pista de petanca','fam.boule.p':'Justo en el paseo (junto al Edeka) hay una pista de petanca — coja las bolas y a jugar.',
+      'fam.tennis.h':'Tenis','fam.tennis.p':'Cerca puede jugar al tenis — al aire libre en verano en el <strong>SSV Marina Wendtorf</strong> o todo el año en la <strong>pista cubierta de Heikendorf</strong>.',
+      'fam.tennis.info':'Reserva e información: <a href="https://ssv-marina-wendtorf.de/Unsere-Sparten/Tennis" target="_blank" rel="noopener">SSV Marina Wendtorf (tenis)</a> · <a href="https://www.bookandplay.de/cgi-bin/WebObjects/BookAndPlay.woa/wa/directAccess?id=TSH-2077" target="_blank" rel="noopener">pista cubierta de Heikendorf (reserva online)</a>.',
+      'fam.minigolf.h':'Minigolf Kalifornien','fam.minigolf.p':'El clásico para grandes y pequeños: <strong>Minigolf y alquiler de bicis Gnutzmann</strong> en el vecino balneario de <strong>Kalifornien</strong> — perfecto para una tarde con los niños. Allí también se pueden alquilar bicicletas.','fam.minigolf.m1':'Barrio de Kalifornien','fam.minigolf.m2':'pocos minutos','fam.minigolf.link':'Ver en Google Maps →',
+      'fam.hansa.h':'Hansa-Park','fam.hansa.p':'El único parque de atracciones de Alemania junto al Báltico — en Sierksdorf. Montañas rusas, atracciones y espectáculos para un día entero.','fam.hansa.m':'aprox.',
+      'au.title':'Más <strong>ideas de excursión</strong>','au.lead':'Alrededor de Schönberg y en la bahía de Kiel hay mucho por descubrir — también con lluvia.',
+      'au.heuers.h':'Bauernhof Heuer','au.heuers.p':'Café, golf rural y laberinto de maíz en un mismo lugar: el acogedor <strong>Heuer’s Café</strong> con tejado de paja para café y tarta, además de (por temporada) <strong>golf rural</strong> y un <strong>laberinto de maíz</strong> — fácil de alcanzar en bici.','au.heuers.m':'café según el cartel: ma–do, 13–18 h','au.heuers.link':'bauernhof-heuer.de →',
+      'au.mais.h':'Golf rural y laberinto de maíz','au.mais.p':'Diversión de temporada en el campo junto al café: golf rural y un laberinto de maíz para perderse y reencontrarse.',
+      'au.quad.h':'Pista de quads','au.quad.p':'Acción para niños mayores y adultos: la pista de quads <strong>Kiddy-Quad</strong> cerca de Schönberg. Como alternativa, <strong>karting eléctrico en evoKART en Kiel</strong>.','au.quad.link':'<a href="https://kiddy-quad.de/" target="_blank" rel="noopener">kiddy-quad.de</a> · <a href="https://evokart-kiel.de/" target="_blank" rel="noopener">evokart-kiel.de (Kiel)</a>',
+      'au.korb.h':'Silla de playa en la playa','au.korb.p':'La playa del Báltico está a pocos pasos. En temporada se pueden alquilar las típicas sillas de playa con capota (Strandkörbe) — el clásico asiento de primera fila, resguardado del viento. Lo mejor es reservar con antelación mediante la app <strong>BeachNow</strong>; están muy solicitadas y a menudo ya ocupadas.','au.korb.link':'<a href="https://apps.apple.com/de/app/beachnow/id1663447719" target="_blank" rel="noopener">BeachNow en la App Store →</a>',
+      'au.bahn.h':'Tren-museo y tranvías','au.bahn.p':'La asociación VVM gestiona en Schönberger Strand un <strong>tren-museo</strong> histórico y un <strong>museo del tranvía</strong> — trayectos nostálgicos y trenes antiguos que encantan a los niños.','au.bahn.link':'<a href="https://www.vvm-museumsbahn.de/ix/ix-start/ix-start.php?id=214" target="_blank" rel="noopener">vvm-museumsbahn.de →</a>',
+      'au.kindheit.h':'Museo de la Infancia','au.kindheit.p':'El Museo de la Infancia en Schönberger Strand lleva a grandes y pequeños a un viaje por la infancia de antaño — un bonito destino para familias, también con lluvia. <a href="https://kindheitsmuseum.de/ausstellung" target="_blank" rel="noopener">kindheitsmuseum.de →</a>',
+      'au.museum.h':'Museo de la Probstei','au.museum.p':'Museo regional en Schönberg sobre la historia y el traje típico de la Probstei — ideal para una mañana lluviosa.',
+      'au.kiel.h':'Kiel','au.kiel.p':'La capital del estado, con puerto, museos, acuario (GEOMAR) y compras — a unos 25 km.','au.kiel.m':'aprox. 30 min',
+      'au.kirche.h':'Iglesia de Schönberg','au.kirche.p':'La iglesia de Schönberg invita a servicios religiosos y a visitarla — incluida la <strong>subida a la torre</strong> con vistas sobre la Probstei. Un momento especial son los <strong>servicios en la playa</strong> junto al mar.','au.kirche.link':'<a href="https://kirche-schoenberg.squarespace.com/kalender-1" target="_blank" rel="noopener">Fechas y calendario →</a>',
+      'au.bad.h':'Piscina / Bienestar',
+      'au.essen.h':'Salir a comer','au.essen.p':'Restaurantes, cafeterías y puestos de bocadillos de pescado están a pocos minutos a pie en el paseo.',
+      'au.essen.tips':'Nuestras recomendaciones: <strong>Fisch Ehlers</strong> (pescado fresco y bocadillos de pescado, <a href="https://www.fisch-ehlers.de/" target="_blank" rel="noopener">fisch-ehlers.de</a>) y el restaurante <strong>Filou</strong> (<a href="https://filou-ostsee.de/" target="_blank" rel="noopener">filou-ostsee.de</a>).',
+      'au.rad.h':'Rutas en bici','au.rad.p':'El carril bici de la costa báltica empieza prácticamente en la puerta — llano y familiar a lo largo de la costa.',
+      'ab.title':'Antes de <strong>salir</strong>','ab.lead':'La salida es hasta las <strong>10:00</strong>. Para que la salida vaya sobre ruedas, aquí una breve lista:',
+      'ab.tv.h':'Televisor','ab.tv.l1':'Cierre sesión en todas las cuentas personales (Netflix, Amazon Prime, YouTube, etc.)','ab.tv.l2':'Apague el televisor',
+      'ab.clean.h':'Limpieza','ab.clean.l1':'Deje el apartamento y la terraza barridos','ab.clean.l2':'Deposite la basura separada en los contenedores previstos','ab.clean.l3':'Lave la vajilla usada y guárdela','ab.clean.l4':'Apile todos los muebles de la terraza','ab.clean.l5':'Vacíe y apague la cafetera','ab.clean.l6':'Nevera: retire los alimentos perecederos',
+      'ab.check.h':'Control final','ab.check.l1':'¿Ha cogido todas sus pertenencias?','ab.check.l2':'Deje el transpondedor de la barrera de nuevo en su sitio en el apartamento','ab.check.l3':'Cierre todas las ventanas','ab.check.l4':'Cierre todas las puertas con llave (no olvide la llave)','ab.check.l5':'Apague todas las luces',
+      'ab.key.h':'Devolución de la llave','ab.key.p':'Devuelva la llave según lo acordado (a través de la central de alojamiento / el Tourist-Service Ostseebad Schönberg).',
+      'bw.title':'<strong>Su opinión</strong>&nbsp;cuenta','bw.lead':'¡Esperamos que se haya sentido como en casa en la Casa Baltica! Si le ha gustado, nos encantaría recibir una breve valoración — nos ayuda mucho y también a otros huéspedes al elegir. Bastan unas frases. ¡Muchas gracias! 🙏',
+      'bw.btn1':'⭐ Valorar en Google','bw.btn2':'🌊 En el portal de reservas',
+      'ct.h':'¿Alguna pregunta?','ct.p1':'Escríbanos cuando quiera — estaremos encantados de ayudar.','ct.p2':'Para cualquier pregunta, la <strong>central de alojamiento · Tourist-Service Ostseebad Schönberg</strong> está a su disposición:',
+      'ft.back':'← Volver a la página de inicio','ft.tag':'Apartamento vacacional en Schönberger Strand'
+    }
+  };
+
+  var currentLang = 'de';
+
+  window.switchLang = function(lang) {
+    if (!T[lang]) return;
+    currentLang = lang;
+    document.documentElement.lang = lang;
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-lang') === lang);
+    });
+    var dict = T[lang];
+    document.querySelectorAll('[data-i18n]').forEach(function(el){
+      var key = el.getAttribute('data-i18n');
+      if (dict[key] !== undefined) { el.innerHTML = dict[key]; }
+    });
+  };
+
+  // ============================================================
+  // === NAV SCROLL SHADOW ===
+  // ============================================================
+  var navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', function(){
+    navbar.classList.toggle('scrolled', window.scrollY > 50);
+  });
+})();
+</script>
+
+</body>
+</html>
