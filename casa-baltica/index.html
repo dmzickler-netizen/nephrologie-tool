@@ -40,6 +40,9 @@
   --accent-light: #dbb896;
   --sky: #e8f1f5;
   --serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, 'Times New Roman', serif;
+  /* Strong custom easings (weak built-ins lack punch) */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
 }
 
 html { scroll-behavior: smooth; }
@@ -584,13 +587,57 @@ button:focus-visible,
   outline: 3px solid rgba(255,255,255,0.85); outline-offset: 2px;
 }
 
+/* ===== MOTION POLISH (Emil Kowalski principles) ===== */
+/* Specific properties + strong easing + snappier UI durations (no `transition: all`) */
+nav { transition: box-shadow 250ms var(--ease-out); }
+.nav-links a { transition: color 160ms var(--ease-out), background-color 160ms var(--ease-out); }
+.nav-burger span { transition: transform 250ms var(--ease-out), opacity 250ms var(--ease-out); }
+.lang-btn { transition: background-color 160ms var(--ease-out), color 160ms var(--ease-out), border-color 160ms var(--ease-out); }
+.btn, .btn-cta { transition: transform 180ms var(--ease-out), background-color 180ms var(--ease-out), box-shadow 180ms var(--ease-out), color 180ms var(--ease-out); }
+.gallery-tab { transition: background-color 180ms var(--ease-out), color 180ms var(--ease-out), border-color 180ms var(--ease-out); }
+.feature-card { transition: transform 200ms var(--ease-out), box-shadow 200ms var(--ease-out); }
+.gallery-item { transition: transform 300ms var(--ease-out), box-shadow 300ms var(--ease-out); }
+.gallery-item img { transition: transform 500ms var(--ease-out); }
+.lb-close, .lb-nav { transition: background-color 160ms var(--ease-out), transform 160ms var(--ease-out); }
+
+/* Press feedback — make pressable elements feel like the UI is listening */
+.btn:active, .btn-cta:active, .gallery-tab:active, .lang-btn:active,
+.footer-social a:active, .lb-nav:active, .lb-close:active { transform: scale(0.96); }
+.gallery-item:active { transform: scale(0.99); }
+
+/* Hover motion only where hover is real — no sticky states after a tap */
+@media (hover: none) {
+  .feature-card:hover { transform: none; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+  .gallery-item:hover { transform: none; }
+  .gallery-item:hover img { transform: none; }
+  .btn:hover, .btn-cta:hover { transform: none; }
+}
+
+/* Fade-in on scroll: stronger ease-out, slightly tighter */
+.fade-in { transition: opacity 600ms var(--ease-out), transform 600ms var(--ease-out); }
+
+/* Lightbox: gentle scale-in entrance instead of a hard pop (occasional → a little delight) */
+.lightbox {
+  display: flex; opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity 200ms var(--ease-out), visibility 0s linear 200ms;
+}
+.lightbox.open {
+  opacity: 1; visibility: visible; pointer-events: auto;
+  transition: opacity 200ms var(--ease-out), visibility 0s linear 0ms;
+}
+.lightbox img { transform: scale(0.96); transition: transform 240ms var(--ease-out), opacity 240ms var(--ease-out); }
+.lightbox.open img { transform: scale(1); }
+
 /* Respect reduced-motion preferences */
 @media (prefers-reduced-motion: reduce) {
   .hero-bg { animation: none; transform: none; }
-  .fade-in { transition: none; }
+  .fade-in { transition: opacity 300ms ease; transform: none; }
   .scroll-hint { animation: none; }
   html { scroll-behavior: auto; }
   .gallery-item .gi-label { transform: none; opacity: 1; transition: none; }
+  .gallery-item img, .gallery-item, .feature-card, .btn, .btn-cta { transition: none; }
+  .lightbox img { transition: opacity 200ms ease; transform: none; }
+  .lightbox.open img { transform: none; }
 }
 </style>
 </head>
