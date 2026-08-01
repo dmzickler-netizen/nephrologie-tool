@@ -40,6 +40,8 @@
   --accent-light: #dbb896;
   --sky: #e8f1f5;
   --serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, 'Times New Roman', serif;
+  /* System sans display (SF Pro / Segoe UI) — no external font dependency */
+  --display: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, 'Helvetica Neue', Arial, sans-serif;
   /* Strong custom easings (weak built-ins lack punch) */
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
@@ -156,16 +158,6 @@ nav.scrolled { box-shadow: 0 2px 20px rgba(0,0,0,0.3); }
   font-size: clamp(1rem, 2.5vw, 1.3rem);
   opacity: 0.9; margin-bottom: 2rem;
   text-shadow: 0 1px 8px rgba(0,0,0,0.3);
-}
-
-.hero-badges {
-  display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;
-  margin-bottom: 2.5rem;
-}
-.hero-badge {
-  background: rgba(255,255,255,0.15); backdrop-filter: blur(8px);
-  padding: 0.5rem 1.2rem; border-radius: 50px;
-  font-size: 0.9rem; border: 1px solid rgba(255,255,255,0.25);
 }
 
 .btn {
@@ -535,14 +527,18 @@ footer a:hover { color: var(--white); }
 .fade-in.visible { opacity: 1; transform: translateY(0); }
 
 /* ===== ELEGANCE ENHANCEMENTS ===== */
-/* Serif headlines for a warmer, more premium feel */
+/* Sans display headlines: system font, weight + tight tracking (no external dep) */
 .hero-content h1,
 .section-header h2,
 .about-text h2 {
-  font-family: var(--serif);
-  letter-spacing: 0.5px;
+  font-family: var(--display);
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
-.hero-content h1 { letter-spacing: 1px; }
+.hero-content h1 { letter-spacing: -0.03em; }
+.hero-content h1 strong,
+.section-header h2 strong,
+.about-text h2 strong { font-weight: 800; }
 
 /* Decorative accent line under section headings */
 .section-header h2::after {
@@ -706,12 +702,6 @@ nav { transition: box-shadow 250ms var(--ease-out); }
   <div class="hero-content">
     <h1><strong>Casa Baltica</strong></h1>
     <p class="hero-subtitle" data-i18n="hero.subtitle">Ferienwohnung am Schönberger Strand &mdash; nur 100 m zur Ostsee</p>
-    <div class="hero-badges">
-      <span class="hero-badge" data-i18n="hero.badge1">4 Personen</span>
-      <span class="hero-badge" data-i18n="hero.badge2">2 Schlafzimmer</span>
-      <span class="hero-badge" data-i18n="hero.badge3">Terrasse & Garten</span>
-      <span class="hero-badge">Glasfaser-WLAN</span>
-    </div>
     <a href="#buchen" class="btn" data-i18n="hero.cta">Jetzt anfragen</a>
     <a href="#galerie" class="btn btn-outline" data-i18n="hero.gallery">Galerie ansehen</a>
   </div>

@@ -25,6 +25,7 @@
   --accent-light: #dbb896;
   --sky: #e8f1f5;
   --serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, 'Times New Roman', serif;
+  --display: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, 'Helvetica Neue', Arial, sans-serif;
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
 }
@@ -108,12 +109,12 @@ nav.scrolled { box-shadow: 0 2px 20px rgba(0,0,0,0.3); }
   color: var(--white); max-width: 720px;
 }
 .hero-content h1 {
-  font-family: var(--serif);
+  font-family: var(--display);
   font-size: clamp(1.9rem, 5vw, 3rem);
-  font-weight: 400; letter-spacing: 0.5px;
+  font-weight: 600; letter-spacing: -0.03em;
   text-shadow: 0 2px 20px rgba(0,0,0,0.3); margin-bottom: 0.6rem;
 }
-.hero-content h1 strong { font-weight: 700; }
+.hero-content h1 strong { font-weight: 800; }
 .hero-content p {
   font-size: clamp(1rem, 2.2vw, 1.2rem); opacity: 0.92;
   text-shadow: 0 1px 8px rgba(0,0,0,0.3);
@@ -138,12 +139,12 @@ nav.scrolled { box-shadow: 0 2px 20px rgba(0,0,0,0.3); }
 section { padding: 3.5rem 1.5rem; scroll-margin-top: 130px; }
 .container { max-width: 900px; margin: 0 auto; }
 .section-title {
-  font-family: var(--serif);
+  font-family: var(--display);
   display: flex; align-items: center; gap: 0.7rem;
   font-size: clamp(1.5rem, 4vw, 2rem); color: var(--ocean-dark);
-  font-weight: 400; margin-bottom: 1.5rem; letter-spacing: 0.3px;
+  font-weight: 600; margin-bottom: 1.5rem; letter-spacing: -0.02em;
 }
-.section-title strong { font-weight: 700; }
+.section-title strong { font-weight: 800; }
 .section-title .st-emoji { font-size: 1.8rem; }
 .lead { color: var(--warm-gray); font-size: 1.05rem; margin-bottom: 1.5rem; }
 
@@ -326,7 +327,7 @@ mark.todo {
 .contact-strip {
   background: var(--sand-dark); text-align: center; padding: 2.5rem 1.5rem;
 }
-.contact-strip h3 { color: var(--ocean-dark); margin-bottom: 0.5rem; font-family: var(--serif); }
+.contact-strip h3 { color: var(--ocean-dark); margin-bottom: 0.5rem; font-family: var(--display); font-weight: 700; letter-spacing: -0.02em; }
 .contact-strip p { color: var(--warm-gray); }
 .contact-strip a { color: var(--ocean); font-weight: 600; text-decoration: none; }
 
