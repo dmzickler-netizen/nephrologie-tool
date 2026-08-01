@@ -118,7 +118,8 @@ nav.scrolled { box-shadow: 0 2px 20px rgba(0,0,0,0.3); }
 
 /* ===== HERO ===== */
 .hero {
-  position: relative; height: 100vh; min-height: 600px;
+  /* dynamic viewport height avoids the iOS Safari address-bar jump (never fixed 100vh) */
+  position: relative; min-height: 100vh; min-height: 100dvh;
   display: flex; align-items: center; justify-content: center;
   overflow: hidden;
 }
@@ -367,7 +368,7 @@ section { padding: 5rem 2rem; }
 
 .preise-card {
   max-width: 700px; margin: 0 auto;
-  background: var(--white); border-radius: 20px;
+  background: var(--white); border-radius: 16px;
   padding: 3rem; box-shadow: 0 4px 20px rgba(0,0,0,0.08);
   text-align: center;
 }
