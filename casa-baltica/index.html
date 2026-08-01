@@ -628,6 +628,38 @@ nav { transition: box-shadow 250ms var(--ease-out); }
 .lightbox img { transform: scale(0.96); transition: transform 240ms var(--ease-out), opacity 240ms var(--ease-out); }
 .lightbox.open img { transform: scale(1); }
 
+/* ===== STAGGERED REVEAL — gallery tiles & feature cards cascade in on scroll ===== */
+@media (prefers-reduced-motion: no-preference) {
+  /* these grids reveal via their children, not as one block */
+  .gallery-grid.fade-in, .features-grid.fade-in { opacity: 1; transform: none; }
+  .gallery-grid.fade-in .gallery-item,
+  .features-grid.fade-in .feature-card { opacity: 0; }
+  .gallery-grid.fade-in.visible .gallery-item,
+  .features-grid.fade-in.visible .feature-card {
+    animation: itemReveal 520ms var(--ease-out) both;
+  }
+  .gallery-grid.fade-in.visible .gallery-item:nth-child(1),
+  .features-grid.fade-in.visible .feature-card:nth-child(1) { animation-delay: 40ms; }
+  .gallery-grid.fade-in.visible .gallery-item:nth-child(2),
+  .features-grid.fade-in.visible .feature-card:nth-child(2) { animation-delay: 80ms; }
+  .gallery-grid.fade-in.visible .gallery-item:nth-child(3),
+  .features-grid.fade-in.visible .feature-card:nth-child(3) { animation-delay: 120ms; }
+  .gallery-grid.fade-in.visible .gallery-item:nth-child(4),
+  .features-grid.fade-in.visible .feature-card:nth-child(4) { animation-delay: 160ms; }
+  .gallery-grid.fade-in.visible .gallery-item:nth-child(5),
+  .features-grid.fade-in.visible .feature-card:nth-child(5) { animation-delay: 200ms; }
+  .gallery-grid.fade-in.visible .gallery-item:nth-child(6),
+  .features-grid.fade-in.visible .feature-card:nth-child(6) { animation-delay: 240ms; }
+  .gallery-grid.fade-in.visible .gallery-item:nth-child(7) { animation-delay: 280ms; }
+  .gallery-grid.fade-in.visible .gallery-item:nth-child(8) { animation-delay: 320ms; }
+  /* everything past the first rows shares the max delay so nothing waits too long */
+  .gallery-grid.fade-in.visible .gallery-item:nth-child(n+9) { animation-delay: 360ms; }
+}
+@keyframes itemReveal {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 /* Respect reduced-motion preferences */
 @media (prefers-reduced-motion: reduce) {
   .hero-bg { animation: none; transform: none; }
