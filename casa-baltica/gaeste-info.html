@@ -231,6 +231,22 @@ section { padding: 3.5rem 1.5rem; scroll-margin-top: 130px; }
 .btn-accent:hover { background: var(--accent-light); }
 .btn-row { display: flex; flex-wrap: wrap; gap: 0.8rem; margin-top: 0.5rem; }
 
+/* ===== WETTER-WIDGET ===== */
+.weather-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
+  gap: 0.6rem;
+}
+.weather-day {
+  background: var(--white); border-radius: 12px; padding: 0.9rem 0.4rem;
+  text-align: center; box-shadow: 0 2px 12px rgba(15,47,66,0.06);
+}
+.weather-day .wd-name { font-size: 0.8rem; color: var(--warm-gray); font-weight: 600; }
+.weather-day .wd-icon { font-size: 1.8rem; line-height: 1; margin: 0.35rem 0; }
+.weather-day .wd-temp { font-size: 0.95rem; font-weight: 700; color: var(--ocean-dark); }
+.weather-day .wd-temp .wd-min { color: var(--warm-gray); font-weight: 400; }
+.weather-day .wd-rain { font-size: 0.78rem; color: var(--ocean); margin-top: 0.15rem; }
+.weather-note { font-size: 0.8rem; color: var(--warm-gray); margin-top: 0.8rem; }
+
 /* ===== ACTIVITY GRID ===== */
 .activity-grid {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -357,6 +373,7 @@ a:focus-visible, button:focus-visible, .btn:focus-visible, .lang-btn:focus-visib
 <div class="quicknav">
   <a href="#anfahrt" data-i18n="qn.anfahrt">🚗 Anfahrt &amp; Parken</a>
   <a href="#ankommen" data-i18n="qn.ankommen">🔑 Ankommen</a>
+  <a href="#wetter" data-i18n="qn.wetter">🌤️ Wetter</a>
   <a href="#grillen" data-i18n="qn.grillen">🔥 Grillen</a>
   <a href="#waschsalon" data-i18n="qn.waschen">🧺 Waschsalon</a>
   <a href="#einkaufen" data-i18n="qn.shop">🛒 Einkaufen</a>
@@ -527,6 +544,18 @@ a:focus-visible, button:focus-visible, .btn:focus-visible, .lang-btn:focus-visib
   </div>
 </section>
 
+<!-- ===== WETTER ===== -->
+<section id="wetter" style="background:var(--sand);">
+  <div class="container">
+    <h2 class="section-title"><span class="st-emoji">🌤️</span> <span data-i18n="we.title">Wetter am Schönberger Strand</span></h2>
+    <p class="lead" data-i18n="we.lead">Die Vorschau für die nächsten Tage – für Ihre Urlaubsplanung.</p>
+    <div class="weather-grid" id="weatherGrid" aria-live="polite">
+      <p class="weather-note" data-i18n="we.loading">Wetterdaten werden geladen …</p>
+    </div>
+    <p class="weather-note" data-i18n="we.source">Quelle: Open-Meteo · aktualisiert sich automatisch</p>
+  </div>
+</section>
+
 <!-- ===== GRILLEN ===== -->
 <section id="grillen">
   <div class="container">
@@ -652,7 +681,7 @@ a:focus-visible, button:focus-visible, .btn:focus-visible, .lang-btn:focus-visib
 <section id="familie">
   <div class="container">
     <h2 class="section-title"><span class="st-emoji">👨‍👩‍👧‍👦</span> <span data-i18n="fam.title">Für <strong>Familien</strong> — direkt bei uns</span></h2>
-    <p class="lead" data-i18n="fam.lead">Damit keine Langeweile aufkommt, finden Sie in der Wohnung einiges zum Ausleihen und Mitnehmen:</p>
+    <p class="lead" data-i18n="fam.lead">Damit keine Langeweile aufkommt – hier unsere Tipps aus jahrzehntelanger Schönberger-Strand-Erfahrung :-)</p>
 
     <div class="card">
       <h3>🎒 <span data-i18n="fam.haus.h">Das ist im Haus vorhanden</span></h3>
@@ -685,6 +714,15 @@ a:focus-visible, button:focus-visible, .btn:focus-visible, .lang-btn:focus-visib
         <div class="ac-body">
           <span class="tag tag-family" data-i18n="tag.family">Familie</span><span class="tag" data-i18n="tag.aktiv">Aktiv</span>
           <p data-i18n="fam.boule.p">Direkt am Promenadenweg (beim Edeka) gibt es eine Boulebahn — Kugeln mitnehmen und loslegen.</p>
+        </div>
+      </div>
+
+      <!-- BEACHSPORT -->
+      <div class="activity-card">
+        <div class="ac-head">🏐 <span data-i18n="fam.beach.h">Beachvolleyball &amp; -fußball</span></div>
+        <div class="ac-body">
+          <span class="tag tag-family" data-i18n="tag.family">Familie</span><span class="tag" data-i18n="tag.aktiv">Aktiv</span>
+          <p data-i18n="fam.beach.p">Direkt am Strand, <strong>rechts neben der Seebrücke</strong>, gibt es Felder für <strong>Beachvolleyball</strong> und <strong>Beachfußball</strong> — Ball einpacken und lospielen.</p>
         </div>
       </div>
 
@@ -960,7 +998,8 @@ a:focus-visible, button:focus-visible, .btn:focus-visible, .lang-btn:focus-visib
       'nav.back':'Zur Startseite',
       'hero.title':'Herzlich willkommen in der <strong>Casa Baltica</strong>',
       'hero.sub':'Schön, dass Sie kommen! Hier finden Sie vorab alles Wichtige für einen entspannten Aufenthalt an der Ostsee.',
-      'qn.anfahrt':'🚗 Anfahrt & Parken','qn.ankommen':'🔑 Ankommen','qn.grillen':'🔥 Grillen','qn.waschen':'🧺 Waschsalon','qn.shop':'🛒 Einkaufen',
+      'qn.anfahrt':'🚗 Anfahrt & Parken','qn.ankommen':'🔑 Ankommen','qn.wetter':'🌤️ Wetter','qn.grillen':'🔥 Grillen','qn.waschen':'🧺 Waschsalon','qn.shop':'🛒 Einkaufen',
+      'we.title':'Wetter am Schönberger Strand','we.lead':'Die Vorschau für die nächsten Tage – für Ihre Urlaubsplanung.','we.loading':'Wetterdaten werden geladen …','we.source':'Quelle: Open-Meteo · aktualisiert sich automatisch','we.error':'Wetterdaten sind derzeit nicht verfügbar.',
       'ek.title':'Einkaufen','ek.edeka.h':'Edeka an der Tourist-Info','ek.edeka.p':'Direkt an der Tourist-Info (Käptn’s Gang 3) gibt es einen <strong>Edeka</strong> — bequem zu Fuß erreichbar.','ek.edeka.sb':'Auch abends per Selbstbedienung ohne Personal einkaufen — nach unserer Kenntnis bis ca. 20 Uhr.','ek.edeka.warn':'<strong>Achtung:</strong> Der Parkplatz dort ist teils kostenpflichtig und wird kontrolliert.','ek.edeka.btn':'🧭 Edeka in Google Maps','ek.schoenberg.h':'Frischtheke & mehr in Schönberg','ek.schoenberg.p':'Für die <strong>Frischtheke</strong> (Fleisch, Käse) und größere Einkäufe fahren Sie am besten nach <strong>Schönberg</strong> — dort gibt es alles, auch einen <strong>Rossmann</strong> (Drogerie).','ek.geld.h':'Bargeld & Bezahlen','ek.geld.p':'Einen <strong>Geldautomaten</strong> gibt es hier nach unserer Kenntnis derzeit nicht. Bezahlen ist aber weitgehend <strong>bargeldlos (Karte)</strong> möglich. Tipp: Für den Waschsalon (Münzen) und kleinere Beträge bringen Sie am besten etwas Bargeld mit.',
       'qn.familie':'👨‍👩‍👧‍👦 Für Familien','qn.ausflug':'🎡 Ausflugstipps','qn.events':'📅 Veranstaltungen','qn.abreise':'🧳 Vor der Abreise','qn.bewertung':'⭐ Bewertung',
       'va.title':'Veranstaltungen <strong>in der Nähe</strong>','va.lead':'Feste, Märkte, Konzerte und mehr: Was während Ihres Aufenthalts in der Probstei los ist, sehen Sie im offiziellen Veranstaltungskalender.','va.btn':'📅 Zum Veranstaltungskalender',
@@ -1020,12 +1059,13 @@ a:focus-visible, button:focus-visible, .btn:focus-visible, .lang-btn:focus-visib
       'wa.route.s2':'Dort ist ein <strong>markantes Hochhaus</strong> von Weitem gut zu sehen — der Waschsalon liegt aber <strong>nicht im Hochhaus selbst</strong>, sondern im flachen Gebäude <strong>direkt links daneben</strong> (Erdgeschoss).',
       'wa.route.s3':'Adresse: <strong>Osterwisch 2, 24217 Holm</strong> (Ostsee-Ferienpark Holm). Geöffnet <strong>täglich 8.30–20.00 Uhr</strong>.',
       'wa.route.btn':'🧭 Route zum Waschsalon öffnen',
-      'fam.title':'Für <strong>Familien</strong> — direkt bei uns','fam.lead':'Damit keine Langeweile aufkommt, finden Sie in der Wohnung einiges zum Ausleihen und Mitnehmen:',
+      'fam.title':'Für <strong>Familien</strong> — direkt bei uns','fam.lead':'Damit keine Langeweile aufkommt – hier unsere Tipps aus jahrzehntelanger Schönberger-Strand-Erfahrung :-)',
       'fam.haus.h':'Das ist im Haus vorhanden',
       'fam.haus.l5':'Bluetooth-Lautsprecher und 65-Zoll-TV — Netflix & Co. sind startklar (bitte am Ende von Ihren Konten abmelden)',
       'fam.haus.l6':'Für eine mitgebrachte Nintendo Switch liegt ein passendes HDMI-Kabel bereit',
       'fam.spielplatz.h':'Spielplätze','fam.spielplatz.p':'Ein schöner Spielplatz mit Klettergeräten liegt gleich in der Nähe (beim Edeka, wenige Minuten zu Fuß). Weitere Spielplätze in der Umgebung:','fam.spielplatz.abenteuer':'<strong>Abenteuerspielplatz</strong> — Strandstraße 300, Neuschönberg (<a href="https://www.google.com/maps/search/?api=1&amp;query=Abenteuerspielplatz+Strandstra%C3%9Fe+300+24217+Sch%C3%B6nberg" target="_blank" rel="noopener">Karte</a>)','fam.spielplatz.holm':'<strong>Spielplatz Holm</strong> — unser Favorit, etwas weiter entfernt (<a href="https://www.google.com/maps/search/?api=1&amp;query=Spielplatz+Holm+24217+Sch%C3%B6nberg" target="_blank" rel="noopener">Karte</a>)',
       'fam.boule.h':'Boulebahn','fam.boule.p':'Direkt am Promenadenweg (beim Edeka) gibt es eine Boulebahn — Kugeln mitnehmen und loslegen.',
+      'fam.beach.h':'Beachvolleyball & -fußball','fam.beach.p':'Direkt am Strand, <strong>rechts neben der Seebrücke</strong>, gibt es Felder für <strong>Beachvolleyball</strong> und <strong>Beachfußball</strong> — Ball einpacken und lospielen.',
       'fam.tennis.h':'Tennis','fam.tennis.p':'In der Nähe können Sie Tennis spielen — im Sommer im Freien beim <strong>SSV Marina Wendtorf</strong> oder ganzjährig in der <strong>Tennishalle Heikendorf</strong>.',
       'fam.tennis.info':'Buchung &amp; Infos: <a href="https://ssv-marina-wendtorf.de/Unsere-Sparten/Tennis" target="_blank" rel="noopener">SSV Marina Wendtorf (Tennis)</a> · <a href="https://www.bookandplay.de/cgi-bin/WebObjects/BookAndPlay.woa/wa/directAccess?id=TSH-2077" target="_blank" rel="noopener">Tennishalle Heikendorf (online buchen)</a>.',
       'fam.minigolf.h':'Minigolf Kalifornien','fam.minigolf.p':'Der Klassiker für Groß und Klein: <strong>Minigolf &amp; Fahrradvermietung Gnutzmann</strong> im benachbarten Ostseebad <strong>Kalifornien</strong> — perfekt für einen Nachmittag mit den Kindern. Dort kann man auch Fahrräder leihen.','fam.minigolf.m1':'Ortsteil Kalifornien','fam.minigolf.m2':'wenige Minuten','fam.minigolf.link':'In Google Maps ansehen →',
@@ -1059,7 +1099,8 @@ a:focus-visible, button:focus-visible, .btn:focus-visible, .lang-btn:focus-visib
       'nav.back':'Back to home',
       'hero.title':'Welcome to <strong>Casa Baltica</strong>',
       'hero.sub':'We’re glad you’re coming! Here you’ll find everything you need for a relaxing stay by the Baltic Sea.',
-      'qn.anfahrt':'🚗 Directions & Parking','qn.ankommen':'🔑 Arrival','qn.grillen':'🔥 Barbecue','qn.waschen':'🧺 Laundry','qn.shop':'🛒 Shopping',
+      'qn.anfahrt':'🚗 Directions & Parking','qn.ankommen':'🔑 Arrival','qn.wetter':'🌤️ Weather','qn.grillen':'🔥 Barbecue','qn.waschen':'🧺 Laundry','qn.shop':'🛒 Shopping',
+      'we.title':'Weather at Schönberger Strand','we.lead':'The forecast for the coming days – to help plan your holiday.','we.loading':'Loading weather data …','we.source':'Source: Open-Meteo · updates automatically','we.error':'Weather data is currently unavailable.',
       'ek.title':'Shopping','ek.edeka.h':'Edeka by the tourist office','ek.edeka.p':'Right by the tourist office (Käptn’s Gang 3) there is an <strong>Edeka</strong> supermarket — within easy walking distance.','ek.edeka.sb':'Also open in the evening as a self-service store (no staff) — as far as we know until around 8 PM.','ek.edeka.warn':'<strong>Please note:</strong> The car park there is partly paid and is monitored.','ek.edeka.btn':'🧭 Edeka on Google Maps','ek.schoenberg.h':'Fresh counter & more in Schönberg','ek.schoenberg.p':'For the <strong>fresh counter</strong> (meat, cheese) and larger shops, it’s best to drive to <strong>Schönberg</strong> — you’ll find everything there, including a <strong>Rossmann</strong> drugstore.','ek.geld.h':'Cash & payment','ek.geld.p':'As far as we know, there is currently no <strong>ATM</strong> here. However, <strong>cashless (card)</strong> payment is largely possible. Tip: bring some cash for the launderette (coins) and small amounts.',
       'qn.familie':'👨‍👩‍👧‍👦 For Families','qn.ausflug':'🎡 Day Trips','qn.events':'📅 Events','qn.abreise':'🧳 Before Departure','qn.bewertung':'⭐ Review',
       'va.title':'Events <strong>nearby</strong>','va.lead':'Festivals, markets, concerts and more: see what’s happening in the Probstei region during your stay in the official events calendar.','va.btn':'📅 To the events calendar',
@@ -1119,12 +1160,13 @@ a:focus-visible, button:focus-visible, .btn:focus-visible, .lang-btn:focus-visib
       'wa.route.s2':'There you’ll spot a <strong>prominent high-rise</strong> from afar — but the launderette is <strong>not in the high-rise itself</strong>; it’s in the low building <strong>directly to its left</strong> (ground floor).',
       'wa.route.s3':'Address: <strong>Osterwisch 2, 24217 Holm</strong> (Ostsee-Ferienpark Holm). Open <strong>daily 8:30 AM–8:00 PM</strong>.',
       'wa.route.btn':'🧭 Open route to the launderette',
-      'fam.title':'For <strong>Families</strong> — right here','fam.lead':'To keep boredom at bay, you’ll find plenty to borrow and take along in the apartment:',
+      'fam.title':'For <strong>Families</strong> — right here','fam.lead':'To keep boredom at bay – here are our tips from decades of experience at Schönberger Strand :-)',
       'fam.haus.h':'Available in the apartment',
       'fam.haus.l5':'Bluetooth speaker and 65-inch TV — Netflix & co. are ready to go (please log out of your accounts at the end)',
       'fam.haus.l6':'A matching HDMI cable is ready for a Nintendo Switch you bring along',
       'fam.spielplatz.h':'Playgrounds','fam.spielplatz.p':'A lovely playground with climbing equipment is right nearby (by the Edeka, a few minutes on foot). More playgrounds in the area:','fam.spielplatz.abenteuer':'<strong>Adventure playground</strong> — Strandstraße 300, Neuschönberg (<a href="https://www.google.com/maps/search/?api=1&amp;query=Abenteuerspielplatz+Strandstra%C3%9Fe+300+24217+Sch%C3%B6nberg" target="_blank" rel="noopener">map</a>)','fam.spielplatz.holm':'<strong>Spielplatz Holm</strong> — our favourite, a little further away (<a href="https://www.google.com/maps/search/?api=1&amp;query=Spielplatz+Holm+24217+Sch%C3%B6nberg" target="_blank" rel="noopener">map</a>)',
       'fam.boule.h':'Boules court','fam.boule.p':'Right on the promenade path (by the Edeka) there is a boules/pétanque court — bring the balls and get started.',
+      'fam.beach.h':'Beach volleyball & football','fam.beach.p':'Right on the beach, <strong>just to the right of the pier (Seebrücke)</strong>, there are courts for <strong>beach volleyball</strong> and <strong>beach football</strong> — bring a ball and get playing.',
       'fam.tennis.h':'Tennis','fam.tennis.p':'You can play tennis nearby — outdoors in summer at <strong>SSV Marina Wendtorf</strong> or year-round at the <strong>Heikendorf indoor tennis hall</strong>.',
       'fam.tennis.info':'Booking &amp; details: <a href="https://ssv-marina-wendtorf.de/Unsere-Sparten/Tennis" target="_blank" rel="noopener">SSV Marina Wendtorf (tennis)</a> · <a href="https://www.bookandplay.de/cgi-bin/WebObjects/BookAndPlay.woa/wa/directAccess?id=TSH-2077" target="_blank" rel="noopener">Heikendorf indoor hall (book online)</a>.',
       'fam.minigolf.h':'Mini-golf Kalifornien','fam.minigolf.p':'The classic for young and old: <strong>Minigolf &amp; bike rental Gnutzmann</strong> in the neighbouring seaside resort of <strong>Kalifornien</strong> — perfect for an afternoon with the kids. You can also rent bikes there.','fam.minigolf.m1':'Kalifornien district','fam.minigolf.m2':'a few minutes','fam.minigolf.link':'View on Google Maps →',
@@ -1158,7 +1200,8 @@ a:focus-visible, button:focus-visible, .btn:focus-visible, .lang-btn:focus-visib
       'nav.back':'A la página de inicio',
       'hero.title':'Bienvenidos a la <strong>Casa Baltica</strong>',
       'hero.sub':'¡Nos alegra que vengan! Aquí encontrará de antemano todo lo importante para una estancia relajada junto al mar Báltico.',
-      'qn.anfahrt':'🚗 Cómo llegar y aparcar','qn.ankommen':'🔑 Llegada','qn.grillen':'🔥 Barbacoa','qn.waschen':'🧺 Lavandería','qn.shop':'🛒 Compras',
+      'qn.anfahrt':'🚗 Cómo llegar y aparcar','qn.ankommen':'🔑 Llegada','qn.wetter':'🌤️ Tiempo','qn.grillen':'🔥 Barbacoa','qn.waschen':'🧺 Lavandería','qn.shop':'🛒 Compras',
+      'we.title':'El tiempo en Schönberger Strand','we.lead':'La previsión para los próximos días – para planificar sus vacaciones.','we.loading':'Cargando datos meteorológicos …','we.source':'Fuente: Open-Meteo · se actualiza automáticamente','we.error':'Los datos meteorológicos no están disponibles en este momento.',
       'ek.title':'Compras','ek.edeka.h':'Edeka junto a la oficina de turismo','ek.edeka.p':'Justo al lado de la oficina de turismo (Käptn’s Gang 3) hay un <strong>Edeka</strong> — a poca distancia a pie.','ek.edeka.sb':'También por la tarde como tienda de autoservicio (sin personal) — que sepamos, hasta las 20:00 aprox.','ek.edeka.warn':'<strong>Atención:</strong> El aparcamiento allí es en parte de pago y está vigilado.','ek.edeka.btn':'🧭 Edeka en Google Maps','ek.schoenberg.h':'Mostrador de frescos y más en Schönberg','ek.schoenberg.p':'Para el <strong>mostrador de frescos</strong> (carne, queso) y compras más grandes, lo mejor es ir a <strong>Schönberg</strong> — allí hay de todo, incluida una droguería <strong>Rossmann</strong>.','ek.geld.h':'Efectivo y pago','ek.geld.p':'Que sepamos, actualmente no hay <strong>cajero automático</strong> aquí. Sin embargo, se puede pagar en gran medida <strong>sin efectivo (con tarjeta)</strong>. Consejo: traiga algo de efectivo para la lavandería (monedas) y pequeños importes.',
       'qn.familie':'👨‍👩‍👧‍👦 Para familias','qn.ausflug':'🎡 Excursiones','qn.events':'📅 Eventos','qn.abreise':'🧳 Antes de salir','qn.bewertung':'⭐ Valoración',
       'va.title':'Eventos <strong>cercanos</strong>','va.lead':'Fiestas, mercados, conciertos y más: consulte en el calendario oficial de eventos qué ocurre en la región de Probstei durante su estancia.','va.btn':'📅 Ver el calendario de eventos',
@@ -1218,12 +1261,13 @@ a:focus-visible, button:focus-visible, .btn:focus-visible, .lang-btn:focus-visib
       'wa.route.s2':'Allí verá desde lejos un <strong>edificio alto</strong> — pero la lavandería <strong>no está en el edificio alto</strong>, sino en el edificio bajo <strong>justo a su izquierda</strong> (planta baja).',
       'wa.route.s3':'Dirección: <strong>Osterwisch 2, 24217 Holm</strong> (Ostsee-Ferienpark Holm). Abierto <strong>todos los días de 8:30 a 20:00</strong>.',
       'wa.route.btn':'🧭 Abrir la ruta a la lavandería',
-      'fam.title':'Para <strong>familias</strong> — aquí mismo','fam.lead':'Para que no haya aburrimiento, en el apartamento encontrará varias cosas para usar y llevar:',
+      'fam.title':'Para <strong>familias</strong> — aquí mismo','fam.lead':'Para que no haya aburrimiento – aquí nuestros consejos de décadas de experiencia en Schönberger Strand :-)',
       'fam.haus.h':'Disponible en el apartamento',
       'fam.haus.l5':'Altavoz Bluetooth y TV de 65 pulgadas — Netflix y compañía están listos (cierre sus cuentas al final, por favor)',
       'fam.haus.l6':'Hay un cable HDMI adecuado para una Nintendo Switch que traiga',
       'fam.spielplatz.h':'Parques infantiles','fam.spielplatz.p':'Cerca hay un bonito parque infantil con juegos para trepar (junto al Edeka, a pocos minutos a pie). Más parques en la zona:','fam.spielplatz.abenteuer':'<strong>Parque de aventuras</strong> — Strandstraße 300, Neuschönberg (<a href="https://www.google.com/maps/search/?api=1&amp;query=Abenteuerspielplatz+Strandstra%C3%9Fe+300+24217+Sch%C3%B6nberg" target="_blank" rel="noopener">mapa</a>)','fam.spielplatz.holm':'<strong>Spielplatz Holm</strong> — nuestro favorito, algo más lejos (<a href="https://www.google.com/maps/search/?api=1&amp;query=Spielplatz+Holm+24217+Sch%C3%B6nberg" target="_blank" rel="noopener">mapa</a>)',
       'fam.boule.h':'Pista de petanca','fam.boule.p':'Justo en el paseo (junto al Edeka) hay una pista de petanca — coja las bolas y a jugar.',
+      'fam.beach.h':'Vóley y fútbol playa','fam.beach.p':'Justo en la playa, <strong>a la derecha del embarcadero (Seebrücke)</strong>, hay canchas de <strong>vóley playa</strong> y <strong>fútbol playa</strong> — traiga un balón y a jugar.',
       'fam.tennis.h':'Tenis','fam.tennis.p':'Cerca puede jugar al tenis — al aire libre en verano en el <strong>SSV Marina Wendtorf</strong> o todo el año en la <strong>pista cubierta de Heikendorf</strong>.',
       'fam.tennis.info':'Reserva e información: <a href="https://ssv-marina-wendtorf.de/Unsere-Sparten/Tennis" target="_blank" rel="noopener">SSV Marina Wendtorf (tenis)</a> · <a href="https://www.bookandplay.de/cgi-bin/WebObjects/BookAndPlay.woa/wa/directAccess?id=TSH-2077" target="_blank" rel="noopener">pista cubierta de Heikendorf (reserva online)</a>.',
       'fam.minigolf.h':'Minigolf Kalifornien','fam.minigolf.p':'El clásico para grandes y pequeños: <strong>Minigolf y alquiler de bicis Gnutzmann</strong> en el vecino balneario de <strong>Kalifornien</strong> — perfecto para una tarde con los niños. Allí también se pueden alquilar bicicletas.','fam.minigolf.m1':'Barrio de Kalifornien','fam.minigolf.m2':'pocos minutos','fam.minigolf.link':'Ver en Google Maps →',
@@ -1269,6 +1313,7 @@ a:focus-visible, button:focus-visible, .btn:focus-visible, .lang-btn:focus-visib
       var key = el.getAttribute('data-i18n');
       if (dict[key] !== undefined) { el.innerHTML = dict[key]; }
     });
+    renderWeather();
   };
 
   // ============================================================
@@ -1278,6 +1323,48 @@ a:focus-visible, button:focus-visible, .btn:focus-visible, .lang-btn:focus-visib
   window.addEventListener('scroll', function(){
     navbar.classList.toggle('scrolled', window.scrollY > 50);
   });
+
+  // ============================================================
+  // === WETTER-VORSCHAU (Open-Meteo, ohne API-Key) ===
+  // ============================================================
+  var weatherDaily = null;
+  function wmoIcon(c){
+    if (c === 0) return '☀️';
+    if (c === 1) return '🌤️';
+    if (c === 2) return '⛅';
+    if (c === 3) return '☁️';
+    if (c === 45 || c === 48) return '🌫️';
+    if (c >= 51 && c <= 57) return '🌦️';
+    if (c >= 61 && c <= 67) return '🌧️';
+    if ((c >= 71 && c <= 77) || c === 85 || c === 86) return '🌨️';
+    if (c >= 80 && c <= 82) return '🌦️';
+    if (c >= 95) return '⛈️';
+    return '🌡️';
+  }
+  function renderWeather(){
+    var grid = document.getElementById('weatherGrid');
+    if (!grid || !weatherDaily) return;
+    var locale = currentLang === 'de' ? 'de-DE' : (currentLang === 'es' ? 'es-ES' : 'en-GB');
+    var d = weatherDaily, html = '';
+    for (var i = 0; i < d.time.length; i++){
+      var name = new Date(d.time[i] + 'T12:00:00').toLocaleDateString(locale, { weekday: 'short' });
+      var rain = (d.precipitation_probability_max && d.precipitation_probability_max[i] != null) ? d.precipitation_probability_max[i] : 0;
+      html += '<div class="weather-day">'
+        + '<div class="wd-name">' + name + '</div>'
+        + '<div class="wd-icon">' + wmoIcon(d.weather_code[i]) + '</div>'
+        + '<div class="wd-temp">' + Math.round(d.temperature_2m_max[i]) + '°<span class="wd-min"> / ' + Math.round(d.temperature_2m_min[i]) + '°</span></div>'
+        + '<div class="wd-rain">💧 ' + rain + '%</div>'
+        + '</div>';
+    }
+    grid.innerHTML = html;
+  }
+  fetch('https://api.open-meteo.com/v1/forecast?latitude=54.41&longitude=10.41&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Europe%2FBerlin&forecast_days=7')
+    .then(function(r){ return r.json(); })
+    .then(function(j){ weatherDaily = j.daily; renderWeather(); })
+    .catch(function(){
+      var grid = document.getElementById('weatherGrid');
+      if (grid) grid.innerHTML = '<p class="weather-note">' + (T[currentLang]['we.error'] || 'Wetterdaten sind derzeit nicht verfügbar.') + '</p>';
+    });
 })();
 </script>
 
