@@ -581,10 +581,16 @@ a:focus-visible, button:focus-visible, .btn:focus-visible, .lang-btn:focus-visib
     <div class="card">
       <h3>🍔 <span data-i18n="gr.how.h">So funktioniert's</span></h3>
       <p data-i18n="gr.how.p">Bei uns steht ein <strong>Gasgrill</strong> auf der Terrasse bereit.</p>
-      <figure>
-        <img class="info-photo" src="img/info-grill.jpg" alt="Gasgrill auf der Terrasse, bereit zum Grillen" loading="lazy" width="1050" height="1400" style="max-width:420px;">
-        <figcaption class="photo-cap" data-i18n="gr.how.cap">Unser Gasgrill auf der Terrasse.</figcaption>
-      </figure>
+      <div class="photo-grid">
+        <figure>
+          <img class="info-photo" src="img/info-grill.jpg" alt="Gasgrill auf der Terrasse, geschlossen und bereit zum Grillen" loading="lazy" width="1050" height="1400">
+          <figcaption class="photo-cap" data-i18n="gr.how.cap">Unser Gasgrill auf der Terrasse.</figcaption>
+        </figure>
+        <figure>
+          <img class="info-photo" src="img/info-grill-offen.jpg" alt="Aufgeklappter Gasgrill mit Grillfläche und Brennern" loading="lazy" width="1050" height="1400">
+          <figcaption class="photo-cap" data-i18n="gr.how.cap2">Aufgeklappt mit großer Grillfläche.</figcaption>
+        </figure>
+      </div>
       <ol class="steps">
         <li data-i18n="gr.how.s1">Vor dem Grillen bei Bedarf die <strong>Gasflasche wiegen</strong>, um zu prüfen, ob noch genügend Gas vorhanden ist. Die <strong>Kofferwaage (rosa)</strong> liegt im Flurschrank (Garderobe) in der Schublade.</li>
         <li data-i18n="gr.how.s2">Vom gemessenen Gewicht das auf der Flasche angegebene <strong>Tara-Gewicht</strong> (Leergewicht) abziehen — die Differenz ist die verbleibende Gasmenge.</li>
@@ -1096,7 +1102,7 @@ a:focus-visible, button:focus-visible, .btn:focus-visible, .lang-btn:focus-visib
       'ank.muell.cap1':'Die Müllschuppen liegen gleich hinter der Schranke.','ank.muell.cap2':'Die Holztüren öffnen Sie mit dem Haustürschlüssel.',
       'ank.muell.l1':'<strong>Braun</strong> — Bioabfall','ank.muell.l2':'<strong>Grau</strong> — Restmüll','ank.muell.l3':'<strong>Gelb</strong> — Plastik / Verpackungen','ank.muell.l4':'<strong>Grün</strong> — Papier','ank.muell.l5':'<strong>Glas</strong> — bitte separat entsorgen (nicht in die graue, gelbe, grüne oder braune Tonne)',
       'gr.title':'Der <strong>Grill</strong>','gr.lead':'Ein Abend auf der Terrasse mit Grill gehört zum Ostsee-Urlaub dazu. Damit alles klappt und sicher bleibt:',
-      'gr.how.h':'So funktioniert’s','gr.how.p':'Bei uns steht ein <strong>Gasgrill</strong> auf der Terrasse bereit.','gr.how.cap':'Unser Gasgrill auf der Terrasse.',
+      'gr.how.h':'So funktioniert’s','gr.how.p':'Bei uns steht ein <strong>Gasgrill</strong> auf der Terrasse bereit.','gr.how.cap':'Unser Gasgrill auf der Terrasse.','gr.how.cap2':'Aufgeklappt mit großer Grillfläche.',
       'gr.how.s1':'Vor dem Grillen bei Bedarf die <strong>Gasflasche wiegen</strong>, um zu prüfen, ob noch genügend Gas vorhanden ist. Die <strong>Kofferwaage (rosa)</strong> liegt im Flurschrank (Garderobe) in der Schublade.',
       'gr.how.s2':'Vom gemessenen Gewicht das auf der Flasche angegebene <strong>Tara-Gewicht</strong> (Leergewicht) abziehen — die Differenz ist die verbleibende Gasmenge.',
       'gr.how.s3':'Gasflasche aufdrehen, den Grill gemäß Anleitung zünden und ca. 10–15 Min. vorheizen.',
@@ -1204,7 +1210,7 @@ a:focus-visible, button:focus-visible, .btn:focus-visible, .lang-btn:focus-visib
       'ank.muell.cap1':'The waste sheds are right behind the barrier.','ank.muell.cap2':'Open the wooden doors with your front-door key.',
       'ank.muell.l1':'<strong>Brown</strong> — organic waste','ank.muell.l2':'<strong>Grey</strong> — residual waste','ank.muell.l3':'<strong>Yellow</strong> — plastic / packaging','ank.muell.l4':'<strong>Green</strong> — paper','ank.muell.l5':'<strong>Glass</strong> — please dispose of separately (not in the grey, yellow, green or brown bin)',
       'gr.title':'The <strong>Barbecue</strong>','gr.lead':'An evening on the terrace with the barbecue is part of a Baltic holiday. So everything runs smoothly and safely:',
-      'gr.how.h':'How it works','gr.how.p':'A <strong>gas barbecue</strong> is ready for you on the terrace.','gr.how.cap':'Our gas barbecue on the terrace.',
+      'gr.how.h':'How it works','gr.how.p':'A <strong>gas barbecue</strong> is ready for you on the terrace.','gr.how.cap':'Our gas barbecue on the terrace.','gr.how.cap2':'Open, with a large cooking area.',
       'gr.how.s1':'Before grilling, weigh the <strong>gas bottle</strong> if needed to check there’s enough gas. The <strong>luggage scale (pink)</strong> is in the hallway wardrobe drawer.',
       'gr.how.s2':'Subtract the <strong>tare weight</strong> (empty weight) printed on the bottle from the measured weight — the difference is the remaining gas.',
       'gr.how.s3':'Open the gas bottle, light the barbecue as instructed and preheat for about 10–15 min.',
@@ -1312,7 +1318,7 @@ a:focus-visible, button:focus-visible, .btn:focus-visible, .lang-btn:focus-visib
       'ank.muell.cap1':'Los cobertizos de basura están justo detrás de la barrera.','ank.muell.cap2':'Las puertas de madera se abren con la llave de casa.',
       'ank.muell.l1':'<strong>Marrón</strong> — residuos orgánicos','ank.muell.l2':'<strong>Gris</strong> — resto','ank.muell.l3':'<strong>Amarillo</strong> — plástico / envases','ank.muell.l4':'<strong>Verde</strong> — papel','ank.muell.l5':'<strong>Vidrio</strong> — deposítelo por separado (no en el cubo gris, amarillo, verde ni marrón)',
       'gr.title':'La <strong>barbacoa</strong>','gr.lead':'Una tarde en la terraza con la barbacoa es parte de las vacaciones en el Báltico. Para que todo salga bien y seguro:',
-      'gr.how.h':'Cómo funciona','gr.how.p':'En la terraza hay una <strong>barbacoa de gas</strong> lista para usar.','gr.how.cap':'Nuestra barbacoa de gas en la terraza.',
+      'gr.how.h':'Cómo funciona','gr.how.p':'En la terraza hay una <strong>barbacoa de gas</strong> lista para usar.','gr.how.cap':'Nuestra barbacoa de gas en la terraza.','gr.how.cap2':'Abierta, con amplia zona de cocción.',
       'gr.how.s1':'Antes de asar, si hace falta, <strong>pese la bombona de gas</strong> para comprobar si queda suficiente. La <strong>báscula de maleta (rosa)</strong> está en el cajón del armario del recibidor.',
       'gr.how.s2':'Reste del peso medido la <strong>tara</strong> (peso vacío) indicada en la bombona — la diferencia es el gas restante.',
       'gr.how.s3':'Abra la bombona, encienda la barbacoa según las instrucciones y precaliéntela unos 10–15 min.',
