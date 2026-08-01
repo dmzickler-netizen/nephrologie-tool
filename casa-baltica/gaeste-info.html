@@ -247,6 +247,21 @@ section { padding: 3.5rem 1.5rem; scroll-margin-top: 130px; }
 .weather-day .wd-rain { font-size: 0.78rem; color: var(--ocean); margin-top: 0.15rem; }
 .weather-note { font-size: 0.8rem; color: var(--warm-gray); margin-top: 0.8rem; }
 
+/* ===== STRANDFLAGGEN ===== */
+.flag-list { list-style: none; margin-top: 0.4rem; }
+.flag-list li {
+  display: flex; align-items: center; gap: 0.7rem;
+  padding: 0.4rem 0; font-size: 0.97rem; color: var(--text);
+}
+.flag {
+  display: inline-block; width: 32px; height: 21px; border-radius: 3px;
+  flex: 0 0 auto; border: 1px solid rgba(0,0,0,0.15); box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+}
+.flag-ry { background: linear-gradient(to bottom, #e11d1d 0 50%, #f4c20d 50% 100%); }
+.flag-y  { background: #f4c20d; }
+.flag-r  { background: #e11d1d; }
+.flag-none { background: repeating-linear-gradient(45deg, #e8dfd2, #e8dfd2 5px, #fff 5px, #fff 10px); }
+
 /* ===== ACTIVITY GRID ===== */
 .activity-grid {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -378,6 +393,7 @@ a:focus-visible, button:focus-visible, .btn:focus-visible, .lang-btn:focus-visib
   <a href="#waschsalon" data-i18n="qn.waschen">🧺 Waschsalon</a>
   <a href="#einkaufen" data-i18n="qn.shop">🛒 Einkaufen</a>
   <a href="#familie" data-i18n="qn.familie">👨‍👩‍👧‍👦 Für Familien</a>
+  <a href="#strand" data-i18n="qn.strand">🏖️ Strand</a>
   <a href="#ausflug" data-i18n="qn.ausflug">🎡 Ausflugstipps</a>
   <a href="#veranstaltungen" data-i18n="qn.events">📅 Veranstaltungen</a>
   <a href="#abreise" data-i18n="qn.abreise">🧳 Vor der Abreise</a>
@@ -717,15 +733,6 @@ a:focus-visible, button:focus-visible, .btn:focus-visible, .lang-btn:focus-visib
         </div>
       </div>
 
-      <!-- BEACHSPORT -->
-      <div class="activity-card">
-        <div class="ac-head">🏐 <span data-i18n="fam.beach.h">Beachvolleyball &amp; -fußball</span></div>
-        <div class="ac-body">
-          <span class="tag tag-family" data-i18n="tag.family">Familie</span><span class="tag" data-i18n="tag.aktiv">Aktiv</span>
-          <p data-i18n="fam.beach.p">Direkt am Strand, <strong>rechts neben der Seebrücke</strong>, gibt es Felder für <strong>Beachvolleyball</strong> und <strong>Beachfußball</strong> — Ball einpacken und lospielen.</p>
-        </div>
-      </div>
-
       <!-- TENNIS -->
       <div class="activity-card">
         <div class="ac-head">🎾 <span data-i18n="fam.tennis.h">Tennis</span></div>
@@ -768,6 +775,60 @@ a:focus-visible, button:focus-visible, .btn:focus-visible, .lang-btn:focus-visib
   </div>
 </section>
 
+<!-- ===== STRAND & MEER ===== -->
+<section id="strand" style="background:var(--white);">
+  <div class="container">
+    <h2 class="section-title"><span class="st-emoji">🏖️</span> <span data-i18n="st.title">Strand &amp; Meer</span></h2>
+    <p class="lead" data-i18n="st.lead">Der Ostseestrand ist nur wenige Schritte entfernt – das Wasser ist wunderschön, aber jeden Tag anders.</p>
+
+    <div class="card">
+      <h3>🎫 <span data-i18n="st.kur.h">Kurkarte</span></h3>
+      <p data-i18n="st.kur.p">Für den Strand ist eine <strong>Kurkarte</strong> vorgesehen — halten Sie sie am besten bereit. Kontrollen sind allerdings selten.</p>
+    </div>
+
+    <div class="card">
+      <h3>🚩 <span data-i18n="st.safe.h">Sicher baden – die Strandflaggen</span></h3>
+      <p data-i18n="st.safe.dlrg">An den bewachten Abschnitten sorgt die <strong>DLRG</strong> für Sicherheit. Woran Sie erkennen, ob und wo Baden sicher ist:</p>
+      <ul class="flag-list">
+        <li><span class="flag flag-ry" aria-hidden="true"></span> <span data-i18n="st.flag.ry"><strong>Rot-Gelb:</strong> bewachter Badebereich – Rettungsschwimmer im Dienst, hier baden.</span></li>
+        <li><span class="flag flag-y" aria-hidden="true"></span> <span data-i18n="st.flag.y"><strong>Gelb:</strong> nur für geübte Schwimmer, erhöhte Vorsicht.</span></li>
+        <li><span class="flag flag-r" aria-hidden="true"></span> <span data-i18n="st.flag.r"><strong>Rot:</strong> Baden verboten – Lebensgefahr.</span></li>
+        <li><span class="flag flag-none" aria-hidden="true"></span> <span data-i18n="st.flag.none"><strong>Keine Flagge:</strong> keine Aufsicht – auf eigene Verantwortung.</span></li>
+      </ul>
+      <div class="alert" data-i18n="st.wind"><strong>Ablandiger Wind</strong> (vom Land aufs Meer) treibt alles schnell hinaus – uns hat er schon den einen oder anderen Ball gekostet. Aufblasbares und Kinder dann besonders im Blick behalten.</div>
+    </div>
+
+    <div class="card">
+      <h3>🌿 <span data-i18n="st.duenen.h">Bitte die Dünen schützen</span></h3>
+      <p data-i18n="st.duenen.p">Den Strand bitte <strong>nicht über die Dünen</strong> betreten, sondern nur die <strong>vorgesehenen Strandzugänge</strong> nutzen – so bleibt der Dünenschutz erhalten.</p>
+    </div>
+
+    <div class="activity-grid">
+      <div class="activity-card">
+        <img class="ac-img" src="img/strand-strandkorb.jpg" alt="Strandkorb am Ostseestrand mit Blick aufs Meer" loading="lazy" width="1600" height="1200">
+        <div class="ac-head">🪑 <span data-i18n="au.korb.h">Strandkorb am Strand</span></div>
+        <div class="ac-body">
+          <span class="tag" data-i18n="tag.genuss">Genuss</span>
+          <p data-i18n="au.korb.p">Der Ostseestrand ist nur wenige Schritte entfernt. In der Saison lassen sich Strandkörbe mieten — der klassische, windgeschützte Logenplatz am Meer. Buchen Sie am besten vorab über die App <strong>BeachNow</strong>; die Körbe sind heiß begehrt und oft schon vergeben.</p>
+          <p data-i18n="au.korb.link"><a href="https://apps.apple.com/de/app/beachnow/id1663447719" target="_blank" rel="noopener">BeachNow im App Store →</a></p>
+        </div>
+      </div>
+      <div class="activity-card">
+        <div class="ac-head">🏐 <span data-i18n="fam.beach.h">Beachvolleyball &amp; -fußball</span></div>
+        <div class="ac-body">
+          <span class="tag tag-family" data-i18n="tag.family">Familie</span><span class="tag" data-i18n="tag.aktiv">Aktiv</span>
+          <p data-i18n="fam.beach.p">Direkt am Strand, <strong>rechts neben der Seebrücke</strong>, gibt es Felder für <strong>Beachvolleyball</strong> und <strong>Beachfußball</strong> — Ball einpacken und lospielen.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:1.3rem;">
+      <h3>🦅 <span data-i18n="st.moewen.h">Vorsicht, Möwen!</span></h3>
+      <p data-i18n="st.moewen.p">Die Möwen werden gefühlt jedes Jahr dreister: Beim <strong>Fischbrötchen</strong>- und <strong>Brezel</strong>-Genuss am Strand also den Luftraum im Blick behalten 😉</p>
+    </div>
+  </div>
+</section>
+
 <!-- ===== AUSFLUGSTIPPS ===== -->
 <section id="ausflug" style="background:var(--white);">
   <div class="container">
@@ -796,17 +857,6 @@ a:focus-visible, button:focus-visible, .btn:focus-visible, .lang-btn:focus-visib
           <span class="tag tag-family" data-i18n="tag.family">Familie</span><span class="tag" data-i18n="tag.aktiv">Aktiv</span>
           <p data-i18n="au.quad.p">Action für ältere Kinder und Erwachsene: die Quadbahn <strong>Kiddy-Quad</strong> in der Nähe von Schönberg. Alternativ gibt es <strong>E-Karting bei evoKART in Kiel</strong>.</p>
           <p data-i18n="au.quad.link"><a href="https://kiddy-quad.de/" target="_blank" rel="noopener">kiddy-quad.de</a> · <a href="https://evokart-kiel.de/" target="_blank" rel="noopener">evokart-kiel.de (Kiel)</a></p>
-        </div>
-      </div>
-
-      <!-- STRANDKORB -->
-      <div class="activity-card">
-        <img class="ac-img" src="img/strand-strandkorb.jpg" alt="Strandkorb am Ostseestrand mit Blick aufs Meer" loading="lazy" width="1600" height="1200">
-        <div class="ac-head">🏖️ <span data-i18n="au.korb.h">Strandkorb am Strand</span></div>
-        <div class="ac-body">
-          <span class="tag" data-i18n="tag.genuss">Genuss</span>
-          <p data-i18n="au.korb.p">Der Ostseestrand ist nur wenige Schritte entfernt. In der Saison lassen sich Strandkörbe mieten — der klassische, windgeschützte Logenplatz am Meer. Buchen Sie am besten vorab über die App <strong>BeachNow</strong>; die Körbe sind heiß begehrt und oft schon vergeben.</p>
-          <p data-i18n="au.korb.link"><a href="https://apps.apple.com/de/app/beachnow/id1663447719" target="_blank" rel="noopener">BeachNow im App Store →</a></p>
         </div>
       </div>
 
@@ -1001,7 +1051,14 @@ a:focus-visible, button:focus-visible, .btn:focus-visible, .lang-btn:focus-visib
       'qn.anfahrt':'🚗 Anfahrt & Parken','qn.ankommen':'🔑 Ankommen','qn.wetter':'🌤️ Wetter','qn.grillen':'🔥 Grillen','qn.waschen':'🧺 Waschsalon','qn.shop':'🛒 Einkaufen',
       'we.title':'Wetter am Schönberger Strand','we.lead':'Die Vorschau für die nächsten Tage – für Ihre Urlaubsplanung.','we.loading':'Wetterdaten werden geladen …','we.source':'Quelle: Open-Meteo · aktualisiert sich automatisch','we.error':'Wetterdaten sind derzeit nicht verfügbar.',
       'ek.title':'Einkaufen','ek.edeka.h':'Edeka an der Tourist-Info','ek.edeka.p':'Direkt an der Tourist-Info (Käptn’s Gang 3) gibt es einen <strong>Edeka</strong> — bequem zu Fuß erreichbar.','ek.edeka.sb':'Auch abends per Selbstbedienung ohne Personal einkaufen — nach unserer Kenntnis bis ca. 20 Uhr.','ek.edeka.warn':'<strong>Achtung:</strong> Der Parkplatz dort ist teils kostenpflichtig und wird kontrolliert.','ek.edeka.btn':'🧭 Edeka in Google Maps','ek.schoenberg.h':'Frischtheke & mehr in Schönberg','ek.schoenberg.p':'Für die <strong>Frischtheke</strong> (Fleisch, Käse) und größere Einkäufe fahren Sie am besten nach <strong>Schönberg</strong> — dort gibt es alles, auch einen <strong>Rossmann</strong> (Drogerie).','ek.geld.h':'Bargeld & Bezahlen','ek.geld.p':'Einen <strong>Geldautomaten</strong> gibt es hier nach unserer Kenntnis derzeit nicht. Bezahlen ist aber weitgehend <strong>bargeldlos (Karte)</strong> möglich. Tipp: Für den Waschsalon (Münzen) und kleinere Beträge bringen Sie am besten etwas Bargeld mit.',
-      'qn.familie':'👨‍👩‍👧‍👦 Für Familien','qn.ausflug':'🎡 Ausflugstipps','qn.events':'📅 Veranstaltungen','qn.abreise':'🧳 Vor der Abreise','qn.bewertung':'⭐ Bewertung',
+      'qn.familie':'👨‍👩‍👧‍👦 Für Familien','qn.strand':'🏖️ Strand','qn.ausflug':'🎡 Ausflugstipps','qn.events':'📅 Veranstaltungen','qn.abreise':'🧳 Vor der Abreise','qn.bewertung':'⭐ Bewertung',
+      'st.title':'Strand & Meer','st.lead':'Der Ostseestrand ist nur wenige Schritte entfernt – das Wasser ist wunderschön, aber jeden Tag anders.',
+      'st.kur.h':'Kurkarte','st.kur.p':'Für den Strand ist eine <strong>Kurkarte</strong> vorgesehen — halten Sie sie am besten bereit. Kontrollen sind allerdings selten.',
+      'st.safe.h':'Sicher baden – die Strandflaggen','st.safe.dlrg':'An den bewachten Abschnitten sorgt die <strong>DLRG</strong> für Sicherheit. Woran Sie erkennen, ob und wo Baden sicher ist:',
+      'st.flag.ry':'<strong>Rot-Gelb:</strong> bewachter Badebereich – Rettungsschwimmer im Dienst, hier baden.','st.flag.y':'<strong>Gelb:</strong> nur für geübte Schwimmer, erhöhte Vorsicht.','st.flag.r':'<strong>Rot:</strong> Baden verboten – Lebensgefahr.','st.flag.none':'<strong>Keine Flagge:</strong> keine Aufsicht – auf eigene Verantwortung.',
+      'st.wind':'<strong>Ablandiger Wind</strong> (vom Land aufs Meer) treibt alles schnell hinaus – uns hat er schon den einen oder anderen Ball gekostet. Aufblasbares und Kinder dann besonders im Blick behalten.',
+      'st.duenen.h':'Bitte die Dünen schützen','st.duenen.p':'Den Strand bitte <strong>nicht über die Dünen</strong> betreten, sondern nur die <strong>vorgesehenen Strandzugänge</strong> nutzen – so bleibt der Dünenschutz erhalten.',
+      'st.moewen.h':'Vorsicht, Möwen!','st.moewen.p':'Die Möwen werden gefühlt jedes Jahr dreister: Beim <strong>Fischbrötchen</strong>- und <strong>Brezel</strong>-Genuss am Strand also den Luftraum im Blick behalten 😉',
       'va.title':'Veranstaltungen <strong>in der Nähe</strong>','va.lead':'Feste, Märkte, Konzerte und mehr: Was während Ihres Aufenthalts in der Probstei los ist, sehen Sie im offiziellen Veranstaltungskalender.','va.btn':'📅 Zum Veranstaltungskalender',
       'tag.family':'Familie','tag.aktiv':'Aktiv','tag.rain':'Schlechtwetter','tag.ganztags':'Ganztags','tag.stadt':'Stadt','tag.genuss':'Genuss',
       'anf.title':'So finden Sie <strong>zu uns</strong>',
@@ -1102,7 +1159,14 @@ a:focus-visible, button:focus-visible, .btn:focus-visible, .lang-btn:focus-visib
       'qn.anfahrt':'🚗 Directions & Parking','qn.ankommen':'🔑 Arrival','qn.wetter':'🌤️ Weather','qn.grillen':'🔥 Barbecue','qn.waschen':'🧺 Laundry','qn.shop':'🛒 Shopping',
       'we.title':'Weather at Schönberger Strand','we.lead':'The forecast for the coming days – to help plan your holiday.','we.loading':'Loading weather data …','we.source':'Source: Open-Meteo · updates automatically','we.error':'Weather data is currently unavailable.',
       'ek.title':'Shopping','ek.edeka.h':'Edeka by the tourist office','ek.edeka.p':'Right by the tourist office (Käptn’s Gang 3) there is an <strong>Edeka</strong> supermarket — within easy walking distance.','ek.edeka.sb':'Also open in the evening as a self-service store (no staff) — as far as we know until around 8 PM.','ek.edeka.warn':'<strong>Please note:</strong> The car park there is partly paid and is monitored.','ek.edeka.btn':'🧭 Edeka on Google Maps','ek.schoenberg.h':'Fresh counter & more in Schönberg','ek.schoenberg.p':'For the <strong>fresh counter</strong> (meat, cheese) and larger shops, it’s best to drive to <strong>Schönberg</strong> — you’ll find everything there, including a <strong>Rossmann</strong> drugstore.','ek.geld.h':'Cash & payment','ek.geld.p':'As far as we know, there is currently no <strong>ATM</strong> here. However, <strong>cashless (card)</strong> payment is largely possible. Tip: bring some cash for the launderette (coins) and small amounts.',
-      'qn.familie':'👨‍👩‍👧‍👦 For Families','qn.ausflug':'🎡 Day Trips','qn.events':'📅 Events','qn.abreise':'🧳 Before Departure','qn.bewertung':'⭐ Review',
+      'qn.familie':'👨‍👩‍👧‍👦 For Families','qn.strand':'🏖️ Beach','qn.ausflug':'🎡 Day Trips','qn.events':'📅 Events','qn.abreise':'🧳 Before Departure','qn.bewertung':'⭐ Review',
+      'st.title':'Beach & Sea','st.lead':'The Baltic beach is just a few steps away – the water is beautiful, but different every day.',
+      'st.kur.h':'Spa card (Kurkarte)','st.kur.p':'A <strong>spa card (Kurkarte)</strong> is intended for the beach — best to keep it handy. Checks are rare, though.',
+      'st.safe.h':'Swim safely – the beach flags','st.safe.dlrg':'At the supervised sections, the <strong>DLRG</strong> lifeguards keep you safe. How to tell whether and where it’s safe to swim:',
+      'st.flag.ry':'<strong>Red & yellow:</strong> supervised bathing area – lifeguards on duty, swim here.','st.flag.y':'<strong>Yellow:</strong> experienced swimmers only, take extra care.','st.flag.r':'<strong>Red:</strong> bathing prohibited – danger to life.','st.flag.none':'<strong>No flag:</strong> no supervision – at your own risk.',
+      'st.wind':'<strong>Offshore wind</strong> (blowing from land out to sea) carries everything out quickly – it has already cost us the odd ball. Keep a close eye on inflatables and children then.',
+      'st.duenen.h':'Please protect the dunes','st.duenen.p':'Please do <strong>not</strong> cross the <strong>dunes</strong> to reach the beach – use only the <strong>designated beach accesses</strong> to help protect the dunes.',
+      'st.moewen.h':'Watch out for gulls!','st.moewen.p':'The gulls seem to get bolder every year: so keep an eye on the airspace while enjoying your <strong>fish roll</strong> or <strong>pretzel</strong> on the beach 😉',
       'va.title':'Events <strong>nearby</strong>','va.lead':'Festivals, markets, concerts and more: see what’s happening in the Probstei region during your stay in the official events calendar.','va.btn':'📅 To the events calendar',
       'tag.family':'Family','tag.aktiv':'Active','tag.rain':'Rainy day','tag.ganztags':'Full day','tag.stadt':'City','tag.genuss':'Treat',
       'anf.title':'How to <strong>find us</strong>',
@@ -1203,7 +1267,14 @@ a:focus-visible, button:focus-visible, .btn:focus-visible, .lang-btn:focus-visib
       'qn.anfahrt':'🚗 Cómo llegar y aparcar','qn.ankommen':'🔑 Llegada','qn.wetter':'🌤️ Tiempo','qn.grillen':'🔥 Barbacoa','qn.waschen':'🧺 Lavandería','qn.shop':'🛒 Compras',
       'we.title':'El tiempo en Schönberger Strand','we.lead':'La previsión para los próximos días – para planificar sus vacaciones.','we.loading':'Cargando datos meteorológicos …','we.source':'Fuente: Open-Meteo · se actualiza automáticamente','we.error':'Los datos meteorológicos no están disponibles en este momento.',
       'ek.title':'Compras','ek.edeka.h':'Edeka junto a la oficina de turismo','ek.edeka.p':'Justo al lado de la oficina de turismo (Käptn’s Gang 3) hay un <strong>Edeka</strong> — a poca distancia a pie.','ek.edeka.sb':'También por la tarde como tienda de autoservicio (sin personal) — que sepamos, hasta las 20:00 aprox.','ek.edeka.warn':'<strong>Atención:</strong> El aparcamiento allí es en parte de pago y está vigilado.','ek.edeka.btn':'🧭 Edeka en Google Maps','ek.schoenberg.h':'Mostrador de frescos y más en Schönberg','ek.schoenberg.p':'Para el <strong>mostrador de frescos</strong> (carne, queso) y compras más grandes, lo mejor es ir a <strong>Schönberg</strong> — allí hay de todo, incluida una droguería <strong>Rossmann</strong>.','ek.geld.h':'Efectivo y pago','ek.geld.p':'Que sepamos, actualmente no hay <strong>cajero automático</strong> aquí. Sin embargo, se puede pagar en gran medida <strong>sin efectivo (con tarjeta)</strong>. Consejo: traiga algo de efectivo para la lavandería (monedas) y pequeños importes.',
-      'qn.familie':'👨‍👩‍👧‍👦 Para familias','qn.ausflug':'🎡 Excursiones','qn.events':'📅 Eventos','qn.abreise':'🧳 Antes de salir','qn.bewertung':'⭐ Valoración',
+      'qn.familie':'👨‍👩‍👧‍👦 Para familias','qn.strand':'🏖️ Playa','qn.ausflug':'🎡 Excursiones','qn.events':'📅 Eventos','qn.abreise':'🧳 Antes de salir','qn.bewertung':'⭐ Valoración',
+      'st.title':'Playa y mar','st.lead':'La playa del Báltico está a pocos pasos – el agua es preciosa, pero cada día es diferente.',
+      'st.kur.h':'Tarjeta de baño (Kurkarte)','st.kur.p':'Para la playa está prevista una <strong>tarjeta de baño (Kurkarte)</strong> — mejor tenerla a mano. Aunque los controles son escasos.',
+      'st.safe.h':'Bañarse con seguridad – las banderas','st.safe.dlrg':'En los tramos vigilados, los socorristas de la <strong>DLRG</strong> velan por su seguridad. Cómo saber si y dónde es seguro bañarse:',
+      'st.flag.ry':'<strong>Rojo y amarillo:</strong> zona de baño vigilada – socorristas de servicio, báñese aquí.','st.flag.y':'<strong>Amarillo:</strong> solo para nadadores expertos, extreme la precaución.','st.flag.r':'<strong>Rojo:</strong> prohibido bañarse – peligro de muerte.','st.flag.none':'<strong>Sin bandera:</strong> sin vigilancia – bajo su propia responsabilidad.',
+      'st.wind':'El <strong>viento de tierra</strong> (que sopla hacia el mar) se lo lleva todo mar adentro rápidamente – ya nos ha costado algún que otro balón. Vigile entonces de cerca los flotadores y a los niños.',
+      'st.duenen.h':'Proteja las dunas, por favor','st.duenen.p':'Por favor, <strong>no</strong> acceda a la playa <strong>por las dunas</strong>, use solo los <strong>accesos previstos</strong> – así se protegen las dunas.',
+      'st.moewen.h':'¡Cuidado con las gaviotas!','st.moewen.p':'Las gaviotas parecen más atrevidas cada año: vigile el espacio aéreo mientras disfruta de su <strong>bocadillo de pescado</strong> o <strong>pretzel</strong> en la playa 😉',
       'va.title':'Eventos <strong>cercanos</strong>','va.lead':'Fiestas, mercados, conciertos y más: consulte en el calendario oficial de eventos qué ocurre en la región de Probstei durante su estancia.','va.btn':'📅 Ver el calendario de eventos',
       'tag.family':'Familia','tag.aktiv':'Activo','tag.rain':'Día de lluvia','tag.ganztags':'Día completo','tag.stadt':'Ciudad','tag.genuss':'Placer',
       'anf.title':'Cómo <strong>encontrarnos</strong>',
