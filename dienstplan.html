@@ -90,6 +90,12 @@ input,select,textarea{font:inherit;color:inherit}
 .dp-cal select.leer{color:#b8c4d0}
 .dp-cal select.konflikt{background:var(--dp-err-bg);border-color:#fca5a5;font-weight:600}
 .dp-cal select.abwesend{background:var(--dp-warn-bg);border-color:#fcd34d}
+.dp-plus{border:1px dashed #c3d3e2;background:transparent;color:#9fb3c6;border-radius:5px;
+  width:22px;height:20px;line-height:1;font-size:13px;padding:0;transition:.12s}
+.dp-plus:hover{border-color:var(--dp-accent);color:var(--dp-accent);background:var(--dp-accent-soft)}
+.dp-minus{border:none;background:transparent;color:#b8c4d0;font-size:13px;padding:0 3px;line-height:1}
+.dp-minus:hover{color:var(--dp-err)}
+.dp-cal td:has(.dp-minus) select{width:calc(100% - 18px)}
 .dp-feiername{font-size:10.5px;color:#9d174d;font-weight:500;display:block;line-height:1.2}
 
 /* ---- Badges & Meldungen ---- */
@@ -192,10 +198,10 @@ var BEREICHE = ['Station 17','Station 22','Station 24','Dialyse','ITS 28',
                 'ITS Franziskus','ZNA','Med. I'];
 /* Planungsansichten — bündeln Bereiche zu dem, was zusammen geplant wird */
 var ANSICHTEN = [
-  {id:'normal', name:'Normalstationen + Dialyse',
+  {id:'normal', name:'St. Joseph (17 · 22 · 24 · Dialyse · 28)',
    bereiche:['Station 17','Station 22','Station 24','Dialyse','ITS 28']},
-  {id:'fkh',    name:'ITS Franziskus', bereiche:['ITS Franziskus']},
-  {id:'alle',   name:'alle Bereiche',  bereiche:null}
+  {id:'fkh',    name:'Franziskus',    bereiche:['ITS Franziskus']},
+  {id:'alle',   name:'beide Standorte', bereiche:null}
 ];
 function ansichtBereiche(){
   var id = state.ansicht || 'normal';
@@ -326,7 +332,19 @@ function dienstGiltAm(d, datum){
   if(d.tage==='werktag') return !frei;
   if(d.tage==='we')      return frei;
   if(d.tage==='mosa')    return !so;            /* Mo–Sa, ohne Sonn-/Feiertag */
+  if(d.tage==='termine') return (d.termine||[]).indexOf(datum) >= 0;
   return true;
+}
+function istTerminDienst(d){ return d.tage === 'termine'; }
+function terminSetzen(d, datum, an){
+  if(!d.termine) d.termine = [];
+  var i = d.termine.indexOf(datum);
+  if(an && i < 0) d.termine.push(datum);
+  if(!an && i >= 0){
+    d.termine.splice(i,1);
+    slots(d).forEach(function(sk){ setzeBelegung(datum, sk, ''); });
+  }
+  d.termine.sort();
 }
 /* Alle Slot-Schlüssel eines Dienstes an einem Tag (bei Mehrfachbesetzung) */
 function slots(d){
@@ -614,7 +632,14 @@ function renderPlan(){
     aktiveDienste.forEach(function(d){
       slots(d).forEach(function(sk){
         if(!dienstGiltAm(d, datum)){
-          h += '<td style="background:#f8fafc"></td>';
+          if(istTerminDienst(d)){
+            h += '<td style="background:#fbfdff;text-align:center">'
+               + '<button class="dp-plus" title="Diesen Tag als zugewiesenen '
+               + esc(d.kurz)+' eintragen" onclick="dpTermin(\''+d.id+'\',\''+datum+'\',true)">+</button>'
+               + '</td>';
+          } else {
+            h += '<td style="background:#f8fafc"></td>';
+          }
           return;
         }
         var cur = belegung(datum, sk);
@@ -630,13 +655,19 @@ function renderPlan(){
           h += '<option value="'+p.id+'"'+(p.id===cur?' selected':'')+'>'
              + esc(p.name)+mark+'</option>';
         });
-        h += '</select></td>';
+        h += '</select>'
+           + (istTerminDienst(d)
+              ? '<button class="dp-minus" title="Zuweisung entfernen" onclick="dpTermin(\''
+                + d.id+'\',\''+datum+'\',false)">×</button>' : '')
+           + '</td>';
       });
     });
     h += '</tr>';
   }
   h += '</tbody></table></div></div>';
+  var hatTermin = aktiveDienste.some(istTerminDienst);
   h += '<div style="font-size:12px;color:var(--dp-mute)">'
+     + (hatTermin ? '<b>+</b> zugewiesenen Dienst eintragen · <b>×</b> Zuweisung entfernen · ' : '')
      + '⛱ abwesend · ✉ hat frei gewünscht · '
      + '<span style="background:var(--dp-err-bg);padding:1px 6px;border-radius:4px">rot</span> Regelverstoß · '
      + '<span style="background:var(--dp-warn-bg);padding:1px 6px;border-radius:4px">gelb</span> Hinweis</div>';
@@ -735,6 +766,7 @@ function renderDienste(){
        + '<option value="alle"'   +(d.tage==='alle'?' selected':'')   +'>täglich</option>'
        + '<option value="werktag"'+(d.tage==='werktag'?' selected':'')+'>Mo–Fr</option>'
        + '<option value="mosa"'   +(d.tage==='mosa'?' selected':'')   +'>Mo–Sa</option>'
+       + '<option value="termine"'+(d.tage==='termine'?' selected':'')+'>nur zugewiesene Termine</option>'
        + '<option value="we"'     +(d.tage==='we'?' selected':'')     +'>Wo.-ende/Feiertag</option>'
        + '</select></td>'
        + '<td><select onchange="dpD(\''+d.id+'\',\'quali\',this.value)">'
@@ -1061,6 +1093,11 @@ window.dpSetMonat = function(v){ state.monat = parseInt(v,10); aktualisieren(); 
 window.dpSetJahr  = function(v){ state.jahr  = parseInt(v,10); aktualisieren(); };
 window.dpSetze = function(datum, slotKey, pid){ setzeBelegung(datum, slotKey, pid); aktualisieren(); };
 window.dpAnsicht = function(id){ state.ansicht = id; aktualisieren(); };
+window.dpTermin = function(did, datum, an){
+  var d = dienst(did); if(!d) return;
+  terminSetzen(d, datum, an);
+  aktualisieren();
+};
 window.dpLeeren = function(){
   var pre = state.jahr+'-'+String(state.monat).padStart(2,'0');
   var sichtbar = {};
@@ -1332,7 +1369,8 @@ window.dpExportXLSX = function(){
   var dz = [ [{v:'Dienstmodelle', s:1}], [],
              ['Kürzel','Bezeichnung','Bereich','von','bis','Stunden','Tage','Qualifikation','Gruppe','Besetzung','Folgetag frei']
                .map(function(k){ return {v:k,s:2}; }) ];
-  var TG = {alle:'täglich', werktag:'Mo–Fr', mosa:'Mo–Sa', we:'Wochenende/Feiertag'};
+  var TG = {alle:'täglich', werktag:'Mo–Fr', mosa:'Mo–Sa', we:'Wochenende/Feiertag',
+            termine:'zugewiesene Termine'};
   state.dienste.forEach(function(d){
     dz.push([d.kurz, d.name, d.bereich, d.von, d.bis, d.std, TG[d.tage]||d.tage,
              d.quali==='FA'?'nur Facharzt':'beliebig', d.gruppe||'alle',
