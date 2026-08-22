@@ -199,6 +199,7 @@ var START_DIENSTE = [
 ];
 
 var state = {
+  regeln: { ruhezeit: 11 },        /* Mindestruhezeit in Stunden, tariflich änderbar */
   jahr: new Date().getFullYear(),
   monat: new Date().getMonth()+1,
   personen: [],
@@ -277,10 +278,12 @@ function pName(id){ var p=person(id); return p?p.name:'—'; }
 
 /* Gilt eine Dienstart an diesem Tag? */
 function dienstGiltAm(d, datum){
-  var frei = istFrei(datum);
-  if(d.tage==='alle') return true;
+  var frei = istFrei(datum);                    /* Sa, So oder Feiertag */
+  var so   = ausIso(datum).getDay() === 0 || !!feiertagName(datum);
+  if(d.tage==='alle')    return true;
   if(d.tage==='werktag') return !frei;
-  if(d.tage==='we') return frei;
+  if(d.tage==='we')      return frei;
+  if(d.tage==='mosa')    return !so;            /* Mo–Sa, ohne Sonn-/Feiertag */
   return true;
 }
 /* Alle Slot-Schlüssel eines Dienstes an einem Tag (bei Mehrfachbesetzung) */
@@ -316,42 +319,68 @@ function wunschAn(pid, datum){
 }
 
 /* ---------------- Regelprüfung ----------------
-   Geprüft werden:
-   1. Doppelbesetzung — eine Person zweimal am selben Tag
-   2. Dienst trotz Abwesenheit (Urlaub / Krank / Fortbildung)
-   3. Fehlende Facharztqualifikation
-   4. Ruhezeit nach ArbZG § 5 (11 h) — Dienstende zu Beginn des Folgedienstes
-   5. Unbesetzte Dienste
-   6. Verletzter Freiwunsch
+   1. Doppelbesetzung — zwei Dienste am selben Kalendertag
+   2. Dienst trotz Abwesenheit
+   3. Fehlende Qualifikation (Facharzt bzw. SBD-Berechtigung)
+   4. Ruhezeit nach ArbZG § 5 — Vorgabe unter „Regeln" einstellbar
+   5. Folgetag nach Bereitschaftsdienst nicht frei
+   6. Unbesetzte Dienste
+   7. Verletzter Freiwunsch
    ------------------------------------------------ */
-function dienstEndeMin(d){
-  var v = zeitMin(d.von), b = zeitMin(d.bis);
-  return b <= v ? b + 1440 : b;   /* über Mitternacht */
-}
 function zeitMin(t){
   if(!t) return 0;
   var p = String(t).split(':');
   return (+p[0]||0)*60 + (+p[1]||0);
 }
+function minZuZeit(m){
+  m = ((m % 1440) + 1440) % 1440;
+  return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
+}
+function dienstEndeMin(d){
+  var v = zeitMin(d.von), b = zeitMin(d.bis);
+  return b <= v ? b + 1440 : b;   /* über Mitternacht */
+}
 
-function pruefe(jahr, monat){
-  var probleme = [];
-  var tage = tageImMonat(jahr, monat);
-  var vorTag = {};   /* pid -> {datum, endeAbsolut} */
-
-  for(var t=1; t<=tage; t++){
-    var datum = jahr+'-'+String(monat).padStart(2,'0')+'-'+String(t).padStart(2,'0');
-    var heuteBelegt = {};   /* pid -> [dienstKurz] */
-
+/* Alle besetzten Dienste je Person, chronologisch, in Minuten relativ
+   zum Monatsersten. Vor- und Folgetag werden mitgelesen, damit
+   Monatsgrenzen keine Lücke in der Ruhezeitprüfung reißen. */
+function intervalle(jahr, monat){
+  var proPerson = {}, tage = tageImMonat(jahr, monat);
+  for(var off = -1; off <= tage; off++){
+    var datum = iso(new Date(jahr, monat-1, 1+off));
     for(var di=0; di<state.dienste.length; di++){
       var d = state.dienste[di];
       if(!dienstGiltAm(d, datum)) continue;
       var sl = slots(d);
-
       for(var si=0; si<sl.length; si++){
         var pid = belegung(datum, sl[si]);
+        if(!pid) continue;
+        (proPerson[pid] = proPerson[pid] || []).push({
+          von: off*1440 + zeitMin(d.von),
+          bis: off*1440 + dienstEndeMin(d),
+          d: d, datum: datum, tag: off
+        });
+      }
+    }
+  }
+  for(var k in proPerson) proPerson[k].sort(function(a,b){ return a.von - b.von; });
+  return proPerson;
+}
 
-        /* 5. unbesetzt */
+function pruefe(jahr, monat){
+  var probleme = [];
+  var tage = tageImMonat(jahr, monat);
+  var minRuhe = (state.regeln && state.regeln.ruhezeit ? state.regeln.ruhezeit : 11) * 60;
+
+  /* --- tagesbezogen: Besetzung, Abwesenheit, Qualifikation, Wünsche --- */
+  for(var t=1; t<=tage; t++){
+    var datum = jahr+'-'+String(monat).padStart(2,'0')+'-'+String(t).padStart(2,'0');
+    for(var di=0; di<state.dienste.length; di++){
+      var d = state.dienste[di];
+      if(!dienstGiltAm(d, datum)) continue;
+      var sl = slots(d);
+      for(var si=0; si<sl.length; si++){
+        var pid = belegung(datum, sl[si]);
         if(!pid){
           probleme.push({datum:datum, art:'unbesetzt', stufe:'warn',
             text:d.kurz+' ('+d.name+') ist nicht besetzt.'});
@@ -360,59 +389,78 @@ function pruefe(jahr, monat){
         var p = person(pid);
         if(!p) continue;
 
-        /* 1. Doppelbesetzung */
-        if(heuteBelegt[pid]){
-          probleme.push({datum:datum, art:'doppelt', stufe:'err', pid:pid,
-            text:p.name+' ist am selben Tag für '+heuteBelegt[pid].join(' und ')+' und '+d.kurz+' eingeteilt.'});
-        }
-        heuteBelegt[pid] = (heuteBelegt[pid]||[]).concat([d.kurz]);
-
-        /* 2. Abwesenheit */
         var abw = istAbwesend(pid, datum);
         if(abw){
           probleme.push({datum:datum, art:'abwesend', stufe:'err', pid:pid,
             text:p.name+' hat '+d.kurz+', ist aber als „'+abw+'" eingetragen.'});
         }
-
-        /* 3. Qualifikation */
         if(d.quali==='FA' && p.quali!=='FA'){
           probleme.push({datum:datum, art:'quali', stufe:'err', pid:pid,
             text:d.kurz+' verlangt Facharztstandard — '+p.name+' ist als '+p.quali+' geführt.'});
         }
-
-        /* 4. Ruhezeit 11 h */
-        var vt = vorTag[pid];
-        if(vt && d.std > 0){
-          var pause = (1440 - vt.ende) + zeitMin(d.von);
-          if(pause < 660){
-            probleme.push({datum:datum, art:'ruhezeit', stufe:'err', pid:pid,
-              text:p.name+': nur '+(pause/60).toFixed(1)+' h Ruhezeit vor '+d.kurz+
-                   ' (ArbZG § 5 verlangt 11 h) — Vordienst am '+dtKurz(vt.datum)+'.'});
-          }
+        if(d.quali==='SBD' && !p.sbd){
+          probleme.push({datum:datum, art:'quali', stufe:'err', pid:pid,
+            text:d.kurz+' darf nur von der dafür eingeteilten Gruppe besetzt werden — '
+                 +p.name+' ist dafür nicht freigegeben.'});
         }
-
-        /* 6. Freiwunsch verletzt */
         var w = wunschAn(pid, datum);
         if(w && w.typ==='frei'){
           probleme.push({datum:datum, art:'wunsch', stufe:'warn', pid:pid,
-            text:p.name+' hat für diesen Tag frei gewünscht'+(w.notiz?' ('+w.notiz+')':'')+', ist aber für '+d.kurz+' eingeteilt.'});
+            text:p.name+' hat für diesen Tag frei gewünscht'
+                 +(w.notiz?' ('+w.notiz+')':'')+', ist aber für '+d.kurz+' eingeteilt.'});
         }
       }
     }
+  }
 
-    /* Dienstenden für den Folgetag merken */
-    var neu = {};
-    for(var pid2 in heuteBelegt){
-      var maxEnde = 0;
-      for(var di2=0; di2<state.dienste.length; di2++){
-        var dd = state.dienste[di2];
-        if(heuteBelegt[pid2].indexOf(dd.kurz) < 0) continue;
-        if(dd.std === 0) continue;              /* Hintergrund zählt nicht */
-        maxEnde = Math.max(maxEnde, dienstEndeMin(dd));
+  /* --- personenbezogen: Doppelbesetzung, Ruhezeit, Folgetag --- */
+  var iv = intervalle(jahr, monat);
+  for(var pid2 in iv){
+    var p2 = person(pid2); if(!p2) continue;
+    var liste = iv[pid2];
+    for(var i=0; i<liste.length; i++){
+      var a = liste[i];
+      var imMonat = a.tag >= 1 && a.tag <= tage;
+
+      /* 5. Folgetag nach Bereitschaftsdienst */
+      if(a.d.folgetagFrei && imMonat){
+        for(var j=0; j<liste.length; j++){
+          if(liste[j].tag === a.tag + 1){
+            probleme.push({datum:a.datum, art:'folgetag', stufe:'err', pid:pid2,
+              text:p2.name+' hat nach '+a.d.kurz+' am Folgetag ('+dtKurz(liste[j].datum)
+                   +') '+liste[j].d.kurz+' — nach diesem Dienst ist der Folgetag frei.'});
+            break;
+          }
+        }
       }
-      if(maxEnde > 0) neu[pid2] = {datum:datum, ende:maxEnde};
+      if(i+1 >= liste.length) continue;
+      var b = liste[i+1];
+      if(!imMonat && !(b.tag >= 1 && b.tag <= tage)) continue;
+
+      /* 1. Doppelbesetzung — beide am selben Kalendertag */
+      if(a.tag === b.tag){
+        probleme.push({datum:b.datum, art:'doppelt', stufe:'err', pid:pid2,
+          text:p2.name+' ist am selben Tag für '+a.d.kurz+' und '+b.d.kurz+' eingeteilt.'});
+        continue;
+      }
+      /* 4. Ruhezeit — Dienste mit gleitendem Beginn rücken nach hinten,
+            statt die Ruhezeit zu verletzen (Frühdienst nach Spätdienst). */
+      var pause = b.von - a.bis;
+      if(a.d.std > 0 && b.d.std > 0 && pause < minRuhe){
+        var spaeterBeginn = a.bis + minRuhe;
+        if(b.d.gleitBeginn && spaeterBeginn < b.bis){
+          probleme.push({datum:b.datum, art:'gleit', stufe:'info', pid:pid2,
+            text:p2.name+' beginnt '+b.d.kurz+' erst um '+minZuZeit(spaeterBeginn)
+                 +' statt '+b.d.von+' — nach '+a.d.kurz+' am '+dtKurz(a.datum)
+                 +' ist so die Ruhezeit von '+(minRuhe/60)+' h gewahrt.'});
+        } else {
+          probleme.push({datum:b.datum, art:'ruhezeit', stufe:'err', pid:pid2,
+            text:p2.name+': nur '+(pause/60).toFixed(1)+' h zwischen '+a.d.kurz+' am '
+                 +dtKurz(a.datum)+' und '+b.d.kurz+' — verlangt sind '
+                 +(minRuhe/60)+' h (ArbZG § 5).'});
+        }
+      }
     }
-    vorTag = neu;
   }
   return probleme;
 }
@@ -439,7 +487,9 @@ function renderPlan(){
   var probIdx = {};
   probleme.forEach(function(p){
     if(p.art==='unbesetzt') return;
-    (probIdx[p.datum] = probIdx[p.datum] || {})[p.pid] = p.stufe;
+    var vorhanden = (probIdx[p.datum] = probIdx[p.datum] || {})[p.pid];
+    if(vorhanden === 'err') return;              /* Fehler hat Vorrang */
+    probIdx[p.datum][p.pid] = p.stufe;
   });
 
   var aktiveDienste = state.dienste.filter(function(d){ return true; });
@@ -476,11 +526,13 @@ function renderPlan(){
 
   var fehler = probleme.filter(function(p){ return p.stufe==='err'; }).length;
   var warn   = probleme.filter(function(p){ return p.stufe==='warn'; }).length;
+  var info   = probleme.filter(function(p){ return p.stufe==='info'; }).length;
   if(fehler || warn){
     h += '<div class="dp-msg '+(fehler?'dp-msg-err':'dp-msg-warn')+'">'
        + (fehler ? '<b>'+fehler+' Regelverstöße</b>' : '')
        + (fehler && warn ? ' · ' : '')
        + (warn ? warn+' Hinweise' : '')
+       + (info ? (fehler||warn ? ' · ' : '')+info+'× späterer Dienstbeginn' : '')
        + ' — Einzelheiten im Reiter <b>Prüfung</b>.</div>';
   } else {
     h += '<div class="dp-msg dp-msg-ok">Keine Regelverstöße in diesem Monat.</div>';
@@ -546,13 +598,13 @@ function renderPlan(){
 /* ---------------- Tab 2: Mitarbeiter ---------------- */
 function renderPersonen(){
   var h = '<div class="dp-card"><h2>Mitarbeiterinnen und Mitarbeiter</h2>'
-    + '<div class="dp-hint">VK-Anteile aus dem Besetzungsplan 06/2026 vorbelegt. '
-    + '<b>Die Qualifikation steht überall auf AiW und muss noch gepflegt werden</b> — '
-    + 'davon hängt ab, wer Facharzt-Dienste besetzen darf.</div>';
+    + '<div class="dp-hint">Die Spalte <b>SBD</b> legt fest, wer den Spätbereitschaftsdienst '
+    + 'auf der Intensivstation besetzen darf — dafür ist nur eine ausgewählte Gruppe freigegeben.</div>';
 
   h += '<div class="dp-tbl-wrap"><table class="dp-tbl"><thead><tr>'
      + '<th>Name</th><th style="width:80px">Kürzel</th><th style="width:80px">VK</th>'
      + '<th style="width:110px">Qualifikation</th><th style="width:170px">Primärbereich</th>'
+     + '<th style="width:90px" title="Darf den Spätbereitschaftsdienst besetzen">SBD</th>'
      + '<th style="width:70px">Aktiv</th><th style="width:50px"></th></tr></thead><tbody>';
 
   state.personen.forEach(function(p){
@@ -570,6 +622,8 @@ function renderPersonen(){
       h += '<option'+(p.bereich===b?' selected':'')+'>'+esc(b)+'</option>';
     });
     h += '</select></td>'
+       + '<td style="text-align:center"><input type="checkbox"'+(p.sbd?' checked':'')
+       + ' style="width:auto" onchange="dpP(\''+p.id+'\',\'sbd\',this.checked)"></td>'
        + '<td style="text-align:center"><input type="checkbox"'+(p.aktiv?' checked':'')
        + ' style="width:auto" onchange="dpP(\''+p.id+'\',\'aktiv\',this.checked)"></td>'
        + '<td><button class="dp-btn-sm dp-btn-danger" onclick="dpDelP(\''+p.id+'\')">✕</button></td>'
@@ -582,9 +636,11 @@ function renderPersonen(){
   var fa = state.personen.filter(function(p){ return p.aktiv && p.quali==='FA'; }).length;
   var vkSum = state.personen.filter(function(p){return p.aktiv;})
                 .reduce(function(a,p){ return a+(p.vk||0); },0);
+  var nSbd = state.personen.filter(function(p){ return p.aktiv && p.sbd; }).length;
   h += '<div class="dp-stats">'
      + '<div class="dp-stat"><div class="v">'+state.personen.filter(function(p){return p.aktiv;}).length+'</div><div class="l">aktive Personen</div></div>'
      + '<div class="dp-stat"><div class="v">'+fa+'</div><div class="l">davon Fachärzte</div></div>'
+     + '<div class="dp-stat"><div class="v">'+nSbd+'</div><div class="l">SBD-berechtigt</div></div>'
      + '<div class="dp-stat"><div class="v">'+vkSum.toFixed(2)+'</div><div class="l">Vollkräfte gesamt</div></div>'
      + '</div>';
   el('dp-p-pers').innerHTML = h;
@@ -600,8 +656,11 @@ function renderDienste(){
   h += '<div class="dp-tbl-wrap"><table class="dp-tbl"><thead><tr>'
      + '<th style="width:70px">Kürzel</th><th>Bezeichnung</th><th style="width:150px">Bereich</th>'
      + '<th style="width:80px">von</th><th style="width:80px">bis</th><th style="width:70px">Std.</th>'
-     + '<th style="width:110px">Tage</th><th style="width:105px">Qualifikation</th>'
-     + '<th style="width:70px">Anzahl</th><th style="width:50px"></th></tr></thead><tbody>';
+     + '<th style="width:110px">Tage</th><th style="width:125px">Qualifikation</th>'
+     + '<th style="width:70px">Anzahl</th>'
+     + '<th style="width:95px" title="Nach diesem Dienst ist der Folgetag dienstfrei">Folgetag frei</th>'
+     + '<th style="width:95px" title="Beginn rückt nach hinten, wenn sonst die Ruhezeit unterschritten würde">Gleit. Beginn</th>'
+     + '<th style="width:50px"></th></tr></thead><tbody>';
 
   state.dienste.forEach(function(d){
     h += '<tr>'
@@ -616,13 +675,19 @@ function renderDienste(){
        + '<td><select onchange="dpD(\''+d.id+'\',\'tage\',this.value)">'
        + '<option value="alle"'   +(d.tage==='alle'?' selected':'')   +'>täglich</option>'
        + '<option value="werktag"'+(d.tage==='werktag'?' selected':'')+'>Mo–Fr</option>'
+       + '<option value="mosa"'   +(d.tage==='mosa'?' selected':'')   +'>Mo–Sa</option>'
        + '<option value="we"'     +(d.tage==='we'?' selected':'')     +'>Wo.-ende/Feiertag</option>'
        + '</select></td>'
        + '<td><select onchange="dpD(\''+d.id+'\',\'quali\',this.value)">'
        + '<option value="egal"'+(d.quali==='egal'?' selected':'')+'>beliebig</option>'
        + '<option value="FA"'  +(d.quali==='FA'?' selected':'')  +'>nur Facharzt</option>'
+       + '<option value="SBD"' +(d.quali==='SBD'?' selected':'') +'>nur SBD-Gruppe</option>'
        + '</select></td>'
        + '<td><input type="number" min="1" max="8" class="dp-num" value="'+(d.anzahl||1)+'" onchange="dpD(\''+d.id+'\',\'anzahl\',parseInt(this.value,10))"></td>'
+       + '<td style="text-align:center"><input type="checkbox"'+(d.folgetagFrei?' checked':'')
+       + ' style="width:auto" onchange="dpD(\''+d.id+'\',\'folgetagFrei\',this.checked)"></td>'
+       + '<td style="text-align:center"><input type="checkbox"'+(d.gleitBeginn?' checked':'')
+       + ' style="width:auto" onchange="dpD(\''+d.id+'\',\'gleitBeginn\',this.checked)"></td>'
        + '<td><button class="dp-btn-sm dp-btn-danger" onclick="dpDelD(\''+d.id+'\')">✕</button></td>'
        + '</tr>';
   });
@@ -720,12 +785,24 @@ function renderCheck(){
     + 'Dienste trotz Abwesenheit, Facharztabdeckung, unbesetzte Dienste und verletzte Freiwünsche. '
     + 'Die Prüfung ersetzt weder die arbeitsrechtliche Freigabe noch die Beteiligung der Mitarbeitervertretung.</div>';
 
+  h += '<div class="dp-row" style="margin-bottom:13px;padding:9px 12px;background:#fafcfe;'
+     + 'border:1px solid var(--dp-line);border-radius:7px">'
+     + '<label style="font-size:12.5px;font-weight:600;color:var(--dp-mute)">Mindestruhezeit</label>'
+     + '<input type="number" min="6" max="16" step="0.5" style="width:70px;padding:5px 8px;'
+     + 'border:1px solid var(--dp-line);border-radius:6px" value="'
+     + (state.regeln && state.regeln.ruhezeit ? state.regeln.ruhezeit : 11) + '" '
+     + 'onchange="dpRuhezeit(this.value)"> <span style="font-size:12.5px">Stunden</span>'
+     + '<span style="font-size:12px;color:var(--dp-mute);margin-left:6px">'
+     + '(ArbZG § 5 verlangt 11 h; § 7 lässt tarifliche Verkürzung auf 10 h mit Ausgleich zu)</span></div>';
+
   var err  = probleme.filter(function(p){ return p.stufe==='err'; });
   var warn = probleme.filter(function(p){ return p.stufe==='warn'; });
 
+  var inf = probleme.filter(function(p){ return p.stufe==='info'; });
   h += '<div class="dp-stats" style="margin-bottom:14px">'
      + '<div class="dp-stat"><div class="v" style="color:var(--dp-err)">'+err.length+'</div><div class="l">Regelverstöße</div></div>'
      + '<div class="dp-stat"><div class="v" style="color:var(--dp-warn)">'+warn.length+'</div><div class="l">Hinweise</div></div>'
+     + '<div class="dp-stat"><div class="v" style="color:var(--dp-ok)">'+inf.length+'</div><div class="l">späterer Beginn</div></div>'
      + '</div>';
 
   if(!probleme.length){
@@ -738,16 +815,19 @@ function renderCheck(){
     ruhezeit:'Ruhezeit unter 11 h (ArbZG § 5)',
     doppelt:'Doppelbesetzung am selben Tag',
     abwesend:'Dienst trotz Abwesenheit',
-    quali:'Facharztqualifikation fehlt',
+    quali:'Qualifikation nicht erfüllt',
+    folgetag:'Folgetag nach Bereitschaftsdienst nicht frei',
+    gleit:'Späterer Dienstbeginn zur Wahrung der Ruhezeit',
     unbesetzt:'Unbesetzte Dienste',
     wunsch:'Freiwunsch nicht erfüllt'
   };
   Object.keys(GRUPPEN).forEach(function(art){
     var liste = probleme.filter(function(p){ return p.art===art; });
     if(!liste.length) return;
-    var istErr = liste[0].stufe==='err';
+    var stufe0 = liste[0].stufe;
+    var badge = stufe0==='err' ? 'dp-b-err' : (stufe0==='info' ? 'dp-b-ok' : 'dp-b-warn');
     h += '<h3 style="font-size:13.5px;margin:16px 0 7px">'
-       + '<span class="dp-badge '+(istErr?'dp-b-err':'dp-b-warn')+'">'+liste.length+'</span> '
+       + '<span class="dp-badge '+badge+'">'+liste.length+'</span> '
        + GRUPPEN[art]+'</h3>';
     h += '<div class="dp-tbl-wrap"><table class="dp-tbl"><tbody>';
     liste.slice(0,60).forEach(function(p){
@@ -924,6 +1004,11 @@ window.dpLeeren = function(){
   aktualisieren();
 };
 
+window.dpRuhezeit = function(v){
+  if(!state.regeln) state.regeln = {};
+  state.regeln.ruhezeit = parseFloat(v) || 11;
+  aktualisieren();
+};
 window.dpP = function(id, feld, wert){ var p=person(id); if(p){ p[feld]=wert; aktualisieren(); } };
 window.dpAddP = function(){
   state.personen.push({id:'p'+Date.now(), name:'Neue Person', kurz:'NEU', vk:1,
@@ -1152,20 +1237,22 @@ window.dpExportXLSX = function(){
 
   /* --- 4. Mitarbeiter --- */
   var mz = [ [{v:'Mitarbeiterstamm', s:1}], [],
-             ['Name','Kürzel','VK','Qualifikation','Primärbereich','Aktiv'].map(function(k){ return {v:k,s:2}; }) ];
+             ['Name','Kürzel','VK','Qualifikation','Primärbereich','SBD-berechtigt','Aktiv'].map(function(k){ return {v:k,s:2}; }) ];
   state.personen.forEach(function(p){
-    mz.push([p.name, p.kurz, p.vk, p.quali==='FA'?'Facharzt':'AiW', p.bereich, p.aktiv?'ja':'nein']);
+    mz.push([p.name, p.kurz, p.vk, p.quali==='FA'?'Facharzt':'AiW', p.bereich,
+             p.sbd?'ja':'nein', p.aktiv?'ja':'nein']);
   });
   blaetter.push({name:'Mitarbeiter', zeilen:mz});
 
   /* --- 5. Dienstmodelle --- */
   var dz = [ [{v:'Dienstmodelle', s:1}], [],
-             ['Kürzel','Bezeichnung','Bereich','von','bis','Stunden','Tage','Qualifikation','Besetzung']
+             ['Kürzel','Bezeichnung','Bereich','von','bis','Stunden','Tage','Qualifikation','Besetzung','Folgetag frei']
                .map(function(k){ return {v:k,s:2}; }) ];
-  var TG = {alle:'täglich', werktag:'Mo–Fr', we:'Wochenende/Feiertag'};
+  var TG = {alle:'täglich', werktag:'Mo–Fr', mosa:'Mo–Sa', we:'Wochenende/Feiertag'};
   state.dienste.forEach(function(d){
     dz.push([d.kurz, d.name, d.bereich, d.von, d.bis, d.std, TG[d.tage]||d.tage,
-             d.quali==='FA'?'nur Facharzt':'beliebig', d.anzahl||1]);
+             d.quali==='FA'?'nur Facharzt':(d.quali==='SBD'?'nur SBD-Gruppe':'beliebig'),
+             d.anzahl||1, d.folgetagFrei?'ja':'nein']);
   });
   blaetter.push({name:'Dienstmodelle', zeilen:dz});
 
