@@ -825,8 +825,24 @@ function renderAbw(){
 }
 
 /* ---------------- Tab 5: Wünsche ---------------- */
+var wunschMeldung = null;      /* {text, farbe} — überlebt das Neurendern */
 function renderWunsch(){
-  var h = '<div class="dp-card"><h2>Dienstplanwünsche</h2>'
+  var h = '<div class="dp-card"><h2>Wünsche aus einer Mail übernehmen</h2>'
+    + '<div class="dp-hint">Den Textblock aus der Mail hier einfügen — er beginnt mit '
+    + '<code>#WUNSCH</code> und stammt aus der Seite <b>Dienstwünsche</b>, die an die '
+    + 'Mitarbeiter verteilt wird. Mehrere Blöcke auf einmal sind möglich.</div>'
+    + '<textarea id="dp-w-import" rows="5" placeholder="#WUNSCH Younes 11/2026&#10;'
+    + 'frei 2026-11-14..2026-11-16 !&#10;dienst 2026-11-07&#10;#ENDE" '
+    + 'style="width:100%;padding:9px 11px;border:1px solid var(--dp-line);border-radius:7px;'
+    + 'font:12.5px/1.5 ui-monospace,Menlo,Consolas,monospace;background:#fbfdff;resize:vertical">'
+    + '</textarea>'
+    + '<div class="dp-row" style="margin-top:9px">'
+    + '<button class="dp-btn-sm" onclick="dpWunschImport()">Wünsche übernehmen</button>'
+    + '<span id="dp-w-meldung" style="font-size:12.5px;font-weight:600'
+    + (wunschMeldung ? ';color:'+wunschMeldung.farbe : '') + '">'
+    + (wunschMeldung ? esc(wunschMeldung.text) : '') + '</span></div></div>'
+
+    + '<div class="dp-card"><h2>Dienstplanwünsche</h2>'
     + '<div class="dp-hint">Frei- und Dienstwünsche der Mitarbeiter. Ein verletzter Freiwunsch '
     + 'erscheint in der Prüfung als Hinweis (nicht als Verstoß) und geht in die Wunscherfüllungsquote ein.</div>'
     + '<div class="dp-row" style="margin-bottom:14px;align-items:flex-end">'
@@ -1172,6 +1188,69 @@ window.dpAddAbw = function(){
 };
 window.dpDelAbw = function(id){
   state.abwesenheit = state.abwesenheit.filter(function(a){ return a.id!==id; }); aktualisieren();
+};
+/* Textblöcke aus der Wunsch-Seite einlesen.
+   #WUNSCH <Name> <M>/<JJJJ>
+   frei|dienst JJJJ-MM-TT[..JJJJ-MM-TT] [!]
+   #ENDE                                                        */
+window.dpWunschImport = function(){
+  var feld = el('dp-w-import'), roh = (feld ? feld.value : '').trim();
+  function sag(txt, farbe){
+    wunschMeldung = {text:txt, farbe:farbe};
+    var m = el('dp-w-meldung');
+    if(m){ m.textContent = txt; m.style.color = farbe; }
+  }
+  if(!roh){ sag('Bitte zuerst den Text aus der Mail einfügen.', 'var(--dp-warn)'); return; }
+
+  var zeilen = roh.split(/\r?\n/);
+  var aktuell = null, neu = 0, ersetzt = 0, unbekannt = [], ohnePerson = [];
+
+  zeilen.forEach(function(z){
+    z = z.trim();
+    if(!z || z === '#ENDE') return;
+    var k = z.match(/^#WUNSCH\s+(.+?)\s+(\d{1,2})\/(\d{4})\s*$/i);
+    if(k){
+      var suche = k[1].trim().toLowerCase();
+      aktuell = null;
+      for(var i=0;i<state.personen.length;i++){
+        if(state.personen[i].name.trim().toLowerCase() === suche){ aktuell = state.personen[i]; break; }
+      }
+      if(!aktuell && ohnePerson.indexOf(k[1].trim()) < 0) ohnePerson.push(k[1].trim());
+      return;
+    }
+    var w = z.match(/^(frei|dienst)\s+(\d{4}-\d{2}-\d{2})(?:\s*\.\.\s*(\d{4}-\d{2}-\d{2}))?\s*(!)?\s*(?:\((.*)\))?$/i);
+    if(!w){ unbekannt.push(z); return; }
+    if(!aktuell) return;
+    var von = w[2], bis = w[3] || w[2];
+    if(bis < von){ var t = von; von = bis; bis = t; }
+    /* gleiche Person, gleicher Zeitraum: ersetzen statt doppeln */
+    var vorher = state.wuensche.length;
+    state.wuensche = state.wuensche.filter(function(x){
+      return !(x.pid === aktuell.id && x.von === von && x.bis === bis);
+    });
+    if(state.wuensche.length < vorher) ersetzt++;
+    state.wuensche.push({ id:'w'+Date.now()+'_'+neu, pid:aktuell.id, von:von, bis:bis,
+                          typ:w[1].toLowerCase(), prio:w[4] ? 'hoch' : 'normal',
+                          notiz:(w[5]||'').trim() });
+    neu++;
+  });
+
+  if(!neu && ohnePerson.length){
+    sag('Kein Treffer: „'+ohnePerson.join('", „')+'" steht nicht im Mitarbeiterstamm. '
+        +'Name dort anlegen oder Schreibweise angleichen.', 'var(--dp-err)');
+    return;
+  }
+  if(!neu){
+    sag('Nichts erkannt — beginnt der Text mit #WUNSCH?', 'var(--dp-err)');
+    return;
+  }
+  feld.value = '';
+  var txt = neu+' '+(neu===1?'Wunsch':'Wünsche')+' übernommen';
+  if(ersetzt)          txt += ', '+ersetzt+' davon aktualisiert';
+  if(ohnePerson.length) txt += ' · unbekannt: '+ohnePerson.join(', ');
+  if(unbekannt.length)  txt += ' · '+unbekannt.length+' Zeile(n) übersprungen';
+  sag(txt, ohnePerson.length ? 'var(--dp-warn)' : 'var(--dp-ok)');
+  aktualisieren();
 };
 window.dpAddW = function(){
   var p=el('dp-w-p').value, v=el('dp-w-von').value, b=el('dp-w-bis').value;
