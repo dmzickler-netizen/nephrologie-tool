@@ -202,6 +202,18 @@ function ansichtBereiche(){
   for(var i=0;i<ANSICHTEN.length;i++) if(ANSICHTEN[i].id===id) return ANSICHTEN[i].bereiche;
   return null;
 }
+/* Dienstgruppen ergeben sich aus den Dienstarten — keine eigene Verwaltung. */
+function alleGruppen(){
+  var g = [];
+  state.dienste.forEach(function(d){
+    if(d.gruppe && g.indexOf(d.gruppe) < 0) g.push(d.gruppe);
+  });
+  return g.sort();
+}
+function inGruppe(p, name){
+  if(!name) return true;
+  return !!(p.gruppen && p.gruppen.indexOf(name) >= 0);
+}
 function dienstInAnsicht(d){
   var b = ansichtBereiche();
   return !b || b.indexOf(d.bereich) >= 0;
@@ -232,10 +244,22 @@ function speichern(){
   try { localStorage.setItem(LS_KEY, JSON.stringify(state)); }
   catch(e){ console.warn('Speichern fehlgeschlagen', e); }
 }
+function migriere(){
+  /* frühere Einzelmarkierung sbd -> allgemeine Gruppenliste */
+  state.personen.forEach(function(p){
+    if(!p.gruppen) p.gruppen = [];
+    if(p.sbd && p.gruppen.indexOf('SBD') < 0) p.gruppen.push('SBD');
+    delete p.sbd;
+  });
+  state.dienste.forEach(function(d){
+    if(d.quali === 'SBD'){ d.gruppe = 'SBD'; d.quali = 'egal'; }
+  });
+}
 function laden(){
   try {
     var raw = localStorage.getItem(LS_KEY);
-    if(raw){ var s=JSON.parse(raw); for(var k in s) if(s.hasOwnProperty(k)) state[k]=s[k]; return true; }
+    if(raw){ var s=JSON.parse(raw); for(var k in s) if(s.hasOwnProperty(k)) state[k]=s[k];
+             migriere(); return true; }
   } catch(e){ console.warn('Laden fehlgeschlagen', e); }
   return false;
 }
@@ -416,10 +440,10 @@ function pruefe(jahr, monat){
           probleme.push({datum:datum, art:'quali', stufe:'err', pid:pid,
             text:d.kurz+' verlangt Facharztstandard — '+p.name+' ist als '+p.quali+' geführt.'});
         }
-        if(d.quali==='SBD' && !p.sbd){
+        if(d.gruppe && !inGruppe(p, d.gruppe)){
           probleme.push({datum:datum, art:'quali', stufe:'err', pid:pid,
-            text:d.kurz+' darf nur von der dafür eingeteilten Gruppe besetzt werden — '
-                 +p.name+' ist dafür nicht freigegeben.'});
+            text:d.kurz+' ist der Gruppe „'+d.gruppe+'" vorbehalten — '
+                 +p.name+' gehört nicht dazu.'});
         }
         var w = wunschAn(pid, datum);
         if(w && w.typ==='frei'){
@@ -622,14 +646,17 @@ function renderPlan(){
 
 /* ---------------- Tab 2: Mitarbeiter ---------------- */
 function renderPersonen(){
+  var gruppen = alleGruppen();
   var h = '<div class="dp-card"><h2>Mitarbeiterinnen und Mitarbeiter</h2>'
-    + '<div class="dp-hint">Die Spalte <b>SBD</b> legt fest, wer den Spätbereitschaftsdienst '
-    + 'auf der Intensivstation besetzen darf — dafür ist nur eine ausgewählte Gruppe freigegeben.</div>';
+    + '<div class="dp-hint">Die Spalten rechts sind <b>Dienstgruppen</b>: Sie legen fest, wer '
+    + 'Dienste besetzen darf, die einer festen Gruppe vorbehalten sind. Die Gruppen ergeben sich '
+    + 'aus den Dienstmodellen — dort im Feld <b>Gruppe</b> eintragen.</div>';
 
   h += '<div class="dp-tbl-wrap"><table class="dp-tbl"><thead><tr>'
      + '<th>Name</th><th style="width:80px">Kürzel</th><th style="width:80px">VK</th>'
      + '<th style="width:110px">Qualifikation</th><th style="width:170px">Primärbereich</th>'
-     + '<th style="width:90px" title="Darf den Spätbereitschaftsdienst besetzen">SBD</th>'
+     + gruppen.map(function(g){
+         return '<th style="width:80px" title="Gehört zur Gruppe '+esc(g)+'">'+esc(g)+'</th>'; }).join('')
      + '<th style="width:70px">Aktiv</th><th style="width:50px"></th></tr></thead><tbody>';
 
   state.personen.forEach(function(p){
@@ -647,8 +674,10 @@ function renderPersonen(){
       h += '<option'+(p.bereich===b?' selected':'')+'>'+esc(b)+'</option>';
     });
     h += '</select></td>'
-       + '<td style="text-align:center"><input type="checkbox"'+(p.sbd?' checked':'')
-       + ' style="width:auto" onchange="dpP(\''+p.id+'\',\'sbd\',this.checked)"></td>'
+       + gruppen.map(function(g){
+           return '<td style="text-align:center"><input type="checkbox"'
+                + (inGruppe(p,g)?' checked':'')+' style="width:auto" '
+                + 'onchange="dpGruppe(\''+p.id+'\',\''+g+'\',this.checked)"></td>'; }).join('')
        + '<td style="text-align:center"><input type="checkbox"'+(p.aktiv?' checked':'')
        + ' style="width:auto" onchange="dpP(\''+p.id+'\',\'aktiv\',this.checked)"></td>'
        + '<td><button class="dp-btn-sm dp-btn-danger" onclick="dpDelP(\''+p.id+'\')">✕</button></td>'
@@ -661,11 +690,15 @@ function renderPersonen(){
   var fa = state.personen.filter(function(p){ return p.aktiv && p.quali==='FA'; }).length;
   var vkSum = state.personen.filter(function(p){return p.aktiv;})
                 .reduce(function(a,p){ return a+(p.vk||0); },0);
-  var nSbd = state.personen.filter(function(p){ return p.aktiv && p.sbd; }).length;
+  var gruppenZahl = gruppen.map(function(g){
+    return {g:g, n:state.personen.filter(function(p){ return p.aktiv && inGruppe(p,g); }).length};
+  });
   h += '<div class="dp-stats">'
      + '<div class="dp-stat"><div class="v">'+state.personen.filter(function(p){return p.aktiv;}).length+'</div><div class="l">aktive Personen</div></div>'
      + '<div class="dp-stat"><div class="v">'+fa+'</div><div class="l">davon Fachärzte</div></div>'
-     + '<div class="dp-stat"><div class="v">'+nSbd+'</div><div class="l">SBD-berechtigt</div></div>'
+     + gruppenZahl.map(function(x){
+         return '<div class="dp-stat"><div class="v">'+x.n+'</div><div class="l">in Gruppe '
+              + esc(x.g)+'</div></div>'; }).join('')
      + '<div class="dp-stat"><div class="v">'+vkSum.toFixed(2)+'</div><div class="l">Vollkräfte gesamt</div></div>'
      + '</div>';
   el('dp-p-pers').innerHTML = h;
@@ -681,7 +714,8 @@ function renderDienste(){
   h += '<div class="dp-tbl-wrap"><table class="dp-tbl"><thead><tr>'
      + '<th style="width:70px">Kürzel</th><th>Bezeichnung</th><th style="width:150px">Bereich</th>'
      + '<th style="width:80px">von</th><th style="width:80px">bis</th><th style="width:70px">Std.</th>'
-     + '<th style="width:110px">Tage</th><th style="width:125px">Qualifikation</th>'
+     + '<th style="width:110px">Tage</th><th style="width:110px">Qualifikation</th>'
+     + '<th style="width:95px" title="Nur Personen dieser Gruppe dürfen den Dienst besetzen">Gruppe</th>'
      + '<th style="width:70px">Anzahl</th>'
      + '<th style="width:95px" title="Nach diesem Dienst ist der Folgetag dienstfrei">Folgetag frei</th>'
      + '<th style="width:95px" title="Beginn rückt nach hinten, wenn sonst die Ruhezeit unterschritten würde">Gleit. Beginn</th>'
@@ -706,8 +740,9 @@ function renderDienste(){
        + '<td><select onchange="dpD(\''+d.id+'\',\'quali\',this.value)">'
        + '<option value="egal"'+(d.quali==='egal'?' selected':'')+'>beliebig</option>'
        + '<option value="FA"'  +(d.quali==='FA'?' selected':'')  +'>nur Facharzt</option>'
-       + '<option value="SBD"' +(d.quali==='SBD'?' selected':'') +'>nur SBD-Gruppe</option>'
        + '</select></td>'
+       + '<td><input value="'+esc(d.gruppe||'')+'" placeholder="alle" '
+       + 'onchange="dpD(\''+d.id+'\',\'gruppe\',this.value.trim())"></td>'
        + '<td><input type="number" min="1" max="8" class="dp-num" value="'+(d.anzahl||1)+'" onchange="dpD(\''+d.id+'\',\'anzahl\',parseInt(this.value,10))"></td>'
        + '<td style="text-align:center"><input type="checkbox"'+(d.folgetagFrei?' checked':'')
        + ' style="width:auto" onchange="dpD(\''+d.id+'\',\'folgetagFrei\',this.checked)"></td>'
@@ -1049,6 +1084,14 @@ window.dpRuhezeit = function(v){
   state.regeln.ruhezeit = parseFloat(v) || 11;
   aktualisieren();
 };
+window.dpGruppe = function(pid, name, an){
+  var p = person(pid); if(!p) return;
+  if(!p.gruppen) p.gruppen = [];
+  var i = p.gruppen.indexOf(name);
+  if(an && i < 0) p.gruppen.push(name);
+  if(!an && i >= 0) p.gruppen.splice(i,1);
+  aktualisieren();
+};
 window.dpP = function(id, feld, wert){ var p=person(id); if(p){ p[feld]=wert; aktualisieren(); } };
 window.dpAddP = function(){
   state.personen.push({id:'p'+Date.now(), name:'Neue Person', kurz:'NEU', vk:1,
@@ -1126,6 +1169,7 @@ window.dpImportJSON = function(input){
       if(!s.personen || !s.dienste) throw new Error('Unerwarteter Dateiaufbau');
       if(!confirm('Gesicherten Stand laden? Die aktuellen Daten in diesem Browser werden ersetzt.')) return;
       for(var k in s) if(s.hasOwnProperty(k)) state[k] = s[k];
+      migriere();
       aktualisieren();
       alert('Stand geladen: '+state.personen.length+' Personen, '+state.dienste.length+' Dienstarten.');
     } catch(e){ alert('Die Datei konnte nicht gelesen werden: '+e.message); }
@@ -1277,21 +1321,21 @@ window.dpExportXLSX = function(){
 
   /* --- 4. Mitarbeiter --- */
   var mz = [ [{v:'Mitarbeiterstamm', s:1}], [],
-             ['Name','Kürzel','VK','Qualifikation','Primärbereich','SBD-berechtigt','Aktiv'].map(function(k){ return {v:k,s:2}; }) ];
+             ['Name','Kürzel','VK','Qualifikation','Primärbereich','Gruppen','Aktiv'].map(function(k){ return {v:k,s:2}; }) ];
   state.personen.forEach(function(p){
     mz.push([p.name, p.kurz, p.vk, p.quali==='FA'?'Facharzt':'AiW', p.bereich,
-             p.sbd?'ja':'nein', p.aktiv?'ja':'nein']);
+             (p.gruppen||[]).join(', '), p.aktiv?'ja':'nein']);
   });
   blaetter.push({name:'Mitarbeiter', zeilen:mz});
 
   /* --- 5. Dienstmodelle --- */
   var dz = [ [{v:'Dienstmodelle', s:1}], [],
-             ['Kürzel','Bezeichnung','Bereich','von','bis','Stunden','Tage','Qualifikation','Besetzung','Folgetag frei']
+             ['Kürzel','Bezeichnung','Bereich','von','bis','Stunden','Tage','Qualifikation','Gruppe','Besetzung','Folgetag frei']
                .map(function(k){ return {v:k,s:2}; }) ];
   var TG = {alle:'täglich', werktag:'Mo–Fr', mosa:'Mo–Sa', we:'Wochenende/Feiertag'};
   state.dienste.forEach(function(d){
     dz.push([d.kurz, d.name, d.bereich, d.von, d.bis, d.std, TG[d.tage]||d.tage,
-             d.quali==='FA'?'nur Facharzt':(d.quali==='SBD'?'nur SBD-Gruppe':'beliebig'),
+             d.quali==='FA'?'nur Facharzt':'beliebig', d.gruppe||'alle',
              d.anzahl||1, d.folgetagFrei?'ja':'nein']);
   });
   blaetter.push({name:'Dienstmodelle', zeilen:dz});
