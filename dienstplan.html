@@ -188,7 +188,24 @@ var LS_KEY = 'dp_nephro_v1';
    GitHub Pages. Der Mitarbeiterstamm wird über „↑ Laden" aus der
    JSON-Sicherung eingelesen, die im geschützten Ordner liegt.
    ---------------------------------------------------------------- */
-var BEREICHE = ['ITS Franziskus','ITS 28','Normalstation','Dialyse','ZNA','St. 17','Med. I','Gegenrotant'];
+var BEREICHE = ['Station 17','Station 22','Station 24','Dialyse','ITS 28',
+                'ITS Franziskus','ZNA','Med. I'];
+/* Planungsansichten — bündeln Bereiche zu dem, was zusammen geplant wird */
+var ANSICHTEN = [
+  {id:'normal', name:'Normalstationen + Dialyse',
+   bereiche:['Station 17','Station 22','Station 24','Dialyse','ITS 28']},
+  {id:'fkh',    name:'ITS Franziskus', bereiche:['ITS Franziskus']},
+  {id:'alle',   name:'alle Bereiche',  bereiche:null}
+];
+function ansichtBereiche(){
+  var id = state.ansicht || 'normal';
+  for(var i=0;i<ANSICHTEN.length;i++) if(ANSICHTEN[i].id===id) return ANSICHTEN[i].bereiche;
+  return null;
+}
+function dienstInAnsicht(d){
+  var b = ansichtBereiche();
+  return !b || b.indexOf(d.bereich) >= 0;
+}
 
 /* Dienstmodelle — Vorbelegung, von der Dienstplanerin überschreibbar. */
 var START_DIENSTE = [
@@ -199,7 +216,8 @@ var START_DIENSTE = [
 ];
 
 var state = {
-  regeln: { ruhezeit: 11 },        /* Mindestruhezeit in Stunden, tariflich änderbar */
+  regeln: { ruhezeit: 11 },
+  ansicht: 'normal',               /* welcher Plan gerade bearbeitet wird */        /* Mindestruhezeit in Stunden, tariflich änderbar */
   jahr: new Date().getFullYear(),
   monat: new Date().getMonth()+1,
   personen: [],
@@ -492,7 +510,7 @@ function renderPlan(){
     probIdx[p.datum][p.pid] = p.stufe;
   });
 
-  var aktiveDienste = state.dienste.filter(function(d){ return true; });
+  var aktiveDienste = state.dienste.filter(dienstInAnsicht);
   var h = '';
 
   h += '<div class="dp-toolbar">'
@@ -504,14 +522,21 @@ function renderPlan(){
      + '<input type="number" value="'+j+'" min="2020" max="2099" style="width:82px" '
      + 'onchange="dpSetJahr(this.value)">'
      + '<button class="dp-btn-sm" onclick="dpMonat(1)">Folgemonat ›</button>'
+     + '<span style="margin-left:14px;font-size:12.5px;font-weight:600;color:var(--dp-mute)">Plan</span>'
+     + '<select onchange="dpAnsicht(this.value)">'
+     + ANSICHTEN.map(function(a){
+         return '<option value="'+a.id+'"'+((state.ansicht||'normal')===a.id?' selected':'')
+              + '>'+esc(a.name)+'</option>'; }).join('')
+     + '</select>'
      + '<div class="dp-spacer"></div>'
      + '<button class="dp-btn-sm" onclick="dpLeeren()">Monat leeren</button>'
      + '<button class="dp-btn-sm" onclick="window.print()">Drucken</button>'
      + '</div>';
 
-  if(!state.dienste.length){
-    el('dp-p-plan').innerHTML = h + '<div class="dp-empty">Noch keine Dienstmodelle angelegt — '
-      + 'bitte zuerst im Reiter <b>Dienstmodelle</b> festlegen, welche Dienste es gibt.</div>';
+  if(!aktiveDienste.length){
+    el('dp-p-plan').innerHTML = h + '<div class="dp-empty">Für diesen Plan sind noch keine '
+      + 'Dienstarten angelegt — im Reiter <b>Dienstmodelle</b> ergänzen und dort den '
+      + 'passenden Bereich zuordnen.</div>';
     return;
   }
   if(!state.personen.length){
@@ -781,9 +806,12 @@ function dtLang(datum){
 function renderCheck(){
   var probleme = pruefe(state.jahr, state.monat);
   var h = '<div class="dp-card"><h2>Regelprüfung — '+MONATSNAME[state.monat-1]+' '+state.jahr+'</h2>'
-    + '<div class="dp-hint">Geprüft werden Ruhezeit nach ArbZG § 5 (11 h), Doppelbesetzungen, '
-    + 'Dienste trotz Abwesenheit, Facharztabdeckung, unbesetzte Dienste und verletzte Freiwünsche. '
-    + 'Die Prüfung ersetzt weder die arbeitsrechtliche Freigabe noch die Beteiligung der Mitarbeitervertretung.</div>';
+    + '<div class="dp-hint"><b>Die Prüfung rechnet über alle Bereiche hinweg</b> — auch über die '
+    + 'Planansicht hinaus, damit ein Franziskus-Einsatz am Vortag in der Ruhezeit mitzählt. '
+    + 'Geprüft werden Ruhezeit (ArbZG § 5), Doppelbesetzungen, Dienste trotz Abwesenheit, '
+    + 'Qualifikation, Folgetag nach Bereitschaftsdienst, offene Dienste und Freiwünsche. '
+    + 'Sie ersetzt weder die arbeitsrechtliche Freigabe noch die Beteiligung der '
+    + 'Mitarbeitervertretung.</div>';
 
   h += '<div class="dp-row" style="margin-bottom:13px;padding:9px 12px;background:#fafcfe;'
      + 'border:1px solid var(--dp-line);border-radius:7px">'
@@ -997,10 +1025,22 @@ window.dpMonat = function(delta){
 window.dpSetMonat = function(v){ state.monat = parseInt(v,10); aktualisieren(); };
 window.dpSetJahr  = function(v){ state.jahr  = parseInt(v,10); aktualisieren(); };
 window.dpSetze = function(datum, slotKey, pid){ setzeBelegung(datum, slotKey, pid); aktualisieren(); };
+window.dpAnsicht = function(id){ state.ansicht = id; aktualisieren(); };
 window.dpLeeren = function(){
   var pre = state.jahr+'-'+String(state.monat).padStart(2,'0');
-  if(!confirm('Alle Besetzungen im '+MONATSNAME[state.monat-1]+' '+state.jahr+' löschen?')) return;
-  Object.keys(state.plan).forEach(function(k){ if(k.indexOf(pre)===0) delete state.plan[k]; });
+  var sichtbar = {};
+  state.dienste.filter(dienstInAnsicht).forEach(function(d){
+    slots(d).forEach(function(sk){ sichtbar[sk]=1; });
+  });
+  if(!confirm('Alle Besetzungen dieses Plans im '+MONATSNAME[state.monat-1]+' '
+              +state.jahr+' löschen? Andere Bereiche bleiben unberührt.')) return;
+  Object.keys(state.plan).forEach(function(k){
+    if(k.indexOf(pre)!==0) return;
+    Object.keys(state.plan[k]).forEach(function(sk){
+      if(sichtbar[sk]) delete state.plan[k][sk];
+    });
+    if(Object.keys(state.plan[k]).length===0) delete state.plan[k];
+  });
   aktualisieren();
 };
 
