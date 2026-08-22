@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dienstplan — Nephrologie &amp; Int. Intensivmedizin</title>
+<style>
+:root{
+  --dp-bg:#f4f6f9; --dp-card:#fff; --dp-ink:#1c2733; --dp-mute:#5f7183;
+  --dp-line:#dde4ec; --dp-accent:#1f4e78; --dp-accent-soft:#e8f0f8;
+  --dp-warn:#b45309; --dp-warn-bg:#fef3c7; --dp-err:#b91c1c; --dp-err-bg:#fee2e2;
+  --dp-ok:#15803d; --dp-ok-bg:#dcfce7; --dp-we:#f1f5f9; --dp-feier:#fdf2f8;
+  --dp-r:10px; --dp-shadow:0 1px 3px rgba(16,32,48,.08),0 1px 2px rgba(16,32,48,.06);
+}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  background:var(--dp-bg);color:var(--dp-ink);-webkit-font-smoothing:antialiased}
+h1,h2,h3{margin:0;font-weight:650;letter-spacing:-.01em}
+button{font:inherit;cursor:pointer}
+input,select,textarea{font:inherit;color:inherit}
+
+/* ---- Kopf ---- */
+.dp-head{background:var(--dp-accent);color:#fff;padding:14px 20px;
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.dp-head h1{font-size:17px}
+.dp-head .dp-sub{font-size:12.5px;opacity:.82}
+.dp-head-right{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.dp-btn{background:#fff;color:var(--dp-accent);border:1px solid transparent;
+  border-radius:7px;padding:7px 13px;font-size:13px;font-weight:600;transition:.15s}
+.dp-btn:hover{background:var(--dp-accent-soft)}
+.dp-btn-ghost{background:rgba(255,255,255,.14);color:#fff}
+.dp-btn-ghost:hover{background:rgba(255,255,255,.24)}
+.dp-btn-sm{padding:4px 9px;font-size:12px;border-radius:6px;
+  background:var(--dp-card);color:var(--dp-accent);border:1px solid var(--dp-line)}
+.dp-btn-sm:hover{background:var(--dp-accent-soft);border-color:var(--dp-accent)}
+.dp-btn-danger{color:var(--dp-err);border-color:#f3c9c9}
+.dp-btn-danger:hover{background:var(--dp-err-bg);border-color:var(--dp-err)}
+
+/* ---- Datenschutz-Banner ---- */
+.dp-privacy{background:#fffbeb;border-bottom:1px solid #fde68a;color:#78350f;
+  padding:7px 20px;font-size:12.5px;display:flex;gap:8px;align-items:center}
+
+/* ---- Tabs ---- */
+.dp-tabs{background:var(--dp-card);border-bottom:1px solid var(--dp-line);
+  padding:0 12px;display:flex;gap:2px;overflow-x:auto}
+.dp-tab{background:none;border:none;padding:12px 15px;font-size:13.5px;font-weight:550;
+  color:var(--dp-mute);border-bottom:2.5px solid transparent;white-space:nowrap}
+.dp-tab:hover{color:var(--dp-ink)}
+.dp-tab.active{color:var(--dp-accent);border-bottom-color:var(--dp-accent)}
+.dp-panel{display:none;padding:18px 20px 60px;max-width:1500px;margin:0 auto}
+.dp-panel.active{display:block}
+
+/* ---- Karten ---- */
+.dp-card{background:var(--dp-card);border:1px solid var(--dp-line);border-radius:var(--dp-r);
+  padding:16px 18px;margin-bottom:16px;box-shadow:var(--dp-shadow)}
+.dp-card h2{font-size:15px;margin-bottom:3px}
+.dp-card .dp-hint{font-size:12.5px;color:var(--dp-mute);margin-bottom:13px}
+.dp-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+
+/* ---- Tabellen ---- */
+.dp-tbl{width:100%;border-collapse:collapse;font-size:13px}
+.dp-tbl th{text-align:left;font-weight:600;color:var(--dp-mute);font-size:11.5px;
+  text-transform:uppercase;letter-spacing:.04em;padding:7px 9px;
+  border-bottom:1.5px solid var(--dp-line);white-space:nowrap}
+.dp-tbl td{padding:6px 9px;border-bottom:1px solid var(--dp-line);vertical-align:middle}
+.dp-tbl tr:last-child td{border-bottom:none}
+.dp-tbl input,.dp-tbl select{width:100%;padding:4px 7px;border:1px solid transparent;
+  border-radius:5px;background:transparent}
+.dp-tbl input:hover,.dp-tbl select:hover{border-color:var(--dp-line);background:#fafcfe}
+.dp-tbl input:focus,.dp-tbl select:focus{outline:none;border-color:var(--dp-accent);background:#fff}
+.dp-tbl-wrap{overflow-x:auto}
+.dp-num{text-align:right;font-variant-numeric:tabular-nums}
+
+/* ---- Kalender ---- */
+.dp-cal{width:100%;border-collapse:collapse;font-size:12.5px}
+.dp-cal th{position:sticky;top:0;background:var(--dp-card);z-index:2;
+  padding:8px 6px;border-bottom:2px solid var(--dp-line);font-size:11px;
+  text-transform:uppercase;letter-spacing:.04em;color:var(--dp-mute);text-align:left}
+.dp-cal td{padding:3px 5px;border-bottom:1px solid var(--dp-line);border-right:1px solid #eef2f6}
+.dp-cal .dp-daycol{white-space:nowrap;font-weight:600;width:110px;
+  position:sticky;left:0;background:var(--dp-card);z-index:1}
+.dp-cal tr.we td{background:var(--dp-we)}
+.dp-cal tr.we .dp-daycol{background:#e8eef4}
+.dp-cal tr.feier td{background:var(--dp-feier)}
+.dp-cal tr.feier .dp-daycol{background:#fce7f3}
+.dp-cal select{width:100%;min-width:105px;padding:3px 5px;border:1px solid transparent;
+  border-radius:5px;background:transparent;font-size:12.5px}
+.dp-cal select:hover{border-color:var(--dp-line);background:#fff}
+.dp-cal select:focus{outline:none;border-color:var(--dp-accent);background:#fff}
+.dp-cal select.leer{color:#b8c4d0}
+.dp-cal select.konflikt{background:var(--dp-err-bg);border-color:#fca5a5;font-weight:600}
+.dp-cal select.abwesend{background:var(--dp-warn-bg);border-color:#fcd34d}
+.dp-feiername{font-size:10.5px;color:#9d174d;font-weight:500;display:block;line-height:1.2}
+
+/* ---- Badges & Meldungen ---- */
+.dp-badge{display:inline-block;padding:1.5px 7px;border-radius:20px;font-size:11px;
+  font-weight:650;letter-spacing:.01em}
+.dp-b-fa{background:var(--dp-accent-soft);color:var(--dp-accent)}
+.dp-b-aiw{background:#f3f0ff;color:#6d28d9}
+.dp-b-err{background:var(--dp-err-bg);color:var(--dp-err)}
+.dp-b-warn{background:var(--dp-warn-bg);color:var(--dp-warn)}
+.dp-b-ok{background:var(--dp-ok-bg);color:var(--dp-ok)}
+.dp-msg{padding:10px 13px;border-radius:8px;font-size:13px;margin-bottom:10px;
+  border-left:3px solid}
+.dp-msg-err{background:var(--dp-err-bg);border-color:var(--dp-err);color:#7f1d1d}
+.dp-msg-warn{background:var(--dp-warn-bg);border-color:var(--dp-warn);color:#78350f}
+.dp-msg-ok{background:var(--dp-ok-bg);border-color:var(--dp-ok);color:#14532d}
+.dp-empty{color:var(--dp-mute);font-size:13px;padding:22px;text-align:center;
+  background:#fafcfe;border:1px dashed var(--dp-line);border-radius:8px}
+
+/* ---- Statistik-Kacheln ---- */
+.dp-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:11px;margin-bottom:16px}
+.dp-stat{background:var(--dp-card);border:1px solid var(--dp-line);border-radius:9px;padding:12px 14px}
+.dp-stat .v{font-size:23px;font-weight:660;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.dp-stat .l{font-size:11.5px;color:var(--dp-mute);margin-top:1px}
+
+/* ---- Formularfelder ---- */
+.dp-fld{display:flex;flex-direction:column;gap:3px}
+.dp-fld label{font-size:11.5px;font-weight:600;color:var(--dp-mute)}
+.dp-fld input,.dp-fld select{padding:6px 9px;border:1px solid var(--dp-line);
+  border-radius:6px;background:#fff}
+.dp-fld input:focus,.dp-fld select:focus{outline:none;border-color:var(--dp-accent)}
+.dp-toolbar{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-bottom:13px}
+.dp-toolbar select,.dp-toolbar input{padding:6px 10px;border:1px solid var(--dp-line);
+  border-radius:6px;background:#fff}
+.dp-spacer{flex:1}
+@media print{
+  .dp-head-right,.dp-tabs,.dp-privacy,.dp-toolbar button{display:none !important}
+  .dp-panel{display:none !important} .dp-panel.active{display:block !important}
+  body{background:#fff} .dp-card{box-shadow:none;break-inside:avoid}
+}
+</style>
+</head>
+<body>
+
+<div class="dp-head">
+  <div>
+    <h1>Dienstplan — Nephrologie &amp; Internistische Intensivmedizin</h1>
+    <div class="dp-sub">St. Joseph Krankenhaus Berlin · Intensivstation Franziskus</div>
+  </div>
+  <div class="dp-head-right">
+    <button class="dp-btn-ghost dp-btn" onclick="dpExportJSON()">↓ Sicherung</button>
+    <button class="dp-btn-ghost dp-btn" onclick="document.getElementById('dp-file').click()">↑ Laden</button>
+    <button class="dp-btn" onclick="dpExportXLSX()">Excel erzeugen</button>
+    <input type="file" id="dp-file" accept=".json" style="display:none" onchange="dpImportJSON(this)">
+  </div>
+</div>
+
+<div class="dp-privacy">
+  <span>🔒</span>
+  <span><b>Alle Daten bleiben in diesem Browser.</b> Nichts wird hochgeladen oder übertragen.
+  Zum Weitergeben oder Sichern „Sicherung" verwenden und die JSON-Datei im geschützten Ordner ablegen.</span>
+</div>
+
+<div class="dp-tabs">
+  <button class="dp-tab active" data-p="plan"  onclick="dpTab('plan')">📅 Dienstplan</button>
+  <button class="dp-tab" data-p="pers"  onclick="dpTab('pers')">👥 Mitarbeiter</button>
+  <button class="dp-tab" data-p="dienste" onclick="dpTab('dienste')">🕐 Dienstmodelle</button>
+  <button class="dp-tab" data-p="abw"   onclick="dpTab('abw')">🏖 Abwesenheiten</button>
+  <button class="dp-tab" data-p="wunsch" onclick="dpTab('wunsch')">✉️ Wünsche</button>
+  <button class="dp-tab" data-p="check" onclick="dpTab('check')">⚠️ Prüfung</button>
+  <button class="dp-tab" data-p="auswert" onclick="dpTab('auswert')">📊 Auswertung</button>
+  <button class="dp-tab" data-p="jahr"  onclick="dpTab('jahr')">🗓 Jahresübersicht</button>
+</div>
+
+<div id="dp-p-plan" class="dp-panel active"></div>
+<div id="dp-p-pers" class="dp-panel"></div>
+<div id="dp-p-dienste" class="dp-panel"></div>
+<div id="dp-p-abw" class="dp-panel"></div>
+<div id="dp-p-wunsch" class="dp-panel"></div>
+<div id="dp-p-check" class="dp-panel"></div>
+<div id="dp-p-auswert" class="dp-panel"></div>
+<div id="dp-p-jahr" class="dp-panel"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ============================================================
+   DIENSTPLAN — Nephrologie & Int. Intensivmedizin
+   Reines Vanilla-JS. Daten ausschließlich in localStorage.
+   ============================================================ */
+
+var LS_KEY = 'dp_nephro_v1';
+
+/* ---------- Stammdaten ----------------------------------------
+   Bewusst KEINE Namen im Quelltext: diese Datei liegt öffentlich auf
+   GitHub Pages. Der Mitarbeiterstamm wird über „↑ Laden" aus der
+   JSON-Sicherung eingelesen, die im geschützten Ordner liegt.
+   ---------------------------------------------------------------- */
+var BEREICHE = ['ITS Franziskus','ITS 28','Normalstation','Dialyse','ZNA','St. 17','Med. I','Gegenrotant'];
+
+/* Dienstmodelle — Vorbelegung, von der Dienstplanerin überschreibbar. */
+var START_DIENSTE = [
+  {id:'d1', kurz:'FT',  name:'Franziskus Tagdienst',   bereich:'ITS Franziskus', von:'07:30', bis:'16:30', std:8.5, tage:'werktag', quali:'egal', anzahl:2},
+  {id:'d2', kurz:'FSB', name:'Franziskus SBD',         bereich:'ITS Franziskus', von:'16:30', bis:'07:30', std:15,  tage:'alle',    quali:'egal', anzahl:1},
+  {id:'d3', kurz:'FWE', name:'Franziskus Wochenende',  bereich:'ITS Franziskus', von:'08:00', bis:'16:30', std:8.5, tage:'we',      quali:'egal', anzahl:1},
+  {id:'d4', kurz:'FHG', name:'Franziskus Hintergrund', bereich:'ITS Franziskus', von:'16:30', bis:'07:30', std:0,   tage:'alle',    quali:'FA',   anzahl:1}
+];
+
+var state = {
+  jahr: new Date().getFullYear(),
+  monat: new Date().getMonth()+1,
+  personen: [],
+  dienste: [],
+  plan: {},        /* 'YYYY-MM-DD' -> { dienstId_slot : personId } */
+  abwesenheit: [], /* {id, pid, von, bis, typ} */
+  wuensche: []     /* {id, pid, von, bis, typ:'frei'|'dienst', prio, notiz} */
+};
+
+/* ---------------- Persistenz ---------------- */
+function speichern(){
+  try { localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+  catch(e){ console.warn('Speichern fehlgeschlagen', e); }
+}
+function laden(){
+  try {
+    var raw = localStorage.getItem(LS_KEY);
+    if(raw){ var s=JSON.parse(raw); for(var k in s) if(s.hasOwnProperty(k)) state[k]=s[k]; return true; }
+  } catch(e){ console.warn('Laden fehlgeschlagen', e); }
+  return false;
+}
+function erstbefuellung(){
+  state.personen = [];                    /* Namen kommen aus der Sicherung */
+  state.dienste  = START_DIENSTE.slice();
+}
+
+/* ---------------- Datum & Feiertage ---------------- */
+var WOCHENTAG = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+var MONATSNAME = ['Januar','Februar','März','April','Mai','Juni','Juli','August',
+                  'September','Oktober','November','Dezember'];
+
+function iso(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function ausIso(s){ var t=s.split('-'); return new Date(+t[0], +t[1]-1, +t[2]); }
+function tageImMonat(j,m){ return new Date(j, m, 0).getDate(); }
+
+/* Ostersonntag — Gaußsche Osterformel */
+function ostern(j){
+  var a=j%19, b=Math.floor(j/100), c=j%100, d=Math.floor(b/4), e=b%4,
+      f=Math.floor((b+8)/25), g=Math.floor((b-f+1)/3), h=(19*a+b-d-g+15)%30,
+      i=Math.floor(c/4), k=c%4, l=(32+2*e+2*i-h-k)%7, m=Math.floor((a+11*h+22*l)/451),
+      mo=Math.floor((h+l-7*m+114)/31), ta=((h+l-7*m+114)%31)+1;
+  return new Date(j, mo-1, ta);
+}
+/* Gesetzliche Feiertage Berlin (inkl. 8. März) */
+function feiertage(j){
+  var o = ostern(j), f = {};
+  function add(d, n){ f[iso(d)] = n; }
+  function plus(d, n){ var x=new Date(d); x.setDate(x.getDate()+n); return x; }
+  add(new Date(j,0,1),  'Neujahr');
+  add(new Date(j,2,8),  'Frauentag');
+  add(plus(o,-2),       'Karfreitag');
+  add(plus(o,1),        'Ostermontag');
+  add(new Date(j,4,1),  'Tag der Arbeit');
+  add(plus(o,39),       'Christi Himmelfahrt');
+  add(plus(o,50),       'Pfingstmontag');
+  add(new Date(j,9,3),  'Tag der Dt. Einheit');
+  add(new Date(j,11,25),'1. Weihnachtstag');
+  add(new Date(j,11,26),'2. Weihnachtstag');
+  return f;
+}
+var _ftCache = {};
+function feiertagName(datum){
+  var j = +datum.substring(0,4);
+  if(!_ftCache[j]) _ftCache[j] = feiertage(j);
+  return _ftCache[j][datum] || null;
+}
+function istWE(d){ var w=d.getDay(); return w===0 || w===6; }
+function istFrei(datum){ return istWE(ausIso(datum)) || !!feiertagName(datum); }
+
+/* ---------------- Lookups ---------------- */
+function person(id){ for(var i=0;i<state.personen.length;i++) if(state.personen[i].id===id) return state.personen[i]; return null; }
+function dienst(id){ for(var i=0;i<state.dienste.length;i++) if(state.dienste[i].id===id) return state.dienste[i]; return null; }
+function pName(id){ var p=person(id); return p?p.name:'—'; }
+
+/* Gilt eine Dienstart an diesem Tag? */
+function dienstGiltAm(d, datum){
+  var frei = istFrei(datum);
+  if(d.tage==='alle') return true;
+  if(d.tage==='werktag') return !frei;
+  if(d.tage==='we') return frei;
+  return true;
+}
+/* Alle Slot-Schlüssel eines Dienstes an einem Tag (bei Mehrfachbesetzung) */
+function slots(d){
+  var out=[], n=Math.max(1, d.anzahl||1);
+  for(var i=0;i<n;i++) out.push(d.id + (i>0 ? '#'+i : ''));
+  return out;
+}
+function belegung(datum, slotKey){
+  return (state.plan[datum] && state.plan[datum][slotKey]) || '';
+}
+function setzeBelegung(datum, slotKey, pid){
+  if(!state.plan[datum]) state.plan[datum] = {};
+  if(pid) state.plan[datum][slotKey] = pid;
+  else delete state.plan[datum][slotKey];
+  if(Object.keys(state.plan[datum]).length===0) delete state.plan[datum];
+}
+
+/* ---------------- Abwesenheit & Wünsche ---------------- */
+function istAbwesend(pid, datum){
+  for(var i=0;i<state.abwesenheit.length;i++){
+    var a=state.abwesenheit[i];
+    if(a.pid===pid && datum>=a.von && datum<=a.bis) return a.typ;
+  }
+  return null;
+}
+function wunschAn(pid, datum){
+  for(var i=0;i<state.wuensche.length;i++){
+    var w=state.wuensche[i];
+    if(w.pid===pid && datum>=w.von && datum<=w.bis) return w;
+  }
+  return null;
+}
+
+/* ---------------- Regelprüfung ----------------
+   Geprüft werden:
+   1. Doppelbesetzung — eine Person zweimal am selben Tag
+   2. Dienst trotz Abwesenheit (Urlaub / Krank / Fortbildung)
+   3. Fehlende Facharztqualifikation
+   4. Ruhezeit nach ArbZG § 5 (11 h) — Dienstende zu Beginn des Folgedienstes
+   5. Unbesetzte Dienste
+   6. Verletzter Freiwunsch
+   ------------------------------------------------ */
+function dienstEndeMin(d){
+  var v = zeitMin(d.von), b = zeitMin(d.bis);
+  return b <= v ? b + 1440 : b;   /* über Mitternacht */
+}
+function zeitMin(t){
+  if(!t) return 0;
+  var p = String(t).split(':');
+  return (+p[0]||0)*60 + (+p[1]||0);
+}
+
+function pruefe(jahr, monat){
+  var probleme = [];
+  var tage = tageImMonat(jahr, monat);
+  var vorTag = {};   /* pid -> {datum, endeAbsolut} */
+
+  for(var t=1; t<=tage; t++){
+    var datum = jahr+'-'+String(monat).padStart(2,'0')+'-'+String(t).padStart(2,'0');
+    var heuteBelegt = {};   /* pid -> [dienstKurz] */
+
+    for(var di=0; di<state.dienste.length; di++){
+      var d = state.dienste[di];
+      if(!dienstGiltAm(d, datum)) continue;
+      var sl = slots(d);
+
+      for(var si=0; si<sl.length; si++){
+        var pid = belegung(datum, sl[si]);
+
+        /* 5. unbesetzt */
+        if(!pid){
+          probleme.push({datum:datum, art:'unbesetzt', stufe:'warn',
+            text:d.kurz+' ('+d.name+') ist nicht besetzt.'});
+          continue;
+        }
+        var p = person(pid);
+        if(!p) continue;
+
+        /* 1. Doppelbesetzung */
+        if(heuteBelegt[pid]){
+          probleme.push({datum:datum, art:'doppelt', stufe:'err', pid:pid,
+            text:p.name+' ist am selben Tag für '+heuteBelegt[pid].join(' und ')+' und '+d.kurz+' eingeteilt.'});
+        }
+        heuteBelegt[pid] = (heuteBelegt[pid]||[]).concat([d.kurz]);
+
+        /* 2. Abwesenheit */
+        var abw = istAbwesend(pid, datum);
+        if(abw){
+          probleme.push({datum:datum, art:'abwesend', stufe:'err', pid:pid,
+            text:p.name+' hat '+d.kurz+', ist aber als „'+abw+'" eingetragen.'});
+        }
+
+        /* 3. Qualifikation */
+        if(d.quali==='FA' && p.quali!=='FA'){
+          probleme.push({datum:datum, art:'quali', stufe:'err', pid:pid,
+            text:d.kurz+' verlangt Facharztstandard — '+p.name+' ist als '+p.quali+' geführt.'});
+        }
+
+        /* 4. Ruhezeit 11 h */
+        var vt = vorTag[pid];
+        if(vt && d.std > 0){
+          var pause = (1440 - vt.ende) + zeitMin(d.von);
+          if(pause < 660){
+            probleme.push({datum:datum, art:'ruhezeit', stufe:'err', pid:pid,
+              text:p.name+': nur '+(pause/60).toFixed(1)+' h Ruhezeit vor '+d.kurz+
+                   ' (ArbZG § 5 verlangt 11 h) — Vordienst am '+dtKurz(vt.datum)+'.'});
+          }
+        }
+
+        /* 6. Freiwunsch verletzt */
+        var w = wunschAn(pid, datum);
+        if(w && w.typ==='frei'){
+          probleme.push({datum:datum, art:'wunsch', stufe:'warn', pid:pid,
+            text:p.name+' hat für diesen Tag frei gewünscht'+(w.notiz?' ('+w.notiz+')':'')+', ist aber für '+d.kurz+' eingeteilt.'});
+        }
+      }
+    }
+
+    /* Dienstenden für den Folgetag merken */
+    var neu = {};
+    for(var pid2 in heuteBelegt){
+      var maxEnde = 0;
+      for(var di2=0; di2<state.dienste.length; di2++){
+        var dd = state.dienste[di2];
+        if(heuteBelegt[pid2].indexOf(dd.kurz) < 0) continue;
+        if(dd.std === 0) continue;              /* Hintergrund zählt nicht */
+        maxEnde = Math.max(maxEnde, dienstEndeMin(dd));
+      }
+      if(maxEnde > 0) neu[pid2] = {datum:datum, ende:maxEnde};
+    }
+    vorTag = neu;
+  }
+  return probleme;
+}
+
+function dtKurz(datum){
+  var d = ausIso(datum);
+  return WOCHENTAG[d.getDay()]+' '+d.getDate()+'.'+(d.getMonth()+1)+'.';
+}
+
+/* ============================================================
+   RENDERING
+   ============================================================ */
+function esc(s){
+  return String(s==null?'':s).replace(/[&<>"]/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];
+  });
+}
+function el(id){ return document.getElementById(id); }
+
+/* ---------------- Tab 1: Dienstplan ---------------- */
+function renderPlan(){
+  var j = state.jahr, m = state.monat;
+  var probleme = pruefe(j, m);
+  var probIdx = {};
+  probleme.forEach(function(p){
+    if(p.art==='unbesetzt') return;
+    (probIdx[p.datum] = probIdx[p.datum] || {})[p.pid] = p.stufe;
+  });
+
+  var aktiveDienste = state.dienste.filter(function(d){ return true; });
+  var h = '';
+
+  h += '<div class="dp-toolbar">'
+     + '<button class="dp-btn-sm" onclick="dpMonat(-1)">‹ Vormonat</button>'
+     + '<select onchange="dpSetMonat(this.value)">';
+  for(var mi=1; mi<=12; mi++)
+    h += '<option value="'+mi+'"'+(mi===m?' selected':'')+'>'+MONATSNAME[mi-1]+'</option>';
+  h += '</select>'
+     + '<input type="number" value="'+j+'" min="2020" max="2099" style="width:82px" '
+     + 'onchange="dpSetJahr(this.value)">'
+     + '<button class="dp-btn-sm" onclick="dpMonat(1)">Folgemonat ›</button>'
+     + '<div class="dp-spacer"></div>'
+     + '<button class="dp-btn-sm" onclick="dpLeeren()">Monat leeren</button>'
+     + '<button class="dp-btn-sm" onclick="window.print()">Drucken</button>'
+     + '</div>';
+
+  if(!state.dienste.length){
+    el('dp-p-plan').innerHTML = h + '<div class="dp-empty">Noch keine Dienstmodelle angelegt — '
+      + 'bitte zuerst im Reiter <b>Dienstmodelle</b> festlegen, welche Dienste es gibt.</div>';
+    return;
+  }
+  if(!state.personen.length){
+    el('dp-p-plan').innerHTML = h
+      + '<div class="dp-empty" style="padding:34px;line-height:1.7">'
+      + '<b style="font-size:15px;color:var(--dp-ink)">Noch kein Mitarbeiterstamm vorhanden</b><br>'
+      + 'Oben rechts über <b>↑ Laden</b> die JSON-Sicherung einlesen —<br>'
+      + 'oder im Reiter <b>Mitarbeiter</b> die Personen von Hand anlegen.'
+      + '</div>';
+    return;
+  }
+
+  var fehler = probleme.filter(function(p){ return p.stufe==='err'; }).length;
+  var warn   = probleme.filter(function(p){ return p.stufe==='warn'; }).length;
+  if(fehler || warn){
+    h += '<div class="dp-msg '+(fehler?'dp-msg-err':'dp-msg-warn')+'">'
+       + (fehler ? '<b>'+fehler+' Regelverstöße</b>' : '')
+       + (fehler && warn ? ' · ' : '')
+       + (warn ? warn+' Hinweise' : '')
+       + ' — Einzelheiten im Reiter <b>Prüfung</b>.</div>';
+  } else {
+    h += '<div class="dp-msg dp-msg-ok">Keine Regelverstöße in diesem Monat.</div>';
+  }
+
+  /* Spaltenköpfe: je Dienst so viele Spalten wie Besetzungsstärke */
+  h += '<div class="dp-card" style="padding:0;overflow:hidden">'
+     + '<div class="dp-tbl-wrap"><table class="dp-cal"><thead><tr>'
+     + '<th class="dp-daycol">Tag</th>';
+  aktiveDienste.forEach(function(d){
+    slots(d).forEach(function(s,i){
+      h += '<th title="'+esc(d.name)+' · '+esc(d.von)+'–'+esc(d.bis)+'">'
+         + esc(d.kurz) + (slots(d).length>1 ? ' '+(i+1) : '') + '</th>';
+    });
+  });
+  h += '</tr></thead><tbody>';
+
+  var tage = tageImMonat(j, m);
+  for(var t=1; t<=tage; t++){
+    var datum = j+'-'+String(m).padStart(2,'0')+'-'+String(t).padStart(2,'0');
+    var dObj = ausIso(datum);
+    var ft = feiertagName(datum);
+    var cls = ft ? 'feier' : (istWE(dObj) ? 'we' : '');
+
+    h += '<tr class="'+cls+'"><td class="dp-daycol">'
+       + WOCHENTAG[dObj.getDay()]+' '+t+'.'
+       + (ft ? '<span class="dp-feiername">'+esc(ft)+'</span>' : '')
+       + '</td>';
+
+    aktiveDienste.forEach(function(d){
+      slots(d).forEach(function(sk){
+        if(!dienstGiltAm(d, datum)){
+          h += '<td style="background:#f8fafc"></td>';
+          return;
+        }
+        var cur = belegung(datum, sk);
+        var stufe = cur && probIdx[datum] ? probIdx[datum][cur] : null;
+        var selCls = !cur ? 'leer' : (stufe==='err' ? 'konflikt' : (stufe==='warn' ? 'abwesend' : ''));
+        h += '<td><select class="'+selCls+'" onchange="dpSetze(\''+datum+'\',\''+sk+'\',this.value)">'
+           + '<option value="">–</option>';
+        state.personen.forEach(function(p){
+          if(!p.aktiv && p.id!==cur) return;
+          var abw = istAbwesend(p.id, datum);
+          var wl = wunschAn(p.id, datum);
+          var mark = abw ? ' ⛱' : (wl && wl.typ==='frei' ? ' ✉' : '');
+          h += '<option value="'+p.id+'"'+(p.id===cur?' selected':'')+'>'
+             + esc(p.name)+mark+'</option>';
+        });
+        h += '</select></td>';
+      });
+    });
+    h += '</tr>';
+  }
+  h += '</tbody></table></div></div>';
+  h += '<div style="font-size:12px;color:var(--dp-mute)">'
+     + '⛱ abwesend · ✉ hat frei gewünscht · '
+     + '<span style="background:var(--dp-err-bg);padding:1px 6px;border-radius:4px">rot</span> Regelverstoß · '
+     + '<span style="background:var(--dp-warn-bg);padding:1px 6px;border-radius:4px">gelb</span> Hinweis</div>';
+
+  el('dp-p-plan').innerHTML = h;
+}
+
+/* ---------------- Tab 2: Mitarbeiter ---------------- */
+function renderPersonen(){
+  var h = '<div class="dp-card"><h2>Mitarbeiterinnen und Mitarbeiter</h2>'
+    + '<div class="dp-hint">VK-Anteile aus dem Besetzungsplan 06/2026 vorbelegt. '
+    + '<b>Die Qualifikation steht überall auf AiW und muss noch gepflegt werden</b> — '
+    + 'davon hängt ab, wer Facharzt-Dienste besetzen darf.</div>';
+
+  h += '<div class="dp-tbl-wrap"><table class="dp-tbl"><thead><tr>'
+     + '<th>Name</th><th style="width:80px">Kürzel</th><th style="width:80px">VK</th>'
+     + '<th style="width:110px">Qualifikation</th><th style="width:170px">Primärbereich</th>'
+     + '<th style="width:70px">Aktiv</th><th style="width:50px"></th></tr></thead><tbody>';
+
+  state.personen.forEach(function(p){
+    h += '<tr'+(p.aktiv?'':' style="opacity:.45"')+'>'
+       + '<td><input value="'+esc(p.name)+'" onchange="dpP(\''+p.id+'\',\'name\',this.value)"></td>'
+       + '<td><input value="'+esc(p.kurz)+'" onchange="dpP(\''+p.id+'\',\'kurz\',this.value)"></td>'
+       + '<td><input type="number" step="0.05" min="0" max="1" value="'+p.vk+'" '
+       + 'class="dp-num" onchange="dpP(\''+p.id+'\',\'vk\',parseFloat(this.value))"></td>'
+       + '<td><select onchange="dpP(\''+p.id+'\',\'quali\',this.value)">'
+       + '<option value="FA"'+(p.quali==='FA'?' selected':'')+'>Facharzt</option>'
+       + '<option value="AiW"'+(p.quali==='AiW'?' selected':'')+'>AiW</option>'
+       + '</select></td>'
+       + '<td><select onchange="dpP(\''+p.id+'\',\'bereich\',this.value)">';
+    BEREICHE.forEach(function(b){
+      h += '<option'+(p.bereich===b?' selected':'')+'>'+esc(b)+'</option>';
+    });
+    h += '</select></td>'
+       + '<td style="text-align:center"><input type="checkbox"'+(p.aktiv?' checked':'')
+       + ' style="width:auto" onchange="dpP(\''+p.id+'\',\'aktiv\',this.checked)"></td>'
+       + '<td><button class="dp-btn-sm dp-btn-danger" onclick="dpDelP(\''+p.id+'\')">✕</button></td>'
+       + '</tr>';
+  });
+  h += '</tbody></table></div>'
+     + '<div style="margin-top:12px"><button class="dp-btn-sm" onclick="dpAddP()">+ Person hinzufügen</button></div>'
+     + '</div>';
+
+  var fa = state.personen.filter(function(p){ return p.aktiv && p.quali==='FA'; }).length;
+  var vkSum = state.personen.filter(function(p){return p.aktiv;})
+                .reduce(function(a,p){ return a+(p.vk||0); },0);
+  h += '<div class="dp-stats">'
+     + '<div class="dp-stat"><div class="v">'+state.personen.filter(function(p){return p.aktiv;}).length+'</div><div class="l">aktive Personen</div></div>'
+     + '<div class="dp-stat"><div class="v">'+fa+'</div><div class="l">davon Fachärzte</div></div>'
+     + '<div class="dp-stat"><div class="v">'+vkSum.toFixed(2)+'</div><div class="l">Vollkräfte gesamt</div></div>'
+     + '</div>';
+  el('dp-p-pers').innerHTML = h;
+}
+
+/* ---------------- Tab 3: Dienstmodelle ---------------- */
+function renderDienste(){
+  var h = '<div class="dp-card"><h2>Dienstmodelle</h2>'
+    + '<div class="dp-hint">Legt fest, welche Dienste es gibt, wann sie laufen und wie viele Personen sie besetzen. '
+    + '<b>Diese Vorbelegung ist geraten</b> — bitte an die tatsächlichen Modelle anpassen. '
+    + 'Stundenzahl 0 bedeutet Hintergrunddienst (geht nicht in die Ruhezeitprüfung ein).</div>';
+
+  h += '<div class="dp-tbl-wrap"><table class="dp-tbl"><thead><tr>'
+     + '<th style="width:70px">Kürzel</th><th>Bezeichnung</th><th style="width:150px">Bereich</th>'
+     + '<th style="width:80px">von</th><th style="width:80px">bis</th><th style="width:70px">Std.</th>'
+     + '<th style="width:110px">Tage</th><th style="width:105px">Qualifikation</th>'
+     + '<th style="width:70px">Anzahl</th><th style="width:50px"></th></tr></thead><tbody>';
+
+  state.dienste.forEach(function(d){
+    h += '<tr>'
+       + '<td><input value="'+esc(d.kurz)+'" onchange="dpD(\''+d.id+'\',\'kurz\',this.value)"></td>'
+       + '<td><input value="'+esc(d.name)+'" onchange="dpD(\''+d.id+'\',\'name\',this.value)"></td>'
+       + '<td><select onchange="dpD(\''+d.id+'\',\'bereich\',this.value)">';
+    BEREICHE.forEach(function(b){ h += '<option'+(d.bereich===b?' selected':'')+'>'+esc(b)+'</option>'; });
+    h += '</select></td>'
+       + '<td><input type="time" value="'+esc(d.von)+'" onchange="dpD(\''+d.id+'\',\'von\',this.value)"></td>'
+       + '<td><input type="time" value="'+esc(d.bis)+'" onchange="dpD(\''+d.id+'\',\'bis\',this.value)"></td>'
+       + '<td><input type="number" step="0.5" min="0" class="dp-num" value="'+d.std+'" onchange="dpD(\''+d.id+'\',\'std\',parseFloat(this.value))"></td>'
+       + '<td><select onchange="dpD(\''+d.id+'\',\'tage\',this.value)">'
+       + '<option value="alle"'   +(d.tage==='alle'?' selected':'')   +'>täglich</option>'
+       + '<option value="werktag"'+(d.tage==='werktag'?' selected':'')+'>Mo–Fr</option>'
+       + '<option value="we"'     +(d.tage==='we'?' selected':'')     +'>Wo.-ende/Feiertag</option>'
+       + '</select></td>'
+       + '<td><select onchange="dpD(\''+d.id+'\',\'quali\',this.value)">'
+       + '<option value="egal"'+(d.quali==='egal'?' selected':'')+'>beliebig</option>'
+       + '<option value="FA"'  +(d.quali==='FA'?' selected':'')  +'>nur Facharzt</option>'
+       + '</select></td>'
+       + '<td><input type="number" min="1" max="8" class="dp-num" value="'+(d.anzahl||1)+'" onchange="dpD(\''+d.id+'\',\'anzahl\',parseInt(this.value,10))"></td>'
+       + '<td><button class="dp-btn-sm dp-btn-danger" onclick="dpDelD(\''+d.id+'\')">✕</button></td>'
+       + '</tr>';
+  });
+  h += '</tbody></table></div>'
+     + '<div style="margin-top:12px"><button class="dp-btn-sm" onclick="dpAddD()">+ Dienstart hinzufügen</button></div>'
+     + '</div>';
+  el('dp-p-dienste').innerHTML = h;
+}
+
+/* ---------------- Tab 4: Abwesenheiten ---------------- */
+function renderAbw(){
+  var h = '<div class="dp-card"><h2>Abwesenheiten</h2>'
+    + '<div class="dp-hint">Urlaub, Krankheit, Fortbildung, Elternzeit. Wer hier eingetragen ist, '
+    + 'wird im Dienstplan mit ⛱ markiert; eine Besetzung trotz Abwesenheit gilt als Regelverstoß.</div>'
+    + '<div class="dp-row" style="margin-bottom:14px;align-items:flex-end">'
+    + '<div class="dp-fld"><label>Person</label><select id="dp-abw-p">'
+    + state.personen.map(function(p){ return '<option value="'+p.id+'">'+esc(p.name)+'</option>'; }).join('')
+    + '</select></div>'
+    + '<div class="dp-fld"><label>von</label><input type="date" id="dp-abw-von"></div>'
+    + '<div class="dp-fld"><label>bis</label><input type="date" id="dp-abw-bis"></div>'
+    + '<div class="dp-fld"><label>Art</label><select id="dp-abw-typ">'
+    + '<option>Urlaub</option><option>Krank</option><option>Fortbildung</option>'
+    + '<option>Elternzeit</option><option>Freistellung</option></select></div>'
+    + '<button class="dp-btn-sm" onclick="dpAddAbw()">Eintragen</button></div>';
+
+  if(!state.abwesenheit.length){
+    h += '<div class="dp-empty">Noch keine Abwesenheiten erfasst.</div>';
+  } else {
+    var sorted = state.abwesenheit.slice().sort(function(a,b){ return a.von<b.von?-1:1; });
+    h += '<div class="dp-tbl-wrap"><table class="dp-tbl"><thead><tr>'
+       + '<th>Person</th><th>von</th><th>bis</th><th>Tage</th><th>Art</th><th style="width:50px"></th>'
+       + '</tr></thead><tbody>';
+    sorted.forEach(function(a){
+      var n = Math.round((ausIso(a.bis)-ausIso(a.von))/86400000)+1;
+      h += '<tr><td><b>'+esc(pName(a.pid))+'</b></td><td>'+dtLang(a.von)+'</td><td>'+dtLang(a.bis)+'</td>'
+         + '<td class="dp-num">'+n+'</td><td><span class="dp-badge dp-b-warn">'+esc(a.typ)+'</span></td>'
+         + '<td><button class="dp-btn-sm dp-btn-danger" onclick="dpDelAbw(\''+a.id+'\')">✕</button></td></tr>';
+    });
+    h += '</tbody></table></div>';
+  }
+  h += '</div>';
+  el('dp-p-abw').innerHTML = h;
+}
+
+/* ---------------- Tab 5: Wünsche ---------------- */
+function renderWunsch(){
+  var h = '<div class="dp-card"><h2>Dienstplanwünsche</h2>'
+    + '<div class="dp-hint">Frei- und Dienstwünsche der Mitarbeiter. Ein verletzter Freiwunsch '
+    + 'erscheint in der Prüfung als Hinweis (nicht als Verstoß) und geht in die Wunscherfüllungsquote ein.</div>'
+    + '<div class="dp-row" style="margin-bottom:14px;align-items:flex-end">'
+    + '<div class="dp-fld"><label>Person</label><select id="dp-w-p">'
+    + state.personen.map(function(p){ return '<option value="'+p.id+'">'+esc(p.name)+'</option>'; }).join('')
+    + '</select></div>'
+    + '<div class="dp-fld"><label>von</label><input type="date" id="dp-w-von"></div>'
+    + '<div class="dp-fld"><label>bis</label><input type="date" id="dp-w-bis"></div>'
+    + '<div class="dp-fld"><label>Wunsch</label><select id="dp-w-typ">'
+    + '<option value="frei">frei haben</option><option value="dienst">Dienst übernehmen</option></select></div>'
+    + '<div class="dp-fld"><label>Gewicht</label><select id="dp-w-prio">'
+    + '<option value="hoch">hoch</option><option value="normal" selected>normal</option></select></div>'
+    + '<div class="dp-fld"><label>Notiz</label><input id="dp-w-notiz" placeholder="optional" style="width:150px"></div>'
+    + '<button class="dp-btn-sm" onclick="dpAddW()">Eintragen</button></div>';
+
+  if(!state.wuensche.length){
+    h += '<div class="dp-empty">Noch keine Wünsche erfasst.</div>';
+  } else {
+    var sorted = state.wuensche.slice().sort(function(a,b){ return a.von<b.von?-1:1; });
+    h += '<div class="dp-tbl-wrap"><table class="dp-tbl"><thead><tr>'
+       + '<th>Person</th><th>von</th><th>bis</th><th>Wunsch</th><th>Gewicht</th><th>Notiz</th>'
+       + '<th style="width:50px"></th></tr></thead><tbody>';
+    sorted.forEach(function(w){
+      h += '<tr><td><b>'+esc(pName(w.pid))+'</b></td><td>'+dtLang(w.von)+'</td><td>'+dtLang(w.bis)+'</td>'
+         + '<td><span class="dp-badge '+(w.typ==='frei'?'dp-b-warn':'dp-b-ok')+'">'
+         + (w.typ==='frei'?'frei':'Dienst')+'</span></td>'
+         + '<td>'+(w.prio==='hoch'?'<b>hoch</b>':'normal')+'</td>'
+         + '<td style="color:var(--dp-mute)">'+esc(w.notiz||'')+'</td>'
+         + '<td><button class="dp-btn-sm dp-btn-danger" onclick="dpDelW(\''+w.id+'\')">✕</button></td></tr>';
+    });
+    h += '</tbody></table></div>';
+  }
+  h += '</div>';
+  el('dp-p-wunsch').innerHTML = h;
+}
+
+function dtLang(datum){
+  var d = ausIso(datum);
+  return WOCHENTAG[d.getDay()]+', '+String(d.getDate()).padStart(2,'0')+'.'
+       + String(d.getMonth()+1).padStart(2,'0')+'.'+d.getFullYear();
+}
+
+/* ---------------- Tab 6: Prüfung ---------------- */
+function renderCheck(){
+  var probleme = pruefe(state.jahr, state.monat);
+  var h = '<div class="dp-card"><h2>Regelprüfung — '+MONATSNAME[state.monat-1]+' '+state.jahr+'</h2>'
+    + '<div class="dp-hint">Geprüft werden Ruhezeit nach ArbZG § 5 (11 h), Doppelbesetzungen, '
+    + 'Dienste trotz Abwesenheit, Facharztabdeckung, unbesetzte Dienste und verletzte Freiwünsche. '
+    + 'Die Prüfung ersetzt weder die arbeitsrechtliche Freigabe noch die Beteiligung der Mitarbeitervertretung.</div>';
+
+  var err  = probleme.filter(function(p){ return p.stufe==='err'; });
+  var warn = probleme.filter(function(p){ return p.stufe==='warn'; });
+
+  h += '<div class="dp-stats" style="margin-bottom:14px">'
+     + '<div class="dp-stat"><div class="v" style="color:var(--dp-err)">'+err.length+'</div><div class="l">Regelverstöße</div></div>'
+     + '<div class="dp-stat"><div class="v" style="color:var(--dp-warn)">'+warn.length+'</div><div class="l">Hinweise</div></div>'
+     + '</div>';
+
+  if(!probleme.length){
+    h += '<div class="dp-msg dp-msg-ok">Keine Beanstandungen.</div></div>';
+    el('dp-p-check').innerHTML = h;
+    return;
+  }
+
+  var GRUPPEN = {
+    ruhezeit:'Ruhezeit unter 11 h (ArbZG § 5)',
+    doppelt:'Doppelbesetzung am selben Tag',
+    abwesend:'Dienst trotz Abwesenheit',
+    quali:'Facharztqualifikation fehlt',
+    unbesetzt:'Unbesetzte Dienste',
+    wunsch:'Freiwunsch nicht erfüllt'
+  };
+  Object.keys(GRUPPEN).forEach(function(art){
+    var liste = probleme.filter(function(p){ return p.art===art; });
+    if(!liste.length) return;
+    var istErr = liste[0].stufe==='err';
+    h += '<h3 style="font-size:13.5px;margin:16px 0 7px">'
+       + '<span class="dp-badge '+(istErr?'dp-b-err':'dp-b-warn')+'">'+liste.length+'</span> '
+       + GRUPPEN[art]+'</h3>';
+    h += '<div class="dp-tbl-wrap"><table class="dp-tbl"><tbody>';
+    liste.slice(0,60).forEach(function(p){
+      h += '<tr><td style="width:105px;white-space:nowrap"><b>'+dtKurz(p.datum)+'</b></td>'
+         + '<td>'+esc(p.text)+'</td></tr>';
+    });
+    if(liste.length>60) h += '<tr><td colspan="2" style="color:var(--dp-mute)">… und '+(liste.length-60)+' weitere</td></tr>';
+    h += '</tbody></table></div>';
+  });
+  h += '</div>';
+  el('dp-p-check').innerHTML = h;
+}
+
+/* ---------------- Tab 7: Auswertung ---------------- */
+function statistik(jahr, monat){
+  var st = {};
+  state.personen.forEach(function(p){
+    st[p.id] = {name:p.name, vk:p.vk, dienste:0, std:0, we:0, nacht:0, feier:0,
+                wunschOk:0, wunschVerletzt:0};
+  });
+  var tage = tageImMonat(jahr, monat);
+  for(var t=1; t<=tage; t++){
+    var datum = jahr+'-'+String(monat).padStart(2,'0')+'-'+String(t).padStart(2,'0');
+    var dObj = ausIso(datum), ft = feiertagName(datum), we = istWE(dObj);
+    state.dienste.forEach(function(d){
+      if(!dienstGiltAm(d, datum)) return;
+      slots(d).forEach(function(sk){
+        var pid = belegung(datum, sk);
+        if(!pid || !st[pid]) return;
+        st[pid].dienste++;
+        st[pid].std += (d.std||0);
+        if(we) st[pid].we++;
+        if(ft) st[pid].feier++;
+        if(dienstEndeMin(d) > 1440 || zeitMin(d.von) >= 20*60) st[pid].nacht++;
+      });
+    });
+  }
+  /* Wunscherfüllung */
+  state.wuensche.forEach(function(w){
+    if(!st[w.pid]) return;
+    var von = ausIso(w.von), bis = ausIso(w.bis);
+    for(var d=new Date(von); d<=bis; d.setDate(d.getDate()+1)){
+      var dat = iso(d);
+      if(dat.substring(0,7) !== jahr+'-'+String(monat).padStart(2,'0')) continue;
+      var hatDienst = false;
+      state.dienste.forEach(function(dd){
+        slots(dd).forEach(function(sk){ if(belegung(dat,sk)===w.pid) hatDienst = true; });
+      });
+      if(w.typ==='frei')  hatDienst ? st[w.pid].wunschVerletzt++ : st[w.pid].wunschOk++;
+      if(w.typ==='dienst') hatDienst ? st[w.pid].wunschOk++ : st[w.pid].wunschVerletzt++;
+    }
+  });
+  return st;
+}
+
+function renderAuswert(){
+  var st = statistik(state.jahr, state.monat);
+  var rows = state.personen.filter(function(p){ return p.aktiv; })
+    .map(function(p){ return st[p.id]; })
+    .filter(Boolean);
+
+  var gesDienste = rows.reduce(function(a,r){ return a+r.dienste; },0);
+  var gesWE      = rows.reduce(function(a,r){ return a+r.we; },0);
+  var mitDienst  = rows.filter(function(r){ return r.dienste>0; });
+  var schnitt    = mitDienst.length ? gesDienste/mitDienst.length : 0;
+
+  var h = '<div class="dp-stats">'
+    + '<div class="dp-stat"><div class="v">'+gesDienste+'</div><div class="l">besetzte Dienste</div></div>'
+    + '<div class="dp-stat"><div class="v">'+gesWE+'</div><div class="l">Wochenenddienste</div></div>'
+    + '<div class="dp-stat"><div class="v">'+schnitt.toFixed(1)+'</div><div class="l">Ø Dienste je Person</div></div>'
+    + '<div class="dp-stat"><div class="v">'+mitDienst.length+'</div><div class="l">Personen eingesetzt</div></div>'
+    + '</div>';
+
+  h += '<div class="dp-card"><h2>Dienstverteilung — '+MONATSNAME[state.monat-1]+' '+state.jahr+'</h2>'
+     + '<div class="dp-hint">Die Spalte <b>Abweichung</b> zeigt, wie weit die Dienstzahl vom '
+     + 'VK-gewichteten Mittel abweicht — das ist das Fairnessmaß.</div>';
+
+  /* VK-gewichtetes Soll */
+  var vkSum = rows.reduce(function(a,r){ return a+(r.vk||0); },0);
+  h += '<div class="dp-tbl-wrap"><table class="dp-tbl"><thead><tr>'
+     + '<th>Person</th><th class="dp-num">VK</th><th class="dp-num">Dienste</th>'
+     + '<th class="dp-num">Stunden</th><th class="dp-num">Wo.-ende</th><th class="dp-num">Feiertag</th>'
+     + '<th class="dp-num">Nacht</th><th class="dp-num">Soll</th><th class="dp-num">Abweichung</th>'
+     + '<th class="dp-num">Wünsche</th></tr></thead><tbody>';
+
+  rows.sort(function(a,b){ return b.dienste-a.dienste; }).forEach(function(r){
+    var soll = vkSum ? gesDienste * (r.vk/vkSum) : 0;
+    var dev  = r.dienste - soll;
+    var cls  = Math.abs(dev) < 1.5 ? 'dp-b-ok' : (Math.abs(dev) < 3 ? 'dp-b-warn' : 'dp-b-err');
+    var wGes = r.wunschOk + r.wunschVerletzt;
+    h += '<tr><td><b>'+esc(r.name)+'</b></td>'
+       + '<td class="dp-num">'+r.vk.toFixed(2)+'</td>'
+       + '<td class="dp-num"><b>'+r.dienste+'</b></td>'
+       + '<td class="dp-num">'+r.std.toFixed(1)+'</td>'
+       + '<td class="dp-num">'+r.we+'</td>'
+       + '<td class="dp-num">'+r.feier+'</td>'
+       + '<td class="dp-num">'+r.nacht+'</td>'
+       + '<td class="dp-num" style="color:var(--dp-mute)">'+soll.toFixed(1)+'</td>'
+       + '<td class="dp-num"><span class="dp-badge '+cls+'">'+(dev>=0?'+':'')+dev.toFixed(1)+'</span></td>'
+       + '<td class="dp-num">'+(wGes ? r.wunschOk+'/'+wGes : '—')+'</td></tr>';
+  });
+  h += '</tbody></table></div></div>';
+  el('dp-p-auswert').innerHTML = h;
+}
+
+/* ---------------- Tab 8: Jahresübersicht ---------------- */
+function renderJahr(){
+  var j = state.jahr;
+  var h = '<div class="dp-toolbar">'
+    + '<b style="font-size:15px">Jahresübersicht '+j+'</b>'
+    + '<div class="dp-spacer"></div>'
+    + '<button class="dp-btn-sm" onclick="window.print()">Drucken</button></div>';
+
+  h += '<div class="dp-card"><h2>Dienste je Person und Monat</h2>'
+     + '<div class="dp-hint">Ersetzt das Blatt „Übersicht" des alten Besetzungsplans, '
+     + 'das nur noch <code>#REF!</code> enthielt. Zählt die tatsächlich verplanten Dienste.</div>';
+
+  h += '<div class="dp-tbl-wrap"><table class="dp-tbl"><thead><tr><th>Person</th>';
+  for(var m=1;m<=12;m++) h += '<th class="dp-num">'+MONATSNAME[m-1].substring(0,3)+'</th>';
+  h += '<th class="dp-num">Summe</th><th class="dp-num">Wo.-ende</th></tr></thead><tbody>';
+
+  var jahrStat = [];
+  for(var m2=1;m2<=12;m2++) jahrStat.push(statistik(j, m2));
+
+  var spaltenSum = new Array(12).fill(0);
+  state.personen.filter(function(p){return p.aktiv;}).forEach(function(p){
+    var sum=0, weSum=0;
+    var cells='';
+    for(var m3=0;m3<12;m3++){
+      var r = jahrStat[m3][p.id];
+      var n = r ? r.dienste : 0;
+      sum += n; weSum += r ? r.we : 0; spaltenSum[m3]+=n;
+      cells += '<td class="dp-num"'+(n?'':' style="color:#c8d2dc"')+'>'+(n||'·')+'</td>';
+    }
+    h += '<tr><td><b>'+esc(p.name)+'</b> <span style="color:var(--dp-mute)">'+p.vk.toFixed(2)+'</span></td>'
+       + cells + '<td class="dp-num"><b>'+sum+'</b></td><td class="dp-num">'+weSum+'</td></tr>';
+  });
+  h += '</tbody><tfoot><tr style="border-top:2px solid var(--dp-line)"><td><b>Summe</b></td>';
+  var ges=0;
+  spaltenSum.forEach(function(n){ ges+=n; h += '<td class="dp-num"><b>'+n+'</b></td>'; });
+  h += '<td class="dp-num"><b>'+ges+'</b></td><td></td></tr></tfoot></table></div></div>';
+  el('dp-p-jahr').innerHTML = h;
+}
+
+/* ============================================================
+   AKTIONEN (global, für onclick)
+   ============================================================ */
+function alleRendern(){
+  renderPlan(); renderPersonen(); renderDienste(); renderAbw();
+  renderWunsch(); renderCheck(); renderAuswert(); renderJahr();
+}
+function aktualisieren(){ speichern(); alleRendern(); }
+
+window.dpTab = function(name){
+  document.querySelectorAll('.dp-tab').forEach(function(b){
+    b.classList.toggle('active', b.getAttribute('data-p')===name);
+  });
+  document.querySelectorAll('.dp-panel').forEach(function(p){
+    p.classList.toggle('active', p.id==='dp-p-'+name);
+  });
+};
+window.dpMonat = function(delta){
+  var m = state.monat + delta;
+  if(m<1){ m=12; state.jahr--; } else if(m>12){ m=1; state.jahr++; }
+  state.monat = m; aktualisieren();
+};
+window.dpSetMonat = function(v){ state.monat = parseInt(v,10); aktualisieren(); };
+window.dpSetJahr  = function(v){ state.jahr  = parseInt(v,10); aktualisieren(); };
+window.dpSetze = function(datum, slotKey, pid){ setzeBelegung(datum, slotKey, pid); aktualisieren(); };
+window.dpLeeren = function(){
+  var pre = state.jahr+'-'+String(state.monat).padStart(2,'0');
+  if(!confirm('Alle Besetzungen im '+MONATSNAME[state.monat-1]+' '+state.jahr+' löschen?')) return;
+  Object.keys(state.plan).forEach(function(k){ if(k.indexOf(pre)===0) delete state.plan[k]; });
+  aktualisieren();
+};
+
+window.dpP = function(id, feld, wert){ var p=person(id); if(p){ p[feld]=wert; aktualisieren(); } };
+window.dpAddP = function(){
+  state.personen.push({id:'p'+Date.now(), name:'Neue Person', kurz:'NEU', vk:1,
+                       quali:'AiW', bereich:'ITS Franziskus', aktiv:true});
+  aktualisieren();
+};
+window.dpDelP = function(id){
+  var p = person(id); if(!p) return;
+  if(!confirm(p.name+' entfernen? Bestehende Einteilungen dieser Person bleiben als Lücke zurück.')) return;
+  state.personen = state.personen.filter(function(x){ return x.id!==id; });
+  Object.keys(state.plan).forEach(function(dt){
+    Object.keys(state.plan[dt]).forEach(function(sk){ if(state.plan[dt][sk]===id) delete state.plan[dt][sk]; });
+  });
+  aktualisieren();
+};
+
+window.dpD = function(id, feld, wert){ var d=dienst(id); if(d){ d[feld]=wert; aktualisieren(); } };
+window.dpAddD = function(){
+  state.dienste.push({id:'d'+Date.now(), kurz:'NEU', name:'Neue Dienstart',
+    bereich:'ITS Franziskus', von:'08:00', bis:'16:00', std:8, tage:'werktag', quali:'egal', anzahl:1});
+  aktualisieren();
+};
+window.dpDelD = function(id){
+  var d = dienst(id); if(!d) return;
+  if(!confirm('Dienstart „'+d.name+'" entfernen? Alle Besetzungen dieser Art gehen verloren.')) return;
+  state.dienste = state.dienste.filter(function(x){ return x.id!==id; });
+  Object.keys(state.plan).forEach(function(dt){
+    Object.keys(state.plan[dt]).forEach(function(sk){
+      if(sk===id || sk.indexOf(id+'#')===0) delete state.plan[dt][sk];
+    });
+  });
+  aktualisieren();
+};
+
+window.dpAddAbw = function(){
+  var p=el('dp-abw-p').value, v=el('dp-abw-von').value, b=el('dp-abw-bis').value, t=el('dp-abw-typ').value;
+  if(!p||!v||!b){ alert('Bitte Person sowie Beginn und Ende angeben.'); return; }
+  if(b<v){ alert('Das Enddatum liegt vor dem Beginn.'); return; }
+  state.abwesenheit.push({id:'a'+Date.now(), pid:p, von:v, bis:b, typ:t});
+  aktualisieren();
+};
+window.dpDelAbw = function(id){
+  state.abwesenheit = state.abwesenheit.filter(function(a){ return a.id!==id; }); aktualisieren();
+};
+window.dpAddW = function(){
+  var p=el('dp-w-p').value, v=el('dp-w-von').value, b=el('dp-w-bis').value;
+  if(!p||!v||!b){ alert('Bitte Person sowie Beginn und Ende angeben.'); return; }
+  if(b<v){ alert('Das Enddatum liegt vor dem Beginn.'); return; }
+  state.wuensche.push({id:'w'+Date.now(), pid:p, von:v, bis:b,
+    typ:el('dp-w-typ').value, prio:el('dp-w-prio').value, notiz:el('dp-w-notiz').value});
+  el('dp-w-notiz').value='';
+  aktualisieren();
+};
+window.dpDelW = function(id){
+  state.wuensche = state.wuensche.filter(function(w){ return w.id!==id; }); aktualisieren();
+};
+
+/* ============================================================
+   SICHERUNG (JSON) — Austausch über Dropbox
+   ============================================================ */
+window.dpExportJSON = function(){
+  var blob = new Blob([JSON.stringify(state, null, 1)], {type:'application/json'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'Dienstplan_'+state.jahr+'-'+String(state.monat).padStart(2,'0')+'_Stand-'+iso(new Date())+'.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+window.dpImportJSON = function(input){
+  var f = input.files[0]; if(!f) return;
+  var r = new FileReader();
+  r.onload = function(){
+    try {
+      var s = JSON.parse(r.result);
+      if(!s.personen || !s.dienste) throw new Error('Unerwarteter Dateiaufbau');
+      if(!confirm('Gesicherten Stand laden? Die aktuellen Daten in diesem Browser werden ersetzt.')) return;
+      for(var k in s) if(s.hasOwnProperty(k)) state[k] = s[k];
+      aktualisieren();
+      alert('Stand geladen: '+state.personen.length+' Personen, '+state.dienste.length+' Dienstarten.');
+    } catch(e){ alert('Die Datei konnte nicht gelesen werden: '+e.message); }
+  };
+  r.readAsText(f);
+  input.value = '';
+};
+
+/* ============================================================
+   EXCEL-EXPORT — echtes .xlsx, ohne externe Bibliothek
+   (ZIP ohne Kompression, "stored")
+   ============================================================ */
+var _crcTab = (function(){
+  var t = new Uint32Array(256);
+  for(var n=0;n<256;n++){
+    var c=n;
+    for(var k=0;k<8;k++) c = (c&1) ? (0xEDB88320 ^ (c>>>1)) : (c>>>1);
+    t[n]=c>>>0;
+  }
+  return t;
+})();
+function crc32(bytes){
+  var c = 0xFFFFFFFF;
+  for(var i=0;i<bytes.length;i++) c = _crcTab[(c ^ bytes[i]) & 0xFF] ^ (c>>>8);
+  return (c ^ 0xFFFFFFFF)>>>0;
+}
+function utf8(str){ return new TextEncoder().encode(str); }
+
+function zipErzeugen(dateien){
+  var lokal=[], zentral=[], offset=0;
+  function u16(v){ return [v&255,(v>>8)&255]; }
+  function u32(v){ return [v&255,(v>>8)&255,(v>>16)&255,(v>>24)&255]; }
+
+  dateien.forEach(function(f){
+    var name = utf8(f.name), daten = utf8(f.inhalt), crc = crc32(daten);
+    var kopf = [].concat([80,75,3,4], u16(20), u16(0x0800), u16(0), u16(0), u16(0),
+                 u32(crc), u32(daten.length), u32(daten.length),
+                 u16(name.length), u16(0));
+    lokal.push(new Uint8Array(kopf), name, daten);
+    zentral.push({name:name, crc:crc, len:daten.length, off:offset});
+    offset += kopf.length + name.length + daten.length;
+  });
+
+  var zStart = offset, zBytes=[];
+  zentral.forEach(function(e){
+    var kopf = [].concat([80,75,1,2], u16(20), u16(20), u16(0x0800), u16(0), u16(0), u16(0),
+                 u32(e.crc), u32(e.len), u32(e.len), u16(e.name.length),
+                 u16(0), u16(0), u16(0), u16(0), u32(0), u32(e.off));
+    zBytes.push(new Uint8Array(kopf), e.name);
+    offset += kopf.length + e.name.length;
+  });
+  var ende = new Uint8Array([].concat([80,75,5,6], u16(0), u16(0),
+    u16(zentral.length), u16(zentral.length), u32(offset-zStart), u32(zStart), u16(0)));
+
+  var alle = lokal.concat(zBytes, [ende]);
+  var gesamt = alle.reduce(function(a,x){ return a+x.length; },0);
+  var out = new Uint8Array(gesamt), pos=0;
+  alle.forEach(function(x){ out.set(x, pos); pos += x.length; });
+  return new Blob([out], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+}
+
+function xmlEsc(s){
+  return String(s==null?'':s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c];
+  });
+}
+function spalte(n){          /* 0 -> A, 26 -> AA */
+  var s='';
+  do { s = String.fromCharCode(65 + (n%26)) + s; n = Math.floor(n/26)-1; } while(n>=0);
+  return s;
+}
+/* zeilen: Array von Arrays. Zellen: string | number | {v, s} (s = Stil-Index) */
+function blattXML(zeilen){
+  var x = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        + '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+        + '<sheetData>';
+  zeilen.forEach(function(zeile, ri){
+    x += '<row r="'+(ri+1)+'">';
+    zeile.forEach(function(z, ci){
+      if(z===null || z===undefined || z==='') return;
+      var wert = (typeof z==='object') ? z.v : z;
+      var stil = (typeof z==='object' && z.s) ? ' s="'+z.s+'"' : '';
+      var ref = spalte(ci)+(ri+1);
+      if(typeof wert === 'number' && isFinite(wert))
+        x += '<c r="'+ref+'"'+stil+'><v>'+wert+'</v></c>';
+      else
+        x += '<c r="'+ref+'"'+stil+' t="inlineStr"><is><t xml:space="preserve">'+xmlEsc(wert)+'</t></is></c>';
+    });
+    x += '</row>';
+  });
+  return x + '</sheetData></worksheet>';
+}
+
+window.dpExportXLSX = function(){
+  var j = state.jahr, m = state.monat;
+  var blaetter = [];
+
+  /* --- 1. Dienstplan des Monats --- */
+  var kopf = ['Datum','Tag','Hinweis'];
+  var spalten = [];
+  state.dienste.forEach(function(d){
+    slots(d).forEach(function(sk,i){
+      kopf.push(d.kurz + (slots(d).length>1 ? ' '+(i+1) : ''));
+      spalten.push({d:d, sk:sk});
+    });
+  });
+  var planZeilen = [ [{v:'Dienstplan '+MONATSNAME[m-1]+' '+j, s:1}], [], kopf.map(function(k){ return {v:k, s:2}; }) ];
+  for(var t=1;t<=tageImMonat(j,m);t++){
+    var datum = j+'-'+String(m).padStart(2,'0')+'-'+String(t).padStart(2,'0');
+    var dObj = ausIso(datum), ft = feiertagName(datum);
+    var zeile = [ String(t)+'.'+m+'.'+j, WOCHENTAG[dObj.getDay()], ft || (istWE(dObj) ? 'Wochenende' : '') ];
+    spalten.forEach(function(s){
+      zeile.push(dienstGiltAm(s.d, datum) ? (pName(belegung(datum, s.sk)) || '—') : '');
+    });
+    planZeilen.push(zeile);
+  }
+  blaetter.push({name:'Dienstplan', zeilen:planZeilen});
+
+  /* --- 2. Auswertung --- */
+  var st = statistik(j, m);
+  var rows = state.personen.filter(function(p){return p.aktiv;}).map(function(p){ return st[p.id]; }).filter(Boolean);
+  var gesD = rows.reduce(function(a,r){return a+r.dienste;},0);
+  var vkS  = rows.reduce(function(a,r){return a+(r.vk||0);},0);
+  var ausw = [ [{v:'Auswertung '+MONATSNAME[m-1]+' '+j, s:1}], [],
+    ['Person','VK','Dienste','Stunden','Wochenende','Feiertag','Nacht','Soll (VK-gewichtet)','Abweichung']
+      .map(function(k){ return {v:k, s:2}; }) ];
+  rows.sort(function(a,b){return b.dienste-a.dienste;}).forEach(function(r){
+    var soll = vkS ? gesD*(r.vk/vkS) : 0;
+    ausw.push([r.name, r.vk, r.dienste, +r.std.toFixed(1), r.we, r.feier, r.nacht,
+               +soll.toFixed(1), +(r.dienste-soll).toFixed(1)]);
+  });
+  blaetter.push({name:'Auswertung', zeilen:ausw});
+
+  /* --- 3. Jahresübersicht --- */
+  var jStat=[]; for(var mm=1;mm<=12;mm++) jStat.push(statistik(j,mm));
+  var jz = [ [{v:'Jahresübersicht '+j+' — Dienste je Person und Monat', s:1}], [],
+             ['Person','VK'].concat(MONATSNAME).concat(['Summe','Wochenende'])
+               .map(function(k){ return {v:k, s:2}; }) ];
+  state.personen.filter(function(p){return p.aktiv;}).forEach(function(p){
+    var z=[p.name, p.vk], sum=0, weS=0;
+    for(var k=0;k<12;k++){
+      var r=jStat[k][p.id], n=r?r.dienste:0;
+      sum+=n; weS += r?r.we:0; z.push(n);
+    }
+    z.push(sum); z.push(weS);
+    jz.push(z);
+  });
+  blaetter.push({name:'Jahresübersicht', zeilen:jz});
+
+  /* --- 4. Mitarbeiter --- */
+  var mz = [ [{v:'Mitarbeiterstamm', s:1}], [],
+             ['Name','Kürzel','VK','Qualifikation','Primärbereich','Aktiv'].map(function(k){ return {v:k,s:2}; }) ];
+  state.personen.forEach(function(p){
+    mz.push([p.name, p.kurz, p.vk, p.quali==='FA'?'Facharzt':'AiW', p.bereich, p.aktiv?'ja':'nein']);
+  });
+  blaetter.push({name:'Mitarbeiter', zeilen:mz});
+
+  /* --- 5. Dienstmodelle --- */
+  var dz = [ [{v:'Dienstmodelle', s:1}], [],
+             ['Kürzel','Bezeichnung','Bereich','von','bis','Stunden','Tage','Qualifikation','Besetzung']
+               .map(function(k){ return {v:k,s:2}; }) ];
+  var TG = {alle:'täglich', werktag:'Mo–Fr', we:'Wochenende/Feiertag'};
+  state.dienste.forEach(function(d){
+    dz.push([d.kurz, d.name, d.bereich, d.von, d.bis, d.std, TG[d.tage]||d.tage,
+             d.quali==='FA'?'nur Facharzt':'beliebig', d.anzahl||1]);
+  });
+  blaetter.push({name:'Dienstmodelle', zeilen:dz});
+
+  /* --- 6. Konflikte --- */
+  var probleme = pruefe(j, m);
+  var kz = [ [{v:'Regelprüfung '+MONATSNAME[m-1]+' '+j, s:1}],
+             [{v:'Geprüft: Ruhezeit ArbZG § 5 (11 h), Doppelbesetzung, Abwesenheit, Facharztabdeckung, unbesetzte Dienste, Freiwünsche'}],
+             [],
+             ['Datum','Einstufung','Art','Beschreibung'].map(function(k){ return {v:k,s:2}; }) ];
+  var ARTEN = {ruhezeit:'Ruhezeit', doppelt:'Doppelbesetzung', abwesend:'Abwesenheit',
+               quali:'Qualifikation', unbesetzt:'Unbesetzt', wunsch:'Wunsch'};
+  probleme.forEach(function(p){
+    kz.push([dtKurz(p.datum), p.stufe==='err'?'Verstoß':'Hinweis', ARTEN[p.art]||p.art, p.text]);
+  });
+  if(!probleme.length) kz.push(['—','','','Keine Beanstandungen.']);
+  blaetter.push({name:'Konflikte', zeilen:kz});
+
+  /* ---- Arbeitsmappe zusammensetzen ---- */
+  var dateien = [];
+  dateien.push({name:'[Content_Types].xml', inhalt:
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+    + '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+    + '<Default Extension="xml" ContentType="application/xml"/>'
+    + '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+    + '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
+    + blaetter.map(function(b,i){ return '<Override PartName="/xl/worksheets/sheet'+(i+1)
+        +'.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'; }).join('')
+    + '</Types>'});
+
+  dateien.push({name:'_rels/.rels', inhalt:
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+    + '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'
+    + '</Relationships>'});
+
+  dateien.push({name:'xl/workbook.xml', inhalt:
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    + '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
+    + 'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>'
+    + blaetter.map(function(b,i){ return '<sheet name="'+xmlEsc(b.name)+'" sheetId="'+(i+1)+'" r:id="rId'+(i+1)+'"/>'; }).join('')
+    + '</sheets></workbook>'});
+
+  dateien.push({name:'xl/_rels/workbook.xml.rels', inhalt:
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+    + blaetter.map(function(b,i){ return '<Relationship Id="rId'+(i+1)
+        +'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet'+(i+1)+'.xml"/>'; }).join('')
+    + '<Relationship Id="rIdS" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'
+    + '</Relationships>'});
+
+  /* Stile: 0 = normal, 1 = Titel, 2 = Tabellenkopf */
+  dateien.push({name:'xl/styles.xml', inhalt:
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    + '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+    + '<fonts count="3">'
+    + '<font><sz val="11"/><name val="Calibri"/></font>'
+    + '<font><b/><sz val="14"/><color rgb="FF1F4E78"/><name val="Calibri"/></font>'
+    + '<font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>'
+    + '</fonts>'
+    + '<fills count="3"><fill><patternFill patternType="none"/></fill>'
+    + '<fill><patternFill patternType="gray125"/></fill>'
+    + '<fill><patternFill patternType="solid"><fgColor rgb="FF1F4E78"/><bgColor indexed="64"/></patternFill></fill></fills>'
+    + '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>'
+    + '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
+    + '<cellXfs count="3">'
+    + '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'
+    + '<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/>'
+    + '<xf numFmtId="0" fontId="2" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/>'
+    + '</cellXfs></styleSheet>'});
+
+  blaetter.forEach(function(b,i){
+    dateien.push({name:'xl/worksheets/sheet'+(i+1)+'.xml', inhalt:blattXML(b.zeilen)});
+  });
+
+  var blob = zipErzeugen(dateien);
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'Dienstplan_'+MONATSNAME[m-1]+'_'+j+'.xlsx';
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+
+/* ============================================================
+   START
+   ============================================================ */
+if(!laden()) { erstbefuellung(); speichern(); }
+alleRendern();
+
+})();
+</script>
+</body>
+</html>

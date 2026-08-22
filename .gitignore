@@ -22,3 +22,11 @@
 *.pem
 *.key
 id_rsa*
+
+# Dienstplanung — personenbezogene Beschäftigtendaten, NIEMALS ins öffentliche Repo
+# (Das Tool selbst, dienstplan.html, enthält KEINE Namen und wird bewusst versioniert.)
+Dienstplan/
+*Besetzungsplan*
+*Dienstwunsch*
+Dienstplan_*.json
+Dienstplan_*.xlsx
