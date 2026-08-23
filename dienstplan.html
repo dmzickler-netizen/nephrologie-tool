@@ -1288,15 +1288,50 @@ function findeZeitraeume(zeile){
   return treffer;
 }
 
-/* Name aus dem Mitarbeiterstamm im Text suchen */
+/* Editierabstand, begrenzt — reicht für Namensvarianten wie
+   Rampmaier/Rampmeier, die zwischen den Quelldateien vorkommen. */
+function abstand(a, b, max){
+  if(Math.abs(a.length - b.length) > max) return max + 1;
+  var vor = [], akt = [];
+  for(var j=0; j<=b.length; j++) vor[j] = j;
+  for(var i=1; i<=a.length; i++){
+    akt = [i]; var zeilenMin = i;
+    for(var j2=1; j2<=b.length; j2++){
+      var kosten = a.charAt(i-1) === b.charAt(j2-1) ? 0 : 1;
+      akt[j2] = Math.min(vor[j2] + 1, akt[j2-1] + 1, vor[j2-1] + kosten);
+      if(akt[j2] < zeilenMin) zeilenMin = akt[j2];
+    }
+    if(zeilenMin > max) return max + 1;
+    vor = akt;
+  }
+  return vor[b.length];
+}
+
+/* Name aus dem Mitarbeiterstamm im Text suchen.
+   Erst wörtlich, dann tolerant gegen Schreibvarianten. */
 function findePerson(text){
-  var tl = text.toLowerCase();
+  var tl = ' ' + text.toLowerCase().replace(/[^a-zäöüß]+/g, ' ') + ' ';
   var beste = null;
   state.personen.forEach(function(p){
     var n = p.name.trim().toLowerCase();
     if(n.length < 3) return;
-    if(tl.indexOf(n) >= 0 && (!beste || n.length > beste.name.trim().length)) beste = p;
+    if(tl.indexOf(' '+n+' ') >= 0 && (!beste || n.length > beste.name.trim().length)) beste = p;
   });
+  if(beste){ beste.__unscharf = false; return beste; }
+
+  /* tolerant: ein Wort im Text weicht um höchstens zwei Zeichen ab */
+  var woerter = tl.split(/\s+/).filter(function(w){ return w.length >= 4; });
+  var trefferAbstand = 99;
+  state.personen.forEach(function(p){
+    var n = p.name.trim().toLowerCase();
+    if(n.length < 5) return;
+    var grenze = n.length >= 8 ? 2 : 1;
+    woerter.forEach(function(w){
+      var d = abstand(w, n, grenze);
+      if(d <= grenze && d < trefferAbstand){ trefferAbstand = d; beste = p; }
+    });
+  });
+  if(beste) beste.__unscharf = true;
   return beste;
 }
 
@@ -1332,7 +1367,7 @@ function wunschParsen(text){
     block.forEach(function(z, idx){
       var k = z.text.match(/^#?\s*(?:WUNSCH|DIENSTWUNSCH|NAME)\s*[:\s]\s*(.+?)(?:\s+\d{1,2}\/\d{4})?\s*$/i);
       var p = findePerson(k ? k[1] : z.text);
-      if(p) namen.push({idx:idx, person:p});
+      if(p) namen.push({idx:idx, person:p, unscharf:!!p.__unscharf});
     });
 
     /* 2. Wunschzeilen auswerten und dem passenden Namen zuordnen */
@@ -1341,13 +1376,13 @@ function wunschParsen(text){
       var zeitraeume = findeZeitraeume(z.text);
       if(!zeitraeume.length) return;
 
-      var treffer = null;
+      var treffer = null, unscharf = false;
       for(var i=namen.length-1; i>=0; i--){        /* nächster Name oberhalb */
-        if(namen[i].idx <= idx){ treffer = namen[i].person; break; }
+        if(namen[i].idx <= idx){ treffer = namen[i].person; unscharf = namen[i].unscharf; break; }
       }
       if(!treffer){                                 /* sonst: erster darunter */
         for(var j=0; j<namen.length; j++){
-          if(namen[j].idx > idx){ treffer = namen[j].person; break; }
+          if(namen[j].idx > idx){ treffer = namen[j].person; unscharf = namen[j].unscharf; break; }
         }
       }
       var typ  = WORT_DIENST.test(z.text) && !WORT_FREI.test(z.text) ? 'dienst' : 'frei';
@@ -1357,7 +1392,7 @@ function wunschParsen(text){
 
       zeitraeume.forEach(function(zr){
         out.push({ pid: treffer ? treffer.id : '', typ:typ, von:zr.von, bis:zr.bis,
-                   prio:prio, notiz:notiz, quelle:z.text });
+                   prio:prio, notiz:notiz, quelle:z.text, unscharf:unscharf });
       });
     });
   });
@@ -1375,20 +1410,25 @@ function renderVorschau(){
     + 'dann übernehmen.'
     + (offen ? ' <b style="color:var(--dp-err)">'+offen+'× fehlt die Person</b> — '
              + 'diese Zeilen werden übersprungen.' : '')
-    + '</div><div class="dp-tbl-wrap"><table class="dp-tbl"><thead><tr>'
-    + '<th style="width:150px">Person</th><th style="width:105px">Wunsch</th>'
+    + (wunschKandidaten.some(function(k){ return k.unscharf; })
+       ? ' <b style="color:var(--dp-warn)">?</b> = Name wich von der Schreibweise im Stamm ab.' : '')
+    + '</div><div class="dp-tbl-wrap"><table class="dp-tbl" style="min-width:900px"><thead><tr>'
+    + '<th style="width:185px">Person</th><th style="width:105px">Wunsch</th>'
     + '<th style="width:135px">von</th><th style="width:135px">bis</th>'
     + '<th style="width:80px">wichtig</th><th>erkannt aus</th><th style="width:45px"></th>'
     + '</tr></thead><tbody>';
 
   wunschKandidaten.forEach(function(k, i){
-    h += '<tr'+(k.pid?'':' style="background:#fff5f5"')+'>'
-      + '<td><select onchange="dpKand('+i+',\'pid\',this.value)">'
+    h += '<tr'+(k.pid ? (k.unscharf ? ' style="background:#fffbeb"' : '') : ' style="background:#fff5f5"')+'>'
+      + '<td'+(k.unscharf ? ' title="Name wich von der Schreibweise im Stamm ab — bitte prüfen"' : '')+'>'
+      + '<div style="display:flex;align-items:center;gap:5px">'
+      + (k.unscharf ? '<span class="dp-badge dp-b-warn" style="flex:none">?</span>' : '')
+      + '<select style="flex:1;min-width:0" onchange="dpKand('+i+',\'pid\',this.value)">'
       + '<option value="">— wer? —</option>'
       + state.personen.filter(function(p){ return p.aktiv; }).map(function(p){
           return '<option value="'+p.id+'"'+(p.id===k.pid?' selected':'')+'>'+esc(p.name)+'</option>';
         }).join('')
-      + '</select></td>'
+      + '</select></div></td>'
       + '<td><select onchange="dpKand('+i+',\'typ\',this.value)">'
       + '<option value="frei"'  +(k.typ==='frei'?' selected':'')  +'>frei haben</option>'
       + '<option value="dienst"'+(k.typ==='dienst'?' selected':'')+'>Dienst</option>'
@@ -1397,7 +1437,8 @@ function renderVorschau(){
       + '<td><input type="date" value="'+k.bis+'" onchange="dpKand('+i+',\'bis\',this.value)"></td>'
       + '<td style="text-align:center"><input type="checkbox"'+(k.prio==='hoch'?' checked':'')
       + ' style="width:auto" onchange="dpKand('+i+',\'prio\',this.checked?\'hoch\':\'normal\')"></td>'
-      + '<td style="color:var(--dp-mute);font-size:12px">'+esc(k.quelle)+'</td>'
+      + '<td style="color:var(--dp-mute);font-size:12px;min-width:190px;'
+      + 'white-space:normal;line-height:1.35">'+esc(k.quelle)+'</td>'
       + '<td><button class="dp-btn-sm dp-btn-danger" onclick="dpKandWeg('+i+')">✕</button></td>'
       + '</tr>';
   });
