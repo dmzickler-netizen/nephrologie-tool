@@ -828,19 +828,23 @@ function renderAbw(){
 var wunschMeldung = null;      /* {text, farbe} — überlebt das Neurendern */
 function renderWunsch(){
   var h = '<div class="dp-card"><h2>Wünsche aus einer Mail übernehmen</h2>'
-    + '<div class="dp-hint">Den Textblock aus der Mail hier einfügen — er beginnt mit '
-    + '<code>#WUNSCH</code> und stammt aus der Seite <b>Dienstwünsche</b>, die an die '
-    + 'Mitarbeiter verteilt wird. Mehrere Blöcke auf einmal sind möglich.</div>'
-    + '<textarea id="dp-w-import" rows="5" placeholder="#WUNSCH Younes 11/2026&#10;'
-    + 'frei 2026-11-14..2026-11-16 !&#10;dienst 2026-11-07&#10;#ENDE" '
+    + '<div class="dp-hint">Mailtext hier einfügen — <b>so wie er geschrieben wurde</b>. '
+    + 'Erkannt werden Schreibweisen wie <code>14.–16.11.</code>, <code>vom 14. bis 16. November</code> '
+    + 'oder <code>24.12. bitte frei</code>, auch mehrere Mails auf einmal. '
+    + 'Alles Erkannte kommt erst in eine Vorschau.</div>'
+    + '<textarea id="dp-w-import" rows="6" placeholder="Hallo, '
+    + 'ich hätte vom 14. bis 16.11. gerne frei (Hochzeit, wichtig).&#10;'
+    + 'Am 7.11. würde ich einen Dienst übernehmen.&#10;Viele Grüße, Younes" '
     + 'style="width:100%;padding:9px 11px;border:1px solid var(--dp-line);border-radius:7px;'
     + 'font:12.5px/1.5 ui-monospace,Menlo,Consolas,monospace;background:#fbfdff;resize:vertical">'
     + '</textarea>'
     + '<div class="dp-row" style="margin-top:9px">'
-    + '<button class="dp-btn-sm" onclick="dpWunschImport()">Wünsche übernehmen</button>'
+    + '<button class="dp-btn-sm" onclick="dpWunschLesen()">Text auswerten</button>'
+    + '<button class="dp-btn-sm" onclick="dpVorlage()">Vorlage zeigen</button>'
     + '<span id="dp-w-meldung" style="font-size:12.5px;font-weight:600'
     + (wunschMeldung ? ';color:'+wunschMeldung.farbe : '') + '">'
     + (wunschMeldung ? esc(wunschMeldung.text) : '') + '</span></div></div>'
+    + renderVorschau()
 
     + '<div class="dp-card"><h2>Dienstplanwünsche</h2>'
     + '<div class="dp-hint">Frei- und Dienstwünsche der Mitarbeiter. Ein verletzter Freiwunsch '
@@ -1189,69 +1193,290 @@ window.dpAddAbw = function(){
 window.dpDelAbw = function(id){
   state.abwesenheit = state.abwesenheit.filter(function(a){ return a.id!==id; }); aktualisieren();
 };
-/* Textblöcke aus der Wunsch-Seite einlesen.
-   #WUNSCH <Name> <M>/<JJJJ>
-   frei|dienst JJJJ-MM-TT[..JJJJ-MM-TT] [!]
-   #ENDE                                                        */
-window.dpWunschImport = function(){
-  var feld = el('dp-w-import'), roh = (feld ? feld.value : '').trim();
-  function sag(txt, farbe){
-    wunschMeldung = {text:txt, farbe:farbe};
-    var m = el('dp-w-meldung');
-    if(m){ m.textContent = txt; m.style.color = farbe; }
+/* ============================================================
+   WUNSCH-ERKENNUNG AUS FREITEXT
+   Liest Mails so, wie sie geschrieben werden. Alles Erkannte
+   landet in einer Vorschau und wird erst nach Bestätigung
+   übernommen — geraten wird nur vorgeschlagen, nie gespeichert.
+   ============================================================ */
+var wunschKandidaten = [];      /* Vorschau, noch nicht im Plan */
+var wunschMeldung = null;
+
+var MONATSWORT = {
+  jan:1, januar:1, feb:2, februar:2, mar:3, mär:3, maerz:3, 'märz':3, marz:3,
+  apr:4, april:4, mai:5, jun:6, juni:6, jul:7, juli:7, aug:8, august:8,
+  sep:9, sept:9, september:9, okt:10, oktober:10, nov:11, november:11,
+  dez:12, dezember:12
+};
+var WORT_FREI   = /\b(frei|urlaub|dienstfrei|freihaben|abwesend|nicht\s+verf[üu]gbar|kein[e]?\s+dienst)/i;
+var WORT_DIENST = /\b(dienst(?!frei)|[üu]bernehm|sbd|sp[äa]tdienst|nachtdienst|wochenenddienst|kann\s+arbeiten|arbeite)/i;
+var WORT_WICHTIG= /(!|\bwichtig|\bdringend|\bunbedingt|\bbitte\s+unbedingt|\bfest\b)/i;
+
+function jahrVoll(j){
+  if(j === undefined || j === null || j === '') return null;
+  j = +j;
+  return j < 100 ? 2000 + j : j;
+}
+function baueDatum(t, m, j){
+  if(!t || !m) return null;
+  j = j || state.jahr;
+  if(m < 1 || m > 12 || t < 1 || t > 31) return null;
+  if(t > tageImMonat(j, m)) return null;
+  return j+'-'+String(m).padStart(2,'0')+'-'+String(t).padStart(2,'0');
+}
+function monatAusWort(w){
+  if(!w) return null;
+  var k = w.toLowerCase().replace(/\.$/,'');
+  return MONATSWORT[k] || null;
+}
+
+/* Findet in einer Zeile alle Zeitangaben. Reihenfolge der Muster ist
+   wichtig: das spezifischste zuerst, damit "14.-16.11." nicht als
+   zwei Einzeldaten zerfällt. */
+function findeZeitraeume(zeile){
+  var treffer = [], rest = zeile;
+  function schluck(re, bau){
+    var m;
+    while((m = re.exec(rest)) !== null){
+      var z = bau(m);
+      if(z){ treffer.push(z); rest = rest.replace(m[0], ' '.repeat(m[0].length)); re.lastIndex = 0; }
+      else re.lastIndex = m.index + m[0].length;
+    }
   }
-  if(!roh){ sag('Bitte zuerst den Text aus der Mail einfügen.', 'var(--dp-warn)'); return; }
+  /* ISO: 2026-11-14[..2026-11-16] */
+  schluck(/(\d{4}-\d{2}-\d{2})\s*(?:\.\.|-|–|bis)\s*(\d{4}-\d{2}-\d{2})/gi,
+    function(m){ return {von:m[1], bis:m[2]}; });
+  schluck(/(\d{4}-\d{2}-\d{2})/gi, function(m){ return {von:m[1], bis:m[1]}; });
 
-  var zeilen = roh.split(/\r?\n/);
-  var aktuell = null, neu = 0, ersetzt = 0, unbekannt = [], ohnePerson = [];
+  /* 14.11.2026 - 16.11.2026  |  14.11. bis 16.11. */
+  schluck(/(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{2,4})?\s*(?:-|–|—|bis|zum)\s*(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{2,4})?/gi,
+    function(m){
+      var j2 = jahrVoll(m[6]), j1 = jahrVoll(m[3]) || j2;
+      var a = baueDatum(+m[1], +m[2], j1), b = baueDatum(+m[4], +m[5], j2 || j1);
+      return (a && b) ? {von:a, bis:b} : null;
+    });
+  /* 14. - 16.11.2026   (Tagesbereich, Monat nur hinten) */
+  schluck(/(\d{1,2})\.\s*(?:-|–|—|bis|zum)\s*(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{2,4})?/gi,
+    function(m){
+      var j = jahrVoll(m[4]);
+      var a = baueDatum(+m[1], +m[3], j), b = baueDatum(+m[2], +m[3], j);
+      return (a && b) ? {von:a, bis:b} : null;
+    });
+  /* 14. bis 16. November [2026] */
+  schluck(/(\d{1,2})\.?\s*(?:-|–|—|bis|zum)\s*(\d{1,2})\.?\s*([A-Za-zÄÖÜäöü]{3,9})\.?\s*(\d{4})?/gi,
+    function(m){
+      var mo = monatAusWort(m[3]); if(!mo) return null;
+      var j = jahrVoll(m[4]);
+      var a = baueDatum(+m[1], mo, j), b = baueDatum(+m[2], mo, j);
+      return (a && b) ? {von:a, bis:b} : null;
+    });
+  /* 14. November [2026] */
+  schluck(/(\d{1,2})\.?\s*([A-Za-zÄÖÜäöü]{3,9})\.?\s*(\d{4})?/gi,
+    function(m){
+      var mo = monatAusWort(m[2]); if(!mo) return null;
+      var d = baueDatum(+m[1], mo, jahrVoll(m[3]));
+      return d ? {von:d, bis:d} : null;
+    });
+  /* 24.12.[2026] */
+  schluck(/(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{2,4})?/gi,
+    function(m){
+      var d = baueDatum(+m[1], +m[2], jahrVoll(m[3]));
+      return d ? {von:d, bis:d} : null;
+    });
 
-  zeilen.forEach(function(z){
-    z = z.trim();
-    if(!z || z === '#ENDE') return;
-    var k = z.match(/^#WUNSCH\s+(.+?)\s+(\d{1,2})\/(\d{4})\s*$/i);
-    if(k){
-      var suche = k[1].trim().toLowerCase();
-      aktuell = null;
-      for(var i=0;i<state.personen.length;i++){
-        if(state.personen[i].name.trim().toLowerCase() === suche){ aktuell = state.personen[i]; break; }
-      }
-      if(!aktuell && ohnePerson.indexOf(k[1].trim()) < 0) ohnePerson.push(k[1].trim());
+  treffer.forEach(function(t){ if(t.bis < t.von){ var x=t.von; t.von=t.bis; t.bis=x; } });
+  return treffer;
+}
+
+/* Name aus dem Mitarbeiterstamm im Text suchen */
+function findePerson(text){
+  var tl = text.toLowerCase();
+  var beste = null;
+  state.personen.forEach(function(p){
+    var n = p.name.trim().toLowerCase();
+    if(n.length < 3) return;
+    if(tl.indexOf(n) >= 0 && (!beste || n.length > beste.name.trim().length)) beste = p;
+  });
+  return beste;
+}
+
+/* Mails nennen den Namen meist erst in der Grußformel — also
+   erst alle Namensnennungen einsammeln, dann zuordnen:
+   ein Name gilt ab seiner Zeile abwärts; steht davor keiner,
+   greift der nächste darunter. Trennlinien und Leerzeilenblöcke
+   setzen den Kontext zurück, damit aneinandergehängte Mails
+   nicht ineinanderlaufen. */
+function inBloecke(zeilen){
+  var bloecke = [], akt = [], leerLauf = 0;
+  zeilen.forEach(function(z, i){
+    var t = z.trim();
+    var trenner = /^[-_=*]{3,}$/.test(t) || /^(von|from|betreff|subject|gesendet|an|to)\s*:/i.test(t);
+    if(!t){ leerLauf++; } else { leerLauf = 0; }
+    if(trenner || leerLauf >= 2){
+      if(akt.length){ bloecke.push(akt); akt = []; }
       return;
     }
-    var w = z.match(/^(frei|dienst)\s+(\d{4}-\d{2}-\d{2})(?:\s*\.\.\s*(\d{4}-\d{2}-\d{2}))?\s*(!)?\s*(?:\((.*)\))?$/i);
-    if(!w){ unbekannt.push(z); return; }
-    if(!aktuell) return;
-    var von = w[2], bis = w[3] || w[2];
-    if(bis < von){ var t = von; von = bis; bis = t; }
-    /* gleiche Person, gleicher Zeitraum: ersetzen statt doppeln */
+    if(t) akt.push({nr:i, text:t});
+  });
+  if(akt.length) bloecke.push(akt);
+  return bloecke;
+}
+
+function wunschParsen(text){
+  var bloecke = inBloecke(text.split(/\r?\n/));
+  var out = [];
+
+  bloecke.forEach(function(block){
+    /* 1. Namensnennungen im Block verorten */
+    var namen = [];
+    block.forEach(function(z, idx){
+      var k = z.text.match(/^#?\s*(?:WUNSCH|DIENSTWUNSCH|NAME)\s*[:\s]\s*(.+?)(?:\s+\d{1,2}\/\d{4})?\s*$/i);
+      var p = findePerson(k ? k[1] : z.text);
+      if(p) namen.push({idx:idx, person:p});
+    });
+
+    /* 2. Wunschzeilen auswerten und dem passenden Namen zuordnen */
+    block.forEach(function(z, idx){
+      if(/^#ENDE/i.test(z.text)) return;
+      var zeitraeume = findeZeitraeume(z.text);
+      if(!zeitraeume.length) return;
+
+      var treffer = null;
+      for(var i=namen.length-1; i>=0; i--){        /* nächster Name oberhalb */
+        if(namen[i].idx <= idx){ treffer = namen[i].person; break; }
+      }
+      if(!treffer){                                 /* sonst: erster darunter */
+        for(var j=0; j<namen.length; j++){
+          if(namen[j].idx > idx){ treffer = namen[j].person; break; }
+        }
+      }
+      var typ  = WORT_DIENST.test(z.text) && !WORT_FREI.test(z.text) ? 'dienst' : 'frei';
+      var prio = WORT_WICHTIG.test(z.text) ? 'hoch' : 'normal';
+      var notiz = z.text.replace(/[#!]/g,'').trim();
+      if(notiz.length > 90) notiz = notiz.slice(0,88)+'…';
+
+      zeitraeume.forEach(function(zr){
+        out.push({ pid: treffer ? treffer.id : '', typ:typ, von:zr.von, bis:zr.bis,
+                   prio:prio, notiz:notiz, quelle:z.text });
+      });
+    });
+  });
+  out.sort(function(a,b){ return a.von < b.von ? -1 : (a.von > b.von ? 1 : 0); });
+  return out;
+}
+
+/* ---------- Vorschau ---------- */
+function renderVorschau(){
+  if(!wunschKandidaten.length) return '';
+  var offen = wunschKandidaten.filter(function(k){ return !k.pid; }).length;
+  var h = '<div class="dp-card" style="border-color:var(--dp-accent);border-width:1.5px">'
+    + '<h2>Erkannt — bitte prüfen</h2>'
+    + '<div class="dp-hint">Nichts davon ist gespeichert. Zeilen korrigieren, verwerfen, '
+    + 'dann übernehmen.'
+    + (offen ? ' <b style="color:var(--dp-err)">'+offen+'× fehlt die Person</b> — '
+             + 'diese Zeilen werden übersprungen.' : '')
+    + '</div><div class="dp-tbl-wrap"><table class="dp-tbl"><thead><tr>'
+    + '<th style="width:150px">Person</th><th style="width:105px">Wunsch</th>'
+    + '<th style="width:135px">von</th><th style="width:135px">bis</th>'
+    + '<th style="width:80px">wichtig</th><th>erkannt aus</th><th style="width:45px"></th>'
+    + '</tr></thead><tbody>';
+
+  wunschKandidaten.forEach(function(k, i){
+    h += '<tr'+(k.pid?'':' style="background:#fff5f5"')+'>'
+      + '<td><select onchange="dpKand('+i+',\'pid\',this.value)">'
+      + '<option value="">— wer? —</option>'
+      + state.personen.filter(function(p){ return p.aktiv; }).map(function(p){
+          return '<option value="'+p.id+'"'+(p.id===k.pid?' selected':'')+'>'+esc(p.name)+'</option>';
+        }).join('')
+      + '</select></td>'
+      + '<td><select onchange="dpKand('+i+',\'typ\',this.value)">'
+      + '<option value="frei"'  +(k.typ==='frei'?' selected':'')  +'>frei haben</option>'
+      + '<option value="dienst"'+(k.typ==='dienst'?' selected':'')+'>Dienst</option>'
+      + '</select></td>'
+      + '<td><input type="date" value="'+k.von+'" onchange="dpKand('+i+',\'von\',this.value)"></td>'
+      + '<td><input type="date" value="'+k.bis+'" onchange="dpKand('+i+',\'bis\',this.value)"></td>'
+      + '<td style="text-align:center"><input type="checkbox"'+(k.prio==='hoch'?' checked':'')
+      + ' style="width:auto" onchange="dpKand('+i+',\'prio\',this.checked?\'hoch\':\'normal\')"></td>'
+      + '<td style="color:var(--dp-mute);font-size:12px">'+esc(k.quelle)+'</td>'
+      + '<td><button class="dp-btn-sm dp-btn-danger" onclick="dpKandWeg('+i+')">✕</button></td>'
+      + '</tr>';
+  });
+  h += '</tbody></table></div><div class="dp-row" style="margin-top:12px">'
+    + '<button class="dp-btn" style="background:var(--dp-accent);color:#fff" '
+    + 'onclick="dpKandUebernehmen()">'+wunschKandidaten.filter(function(k){return k.pid;}).length
+    + ' Wünsche übernehmen</button>'
+    + '<button class="dp-btn-sm" onclick="dpKandVerwerfen()">alles verwerfen</button>'
+    + '</div></div>';
+  return h;
+}
+
+window.dpKand = function(i, feld, wert){
+  if(!wunschKandidaten[i]) return;
+  wunschKandidaten[i][feld] = wert;
+  if(feld==='von' && wunschKandidaten[i].bis < wert) wunschKandidaten[i].bis = wert;
+  if(feld==='bis' && wert < wunschKandidaten[i].von) wunschKandidaten[i].von = wert;
+  renderWunsch();
+};
+window.dpKandWeg = function(i){ wunschKandidaten.splice(i,1); renderWunsch(); };
+window.dpKandVerwerfen = function(){ wunschKandidaten = []; wunschMeldung = null; renderWunsch(); };
+
+window.dpWunschLesen = function(){
+  var feld = el('dp-w-import'), roh = (feld ? feld.value : '').trim();
+  if(!roh){ wunschMeldung = {text:'Bitte zuerst den Mailtext einfügen.', farbe:'var(--dp-warn)'};
+            renderWunsch(); return; }
+  wunschKandidaten = wunschParsen(roh);
+  if(!wunschKandidaten.length){
+    wunschMeldung = {text:'Keine Datumsangabe gefunden — bitte unten von Hand eintragen.',
+                     farbe:'var(--dp-err)'};
+  } else {
+    var ohne = wunschKandidaten.filter(function(k){ return !k.pid; }).length;
+    wunschMeldung = {text:wunschKandidaten.length+' Zeitraum(e) erkannt'
+                          +(ohne?' — bei '+ohne+' fehlt die Person':''),
+                     farbe: ohne ? 'var(--dp-warn)' : 'var(--dp-ok)'};
+  }
+  renderWunsch();
+};
+
+window.dpKandUebernehmen = function(){
+  var neu = 0, ersetzt = 0;
+  wunschKandidaten.forEach(function(k){
+    if(!k.pid) return;
     var vorher = state.wuensche.length;
     state.wuensche = state.wuensche.filter(function(x){
-      return !(x.pid === aktuell.id && x.von === von && x.bis === bis);
+      return !(x.pid===k.pid && x.von===k.von && x.bis===k.bis);
     });
     if(state.wuensche.length < vorher) ersetzt++;
-    state.wuensche.push({ id:'w'+Date.now()+'_'+neu, pid:aktuell.id, von:von, bis:bis,
-                          typ:w[1].toLowerCase(), prio:w[4] ? 'hoch' : 'normal',
-                          notiz:(w[5]||'').trim() });
+    state.wuensche.push({ id:'w'+Date.now()+'_'+neu, pid:k.pid, von:k.von, bis:k.bis,
+                          typ:k.typ, prio:k.prio, notiz:k.notiz });
     neu++;
   });
-
-  if(!neu && ohnePerson.length){
-    sag('Kein Treffer: „'+ohnePerson.join('", „')+'" steht nicht im Mitarbeiterstamm. '
-        +'Name dort anlegen oder Schreibweise angleichen.', 'var(--dp-err)');
-    return;
-  }
-  if(!neu){
-    sag('Nichts erkannt — beginnt der Text mit #WUNSCH?', 'var(--dp-err)');
-    return;
-  }
-  feld.value = '';
-  var txt = neu+' '+(neu===1?'Wunsch':'Wünsche')+' übernommen';
-  if(ersetzt)          txt += ', '+ersetzt+' davon aktualisiert';
-  if(ohnePerson.length) txt += ' · unbekannt: '+ohnePerson.join(', ');
-  if(unbekannt.length)  txt += ' · '+unbekannt.length+' Zeile(n) übersprungen';
-  sag(txt, ohnePerson.length ? 'var(--dp-warn)' : 'var(--dp-ok)');
+  var uebrig = wunschKandidaten.filter(function(k){ return !k.pid; }).length;
+  wunschKandidaten = [];
+  var feld = el('dp-w-import'); if(feld) feld.value = '';
+  wunschMeldung = {text: neu+' übernommen'+(ersetzt?', '+ersetzt+' aktualisiert':'')
+                        +(uebrig?' · '+uebrig+' ohne Person übersprungen':''),
+                   farbe: uebrig ? 'var(--dp-warn)' : 'var(--dp-ok)'};
   aktualisieren();
 };
+
+/* Mail-Vorlage zum Rundschicken */
+var MAIL_VORLAGE =
+  'Dienstwunsch <Monat/Jahr>\n'
++ 'Name: <Nachname>\n'
++ '\n'
++ 'frei:   14.11. - 16.11.   (wichtig: Hochzeit)\n'
++ 'frei:   23.11.\n'
++ 'Dienst: 07.11.\n';
+
+window.dpVorlage = function(){
+  var t = el('dp-w-import'); if(!t) return;
+  t.value = MAIL_VORLAGE;
+  t.focus();
+  wunschMeldung = {text:'Vorlage eingefügt — so darf eine Mail aussehen. '
+                      + 'Freitext wird aber genauso gelesen.', farbe:'var(--dp-mute)'};
+  renderWunsch();
+};
+
 window.dpAddW = function(){
   var p=el('dp-w-p').value, v=el('dp-w-von').value, b=el('dp-w-bis').value;
   if(!p||!v||!b){ alert('Bitte Person sowie Beginn und Ende angeben.'); return; }
