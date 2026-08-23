@@ -999,9 +999,23 @@ function statistik(jahr, monat){
   var st = {};
   state.personen.forEach(function(p){
     st[p.id] = {name:p.name, vk:p.vk, dienste:0, std:0, we:0, nacht:0, feier:0,
-                wunschOk:0, wunschVerletzt:0};
+                wunschOk:0, wunschVerletzt:0, abwesend:0, verfuegbar:0};
   });
   var tage = tageImMonat(jahr, monat);
+
+  /* Verfügbarkeit: Werktage des Monats abzüglich Abwesenheit */
+  var werktage = 0;
+  for(var wt=1; wt<=tage; wt++){
+    var dt = jahr+'-'+String(monat).padStart(2,'0')+'-'+String(wt).padStart(2,'0');
+    if(!istFrei(dt)) werktage++;
+    state.personen.forEach(function(p){
+      if(!istFrei(dt) && istAbwesend(p.id, dt)) st[p.id].abwesend++;
+    });
+  }
+  state.personen.forEach(function(p){
+    st[p.id].werktage  = werktage;
+    st[p.id].verfuegbar = werktage ? Math.max(0, werktage - st[p.id].abwesend) / werktage : 0;
+  });
   for(var t=1; t<=tage; t++){
     var datum = jahr+'-'+String(monat).padStart(2,'0')+'-'+String(t).padStart(2,'0');
     var dObj = ausIso(datum), ft = feiertagName(datum), we = istWE(dObj);
@@ -1051,35 +1065,67 @@ function renderAuswert(){
     + '<div class="dp-stat"><div class="v">'+gesDienste+'</div><div class="l">besetzte Dienste</div></div>'
     + '<div class="dp-stat"><div class="v">'+gesWE+'</div><div class="l">Wochenenddienste</div></div>'
     + '<div class="dp-stat"><div class="v">'+schnitt.toFixed(1)+'</div><div class="l">Ø Dienste je Person</div></div>'
+    + '<div class="dp-stat"><div class="v">'+rows.reduce(function(a,r){return a+r.std;},0).toFixed(0)
+    + '</div><div class="l">Stunden gesamt</div></div>'
     + '<div class="dp-stat"><div class="v">'+mitDienst.length+'</div><div class="l">Personen eingesetzt</div></div>'
     + '</div>';
 
+  /* Verglichen wird nur, wer in diesem Monat überhaupt eingeteilt war.
+     Sonst verwässern Kolleginnen und Kollegen aus anderen Bereichen
+     (ZNA, ITS) das Soll und alle erscheinen überlastet. */
+  var beteiligt = rows.filter(function(r){ return r.dienste > 0; });
+  var gesStd = beteiligt.reduce(function(a,r){ return a+r.std; },0);
+  var gesDienste2 = beteiligt.reduce(function(a,r){ return a+r.dienste; },0);
+  /* Wer im Urlaub war, kann keine Dienste leisten — sonst erscheint jeder
+     Urlaub als Minderleistung. Daher VK mit der Anwesenheit gewichten. */
+  function gewicht(r){ return (r.vk||0) * (r.verfuegbar !== undefined ? r.verfuegbar : 1); }
+  var vkSum = beteiligt.reduce(function(a,r){ return a+gewicht(r); },0);
+
   h += '<div class="dp-card"><h2>Dienstverteilung — '+MONATSNAME[state.monat-1]+' '+state.jahr+'</h2>'
-     + '<div class="dp-hint">Die Spalte <b>Abweichung</b> zeigt, wie weit die Dienstzahl vom '
-     + 'VK-gewichteten Mittel abweicht — das ist das Fairnessmaß.</div>';
+     + '<div class="dp-hint">Weil die Dienste sehr ungleich lang sind (Visite 4 h, '
+     + 'Bereitschaft 17,5 h), ist die <b>Stundenabweichung</b> das aussagekräftige '
+     + 'Fairnessmaß — sie vergleicht die geleisteten Stunden mit dem VK-gewichteten Anteil. '
+     + 'Verglichen werden die <b>'+beteiligt.length+' Personen, die in diesem Monat '
+     + 'eingeteilt waren</b>. Das Soll ist mit der <b>Anwesenheit gewichtet</b> — '
+     + 'Urlaubstage senken es, damit Abwesenheit nicht als Minderleistung erscheint.</div>';
+  h += '<div class="dp-tbl-wrap"><table class="dp-tbl" style="min-width:940px"><thead><tr>'
+     + '<th style="min-width:130px">Person</th><th class="dp-num">VK</th>'
+     + '<th class="dp-num">Dienste</th><th class="dp-num">Soll</th><th class="dp-num">±</th>'
+     + '<th class="dp-num">Stunden</th><th class="dp-num">Soll</th>'
+     + '<th class="dp-num" style="min-width:92px">± Stunden</th>'
+     + '<th class="dp-num" title="Abwesende Werktage im Monat">frei</th>'
+     + '<th class="dp-num">Wo.-ende</th><th class="dp-num">Feiertag</th>'
+     + '<th class="dp-num">Nacht</th><th class="dp-num">Wünsche</th></tr></thead><tbody>';
 
-  /* VK-gewichtetes Soll */
-  var vkSum = rows.reduce(function(a,r){ return a+(r.vk||0); },0);
-  h += '<div class="dp-tbl-wrap"><table class="dp-tbl"><thead><tr>'
-     + '<th>Person</th><th class="dp-num">VK</th><th class="dp-num">Dienste</th>'
-     + '<th class="dp-num">Stunden</th><th class="dp-num">Wo.-ende</th><th class="dp-num">Feiertag</th>'
-     + '<th class="dp-num">Nacht</th><th class="dp-num">Soll</th><th class="dp-num">Abweichung</th>'
-     + '<th class="dp-num">Wünsche</th></tr></thead><tbody>';
-
-  rows.sort(function(a,b){ return b.dienste-a.dienste; }).forEach(function(r){
-    var soll = vkSum ? gesDienste * (r.vk/vkSum) : 0;
-    var dev  = r.dienste - soll;
-    var cls  = Math.abs(dev) < 1.5 ? 'dp-b-ok' : (Math.abs(dev) < 3 ? 'dp-b-warn' : 'dp-b-err');
+  rows.sort(function(a,b){ return b.std-a.std; }).forEach(function(r){
+    if(r.dienste === 0){
+      h += '<tr style="color:var(--dp-mute)"><td>'+esc(r.name)+'</td>'
+         + '<td class="dp-num">'+r.vk.toFixed(2)+'</td>'
+         + '<td class="dp-num">0</td><td colspan="10" style="font-size:12px">'
+         + 'in diesem Monat nicht eingeteilt</td></tr>';
+      return;
+    }
+    var anteil   = vkSum ? (gewicht(r)/vkSum) : 0;
+    var sollD    = gesDienste2 * anteil;
+    var sollStd  = gesStd * anteil;
+    var devD     = r.dienste - sollD;
+    var devStd   = r.std - sollStd;
+    /* Maßstab: eine halbe Schicht (rund 4 h) gilt noch als ausgeglichen */
+    var cls = Math.abs(devStd) < 4.5 ? 'dp-b-ok' : (Math.abs(devStd) < 9 ? 'dp-b-warn' : 'dp-b-err');
     var wGes = r.wunschOk + r.wunschVerletzt;
     h += '<tr><td><b>'+esc(r.name)+'</b></td>'
        + '<td class="dp-num">'+r.vk.toFixed(2)+'</td>'
-       + '<td class="dp-num"><b>'+r.dienste+'</b></td>'
-       + '<td class="dp-num">'+r.std.toFixed(1)+'</td>'
+       + '<td class="dp-num">'+r.dienste+'</td>'
+       + '<td class="dp-num" style="color:var(--dp-mute)">'+sollD.toFixed(1)+'</td>'
+       + '<td class="dp-num" style="color:var(--dp-mute)">'+(devD>=0?'+':'')+devD.toFixed(1)+'</td>'
+       + '<td class="dp-num"><b>'+r.std.toFixed(1)+'</b></td>'
+       + '<td class="dp-num" style="color:var(--dp-mute)">'+sollStd.toFixed(1)+'</td>'
+       + '<td class="dp-num"><span class="dp-badge '+cls+'">'+(devStd>=0?'+':'')+devStd.toFixed(1)+' h</span></td>'
+       + '<td class="dp-num"'+(r.abwesend ? ' style="color:var(--dp-warn)"' : '')+'>'
+       + (r.abwesend || '·')+'</td>'
        + '<td class="dp-num">'+r.we+'</td>'
        + '<td class="dp-num">'+r.feier+'</td>'
        + '<td class="dp-num">'+r.nacht+'</td>'
-       + '<td class="dp-num" style="color:var(--dp-mute)">'+soll.toFixed(1)+'</td>'
-       + '<td class="dp-num"><span class="dp-badge '+cls+'">'+(dev>=0?'+':'')+dev.toFixed(1)+'</span></td>'
        + '<td class="dp-num">'+(wGes ? r.wunschOk+'/'+wGes : '—')+'</td></tr>';
   });
   h += '</tbody></table></div></div>';
@@ -1714,12 +1760,20 @@ window.dpExportXLSX = function(){
   var gesD = rows.reduce(function(a,r){return a+r.dienste;},0);
   var vkS  = rows.reduce(function(a,r){return a+(r.vk||0);},0);
   var ausw = [ [{v:'Auswertung '+MONATSNAME[m-1]+' '+j, s:1}], [],
-    ['Person','VK','Dienste','Stunden','Wochenende','Feiertag','Nacht','Soll (VK-gewichtet)','Abweichung']
+    ['Person','VK','Dienste','Soll Dienste','Abw. Dienste','Stunden','Soll Stunden',
+     'Abw. Stunden','abwesende Werktage','Wochenende','Feiertag','Nacht']
       .map(function(k){ return {v:k, s:2}; }) ];
-  rows.sort(function(a,b){return b.dienste-a.dienste;}).forEach(function(r){
-    var soll = vkS ? gesD*(r.vk/vkS) : 0;
-    ausw.push([r.name, r.vk, r.dienste, +r.std.toFixed(1), r.we, r.feier, r.nacht,
-               +soll.toFixed(1), +(r.dienste-soll).toFixed(1)]);
+  var beteiligt2 = rows.filter(function(r){ return r.dienste > 0; });
+  var gesStd2 = beteiligt2.reduce(function(a,r){ return a+r.std; },0);
+  var vkB     = beteiligt2.reduce(function(a,r){
+                  return a+(r.vk||0)*(r.verfuegbar!==undefined?r.verfuegbar:1); },0);
+  var gesD2   = beteiligt2.reduce(function(a,r){ return a+r.dienste; },0);
+  beteiligt2.sort(function(a,b){return b.std-a.std;}).forEach(function(r){
+    var anteil = vkB ? ((r.vk||0)*(r.verfuegbar!==undefined?r.verfuegbar:1)/vkB) : 0;
+    ausw.push([r.name, r.vk, r.dienste, +(gesD2*anteil).toFixed(1),
+               +(r.dienste-gesD2*anteil).toFixed(1), +r.std.toFixed(1),
+               +(gesStd2*anteil).toFixed(1), +(r.std-gesStd2*anteil).toFixed(1),
+               r.abwesend||0, r.we, r.feier, r.nacht]);
   });
   blaetter.push({name:'Auswertung', zeilen:ausw});
 
