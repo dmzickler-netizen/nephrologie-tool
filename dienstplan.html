@@ -683,8 +683,9 @@ function renderPersonen(){
     + 'Dienste besetzen darf, die einer festen Gruppe vorbehalten sind. Die Gruppen ergeben sich '
     + 'aus den Dienstmodellen — dort im Feld <b>Gruppe</b> eintragen.</div>';
 
-  h += '<div class="dp-tbl-wrap"><table class="dp-tbl"><thead><tr>'
-     + '<th>Name</th><th style="width:80px">Kürzel</th><th style="width:80px">VK</th>'
+  h += '<div class="dp-tbl-wrap"><table class="dp-tbl" style="min-width:'
+     + (760 + gruppen.length*80) + 'px"><thead><tr>'
+     + '<th style="min-width:150px">Name</th><th style="width:80px">Kürzel</th><th style="width:80px">VK</th>'
      + '<th style="width:110px">Qualifikation</th><th style="width:170px">Primärbereich</th>'
      + gruppen.map(function(g){
          return '<th style="width:80px" title="Gehört zur Gruppe '+esc(g)+'">'+esc(g)+'</th>'; }).join('')
@@ -718,14 +719,46 @@ function renderPersonen(){
      + '<div style="margin-top:12px"><button class="dp-btn-sm" onclick="dpAddP()">+ Person hinzufügen</button></div>'
      + '</div>';
 
+  /* Wer ruht — und ab wann wieder verfügbar */
+  var ruhend = state.personen.filter(function(p){ return !p.aktiv; });
+  if(ruhend.length){
+    h += '<div class="dp-card"><h2>Zurzeit nicht im Team</h2>'
+       + '<div class="dp-hint">Diese Personen erscheinen in keiner Auswahlliste. '
+       + 'Zum Zurückholen im Haken oben <b>Aktiv</b> setzen.</div>'
+       + '<div class="dp-tbl-wrap"><table class="dp-tbl"><thead><tr>'
+       + '<th>Name</th><th style="width:190px">Grund</th><th style="width:150px">zurück ab</th>'
+       + '<th style="width:110px"></th></tr></thead><tbody>';
+    ruhend.forEach(function(p){
+      var grund = null;
+      state.abwesenheit.forEach(function(a){
+        if(a.pid===p.id && (!grund || a.bis > grund.bis)) grund = a;
+      });
+      var zurueck = null;
+      if(grund){
+        var d = ausIso(grund.bis); d.setDate(d.getDate()+1);
+        zurueck = d;
+      }
+      var bald = zurueck && (zurueck - new Date()) < 1000*60*60*24*60;
+      h += '<tr><td><b>'+esc(p.name)+'</b></td>'
+         + '<td>'+(grund ? '<span class="dp-badge dp-b-warn">'+esc(grund.typ)+'</span>' : '—')+'</td>'
+         + '<td'+(bald ? ' style="font-weight:650;color:var(--dp-accent)"' : '')+'>'
+         + (zurueck ? dtLang(iso(zurueck)) : 'offen') + (bald ? ' ⟵ bald' : '') + '</td>'
+         + '<td><button class="dp-btn-sm" onclick="dpP(\''+p.id+'\',\'aktiv\',true)">zurückholen</button></td>'
+         + '</tr>';
+    });
+    h += '</tbody></table></div></div>';
+  }
+
   var fa = state.personen.filter(function(p){ return p.aktiv && p.quali==='FA'; }).length;
   var vkSum = state.personen.filter(function(p){return p.aktiv;})
                 .reduce(function(a,p){ return a+(p.vk||0); },0);
+  var ruhendZahl = state.personen.filter(function(p){ return !p.aktiv; }).length;
   var gruppenZahl = gruppen.map(function(g){
     return {g:g, n:state.personen.filter(function(p){ return p.aktiv && inGruppe(p,g); }).length};
   });
   h += '<div class="dp-stats">'
-     + '<div class="dp-stat"><div class="v">'+state.personen.filter(function(p){return p.aktiv;}).length+'</div><div class="l">aktive Personen</div></div>'
+     + '<div class="dp-stat"><div class="v">'+state.personen.filter(function(p){return p.aktiv;}).length+'</div>'
+     + '<div class="l">aktive Personen'+(ruhendZahl?' (+'+ruhendZahl+' ruhend)':'')+'</div></div>'
      + '<div class="dp-stat"><div class="v">'+fa+'</div><div class="l">davon Fachärzte</div></div>'
      + gruppenZahl.map(function(x){
          return '<div class="dp-stat"><div class="v">'+x.n+'</div><div class="l">in Gruppe '
@@ -742,8 +775,9 @@ function renderDienste(){
     + '<b>Diese Vorbelegung ist geraten</b> — bitte an die tatsächlichen Modelle anpassen. '
     + 'Stundenzahl 0 bedeutet Hintergrunddienst (geht nicht in die Ruhezeitprüfung ein).</div>';
 
-  h += '<div class="dp-tbl-wrap"><table class="dp-tbl"><thead><tr>'
-     + '<th style="width:70px">Kürzel</th><th>Bezeichnung</th><th style="width:150px">Bereich</th>'
+  h += '<div class="dp-tbl-wrap"><table class="dp-tbl" style="min-width:1180px"><thead><tr>'
+     + '<th style="width:70px">Kürzel</th><th style="min-width:190px">Bezeichnung</th>'
+     + '<th style="width:150px">Bereich</th>'
      + '<th style="width:80px">von</th><th style="width:80px">bis</th><th style="width:70px">Std.</th>'
      + '<th style="width:110px">Tage</th><th style="width:110px">Qualifikation</th>'
      + '<th style="width:95px" title="Nur Personen dieser Gruppe dürfen den Dienst besetzen">Gruppe</th>'
@@ -796,13 +830,16 @@ function renderAbw(){
     + 'wird im Dienstplan mit ⛱ markiert; eine Besetzung trotz Abwesenheit gilt als Regelverstoß.</div>'
     + '<div class="dp-row" style="margin-bottom:14px;align-items:flex-end">'
     + '<div class="dp-fld"><label>Person</label><select id="dp-abw-p">'
-    + state.personen.map(function(p){ return '<option value="'+p.id+'">'+esc(p.name)+'</option>'; }).join('')
+    + state.personen.filter(function(p){ return p.aktiv; })
+        .map(function(p){ return '<option value="'+p.id+'">'+esc(p.name)+'</option>'; }).join('')
     + '</select></div>'
     + '<div class="dp-fld"><label>von</label><input type="date" id="dp-abw-von"></div>'
     + '<div class="dp-fld"><label>bis</label><input type="date" id="dp-abw-bis"></div>'
     + '<div class="dp-fld"><label>Art</label><select id="dp-abw-typ">'
     + '<option>Urlaub</option><option>Krank</option><option>Fortbildung</option>'
-    + '<option>Elternzeit</option><option>Freistellung</option></select></div>'
+    + '<option>Elternzeit</option><option>Freistellung</option>'
+    + '<option>Rotation Med. I</option><option>Rotation</option>'
+    + '<option>Einsatz Franziskus</option><option>nicht im Team</option></select></div>'
     + '<button class="dp-btn-sm" onclick="dpAddAbw()">Eintragen</button></div>';
 
   if(!state.abwesenheit.length){
@@ -851,7 +888,8 @@ function renderWunsch(){
     + 'erscheint in der Prüfung als Hinweis (nicht als Verstoß) und geht in die Wunscherfüllungsquote ein.</div>'
     + '<div class="dp-row" style="margin-bottom:14px;align-items:flex-end">'
     + '<div class="dp-fld"><label>Person</label><select id="dp-w-p">'
-    + state.personen.map(function(p){ return '<option value="'+p.id+'">'+esc(p.name)+'</option>'; }).join('')
+    + state.personen.filter(function(p){ return p.aktiv; })
+        .map(function(p){ return '<option value="'+p.id+'">'+esc(p.name)+'</option>'; }).join('')
     + '</select></div>'
     + '<div class="dp-fld"><label>von</label><input type="date" id="dp-w-von"></div>'
     + '<div class="dp-fld"><label>bis</label><input type="date" id="dp-w-bis"></div>'
