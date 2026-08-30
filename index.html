@@ -2252,6 +2252,15 @@ window.goHome = function(e){
             </tbody>
           </table>
         </div>
+        <div style="border-top:1px solid #e8eaf6;margin-top:10px;padding-top:10px;">
+          <div style="font-size:.72rem;color:#607d8b;margin-bottom:6px;">In den Arztbrief übernehmen — ohne Screenshot:</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+            <button class="btn-copy" onclick="copyMatrixTable(this)" title="Farbige Tabelle — fügt sich in Word, Outlook und die meisten KIS-Editoren als echte Tabelle ein">📋 Tabelle kopieren</button>
+            <button class="btn-copy" onclick="copyMatrixImage(this)" title="PNG-Grafik in die Zwischenablage — für Editoren, die keine Tabellen annehmen">🖼️ Als Bild kopieren</button>
+            <button class="btn-copy" onclick="copyMatrixPlain(this)" title="Reine Textfassung — für Klartext-Felder ohne Formatierung">📝 Als Text kopieren</button>
+          </div>
+          <div style="font-size:.7rem;color:#90a4ae;margin-top:6px;">Die Tabellenfassung behält die Farben und markiert das Patientenfeld mit ★.</div>
+        </div>
       </div>
     </div>
   </div>
@@ -18333,64 +18342,62 @@ function copyText(id) {
 
 let _lastGFRStage = null, _lastAlbStage = null, _lastRiskInfo = null;
 
-// ===== ASCII RISK MATRIX (for text export) =====
+// ===== PLAIN-TEXT RISK MATRIX (Klartext-Felder, Arztbrief-Textbausteine) =====
 function buildAsciiMatrix(gfrStage, albStage, riskInfo) {
   const rows = [
-    { stage:'G1',  sub:'>105'   },
-    { stage:'G1',  sub:'90–104' },
-    { stage:'G2',  sub:'75–89'  },
-    { stage:'G2',  sub:'60–74'  },
-    { stage:'G3a', sub:'45–59'  },
-    { stage:'G3b', sub:'30–44'  },
-    { stage:'G4',  sub:'15–29'  },
-    { stage:'G5',  sub:'<15'    },
+    { stage:'G1',  sub:'>105'    },
+    { stage:'G1',  sub:'90-104'  },
+    { stage:'G2',  sub:'75-89'   },
+    { stage:'G2',  sub:'60-74'   },
+    { stage:'G3a', sub:'45-59'   },
+    { stage:'G3b', sub:'30-44'   },
+    { stage:'G4',  sub:'15-29'   },
+    { stage:'G5',  sub:'<15'     },
   ];
-  const cols = ['<10','10–29','30–299','300–1999','>2000'];
-  const riskLabel = {
-    'cell-green-bright':'Niedrig','cell-green':'Mäßig erhöht','cell-yellow':'Mäßig erhöht',
-    'cell-orange':'Hoch','cell-red':'Sehr hoch','cell-dark-red':'Extrem hoch'
+  const colStage = ['A1','A1','A2','A3','A3'];
+  const colRange = ['<10','10-29','30-299','300-1999','>2000'];
+  const riskWord = {
+    'cell-green-bright':'niedrig','cell-green':'mäßig','cell-yellow':'mäßig',
+    'cell-orange':'hoch','cell-red':'sehr hoch','cell-dark-red':'extrem'
   };
   const activeRow = gfrStage ? gfrStage.row : -1;
   const activeCol = albStage ? albStage.col : -1;
 
-  let out = '--- KDIGO-RISIKOMATRIX (CKD-EPI 2021) ---\n\n';
-  out += '          Albuminurie-Stadium (uACR mg/g)\n';
-  out += '              A1          A2        A3\n';
-  out += '         ┌──────┬──────┬──────┬────────┬──────┐\n';
-  out += '  GFR    │  <10 │10–29 │30–299│300–1999│ >2000│\n';
-  out += '  ml/min ├──────┼──────┼──────┼────────┼──────┤\n';
+  const LBL = 19, COL = 12;
+  const pad = (s, n) => (String(s) + ' '.repeat(n)).slice(0, n);
+  const row = (label, cells) => pad(label, LBL) + cells.map(c => pad(c, COL)).join('').replace(/\s+$/, '');
 
-  rows.forEach((row, ri) => {
-    const label = `${row.stage} ${row.sub}`.padEnd(10);
-    const cells = cols.map((_, ci) => {
-      const cellClass = riskMatrix[ri][ci];
-      const sym = riskLabel[cellClass] === 'Niedrig' ? '  ██  ' :
-                  riskLabel[cellClass] === 'Mäßig erhöht' ? '  ▒▒  ' :
-                  riskLabel[cellClass] === 'Hoch' ? '  ▓▓  ' :
-                  riskLabel[cellClass] === 'Sehr hoch' ? '  ░R░  ' : '  ●●  ';
-      const isActive = (ri === activeRow && ci === activeCol);
-      // For text: mark patient cell with ★
-      const content = isActive ? ' [★] ' : sym.slice(0,5);
-      return content.padEnd(ci === 3 ? 8 : 6);
+  let out  = 'KDIGO-Risikomatrix - Risiko für CKD-Progression und kardiovaskuläre Ereignisse\n';
+  out     += '(KDIGO 2024; eGFR nach CKD-EPI 2021)\n\n';
+  out     += pad('', LBL) + 'Albuminurie (uACR in mg/g)\n';
+  out     += row('', colStage) + '\n';
+  out     += row('GFR (ml/min/1,73)', colRange) + '\n';
+  out     += '-'.repeat(LBL + COL * 5 - 3) + '\n';
+
+  rows.forEach((r, ri) => {
+    const cells = colRange.map((_, ci) => {
+      const w = riskWord[riskMatrix[ri][ci]] || '?';
+      return (ri === activeRow && ci === activeCol) ? '[' + w + ']' : w;
     });
-    out += `  ${label}│${cells[0]}│${cells[1]}│${cells[2]}│${cells[3]}  │${cells[4]}│\n`;
-    if (ri < rows.length - 1) {
-      out += '          ├──────┼──────┼──────┼────────┼──────┤\n';
-    }
+    out += row(pad(r.stage, 5) + r.sub, cells) + '\n';
   });
-  out += '          └──────┴──────┴──────┴────────┴──────┘\n';
 
+  out += '\n';
   if (gfrStage && albStage && riskInfo) {
-    out += `\n  ★ Patient: Stadium ${gfrStage.stage} (eGFR ${gfrStage.sub} ml/min) + ${albStage.stage} (uACR ${albStage.sub} mg/g)\n`;
-    out += `  Progressionsrisiko: ${riskInfo.name.toUpperCase()}\n`;
+    out += '[ ] = Befund des Patienten: ' + gfrStage.stage + ' (eGFR ' + gfrStage.sub.replace('–','-') +
+           ' ml/min/1,73 m²) + ' + albStage.stage + ' (uACR ' + albStage.sub.replace('–','-') + ' mg/g)\n';
+    out += 'Progressionsrisiko: ' + riskInfo.name + '\n';
   }
-  out += '  Legende: ██ Niedrig  ▒▒ Mäßig  ▓▓ Hoch  ░R░ Sehr hoch  ●● Extrem hoch\n';
-  out += '  Quelle: KDIGO CKD 2024';
+  out += 'Risikokategorien aufsteigend: niedrig - mäßig - hoch - sehr hoch - extrem (= extrem hoch).\n';
+  out += 'Quelle: KDIGO 2024 Clinical Practice Guideline for CKD.';
   return out;
 }
 
-// ===== HTML COLOR MATRIX (for print) =====
-function buildHtmlMatrix(gfrStage, albStage, riskInfo) {
+// ===== HTML COLOR MATRIX (Druck + Zwischenablage) =====
+// opts.forClipboard = true  -> Word/Outlook-taugliches Markup:
+//   keine vertikale Schrift, bgcolor-Attribute zusätzlich zu CSS, kein Flexbox.
+function buildHtmlMatrix(gfrStage, albStage, riskInfo, opts) {
+  const clip = !!(opts && opts.forClipboard);
   const rows = [
     { stage:'G1',  sub:'>105'   },
     { stage:'G1',  sub:'90–104' },
@@ -18406,30 +18413,30 @@ function buildHtmlMatrix(gfrStage, albStage, riskInfo) {
     'cell-green-bright':'#00b050','cell-green':'#92d050','cell-yellow':'#ffff00',
     'cell-orange':'#ffc000','cell-red':'#ff0000','cell-dark-red':'#c00000'
   };
-  const riskLabel = {
-    'cell-green-bright':'Niedrig','cell-green':'Mäßig','cell-yellow':'Mäßig',
-    'cell-orange':'Hoch','cell-red':'Sehr hoch','cell-dark-red':'Extrem hoch'
-  };
   const activeRow = gfrStage ? gfrStage.row : -1;
   const activeCol = albStage ? albStage.col : -1;
 
-  let html = `<div style="margin:12pt 0 8pt 0;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
-    <div style="font-size:9pt;font-weight:700;color:#1a237e;margin-bottom:4pt;">KDIGO-Risikomatrix — Risiko für CKD-Progression &amp; kardiovask. Ereignisse (KDIGO 2024)</div>
-    <table style="border-collapse:collapse;font-size:7.5pt;width:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+  const ce = '-webkit-print-color-adjust:exact;print-color-adjust:exact;';
+  const fam = clip ? 'font-family:Arial,Helvetica,sans-serif;' : '';
+  const bg = c => clip ? ' bgcolor="' + c + '"' : '';
+
+  let html = `<div style="margin:12pt 0 8pt 0;${fam}${ce}">
+    <div style="font-size:9pt;font-weight:700;color:#1a237e;margin-bottom:4pt;${fam}">KDIGO-Risikomatrix — Risiko für CKD-Progression &amp; kardiovask. Ereignisse (KDIGO 2024)</div>
+    <table cellspacing="0" cellpadding="0" style="border-collapse:collapse;font-size:7.5pt;width:auto;${fam}${ce}">
       <thead>
         <tr>
           <th colspan="2" style="border:none;background:none;"></th>
-          <th colspan="5" style="background:#d9b3ff;border:1px solid #999;padding:2px 4px;text-align:center;">Albuminurie-Stadien (uACR mg/g)</th>
+          <th colspan="5"${bg('#d9b3ff')} style="background:#d9b3ff;border:1px solid #999;padding:2px 4px;text-align:center;${ce}">Albuminurie-Stadien (uACR mg/g)</th>
         </tr>
         <tr>
           <th colspan="2" style="border:none;background:none;"></th>
-          <th colspan="2" style="background:#e6ccff;border:1px solid #999;padding:2px 4px;text-align:center;">A1</th>
-          <th style="background:#e6ccff;border:1px solid #999;padding:2px 4px;text-align:center;">A2</th>
-          <th colspan="2" style="background:#e6ccff;border:1px solid #999;padding:2px 4px;text-align:center;">A3</th>
+          <th colspan="2"${bg('#e6ccff')} style="background:#e6ccff;border:1px solid #999;padding:2px 4px;text-align:center;${ce}">A1</th>
+          <th${bg('#e6ccff')} style="background:#e6ccff;border:1px solid #999;padding:2px 4px;text-align:center;${ce}">A2</th>
+          <th colspan="2"${bg('#e6ccff')} style="background:#e6ccff;border:1px solid #999;padding:2px 4px;text-align:center;${ce}">A3</th>
         </tr>
         <tr>
           <th colspan="2" style="border:none;background:none;font-size:6pt;color:#607d8b;">GFR (ml/min)</th>
-          ${colLabels.map(c=>`<th style="background:#f0e6ff;border:1px solid #999;padding:2px 4px;text-align:center;">${c}</th>`).join('')}
+          ${colLabels.map(c=>`<th${bg('#f0e6ff')} style="background:#f0e6ff;border:1px solid #999;padding:2px 4px;text-align:center;${ce}">${c}</th>`).join('')}
         </tr>
       </thead>
       <tbody>`;
@@ -18438,43 +18445,197 @@ function buildHtmlMatrix(gfrStage, albStage, riskInfo) {
     html += '<tr>';
     if (ri === 0 || rows[ri].stage !== rows[ri-1].stage) {
       const span = rows.filter(r=>r.stage===row.stage).length;
-      html += `<td rowspan="${span}" style="background:#b3e5fc;border:1px solid #999;padding:2px 4px;text-align:center;font-weight:700;writing-mode:vertical-rl;font-size:6.5pt;-webkit-print-color-adjust:exact;print-color-adjust:exact;">${row.stage}</td>`;
+      const vert = clip ? 'font-size:7pt;' : 'writing-mode:vertical-rl;font-size:6.5pt;';
+      html += `<td rowspan="${span}"${bg('#b3e5fc')} style="background:#b3e5fc;border:1px solid #999;padding:2px 4px;text-align:center;font-weight:700;${vert}${ce}">${row.stage}</td>`;
     }
-    html += `<td style="background:#e0e0e0;border:1px solid #999;padding:2px 6px;white-space:nowrap;">${row.sub}</td>`;
+    html += `<td${bg('#e0e0e0')} style="background:#e0e0e0;border:1px solid #999;padding:2px 6px;white-space:nowrap;${ce}">${row.sub}</td>`;
     for (let ci = 0; ci < 5; ci++) {
       const cellClass = riskMatrix[ri][ci];
-      const bg = colorMap[cellClass] || '#fff';
+      const bgc = colorMap[cellClass] || '#ffffff';
       const isActive = (ri === activeRow && ci === activeCol);
-      const content = isActive ? '★' : '';
+      const content = isActive ? '★' : '&nbsp;';
       const border = isActive ? '3px solid #1a237e' : '1px solid #999';
       const fw = isActive ? 'bold' : 'normal';
-      html += `<td style="background:${bg};border:${border};width:36pt;height:14pt;text-align:center;font-size:10pt;font-weight:${fw};-webkit-print-color-adjust:exact;print-color-adjust:exact;">${content}</td>`;
+      const wAttr = clip ? ' width="48"' : '';
+      html += `<td${bg(bgc)}${wAttr} style="background:${bgc};border:${border};width:36pt;height:14pt;text-align:center;font-size:10pt;font-weight:${fw};${ce}">${content}</td>`;
     }
     html += '</tr>';
   });
 
   html += `</tbody></table>`;
 
-  // Legend + patient info
+  // Legende
   const legendItems = [
     {color:'#00b050',label:'Niedrig'},{color:'#92d050',label:'Mäßig erhöht'},
     {color:'#ffff00',label:'Mäßig erhöht'},{color:'#ffc000',label:'Hoch'},
     {color:'#ff0000',label:'Sehr hoch'},{color:'#c00000',label:'Extrem hoch'}
   ];
-  html += `<div style="display:flex;gap:8pt;flex-wrap:wrap;margin-top:4pt;font-size:6.5pt;">`;
-  legendItems.forEach(l => {
-    html += `<span><span style="display:inline-block;width:8pt;height:8pt;background:${l.color};border:1px solid #999;margin-right:2pt;-webkit-print-color-adjust:exact;print-color-adjust:exact;"></span>${l.label}</span>`;
-  });
-  html += `</div>`;
+  if (clip) {
+    // Word kennt kein Flexbox -> Legende als eigene Tabellenzeile
+    html += `<table cellspacing="0" cellpadding="0" style="border-collapse:collapse;margin-top:4pt;font-size:6.5pt;${fam}${ce}"><tr>`;
+    legendItems.forEach(l => {
+      html += `<td${bg(l.color)} style="background:${l.color};border:1px solid #999;width:10pt;height:8pt;${ce}">&nbsp;</td>`;
+      html += `<td style="padding:0 8pt 0 3pt;white-space:nowrap;${fam}">${l.label}</td>`;
+    });
+    html += `</tr></table>`;
+  } else {
+    html += `<div style="display:flex;gap:8pt;flex-wrap:wrap;margin-top:4pt;font-size:6.5pt;">`;
+    legendItems.forEach(l => {
+      html += `<span><span style="display:inline-block;width:8pt;height:8pt;background:${l.color};border:1px solid #999;margin-right:2pt;${ce}"></span>${l.label}</span>`;
+    });
+    html += `</div>`;
+  }
 
   if (gfrStage && albStage && riskInfo) {
-    html += `<div style="font-size:7.5pt;margin-top:4pt;color:#1a237e;">
+    html += `<div style="font-size:7.5pt;margin-top:4pt;color:#1a237e;${fam}">
       <strong>★ Patient:</strong> ${gfrStage.stage} (${gfrStage.sub} ml/min) &bull; ${albStage.stage} (${albStage.sub} mg/g) &bull;
       Progressionsrisiko: <strong>${riskInfo.name}</strong>
     </div>`;
   }
+  if (clip) {
+    html += `<div style="font-size:6.5pt;margin-top:3pt;color:#607d8b;${fam}">Quelle: KDIGO 2024 Clinical Practice Guideline for CKD &bull; eGFR nach CKD-EPI 2021</div>`;
+  }
   html += `</div>`;
   return html;
+}
+
+// ===== MATRIX IN DIE ZWISCHENABLAGE =====
+function _matrixFlash(btn, msg) {
+  if (!btn) return;
+  if (!btn.dataset.origLabel) btn.dataset.origLabel = btn.textContent;
+  btn.textContent = msg;
+  clearTimeout(btn._flashT);
+  btn._flashT = setTimeout(() => { btn.textContent = btn.dataset.origLabel; }, 2200);
+}
+
+// Fallback für Browser/Kontexte ohne Async-Clipboard-API: verstecktes
+// contenteditable-Element markieren und mit execCommand kopieren.
+function _copyRichFallback(html) {
+  const div = document.createElement('div');
+  div.setAttribute('contenteditable', 'true');
+  div.style.cssText = 'position:fixed;left:-10000px;top:0;white-space:normal;';
+  div.innerHTML = html;
+  document.body.appendChild(div);
+  const range = document.createRange();
+  range.selectNodeContents(div);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+  sel.removeAllRanges();
+  document.body.removeChild(div);
+  return ok;
+}
+
+function _copyPlainFallback(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;left:-10000px;top:0;';
+  document.body.appendChild(ta);
+  ta.select();
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+  document.body.removeChild(ta);
+  return ok;
+}
+
+// Farbige Tabelle -> Word / Outlook / KIS-Editoren mit Rich-Text
+async function copyMatrixTable(btn) {
+  const html  = buildHtmlMatrix(_lastGFRStage, _lastAlbStage, _lastRiskInfo, { forClipboard: true });
+  const plain = buildAsciiMatrix(_lastGFRStage, _lastAlbStage, _lastRiskInfo);
+  let ok = false;
+  try {
+    if (navigator.clipboard && window.ClipboardItem) {
+      await navigator.clipboard.write([ new ClipboardItem({
+        'text/html' : new Blob([html],  { type: 'text/html'  }),
+        'text/plain': new Blob([plain], { type: 'text/plain' })
+      })]);
+      ok = true;
+    }
+  } catch (e) { ok = false; }
+  if (!ok) ok = _copyRichFallback(html);
+  _matrixFlash(btn, ok ? '✅ Tabelle kopiert' : '⚠️ Kopieren blockiert');
+}
+
+// Reine Textfassung -> Klartext-Felder
+async function copyMatrixPlain(btn) {
+  const plain = buildAsciiMatrix(_lastGFRStage, _lastAlbStage, _lastRiskInfo);
+  let ok = false;
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(plain);
+      ok = true;
+    }
+  } catch (e) { ok = false; }
+  if (!ok) ok = _copyPlainFallback(plain);
+  _matrixFlash(btn, ok ? '✅ Text kopiert' : '⚠️ Kopieren blockiert');
+}
+
+// PNG erzeugen: HTML -> SVG(foreignObject) -> Canvas -> Blob
+function _matrixPngBlob(scale) {
+  return new Promise((resolve, reject) => {
+    const s = scale || 2;
+    const holder = document.createElement('div');
+    holder.style.cssText = 'position:fixed;left:-10000px;top:0;background:#ffffff;padding:10px;' +
+                           'font-family:Arial,Helvetica,sans-serif;display:inline-block;';
+    holder.innerHTML = buildHtmlMatrix(_lastGFRStage, _lastAlbStage, _lastRiskInfo, { forClipboard: true });
+    document.body.appendChild(holder);
+    const w = Math.ceil(holder.scrollWidth) + 4;
+    const h = Math.ceil(holder.scrollHeight) + 4;
+    // Positionierung entfernen, damit das Element im foreignObject sichtbar bleibt
+    holder.style.cssText = 'background:#ffffff;padding:10px;font-family:Arial,Helvetica,sans-serif;width:' + w + 'px;';
+    let xml;
+    try { xml = new XMLSerializer().serializeToString(holder); }
+    finally { document.body.removeChild(holder); }
+
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '">' +
+                '<foreignObject x="0" y="0" width="100%" height="100%">' +
+                '<div xmlns="http://www.w3.org/1999/xhtml">' + xml + '</div>' +
+                '</foreignObject></svg>';
+
+    const img = new Image();
+    img.onload = function () {
+      try {
+        const c = document.createElement('canvas');
+        c.width = w * s; c.height = h * s;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, c.width, c.height);
+        ctx.scale(s, s);
+        ctx.drawImage(img, 0, 0);
+        c.toBlob(b => b ? resolve(b) : reject(new Error('toBlob')), 'image/png');
+      } catch (e) { reject(e); }
+    };
+    img.onerror = () => reject(new Error('SVG konnte nicht gerendert werden'));
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  });
+}
+
+// PNG -> Zwischenablage; wenn der Browser das nicht erlaubt: PNG-Datei speichern
+async function copyMatrixImage(btn) {
+  try {
+    if (navigator.clipboard && window.ClipboardItem) {
+      // Promise direkt übergeben — hält die User-Geste in Safari aufrecht
+      await navigator.clipboard.write([ new ClipboardItem({ 'image/png': _matrixPngBlob(2) }) ]);
+      _matrixFlash(btn, '✅ Bild kopiert');
+      return;
+    }
+  } catch (e) { /* Fallback unten */ }
+  try {
+    const blob = await _matrixPngBlob(2);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'KDIGO-Risikomatrix.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    _matrixFlash(btn, '💾 Als PNG gespeichert');
+  } catch (e) {
+    _matrixFlash(btn, '⚠️ Bild fehlgeschlagen');
+  }
 }
 
 // ===== PRINT ARZTBRIEF =====
