@@ -123,6 +123,7 @@
 #tab-hwi { display: none; }
 #tab-medcheck { display: none; }
 #tab-ckm { display: none; }
+#tab-cvrisk { display: none; }
 .gicht-section { padding:10px 12px; border-radius:10px; margin-bottom:0; }
 .gicht-section-title { font-size:.75rem; font-weight:800; text-transform:uppercase; letter-spacing:.5px; color:#455a64; margin-bottom:8px; }
 .gicht-akut { background:#fff3e0; border:1.5px solid #ffb74d; }
@@ -1609,6 +1610,7 @@ window.goHome = function(e){
   <button class="nav-tab-btn" data-tab="lipid" onclick="switchToolTab('lipid')">💊 Lipidtherapie</button>
   <button class="nav-tab-btn" data-tab="diabetes" onclick="switchToolTab('diabetes')">🩺 Diabetes</button>
   <button class="nav-tab-btn" data-tab="ckm" onclick="switchToolTab('ckm')">🫀 CKM-Syndrom</button>
+  <button class="nav-tab-btn" data-tab="cvrisk" onclick="switchToolTab('cvrisk')">📈 KV-Risiko</button>
   <button class="nav-tab-btn" data-tab="sd" onclick="switchToolTab('sd')">🦋 Schilddrüse</button>
   <button class="nav-tab-btn" data-tab="htn" onclick="switchToolTab('htn')">❤️‍🩹 Hypertonie</button>
   <button class="nav-tab-btn" data-tab="hi" onclick="switchToolTab('hi')">💔 Herzinsuffizienz</button>
@@ -17008,9 +17010,831 @@ document.querySelectorAll('#tab-medcheck input[type="checkbox"]').forEach(functi
 
   // ── EXPOSE ──────────────────────────────────────────────────
   window.ckmAutoImport = ckmAutoImport;
+
+  /* Von hier aus nachgenutzt vom KV-Risiko-Tab (#tab-cvrisk) — bewusst
+     keine zweite Kopie der PREVENT-Koeffizienten im Projekt. */
+  window.preventCalc  = preventCalc;
+  window.kdigoRiskCat = ckmKdigo;
 })();
 </script>
 </div><!-- end tab-ckm -->
+
+<!-- ============================================================
+     TAB: KV-RISIKO — ASCVD-Risikostratifizierung bei CKD
+     Quelle: Correa S, Cunningham JW, Mc Causland FR.
+     Atherosclerotic Cardiovascular Disease in CKD.
+     Clin J Am Soc Nephrol 2026, doi:10.2215/CJN.0000001199
+     ============================================================ -->
+<div id="tab-cvrisk">
+<style>
+#tab-cvrisk .diab-container { max-width: 1000px; }
+#tab-cvrisk .diab-card h2 { color: #4527a0; border-bottom-color: #d1c4e9; }
+#tab-cvrisk .diab-calc-btn { background: linear-gradient(135deg,#4527a0,#5e35b1); box-shadow: 0 3px 10px rgba(69,39,160,.3); }
+#tab-cvrisk .diab-calc-btn:hover { background: linear-gradient(135deg,#5e35b1,#673ab7); box-shadow: 0 5px 14px rgba(69,39,160,.4); }
+#tab-cvrisk input[type="number"], #tab-cvrisk input[type="text"], #tab-cvrisk select {
+  width:100%; padding:8px 10px; border:1.5px solid #cfd8dc; border-radius:6px;
+  font-size:.9rem; font-family:'Segoe UI',Arial,sans-serif; background:#fafafa;
+  color:#311b92; transition:border-color .2s; box-sizing:border-box;
+}
+#tab-cvrisk input[type="number"]:focus, #tab-cvrisk select:focus { outline:none; border-color:#5e35b1; background:#fff; }
+#tab-cvrisk .diab-toggle-group input[type="radio"]:checked + label { background:#4527a0; border-color:#4527a0; }
+#tab-cvrisk .diab-toggle-group label:hover { border-color:#4527a0; color:#311b92; }
+
+/* ── Sub-Tab-Navigation ── */
+#tab-cvrisk .cvr-subnav { display:flex; gap:4px; flex-wrap:wrap; margin-bottom:16px; border-bottom:2px solid #ede7f6; }
+#tab-cvrisk .cvr-subbtn { padding:9px 15px; border:none; background:none; font-size:.8rem; font-weight:600; color:#78909c; cursor:pointer; border-bottom:2.5px solid transparent; margin-bottom:-2px; white-space:nowrap; transition:color .15s,border-color .15s; font-family:inherit; }
+#tab-cvrisk .cvr-subbtn.active { color:#4527a0; border-bottom-color:#4527a0; }
+#tab-cvrisk .cvr-subbtn:hover:not(.active) { color:#5e35b1; border-bottom-color:#b39ddb; }
+#tab-cvrisk .cvr-subtab { display:none; }
+#tab-cvrisk .cvr-subtab.active { display:block; }
+
+/* ── Ergebnis-Banner ── */
+#tab-cvrisk .cvr-banner { border-radius:12px; padding:16px 20px; margin-bottom:14px; color:#fff; }
+#tab-cvrisk .cvr-banner-lbl { font-size:.72rem; text-transform:uppercase; letter-spacing:.7px; opacity:.85; font-weight:700; }
+#tab-cvrisk .cvr-banner-val { font-size:1.45rem; font-weight:800; line-height:1.2; margin-top:3px; }
+#tab-cvrisk .cvr-banner-sub { font-size:.84rem; line-height:1.5; margin-top:6px; opacity:.95; }
+#tab-cvrisk .cvr-b-vhigh { background:linear-gradient(135deg,#b71c1c,#d32f2f); }
+#tab-cvrisk .cvr-b-high  { background:linear-gradient(135deg,#e65100,#ef6c00); }
+#tab-cvrisk .cvr-b-mod   { background:linear-gradient(135deg,#f9a825,#fbc02d); color:#4e342e; }
+#tab-cvrisk .cvr-b-low   { background:linear-gradient(135deg,#2e7d32,#388e3c); }
+#tab-cvrisk .cvr-b-sec   { background:linear-gradient(135deg,#4a148c,#6a1b9a); }
+
+/* ── Kennzahl-Kacheln ── */
+#tab-cvrisk .cvr-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:8px; }
+@media(max-width:620px){ #tab-cvrisk .cvr-grid { grid-template-columns:1fr; } }
+#tab-cvrisk .cvr-box { background:#f5f3fa; border-radius:8px; padding:12px 14px; text-align:center; border:1px solid #ede7f6; }
+#tab-cvrisk .cvr-box-val { font-size:1.65rem; font-weight:800; line-height:1.1; color:#311b92; }
+#tab-cvrisk .cvr-box-val.na { font-size:1rem; color:#90a4ae; font-weight:600; }
+#tab-cvrisk .cvr-box-lbl { font-size:.7rem; color:#607d8b; text-transform:uppercase; letter-spacing:.4px; margin-top:4px; }
+#tab-cvrisk .cvr-chip { display:inline-block; font-size:.68rem; font-weight:700; padding:2px 8px; border-radius:10px; margin-top:6px; }
+#tab-cvrisk .cvr-c-low { background:#e8f5e9; color:#2e7d32; }
+#tab-cvrisk .cvr-c-bord { background:#fff8e1; color:#f57f17; }
+#tab-cvrisk .cvr-c-int { background:#fff3e0; color:#e65100; }
+#tab-cvrisk .cvr-c-high { background:#ffebee; color:#c62828; }
+
+/* ── Hinweis-/Warnboxen ── */
+#tab-cvrisk .cvr-note { border-left:4px solid #7e57c2; background:#f3e5f5; padding:10px 14px; margin-bottom:8px; border-radius:0 6px 6px 0; font-size:.85rem; line-height:1.55; color:#311b92; }
+#tab-cvrisk .cvr-warn { border-left:4px solid #ef6c00; background:#fff3e0; padding:10px 14px; margin-bottom:8px; border-radius:0 6px 6px 0; font-size:.85rem; line-height:1.55; color:#5d4037; }
+#tab-cvrisk .cvr-stop { border-left:4px solid #c62828; background:#ffebee; padding:10px 14px; margin-bottom:8px; border-radius:0 6px 6px 0; font-size:.85rem; line-height:1.55; color:#b71c1c; }
+#tab-cvrisk .cvr-xref { border-left:4px solid #90a4ae; background:#f5f5f5; padding:10px 14px; margin-bottom:8px; border-radius:0 6px 6px 0; font-size:.84rem; line-height:1.55; }
+#tab-cvrisk .cvr-xref a, #tab-cvrisk .cvr-note a { color:#4527a0; font-weight:600; cursor:pointer; text-decoration:underline; }
+#tab-cvrisk .cvr-note-t, #tab-cvrisk .cvr-warn-t, #tab-cvrisk .cvr-stop-t { font-weight:700; display:block; margin-bottom:2px; }
+
+/* ── Tabellen ── */
+#tab-cvrisk .cvr-tw { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+#tab-cvrisk .cvr-table { width:100%; border-collapse:collapse; font-size:.78rem; min-width:720px; }
+#tab-cvrisk .cvr-table th { background:#ede7f6; color:#311b92; font-weight:700; padding:8px 10px; text-align:left; font-size:.7rem; text-transform:uppercase; letter-spacing:.4px; vertical-align:bottom; }
+#tab-cvrisk .cvr-table td { padding:8px 10px; border-bottom:1px solid #f0f0f5; vertical-align:top; line-height:1.45; }
+#tab-cvrisk .cvr-table tr:last-child td { border-bottom:none; }
+#tab-cvrisk .cvr-table tr:hover td { background:#faf9fd; }
+#tab-cvrisk .cvr-table td.cvr-tool { font-weight:700; color:#311b92; white-space:nowrap; }
+#tab-cvrisk .cvr-tag { display:inline-block; padding:2px 7px; border-radius:8px; font-size:.64rem; font-weight:700; white-space:nowrap; }
+#tab-cvrisk .cvr-t-yes { background:#e8f5e9; color:#2e7d32; }
+#tab-cvrisk .cvr-t-may { background:#fff3e0; color:#e65100; }
+#tab-cvrisk .cvr-t-no  { background:#ffebee; color:#c62828; }
+#tab-cvrisk .cvr-t-res { background:#e3f2fd; color:#1565c0; }
+#tab-cvrisk .cvr-src { font-size:.72rem; color:#78909c; line-height:1.55; margin-top:10px; }
+</style>
+
+<div class="diab-container">
+
+  <div id="cvr-import-banner" style="display:none;" class="diab-import-banner">
+    <span style="font-size:1.1rem;">📥</span><span id="cvr-import-text"></span>
+  </div>
+
+  <div class="cvr-subnav">
+    <button class="cvr-subbtn active" onclick="cvrShowSub('calc',this)">🧮 Rechner</button>
+    <button class="cvr-subbtn" onclick="cvrShowSub('tools',this)">⚖️ Score-Vergleich</button>
+    <button class="cvr-subbtn" onclick="cvrShowSub('bio',this)">🧪 Biomarker</button>
+    <button class="cvr-subbtn" onclick="cvrShowSub('img',this)">📷 Bildgebung</button>
+    <button class="cvr-subbtn" onclick="cvrShowSub('info',this)">ℹ️ Info &amp; Quellen</button>
+  </div>
+
+  <!-- ══════════════════ RECHNER ══════════════════ -->
+  <div id="cvr-sub-calc" class="cvr-subtab active">
+
+    <div class="diab-card">
+      <h2>📈 Kardiovaskuläre Risikostratifizierung bei CKD</h2>
+      <p style="font-size:.82rem;color:#607d8b;margin:-6px 0 12px;line-height:1.55;">
+        Kombiniert die <strong>kategoriale KDIGO-/ESC-Einstufung</strong> (eGFR + Albuminurie) mit den
+        <strong>PREVENT-Gleichungen</strong>. Framingham und die Pooled Cohort Equations unterschätzen
+        das Risiko bei CKD systematisch — Details im Reiter <em>Score-Vergleich</em>.
+      </p>
+      <div class="diab-row">
+        <div class="diab-field">
+          <label>Alter</label>
+          <input type="number" id="cvr-age" min="18" max="110"><span class="diab-unit">Jahre — PREVENT gültig 30–79</span>
+        </div>
+        <div class="diab-field">
+          <label>Geschlecht</label>
+          <div class="diab-toggle-group">
+            <input type="radio" name="cvr-sex" id="cvr-sex-m" value="m"><label for="cvr-sex-m">Mann</label>
+            <input type="radio" name="cvr-sex" id="cvr-sex-f" value="f"><label for="cvr-sex-f">Frau</label>
+          </div>
+        </div>
+      </div>
+      <div class="diab-row">
+        <div class="diab-field">
+          <label>eGFR</label>
+          <input type="number" id="cvr-egfr" step="0.1" min="3" max="200"><span class="diab-unit">ml/min/1,73 m²</span>
+        </div>
+        <div class="diab-field">
+          <label>uACR</label>
+          <input type="number" id="cvr-uacr" step="0.1" min="0" max="30000"><span class="diab-unit">mg/g</span>
+        </div>
+      </div>
+      <div class="diab-row">
+        <div class="diab-field">
+          <label>RR systolisch</label>
+          <input type="number" id="cvr-sbp" min="70" max="260"><span class="diab-unit">mmHg</span>
+        </div>
+        <div class="diab-field">
+          <label>BMI <span class="diab-optional">— optional</span></label>
+          <input type="number" id="cvr-bmi" step="0.1" min="12" max="80"><span class="diab-unit">kg/m² — nur für Herzinsuffizienz-Modell</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="diab-card">
+      <h2>🧪 Lipide &amp; Risikofaktoren</h2>
+      <div class="diab-row">
+        <div class="diab-field">
+          <label>Gesamtcholesterin</label>
+          <input type="number" id="cvr-tc" min="60" max="600"><span class="diab-unit">mg/dl</span>
+        </div>
+        <div class="diab-field">
+          <label>HDL-Cholesterin</label>
+          <input type="number" id="cvr-hdl" min="10" max="150"><span class="diab-unit">mg/dl</span>
+        </div>
+      </div>
+      <div class="diab-med-grid" style="margin-top:8px;">
+        <div class="diab-check-item"><input type="checkbox" id="cvr-dm"><label for="cvr-dm">Diabetes mellitus</label></div>
+        <div class="diab-check-item"><input type="checkbox" id="cvr-smoker"><label for="cvr-smoker">Aktueller Raucher</label></div>
+        <div class="diab-check-item"><input type="checkbox" id="cvr-bptx"><label for="cvr-bptx">Antihypertensiva</label></div>
+        <div class="diab-check-item"><input type="checkbox" id="cvr-statin"><label for="cvr-statin">Statin</label></div>
+      </div>
+    </div>
+
+    <div class="diab-card">
+      <h2>🫀 Manifeste ASCVD &amp; Nierenersatztherapie</h2>
+      <p style="font-size:.79rem;color:#607d8b;margin:-6px 0 10px;">
+        Bei manifester ASCVD ist ein Primärpräventions-Score nicht indiziert — es gilt Sekundärprävention.
+      </p>
+      <div class="diab-med-grid">
+        <div class="diab-check-item"><input type="checkbox" id="cvr-khk"><label for="cvr-khk">KHK / Z.n. Myokardinfarkt</label></div>
+        <div class="diab-check-item"><input type="checkbox" id="cvr-stroke"><label for="cvr-stroke">Schlaganfall / TIA</label></div>
+        <div class="diab-check-item"><input type="checkbox" id="cvr-pavk"><label for="cvr-pavk">pAVK</label></div>
+        <div class="diab-check-item"><input type="checkbox" id="cvr-krt"><label for="cvr-krt">Chronische Nierenersatztherapie</label></div>
+      </div>
+    </div>
+
+    <button class="diab-calc-btn" onclick="cvrCalculate()">📈 Kardiovaskuläres Risiko berechnen</button>
+    <div id="cvr-results" style="margin-top:20px;"></div>
+
+    <div class="diab-disclaimer">
+      ⚕️ <strong>Hinweis:</strong> Kategoriale Einstufung nach <strong>KDIGO 2024 CKD</strong> und
+      <strong>ESC</strong>; quantitative Schätzung mit den <strong>PREVENT</strong>-Gleichungen
+      (Khan SS et al., <em>Circulation</em> 2024;149:430–449), Risikoschwellen nach der
+      <strong>2026 ACC/AHA Dyslipidämie-Leitlinie</strong>. Einordnung und Limitationen nach
+      Correa S, Cunningham JW, Mc Causland FR, <em>Clin J Am Soc Nephrol</em> 2026
+      (doi:10.2215/CJN.0000001199). <strong>Keine Validierung der PREVENT-Gleichungen für
+      CKD G4–G5 und Dialyse.</strong> Alle Angaben ohne Gewähr.
+    </div>
+  </div>
+
+  <!-- ══════════════════ SCORE-VERGLEICH ══════════════════ -->
+  <div id="cvr-sub-tools" class="cvr-subtab">
+    <div class="diab-card">
+      <h2>⚖️ Risikoscores bei CKD — was taugt wofür</h2>
+      <p style="font-size:.82rem;color:#607d8b;margin:-6px 0 12px;line-height:1.55;">
+        Die KDIGO-Leitlinie 2024 empfiehlt für die Primärprävention <strong>QRISK</strong>,
+        die <strong>CKD-PC-Gleichung („CKD Patch“)</strong> und <strong>PREVENT</strong>.
+      </p>
+      <div class="cvr-tw">
+        <table class="cvr-table">
+          <thead>
+            <tr><th>Score</th><th>Ableitungspopulation</th><th>Limitation bei CKD</th><th>CKD-Anpassung</th><th>Klinische Rolle</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="cvr-tool">Framingham<br>(FRS)</td>
+              <td>US-Allgemeinbevölkerung; CKD ausgeschlossen bzw. unterrepräsentiert</td>
+              <td>Enthält weder eGFR noch Albuminurie; unterschätzt das KV-Risiko bei CKD</td>
+              <td>Keine — Ergänzung um eGFR/Albuminurie vorgeschlagen, aber nicht validiert</td>
+              <td><span class="cvr-tag cvr-t-no">nicht empfohlen</span> für die routinemäßige KV-Risikoschätzung bei CKD</td>
+            </tr>
+            <tr>
+              <td class="cvr-tool">Pooled Cohort<br>Equations (PCE)</td>
+              <td>US-Allgemeinbevölkerung; CKD unterrepräsentiert, eGFR kein Prädiktor</td>
+              <td>Unterschätzt das KV-Risiko systematisch; bildet urämiespezifische Risikopfade nicht ab</td>
+              <td>„Kidney Patch“ legt eGFR-/uACR-Korrekturfaktoren über die PCE, ohne sie zu ersetzen — validiert an &gt; 9 Mio. Erwachsenen</td>
+              <td><span class="cvr-tag cvr-t-may">nur mit Patch</span> — falls PREVENT nicht verfügbar</td>
+            </tr>
+            <tr>
+              <td class="cvr-tool">QRISK3</td>
+              <td>UK-Primärversorgung, elektronische Patientenakten (~10 Mio. Erwachsene); CKD als Modellvariable enthalten</td>
+              <td>Ableitung und Validierung überwiegend an UK-Populationen — eingeschränkte Übertragbarkeit auf andere Länder und Ethnien; viele Prädiktoren</td>
+              <td>Bezieht CKD direkt als Prädiktor ein, neben zahlreichen Komorbiditäten</td>
+              <td><span class="cvr-tag cvr-t-yes">KDIGO 2024</span> für die Primärprävention empfohlen; in UK weit verbreitet</td>
+            </tr>
+            <tr>
+              <td class="cvr-tool">PREVENT</td>
+              <td>Breite US-Population; eGFR im Basismodell, uACR und HbA1c im erweiterten Modell</td>
+              <td>Gültigkeit bei fortgeschrittener CKD (G4–G5) unklar; die Schwellenwerte sind in der Lipidleitlinie 2026 verankert, aber für fortgeschrittene CKD nicht validiert</td>
+              <td>eGFR ist fester Bestandteil des Modells; CKM-Rahmen integriert Nieren- und Stoffwechselgesundheit</td>
+              <td><span class="cvr-tag cvr-t-yes">bevorzugt</span> für die quantitative Primärprävention bei CKD</td>
+            </tr>
+            <tr>
+              <td class="cvr-tool">CKD-PC<br>„CKD Patch“</td>
+              <td>72 internationale Datensätze, &gt; 9 Mio. Erwachsene über das gesamte CKD-Spektrum</td>
+              <td>Korrekturaufsatz, kein eigenständiges Instrument — benötigt eine zugrunde liegende PCE- oder SCORE-Gleichung</td>
+              <td>Wendet eGFR- und uACR-basierte Korrekturen auf bestehende Gleichungen an; ging PREVENT voraus und floss in dessen Entwicklung ein</td>
+              <td><span class="cvr-tag cvr-t-yes">KDIGO 2024</span> — nützlich, wo PREVENT noch nicht etabliert ist; verbessert die Risikoreklassifikation</td>
+            </tr>
+            <tr>
+              <td class="cvr-tool">CRIC-Modell</td>
+              <td>CKD-Population (eGFR 20–70 ml/min/1,73 m²); integriert hs-cTnT und uACR</td>
+              <td>Noch nicht extern validiert, daher nicht für den Routineeinsatz</td>
+              <td>Speziell für CKD entwickelt; übertrifft die PCE in Diskrimination und Reklassifikation</td>
+              <td><span class="cvr-tag cvr-t-res">Forschung</span> — derzeit das genaueste CKD-spezifische ASCVD-Modell</td>
+            </tr>
+            <tr>
+              <td class="cvr-tool">ESC- / KDIGO-<br>Kategorien</td>
+              <td>Leitlinien-Rahmenwerk, kein statistisches Vorhersagemodell</td>
+              <td>Binäre Schwellen; quantifiziert das absolute Risiko jenseits von „hoch/sehr hoch“ nicht</td>
+              <td>eGFR &lt; 30 oder relevante Albuminurie = sehr hohes Risiko; eGFR 30–60 = hohes Risiko</td>
+              <td><span class="cvr-tag cvr-t-yes">praxistauglich</span> — Grundlage für die Einleitung präventiver Therapie</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="cvr-src">
+        Nach Tabelle 1 aus Correa S, Cunningham JW, Mc Causland FR. Atherosclerotic Cardiovascular Disease in CKD.
+        <em>Clin J Am Soc Nephrol</em> 2026, doi:10.2215/CJN.0000001199.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ BIOMARKER ══════════════════ -->
+  <div id="cvr-sub-bio" class="cvr-subtab">
+    <div class="diab-card">
+      <h2>🧪 Kardiale Biomarker bei CKD</h2>
+      <p style="font-size:.82rem;color:#607d8b;margin:-6px 0 12px;line-height:1.55;">
+        Akkumulation, Clearance und myokardiale Biologie sind bei CKD verändert — Standardschwellen
+        sind hier nur eingeschränkt anwendbar.
+      </p>
+      <div class="cvr-tw">
+        <table class="cvr-table">
+          <thead>
+            <tr><th>Marker</th><th>Verhalten bei CKD</th><th>Limitation</th><th>Prognostischer Wert</th><th>Klinische Rolle</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="cvr-tool">hs-cTnT</td>
+              <td>81 % der CRIC-Teilnehmer mit nachweisbaren Werten (≥ 3 pg/ml); Median 9,4 pg/ml [IQR 4,3–18,3] vs. 3,0–3,7 pg/ml in der Allgemeinbevölkerung</td>
+              <td>Erhöht durch reduzierte renale Clearance, urämische Myokardschädigung, myokardiales Stunning und intradialytische Hypotonie; zusätzlich Expression in urämischer Skelettmuskulatur</td>
+              <td>Starker unabhängiger Prädiktor für KV-Tod und MACE über das gesamte CKD-Spektrum</td>
+              <td><strong>Serielle Messung mit Ausgangswert zwingend</strong> — eine Einzelmessung ist zur ACS-Diagnostik bei CKD nicht verwertbar</td>
+            </tr>
+            <tr>
+              <td class="cvr-tool">hs-cTnI</td>
+              <td>Sensitivität 87–100 % über alle CKD-Stadien; Spezifität fällt von &gt; 90 % (normale eGFR) auf 57–61 % (eGFR &lt; 30) und 40 % (Dialyse); PPV 51–57 % (eGFR ≥ 90) → 15–32 % (Dialyse)</td>
+              <td>Spezifität und PPV fallen mit abnehmender Nierenfunktion steil ab; Interpretation nur im klinischen Kontext und seriell</td>
+              <td>Prognostische Aussagekraft bleibt über alle CKD-Stadien erhalten; erhöhte Werte gehen mit höherer Mortalität einher</td>
+              <td><strong>Zur ACS-Diagnostik bei CKD zuverlässiger als hs-cTnT</strong> — wird nicht in Skelettmuskulatur exprimiert; serielle Messung und Ausgangswert dennoch erforderlich</td>
+            </tr>
+            <tr>
+              <td class="cvr-tool">BNP /<br>NT-proBNP</td>
+              <td>Akkumulieren mit fallender eGFR; Standard-Grenzwerte für CKD- und Dialysepopulationen nicht validiert</td>
+              <td>Passive Akkumulation durch verminderte renale Clearance; diagnostische Spezifität für akute Herzinsuffizienz bei fortgeschrittener CKD deutlich eingeschränkt</td>
+              <td>Behalten trotz erhöhter Ausgangswerte relevante prognostische Aussagekraft für KV-Ereignisse und Mortalität</td>
+              <td>Für Prognose und Verlaufsbeurteilung nützlich; zur Akutdiagnostik der Herzinsuffizienz ohne Berücksichtigung der CKD-bedingten Basiserhöhung nicht verlässlich</td>
+            </tr>
+            <tr>
+              <td class="cvr-tool">Apo-B</td>
+              <td>Mittleres Tertil mit 30 % höherem ASCVD-Risiko in der CRIC-Studie — klassisches LDL-C war in derselben Kohorte nicht signifikant assoziiert</td>
+              <td>Nicht routinemäßig bestimmt; begrenzte externe Validierung außerhalb von CRIC; keine etablierten CKD-spezifischen Therapieschwellen</td>
+              <td>Übertrifft LDL-C in der ASCVD-Risikovorhersage bei CKD (CRIC)</td>
+              <td>Aufkommender Stellenwert als bevorzugter Lipidmarker bei CKD; noch kein Standard — Bestimmung bei Hochrisikopatienten vertretbar</td>
+            </tr>
+            <tr>
+              <td class="cvr-tool">Lp(a)</td>
+              <td>Je 10 mg/dl Anstieg: 6,5 % höhere Odds für prävalente CVD, 3,7 % höheres Risiko für inzidente MACE (GCKD-Studie)</td>
+              <td>Routinetestung nicht flächendeckend verfügbar; keine zugelassenen CKD-spezifischen Therapieziele; Spiegel können durch die Nierenerkrankung selbst erhöht sein</td>
+              <td>Unabhängiger MACE-Prädiktor bei CKD; Risikobeziehung offenbar kontinuierlich über alle Spiegel</td>
+              <td>Einmalige Bestimmung bei CKD-Patienten mit hohem KV-Risiko empfohlen; RNA-basierte Lp(a)-Senker in Erprobung</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="cvr-warn" style="margin-top:12px;">
+        <span class="cvr-warn-t">⚠️ Klinische Symptome sind bei CKD unzuverlässig</span>
+        Thoraxschmerz hat für eine Koronarstenose bei CKD nur eine Sensitivität von 51 % und eine
+        Spezifität von 59 %. Beim akuten Myokardinfarkt berichten nur 44 % der Patienten mit CKD ≥ G3a
+        über Schmerzen in Brust, Arm oder Schulter.
+      </div>
+      <div class="cvr-src">
+        Nach Tabelle 2 aus Correa S et al., <em>Clin J Am Soc Nephrol</em> 2026, doi:10.2215/CJN.0000001199.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ BILDGEBUNG ══════════════════ -->
+  <div id="cvr-sub-img" class="cvr-subtab">
+    <div class="diab-card">
+      <h2>📷 Nicht-invasive und invasive KHK-Diagnostik bei CKD</h2>
+      <p style="font-size:.82rem;color:#607d8b;margin:-6px 0 12px;line-height:1.55;">
+        Die Sensitivitäts-/Spezifitätsangaben stammen überwiegend aus Kollektiven von
+        <strong>Nierentransplantationskandidaten und Dialysepatienten</strong> — Daten für die
+        Stadien G1–G4 fehlen weitgehend.
+      </p>
+      <div class="cvr-tw">
+        <table class="cvr-table">
+          <thead>
+            <tr><th>Verfahren</th><th>Testgüte bei CKD</th><th>Limitation</th><th>Sicherheit</th><th>Klinische Rolle</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="cvr-tool">Belastungs-EKG</td>
+              <td>Sensitivität 35 %, Spezifität 64 % (Transplantationskandidaten)</td>
+              <td>Schlechte Belastbarkeit bei CKD; LVH-Schädigungsmuster maskieren ischämische ST-Veränderungen</td>
+              <td>Sicher; keine Kontrastmittel, keine Strahlung</td>
+              <td><span class="cvr-tag cvr-t-no">nicht empfohlen</span> als primäres Verfahren — pharmakologische Belastung in allen CKD-Stadien vorzuziehen</td>
+            </tr>
+            <tr>
+              <td class="cvr-tool">Dobutamin-<br>Stressecho (DSE)</td>
+              <td>Sensitivität 76–80 %, Spezifität 88–89 % für obstruktive KHK; insgesamt genauer als die Myokardperfusionsszintigraphie</td>
+              <td>Eingeschränktes Schallfenster bei manchen Patienten; Evidenz überwiegend aus Transplantationskollektiven</td>
+              <td>Sicher; kein Kontrastmittel, keine Strahlung</td>
+              <td><span class="cvr-tag cvr-t-yes">Verfahren der Wahl</span> — bestvalidierter Funktionstest bei CKD, wird in der US-Praxis aber nur bei 7 % der Belastungstests eingesetzt</td>
+            </tr>
+            <tr>
+              <td class="cvr-tool">SPECT-MPI</td>
+              <td>Sensitivität 67–74 %, Spezifität 70–77 %; der DSE unterlegen — macht dennoch ~87 % der Belastungstests bei CKD in den USA aus</td>
+              <td>Nur relative Perfusionsdaten; LVH und LV-Dilatation erzeugen Pseudodefekte; erfasst keine mikrovaskuläre Erkrankung</td>
+              <td>Strahlung 10–15 mSv; kein jodhaltiges Kontrastmittel — in allen CKD-Stadien inkl. Dialyse sicher</td>
+              <td>Häufigstes, aber der DSE unterlegenes Verfahren — einsetzen, wenn DSE nicht durchführbar; PET wo verfügbar vorzuziehen</td>
+            </tr>
+            <tr>
+              <td class="cvr-tool">PET-MPI</td>
+              <td>Quantitativer absoluter Myokardblutfluss und Flussreserve; diagnostisch dem SPECT überlegen</td>
+              <td>Begrenzte Verfügbarkeit, hohe Kosten; Stellenwert vor Transplantation noch nicht etabliert</td>
+              <td>Strahlung 2–5 mSv; kein jodhaltiges Kontrastmittel — in allen CKD-Stadien sicher</td>
+              <td>Bevorzugtes nuklearmedizinisches Verfahren, wo verfügbar — quantitativer MBF erfasst die für fortgeschrittene CKD typische diffuse mikrovaskuläre Erkrankung besser</td>
+            </tr>
+            <tr>
+              <td class="cvr-tool">Koronar-CTA</td>
+              <td>Sensitivität 96 %, Spezifität 66 % bei fortgeschrittener CKD; ~10 % der Untersuchungen bei Dialysepatienten nicht auswertbar</td>
+              <td>Ausgeprägte Koronarverkalkung limitiert die Stenosebeurteilung; ein erheblicher Anteil der Verkalkung ist medial, nicht intimal</td>
+              <td>Jodhaltiges Kontrastmittel: CI-AKI-Risiko bei nicht-dialysepflichtiger CKD; Strahlung 3–10 mSv</td>
+              <td>Hohe Sensitivität bei begrenzter Spezifität; FFR-CT kann die Auswertbarkeit teilweise verbessern; bei ESKD meist erst nach Dialysebeginn</td>
+            </tr>
+            <tr>
+              <td class="cvr-tool">Stress-CMR /<br>native T1-Map</td>
+              <td>Dobutamin-CMR: Sensitivität 100 %, Spezifität 89 % vor Transplantation (n = 62); native T1-Kartierung unterscheidet ischämisches, infarziertes und normales Myokard ohne Gadolinium</td>
+              <td>Begrenzte Verfügbarkeit; Evidenz nur aus kleinen Präatransplantationsstudien; T1-Mapping noch experimentell</td>
+              <td>Dobutamin-CMR und T1-Mapping ohne Kontrastmittel. Lineare Gadolinium-Präparate bei eGFR &lt; 30 kontraindiziert (NSF), makrozyklische deutlich sicherer</td>
+              <td>Vielversprechende kontrastmittelfreie Alternative zur DSE an erfahrenen Zentren; T1-Mapping vor Routineeinsatz weiter zu validieren</td>
+            </tr>
+            <tr>
+              <td class="cvr-tool">CAC-Score</td>
+              <td>CAC-Prävalenz bei CKD weit über den Normwerten der Allgemeinbevölkerung; Zusammenhang mit induzierbarer Ischämie schwach, oberhalb von Scores &gt; 400 etwas besser</td>
+              <td>Erheblicher Anteil medialer (nicht atherosklerotischer) Verkalkung; bildet die atherosklerotische Last nicht verlässlich ab</td>
+              <td>Kein Kontrastmittel, niedrige Strahlendosis — in allen CKD-Stadien sicher</td>
+              <td><span class="cvr-tag cvr-t-no">nicht zur Reklassifikation</span> des primären KV-Risikos bei CKD — Verkalkung ist nahezu ubiquitär; als Ergänzung zur funktionellen Bildgebung brauchbar</td>
+            </tr>
+            <tr>
+              <td class="cvr-tool">Invasive<br>Koronarangiographie</td>
+              <td>Goldstandard für obstruktive KHK; stärkster Outcome-Prädiktor bei Transplantationskandidaten</td>
+              <td>Risiko einer kontrastmittelinduzierten AKI und weiteren eGFR-Verlusts bei nicht-dialysepflichtiger CKD</td>
+              <td>Kontrastmittelvolumen minimieren, isoosmolare Kontrastmittel, ausreichende periprozedurale Hydrierung</td>
+              <td>Vorbehalten für eindeutige Symptomatik, positiven Belastungstest oder die Evaluation vor Revaskularisation</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="cvr-note" style="margin-top:12px;">
+        <span class="cvr-note-t">🔬 ISCHEMIA-CKD — stabile KHK bei fortgeschrittener CKD</span>
+        Bei 777 Patienten mit eGFR &lt; 30 ml/min/1,73 m² oder Dialyse und mindestens mittelgradiger
+        Ischämie senkte eine routinemäßig invasive Strategie den kombinierten Endpunkt aus Tod oder
+        Myokardinfarkt nicht (adj. HR 1,01; 95 %-KI 0,79–1,29) und war mit mehr Schlaganfällen sowie
+        einem beschleunigten Dialysebeginn verbunden. <strong>Optimale medikamentöse Therapie ist
+        der Standard</strong> — Revaskularisation bei refraktärer Symptomatik, ACS oder
+        hämodynamisch relevanter Stenose.
+      </div>
+      <div class="cvr-src">
+        Nach Tabelle 3 aus Correa S et al., <em>Clin J Am Soc Nephrol</em> 2026, doi:10.2215/CJN.0000001199.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ INFO ══════════════════ -->
+  <div id="cvr-sub-info" class="cvr-subtab">
+    <div class="diab-card">
+      <h2>📊 Warum CKD ein eigenes Risikoproblem ist</h2>
+      <div class="cvr-note">
+        <span class="cvr-note-t">Risikogradient über eGFR und Albuminurie</span>
+        Verglichen mit eGFR 90–104 ml/min/1,73 m² und uACR &lt; 10 mg/g steigt bei eGFR &lt; 15 und
+        uACR ≥ 1000 mg/g das Risiko für <strong>Myokardinfarkt 6-fach</strong>,
+        für <strong>Schlaganfall 4-fach</strong> und für <strong>pAVK 14-fach</strong>.
+        Für den <strong>kardiovaskulären Tod</strong> beträgt das Risiko bei eGFR &lt; 30 und
+        uACR ≥ 300 mg/g das <strong>8,7-Fache</strong>.
+      </div>
+      <div class="cvr-note">
+        <span class="cvr-note-t">Krankheitslast</span>
+        Nach dem USRDS-Jahresbericht 2025 haben 36 % der Patienten mit CKD eine atherosklerotische
+        Herzerkrankung, 17 % einen Schlaganfall/TIA und 32 % eine pAVK in der Vorgeschichte.
+        Die Mehrheit stirbt kardiovaskulär, bevor ein Nierenversagen erreicht wird.
+      </div>
+      <div class="cvr-note">
+        <span class="cvr-note-t">Nicht-traditionelle Mechanismen</span>
+        Mineral- und Knochenstoffwechselstörung mit Gefäßverkalkung, chronische Inflammation und
+        oxidativer Stress, urämische Toxine (Indoxylsulfat, p-Kresol, ADMA), Proteincarbamylierung
+        sowie eine atherogene Dyslipidämie — keiner dieser Pfade wird von Allgemeinpopulations-Scores
+        abgebildet.
+      </div>
+    </div>
+
+    <div class="diab-card">
+      <h2>🎯 PREVENT-Risikoschwellen (ACC/AHA 2026)</h2>
+      <div class="cvr-tw">
+        <table class="cvr-table" style="min-width:420px;">
+          <thead><tr><th>10-Jahres-ASCVD-Risiko</th><th>Kategorie</th><th>Lipidsenkung (Primärprävention, 30–79 J.)</th></tr></thead>
+          <tbody>
+            <tr><td class="cvr-tool">&lt; 3 %</td><td><span class="cvr-tag cvr-c-low">niedrig</span></td><td>keine routinemäßige Indikation</td></tr>
+            <tr><td class="cvr-tool">3 – &lt; 5 %</td><td><span class="cvr-tag cvr-c-bord">grenzwertig</span></td><td>vertretbar zu erwägen</td></tr>
+            <tr><td class="cvr-tool">5 – &lt; 10 %</td><td><span class="cvr-tag cvr-c-int">intermediär</span></td><td>empfohlen</td></tr>
+            <tr><td class="cvr-tool">≥ 10 %</td><td><span class="cvr-tag cvr-c-high">hoch</span></td><td>empfohlen</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="cvr-xref" style="margin-top:12px;">
+        Intensität, Zielwerte und Substanzwahl werden hier bewusst nicht wiederholt —
+        maßgeblich ist der <a onclick="switchToolTab('lipid')">💊 Lipidtherapie-Tab</a>
+        (ACC/AHA 2026). Blutdruckziele stehen im
+        <a onclick="switchToolTab('htn')">❤️‍🩹 Hypertonie-Tab</a>, die Stadieneinteilung im
+        <a onclick="switchToolTab('ckm')">🫀 CKM-Tab</a>.
+      </div>
+    </div>
+
+    <div class="diab-card">
+      <h2>⚠️ Evidenzlücken</h2>
+      <div class="cvr-warn">
+        <span class="cvr-warn-t">Fortgeschrittene CKD ist aus den Zulassungsstudien ausgeschlossen</span>
+        Patienten mit CKD G4–G5 und Nierenversagen wurden aus nahezu allen zitierten Landmark-Studien
+        systematisch ausgeschlossen. Die Validierung der PREVENT-Gleichungen für G4–G5 steht aus,
+        optimale LDL-C-Zielwerte bei fortgeschrittener CKD sind unklar.
+      </div>
+      <div class="cvr-warn">
+        <span class="cvr-warn-t">Kein prospektiv geprüftes Troponin-Protokoll</span>
+        Keine prospektive Studie hat serielle Troponinmessungen als diagnostische Strategie für den
+        Myokardinfarkt bei CKD formal untersucht. EKG-Veränderungen und Ischämie-Biomarker haben
+        bei CKD einen begrenzten Screening-Nutzen.
+      </div>
+      <div class="cvr-warn">
+        <span class="cvr-warn-t">ZEUS — Inflammation als Zielstruktur bleibt offen</span>
+        Ziltivekimab (IL-6-Hemmung) senkte bei über 6300 nicht-dialysepflichtigen Patienten mit CKD,
+        manifester ASCVD und hsCRP ≥ 2 mg/l zwar IL-6 und hsCRP, reduzierte MACE aber nicht
+        (HR 0,99; 95 %-KI 0,88–1,11). Biomarker-Ansprechen belegt keinen kardiovaskulären Nutzen.
+      </div>
+    </div>
+
+    <div class="diab-card">
+      <h2>📚 Quellen</h2>
+      <div class="cvr-src" style="font-size:.79rem;">
+        <p style="margin:0 0 8px;"><strong>Leitartikel dieses Tabs:</strong><br>
+        Correa S, Cunningham JW, Mc Causland FR. Atherosclerotic Cardiovascular Disease in CKD:
+        Contemporary Insights into Pathogenesis, Diagnosis, and Management.
+        <em>Clin J Am Soc Nephrol</em> 2026. doi:10.2215/CJN.0000001199</p>
+        <p style="margin:0 0 8px;"><strong>Risikogleichungen:</strong><br>
+        Khan SS et al. Development and Validation of the American Heart Association's PREVENT
+        Equations. <em>Circulation</em> 2024;149(6):430–449. doi:10.1161/CIRCULATIONAHA.123.067626<br>
+        Matsushita K et al. (CKD-PC). Incorporating kidney disease measures into cardiovascular risk
+        prediction — „CKD Patch“.<br>
+        Hippisley-Cox J et al. QRISK3.</p>
+        <p style="margin:0 0 8px;"><strong>Leitlinien:</strong><br>
+        KDIGO 2024 Clinical Practice Guideline for the Evaluation and Management of CKD ·
+        2026 ACC/AHA Guideline on the Management of Blood Cholesterol (Blumenthal et al.) ·
+        ESC Guidelines on Cardiovascular Disease Prevention.</p>
+        <p style="margin:0;"><strong>Implementierungshinweis:</strong> Die PREVENT-Berechnung dieses
+        Tabs nutzt dieselbe geprüfte Implementierung wie der CKM-Tab (Basismodelle; Koeffizienten
+        programmatisch aus dem R-Paket <code>preventr</code>, validiert gegen Supplement-Tabelle S25).
+        Das erweiterte PREVENT-Modell mit uACR und HbA1c ist nicht implementiert — uACR geht hier
+        ausschließlich in die kategoriale KDIGO-/ESC-Einstufung ein.</p>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end diab-container -->
+
+<script>
+(function(){
+  'use strict';
+
+  /* ==========================================================
+     KV-RISIKO-TAB
+     PREVENT-Engine und KDIGO-Kategorisierung werden aus dem
+     CKM-Tab nachgenutzt (window.preventCalc / window.kdigoRiskCat)
+     — es gibt bewusst nur eine Koeffizientenquelle im Projekt.
+     ========================================================== */
+
+  function num(id) {
+    var el = document.getElementById(id);
+    if (!el || el.value === '' || el.value === null) { return null; }
+    var v = parseFloat(String(el.value).replace(',', '.'));
+    return isFinite(v) ? v : null;
+  }
+  function chk(id) { var el = document.getElementById(id); return el ? el.checked : false; }
+  function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function pct(v) { return v.toFixed(1).replace('.', ',') + ' %'; }
+
+  window.cvrShowSub = function(id, btn) {
+    document.querySelectorAll('#tab-cvrisk .cvr-subtab').forEach(function(t){ t.classList.remove('active'); });
+    document.querySelectorAll('#tab-cvrisk .cvr-subbtn').forEach(function(b){ b.classList.remove('active'); });
+    document.getElementById('cvr-sub-' + id).classList.add('active');
+    btn.classList.add('active');
+  };
+
+  /* ── ESC-/KDIGO-Kategorie (Tabelle 1: eGFR <30 oder relevante
+        Albuminurie = sehr hoch; eGFR 30–60 = hoch) ───────────── */
+  function cvrEscCat(egfr, uacr, krt) {
+    if (krt) { return { key:'vhigh', label:'Sehr hohes kardiovaskuläres Risiko', why:'chronische Nierenersatztherapie' }; }
+    if (egfr === null) { return null; }
+    if (egfr < 30) { return { key:'vhigh', label:'Sehr hohes kardiovaskuläres Risiko', why:'eGFR < 30 ml/min/1,73 m²' }; }
+    if (uacr !== null && uacr >= 300) { return { key:'vhigh', label:'Sehr hohes kardiovaskuläres Risiko', why:'relevante Albuminurie (uACR ≥ 300 mg/g)' }; }
+    if (egfr < 60) { return { key:'high', label:'Hohes kardiovaskuläres Risiko', why:'eGFR 30–59 ml/min/1,73 m²' }; }
+    if (uacr !== null && uacr >= 30) { return { key:'mod', label:'Erhöhtes kardiovaskuläres Risiko', why:'Albuminurie A2 bei erhaltener eGFR — quantitative Schätzung maßgeblich' }; }
+    return { key:'low', label:'Keine CKD-bedingte Risikoerhöhung', why:'eGFR ≥ 60 ml/min/1,73 m² ohne relevante Albuminurie' };
+  }
+
+  function cvrPreventCat(p) {
+    if (p < 3)  { return { cls:'cvr-c-low',  txt:'niedrig' }; }
+    if (p < 5)  { return { cls:'cvr-c-bord', txt:'grenzwertig' }; }
+    if (p < 10) { return { cls:'cvr-c-int',  txt:'intermediär' }; }
+    return { cls:'cvr-c-high', txt:'hoch' };
+  }
+
+  function boxHtml(val, label, cat) {
+    if (val === null) {
+      return '<div class="cvr-box"><div class="cvr-box-val na">nicht berechenbar</div>' +
+             '<div class="cvr-box-lbl">' + label + '</div></div>';
+    }
+    var chip = cat ? '<div><span class="cvr-chip ' + cat.cls + '">' + cat.txt + '</span></div>' : '';
+    return '<div class="cvr-box"><div class="cvr-box-val">' + pct(val) + '</div>' +
+           '<div class="cvr-box-lbl">' + label + '</div>' + chip + '</div>';
+  }
+
+  window.cvrCalculate = function() {
+    var out = document.getElementById('cvr-results');
+    var age = num('cvr-age'), egfr = num('cvr-egfr'), uacr = num('cvr-uacr');
+    var sbp = num('cvr-sbp'), tc = num('cvr-tc'), hdl = num('cvr-hdl'), bmi = num('cvr-bmi');
+    var sexR = document.querySelector('input[name="cvr-sex"]:checked');
+    var sex = sexR ? sexR.value : null;
+    var krt = chk('cvr-krt');
+    var ascvd = [];
+    if (chk('cvr-khk'))    { ascvd.push('KHK / Z.n. Myokardinfarkt'); }
+    if (chk('cvr-stroke')) { ascvd.push('Schlaganfall / TIA'); }
+    if (chk('cvr-pavk'))   { ascvd.push('pAVK'); }
+
+    var html = '';
+
+    /* ── 1. Sekundärprävention hat Vorrang ── */
+    if (ascvd.length > 0) {
+      html += '<div class="cvr-banner cvr-b-sec">' +
+              '<div class="cvr-banner-lbl">Sekundärprävention</div>' +
+              '<div class="cvr-banner-val">Manifeste ASCVD — Risikoscore nicht indiziert</div>' +
+              '<div class="cvr-banner-sub">' + esc(ascvd.join(' · ')) +
+              '<br>Primärpräventions-Scores wie PREVENT sind hier definitionsgemäß nicht anwendbar. ' +
+              'Der Patient gehört zur höchsten Risikokategorie.</div></div>';
+      html += '<div class="cvr-xref">Weiteres Vorgehen: ' +
+              '<a onclick="switchToolTab(\'lipid\')">💊 Lipidtherapie</a> · ' +
+              '<a onclick="switchToolTab(\'tah\')">🔴 Antiaggregation</a> · ' +
+              '<a onclick="switchToolTab(\'htn\')">❤️‍🩹 Hypertonie</a>. ' +
+              'KDIGO 2024 empfiehlt bei CKD mit manifester kardiovaskulärer Erkrankung ' +
+              'niedrig dosierte Acetylsalicylsäure zur Sekundärprävention.</div>';
+    }
+
+    /* ── 2. Kategoriale KDIGO-/ESC-Einstufung ── */
+    var escCat = cvrEscCat(egfr, uacr, krt);
+    if (escCat === null) {
+      html += '<div class="cvr-warn"><span class="cvr-warn-t">eGFR fehlt</span>' +
+              'Ohne eGFR ist weder die kategoriale Einstufung noch PREVENT berechenbar.</div>';
+      out.innerHTML = html;
+      return;
+    }
+
+    if (ascvd.length === 0) {
+      var bcls = escCat.key === 'vhigh' ? 'cvr-b-vhigh' : escCat.key === 'high' ? 'cvr-b-high'
+               : escCat.key === 'mod' ? 'cvr-b-mod' : 'cvr-b-low';
+      html += '<div class="cvr-banner ' + bcls + '">' +
+              '<div class="cvr-banner-lbl">KDIGO / ESC — kategoriale Einstufung</div>' +
+              '<div class="cvr-banner-val">' + escCat.label + '</div>' +
+              '<div class="cvr-banner-sub">Begründung: ' + escCat.why + '</div></div>';
+    } else {
+      html += '<div class="cvr-note"><span class="cvr-note-t">Nierenbedingte Zusatzeinstufung</span>' +
+              escCat.label + ' — ' + escCat.why + '</div>';
+    }
+
+    /* KDIGO-Heatmap-Feld, sofern uACR vorliegt */
+    if (typeof window.kdigoRiskCat === 'function' && egfr !== null && uacr !== null) {
+      var k = window.kdigoRiskCat(egfr, uacr);
+      if (k) {
+        var kTxt = k.risk === 'veryhigh' ? 'sehr hohes Risiko'
+                 : k.risk === 'modhigh'  ? 'moderat bis hohes Risiko' : 'niedriges Risiko';
+        html += '<div class="cvr-note"><span class="cvr-note-t">KDIGO-Risikomatrix</span>' +
+                'Stadium <strong>' + k.g + k.a + '</strong> — ' + kTxt +
+                ' (Details in der Matrix im <a onclick="switchToolTab(\'ckd\')">🫘 CKD-Tab</a>).</div>';
+      }
+    }
+
+    /* ── 3. PREVENT ── */
+    if (ascvd.length === 0) {
+      if (typeof window.preventCalc !== 'function') {
+        html += '<div class="cvr-warn">PREVENT-Modul nicht geladen.</div>';
+      } else if (sex === null || age === null || tc === null || hdl === null || sbp === null) {
+        var miss = [];
+        if (sex === null) { miss.push('Geschlecht'); }
+        if (age === null) { miss.push('Alter'); }
+        if (sbp === null) { miss.push('RR systolisch'); }
+        if (tc === null)  { miss.push('Gesamtcholesterin'); }
+        if (hdl === null) { miss.push('HDL'); }
+        html += '<div class="cvr-warn"><span class="cvr-warn-t">PREVENT nicht berechenbar</span>' +
+                'Fehlende Angaben: ' + esc(miss.join(', ')) + '.</div>';
+      } else {
+        var r = window.preventCalc({
+          sex: sex, age: age, tc: tc, hdl: hdl, sbp: sbp, egfr: egfr,
+          bmi: (bmi === null ? undefined : bmi),
+          dm: chk('cvr-dm'), smoker: chk('cvr-smoker'),
+          bpTx: chk('cvr-bptx'), statin: chk('cvr-statin')
+        });
+
+        html += '<div class="diab-card" style="margin-top:14px;"><h2>📈 PREVENT — 10 Jahre</h2>' +
+                '<div class="cvr-grid">' +
+                boxHtml(r.ascvd10, 'ASCVD', r.ascvd10 === null ? null : cvrPreventCat(r.ascvd10)) +
+                boxHtml(r.cvd10,  'Gesamt-CVD', null) +
+                boxHtml(r.hf10,   'Herzinsuffizienz', null) +
+                '</div>';
+
+        if (r.cvd30 !== null || r.ascvd30 !== null) {
+          html += '<h2 style="margin-top:18px;">📉 PREVENT — 30 Jahre</h2>' +
+                  '<div class="cvr-grid">' +
+                  boxHtml(r.ascvd30, 'ASCVD', null) +
+                  boxHtml(r.cvd30,  'Gesamt-CVD', null) +
+                  boxHtml(r.hf30,   'Herzinsuffizienz', null) +
+                  '</div>';
+        } else if (age >= 60 && age <= 79) {
+          html += '<div class="cvr-note" style="margin-top:10px;">Das 30-Jahres-Modell ist nur für ' +
+                  'das Alter 30–59 Jahre definiert.</div>';
+        }
+
+        if (r.ascvd10 === null) {
+          html += '<div class="cvr-warn" style="margin-top:10px;"><span class="cvr-warn-t">Außerhalb des Gültigkeitsbereichs</span>' +
+                  'Die PREVENT-Gleichungen sind für das Alter 30–79 Jahre definiert.</div>';
+        }
+        if (bmi === null) {
+          html += '<div class="cvr-note" style="margin-top:10px;">Ohne BMI bleiben die ' +
+                  'Herzinsuffizienz-Modelle leer — in ASCVD und Gesamt-CVD geht der BMI ' +
+                  'ohnehin nicht ein.</div>';
+        }
+        html += '</div>';
+
+        /* Gültigkeits-Warnungen */
+        if (egfr < 30 || krt) {
+          html += '<div class="cvr-stop"><span class="cvr-stop-t">🚫 PREVENT bei CKD G4–G5 nicht validiert</span>' +
+                  'Die Validierung der PREVENT-Gleichungen für eGFR &lt; 30 ml/min/1,73 m² und für ' +
+                  'Dialysepatienten steht aus. Der berechnete Wert ist hier nicht belastbar — ' +
+                  'maßgeblich ist die kategoriale Einstufung <strong>sehr hohes Risiko</strong>.</div>';
+        } else if (uacr !== null && uacr >= 300) {
+          html += '<div class="cvr-warn"><span class="cvr-warn-t">Albuminurie nicht im Basismodell</span>' +
+                  'Das hier verwendete PREVENT-Basismodell enthält die Albuminurie nicht. ' +
+                  'Bei uACR ' + esc(String(uacr)) + ' mg/g wird das Risiko dadurch unterschätzt — ' +
+                  'die kategoriale Einstufung <strong>sehr hohes Risiko</strong> hat Vorrang.</div>';
+        }
+      }
+    }
+
+    /* ── 4. Einordnung und Konsequenz ── */
+    html += '<div class="cvr-note"><span class="cvr-note-t">Warum nicht Framingham oder PCE?</span>' +
+            'Beide wurden an Allgemeinpopulationen abgeleitet und unterschätzen das kardiovaskuläre ' +
+            'Risiko bei CKD systematisch, da sie weder eGFR noch Albuminurie noch urämiespezifische ' +
+            'Risikopfade abbilden. Steht PREVENT nicht zur Verfügung, korrigiert der ' +
+            '<strong>CKD Patch</strong> der CKD-PC eine bestehende PCE- oder SCORE-Schätzung ' +
+            'über eGFR und uACR. Übersicht im Reiter <em>Score-Vergleich</em>.</div>';
+
+    if (egfr !== null && egfr < 60 && !krt) {
+      var statinTxt;
+      if (age !== null && age >= 50) {
+        statinTxt = 'Alter ≥ 50 Jahre und eGFR &lt; 60: KDIGO 2024 empfiehlt die Einleitung einer ' +
+                    'Statintherapie oder einer Statin-/Ezetimib-Kombination.';
+      } else if (age !== null) {
+        statinTxt = 'Alter 18–49 Jahre mit CKD: KDIGO 2024 empfiehlt ein Statin bei bekannter ' +
+                    'koronarer Herzkrankheit, Diabetes, Z.n. ischämischem Insult oder geschätztem ' +
+                    '10-Jahres-Koronarrisiko &gt; 10 %.';
+      } else {
+        statinTxt = 'KDIGO 2024 empfiehlt bei nicht-dialysepflichtiger CKD und eGFR &lt; 60 ab einem ' +
+                    'Alter von 50 Jahren die Einleitung einer Statintherapie oder Statin-/Ezetimib-Kombination.';
+      }
+      html += '<div class="cvr-xref"><strong>Lipidsenkung bei CKD — zwei Leitlinienlogiken:</strong><br>' +
+              statinTxt + ' KDIGO verfolgt dabei eine Strategie ohne LDL-Zielwert („fire and forget“), ' +
+              'während ACC/AHA zielwertorientiert vorgeht. Substanzwahl, Intensität und Zielwerte im ' +
+              '<a onclick="switchToolTab(\'lipid\')">💊 Lipidtherapie-Tab</a>.</div>';
+    } else {
+      html += '<div class="cvr-xref">Therapieentscheidung im ' +
+              '<a onclick="switchToolTab(\'lipid\')">💊 Lipidtherapie-Tab</a> · ' +
+              'Blutdruckziele im <a onclick="switchToolTab(\'htn\')">❤️‍🩹 Hypertonie-Tab</a> · ' +
+              'Stadieneinteilung im <a onclick="switchToolTab(\'ckm\')">🫀 CKM-Tab</a>.</div>';
+    }
+
+    if (krt) {
+      html += '<div class="cvr-warn"><span class="cvr-warn-t">Dialyse</span>' +
+              'Die KDIGO-Empfehlung zur <em>Neueinleitung</em> einer Statintherapie bezieht sich auf ' +
+              'nicht-dialysepflichtige CKD. Nahezu alle zitierten Landmark-Studien haben ' +
+              'Dialysepatienten ausgeschlossen — die Evidenzlage ist hier ausdrücklich schwach.</div>';
+    }
+
+    out.innerHTML = html;
+  };
+
+  /* ── Auto-Import aus CKD-, Lipid- und CKM-Tab ── */
+  function cvrAutoImport() {
+    var imported = [];
+    function setIf(srcId, dstId, label) {
+      var s = document.getElementById(srcId), d = document.getElementById(dstId);
+      if (s && d && d.value === '' && s.value !== '' && s.value !== null) {
+        d.value = s.value; imported.push(label);
+      }
+    }
+    setIf('age', 'cvr-age', 'Alter');
+    setIf('uacr', 'cvr-uacr', 'uACR');
+    setIf('bp_sys', 'cvr-sbp', 'RR systolisch');
+    setIf('ckm-tc', 'cvr-tc', 'Gesamtcholesterin');
+    setIf('ckm-hdl', 'cvr-hdl', 'HDL');
+    setIf('lip-hdl', 'cvr-hdl', 'HDL');
+    setIf('ckm-bmi', 'cvr-bmi', 'BMI');
+
+    var sexR = document.querySelector('input[name="sex"]:checked');
+    if (sexR && !document.querySelector('input[name="cvr-sex"]:checked')) {
+      var t = document.getElementById(sexR.value === 'male' ? 'cvr-sex-m' : 'cvr-sex-f');
+      if (t) { t.checked = true; imported.push('Geschlecht'); }
+    }
+
+    /* BMI aus Gewicht und Größe des CKD-Tabs, falls dort vorhanden */
+    var bmiEl = document.getElementById('cvr-bmi');
+    if (bmiEl && bmiEl.value === '') {
+      var w = num('weight'), h = num('height');
+      if (w !== null && h !== null && h > 0) {
+        bmiEl.value = (w / Math.pow(h / 100, 2)).toFixed(1);
+        imported.push('BMI');
+      }
+    }
+
+    /* eGFR dreistufig — identisch zum Vorgehen im CKM- und Hypertonie-Tab */
+    var egfrEl = document.getElementById('cvr-egfr');
+    if (egfrEl && egfrEl.value === '') {
+      var egfrVal = null;
+      if (typeof currentEGFR === 'number' && isFinite(currentEGFR)) { egfrVal = currentEGFR; }
+      if (egfrVal === null) {
+        var e1 = document.getElementById('egfr-result-val');
+        if (e1) { var p1 = parseFloat(String(e1.textContent).replace(',', '.')); if (isFinite(p1)) { egfrVal = p1; } }
+      }
+      if (egfrVal === null) {
+        var e2 = document.getElementById('current-egfr-display');
+        if (e2) { var p2 = parseFloat(String(e2.textContent).replace(',', '.')); if (isFinite(p2)) { egfrVal = p2; } }
+      }
+      if (egfrVal !== null) { egfrEl.value = egfrVal; imported.push('eGFR'); }
+    }
+
+    var dmBox = document.querySelector('#disease-checkboxes input[value="diabetisch"]');
+    if (dmBox && dmBox.checked && !chk('cvr-dm')) {
+      document.getElementById('cvr-dm').checked = true; imported.push('Diabetes');
+    }
+
+    var dial = document.getElementById('dialysis_status');
+    if (dial && dial.value && dial.value !== 'praedialysis' && !chk('cvr-krt')) {
+      document.getElementById('cvr-krt').checked = true; imported.push('Nierenersatztherapie');
+    }
+
+    /* Manifeste ASCVD aus dem CKM-Tab */
+    [['ckm-cvd-khk','cvr-khk','KHK'],['ckm-cvd-stroke','cvr-stroke','Schlaganfall'],
+     ['ckm-cvd-pavk','cvr-pavk','pAVK']].forEach(function(p){
+      if (chk(p[0]) && !chk(p[1])) { document.getElementById(p[1]).checked = true; imported.push(p[2]); }
+    });
+
+    var banner = document.getElementById('cvr-import-banner');
+    if (imported.length > 0) {
+      document.getElementById('cvr-import-text').textContent =
+        'Importiert aus CKD-/Lipid-/CKM-Tab: ' + imported.join(' · ');
+      banner.style.display = 'flex';
+    } else {
+      banner.style.display = 'none';
+    }
+  }
+
+  window.cvrAutoImport = cvrAutoImport;
+})();
+</script>
+</div><!-- end tab-cvrisk -->
+
 
 <div class="shared-footer">
   ⚕️ Nur zur ärztlichen Unterstützung — kein Ersatz für klinisches Urteil &bull;
@@ -19572,6 +20396,8 @@ function switchToolTab(tabName) {
 
   document.getElementById('tab-ckm').style.display = tabName === 'ckm' ? 'block' : 'none';
   if (tabName === 'ckm' && window.ckmAutoImport) { window.ckmAutoImport(); }
+  document.getElementById('tab-cvrisk').style.display = tabName === 'cvrisk' ? 'block' : 'none';
+  if (tabName === 'cvrisk' && window.cvrAutoImport) { window.cvrAutoImport(); }
 }
 
 // ============================================================

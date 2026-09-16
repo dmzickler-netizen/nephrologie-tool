@@ -73,6 +73,7 @@ Alle Berechnungen laufen clientseitig — kein Backend, kein Build-Schritt, kein
 | `antikoag` | `tab-antikoag` | 💉 | NMH/UFH Antikoagulation: Prophylaxe, Therapie, UFH-Perfusor, HIT II |
 | `aki` | `tab-aki` | 🚨 | AKI-Staging, Ätiologie, Management |
 | `ckm` | `tab-ckm` | 🫀 | CKM-Syndrom: Stadien 0–4, PREVENT-Rechner, nierenprotektive Therapiekaskade, Screening-Intervalle |
+| `cvrisk` | `tab-cvrisk` | 📈 | KV-Risiko bei CKD: KDIGO-/ESC-Kategorien, PREVENT, Score-Vergleich, Biomarker, Bildgebung |
 
 > ⚠️ **Diese Tabelle ist unvollständig.** `index.html` enthält tatsächlich **20 Tabs** (Stand 07/2026).
 > Nicht dokumentiert sind u.a.: `sd` (Schilddrüse), `hi` (Herzinsuffizienz), `gicht`, `tma` (TTP/HUS/HELLP),
@@ -94,6 +95,32 @@ Zielwerte zu nennen. **So entstehen keine Widersprüche zu den bestehenden Tabs 
 `preventr` (MIT) extrahiert, validiert gegen Supplement-Tabelle S25 — max. Abweichung 0,044 Prozentpunkte.
 **BMI geht ausschließlich in die HF-Modelle ein**, in ASCVD/Total-CVD ist der Koeffizient exakt 0.
 Der Männerpfad hat keinen publizierten Ankerwert und sollte einmal gegen den AHA-Rechner geprüft werden.
+
+### KV-Risiko-Tab (`cvrisk`) — Detail
+
+**Quelle:** Correa S, Cunningham JW, Mc Causland FR. *Atherosclerotic Cardiovascular Disease in CKD:
+Contemporary Insights into Pathogenesis, Diagnosis, and Management.* Clin J Am Soc Nephrol 2026,
+doi:10.2215/CJN.0000001199 (Tabellen 1–3).
+
+**Sub-Tabs:** Rechner / Score-Vergleich / Biomarker / Bildgebung / Info & Quellen
+
+**Wichtig — keine zweite PREVENT-Kopie.** Der Tab nutzt die im CKM-Tab geprüfte Implementierung
+über `window.preventCalc` und `window.kdigoRiskCat`, die am Ende des CKM-IIFE exponiert werden.
+**Beim Ändern der PREVENT-Koeffizienten also nur den CKM-Block anfassen.** Das erweiterte
+PREVENT-Modell (uACR, HbA1c) ist nicht implementiert; uACR geht ausschließlich in die
+kategoriale KDIGO-/ESC-Einstufung ein.
+
+**Bewusste Designentscheidung (wie beim CKM-Tab):** Der Tab nennt keine eigenen LDL-Zielwerte und
+keine eigenen Blutdruckziele, sondern verlinkt per `switchToolTab()` auf den Lipid-, HTN- und
+CKM-Tab. Einzige Ausnahme ist die KDIGO-2024-Statinregel, die ausdrücklich als Leitliniendivergenz
+zu ACC/AHA („fire and forget“ vs. zielwertorientiert) ausgewiesen ist.
+
+**Logik der Ergebnisausgabe (Reihenfolge ist Absicht):**
+1. Manifeste ASCVD → Sekundärprävention, Primärpräventions-Score wird gar nicht erst gerechnet
+2. Kategoriale KDIGO-/ESC-Einstufung (eGFR < 30 oder uACR ≥ 300 → sehr hoch; eGFR 30–59 → hoch)
+3. PREVENT 10 / 30 Jahre mit Schwellen nach ACC/AHA 2026 (<3 / 3–5 / 5–10 / ≥10 %)
+4. Warnboxen: nicht validiert bei G4–G5/Dialyse; Albuminurie nicht im Basismodell
+5. Cross-Links in Lipid-, HTN- und CKM-Tab
 
 **Reihenfolge in der Navigationsleiste:**
 CKD → Anämie/Ca-P → Lipid → Diabetes → Hypertonie → VHF → Antiaggregation → Antikoagulation → AKI
