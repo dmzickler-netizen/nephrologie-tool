@@ -2341,7 +2341,8 @@ window.goHome = function(e){
     <h2>📈 eGFR-Verlauf</h2>
     <p style="font-size:.78rem;color:#607d8b;margin:-4px 0 14px;">Frühere Kreatinin- oder eGFR-Werte eingeben — der Graph zeigt Verlauf und Progressionsgeschwindigkeit.</p>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <style>@media (max-width:760px){ .verlauf-grid{ grid-template-columns:minmax(0,1fr) !important; } }</style>
+    <div class="verlauf-grid" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;">
 
       <!-- Eingabetabelle -->
       <div>
@@ -2377,7 +2378,7 @@ window.goHome = function(e){
 
         <div style="margin-top:10px;padding:10px 12px;background:#f5f5f5;border-radius:8px;font-size:.75rem;color:#607d8b;line-height:1.7;">
           💡 Krea oder eGFR eingeben — das jeweils andere wird automatisch berechnet.<br>
-          Datum flexibel: <b>2023</b> · <b>06/2023</b> · <b>15.06.2023</b> · oder weglassen.
+          Datum flexibel: <b>15.06.2023</b> · <b>2023-06-15</b> · <b>06/2023</b> · <b>Juni 2023</b> · <b>2023</b>. Ohne Datum keine Slope.<br>Kreatinin &gt; 20 wird als µmol/l gewertet. Kursive eGFR = aus Krea berechnet, mit dem Alter zum Messzeitpunkt.
         </div>
       </div>
 
@@ -2388,7 +2389,7 @@ window.goHome = function(e){
           <button onclick="verlaufDraw()" style="padding:5px 14px;background:#1a237e;color:#fff;border:none;border-radius:6px;font-size:.78rem;font-weight:700;cursor:pointer;">📈 Graph erstellen</button>
         </div>
         <div id="verlauf-warn" style="display:none;background:#fff8e1;border:1.5px solid #f9a825;border-radius:8px;padding:8px 12px;font-size:.78rem;color:#5d4037;margin-bottom:8px;line-height:1.5;"></div>
-        <canvas id="verlauf-canvas" style="width:100%;border-radius:10px;background:#fafafa;border:1.5px solid #e8eaf6;" height="280"></canvas>
+        <canvas id="verlauf-canvas" style="display:block;width:100%;height:280px;border-radius:10px;background:#fafafa;border:1.5px solid #e8eaf6;" height="280"></canvas>
         <div id="verlauf-stats" style="margin-top:10px;"></div>
       </div>
 
@@ -18041,6 +18042,8 @@ function calculate() {
     if (!scr) missing.push('Kreatinin');
     document.getElementById('results-panel').innerHTML =
       '<div class="placeholder-text">⏳ Noch benötigt: <strong>' + missing.join(', ') + '</strong></div>';
+    window.currentEGFR = null;
+    if (typeof verlaufRefresh === 'function') verlaufRefresh();
     return;
   }
 
@@ -18239,6 +18242,10 @@ function calculate() {
 
   document.getElementById('results-panel').innerHTML = resHTML;
 
+  // Aktueller Wert für den eGFR-Verlauf (wurde früher von updateDrugEGFR() gesetzt)
+  window.currentEGFR = (primaryEGFR !== null && !isNaN(primaryEGFR)) ? primaryEGFR : null;
+  if (typeof verlaufRefresh === 'function') verlaufRefresh();
+
   // Build matrix
   buildMatrix(gfrStage ? gfrStage.row : -1, albStage ? albStage.col : -1);
 
@@ -18290,21 +18297,8 @@ function diseaseLabelDativ(d) {
 }
 
 function verlaufTextBlock() {
-  // Alle historischen Punkte + aktueller Wert als Text-Tabelle
-  var pts = [];
-  verlaufRows.forEach(function(row) {
-    var egfr = parseFloat(row.egfr);
-    var krea = parseFloat(row.krea);
-    if (!egfr && krea) egfr = verlaufEgfrFromKrea(krea);
-    if (!egfr && !krea) return;
-    var date = verlaufParseDate(row.date);
-    pts.push({ date: date, dateRaw: row.date, egfr: egfr || null, krea: krea || null });
-  });
-  // Aktuellen Wert anhängen
-  if (typeof currentEGFR !== 'undefined' && currentEGFR !== null) {
-    var today = new Date();
-    pts.push({ date: today, dateRaw: today.toLocaleDateString('de-DE', { month: '2-digit', year: 'numeric' }), egfr: currentEGFR, krea: null, current: true });
-  }
+  // Gleiche Punkte wie im Graphen (inkl. aktuellem Wert, ohne Dubletten)
+  var pts = verlaufGetPoints().pts.slice();
   if (pts.length === 0) return '';
 
   // Sortieren (mit Datum zuerst, ohne Datum am Ende)
@@ -18322,29 +18316,17 @@ function verlaufTextBlock() {
   lines.push(header);
   lines.push(sep);
   pts.forEach(function(p) {
-    var dStr = p.dateRaw ? p.dateRaw : '—';
+    var dStr = p.label ? p.label : '—';
     var eStr = p.egfr ? String(Math.round(p.egfr * 10) / 10) + (p.current ? ' ◄' : '') : '—';
     var kStr = p.krea ? String(Math.round(p.krea * 100) / 100) : '—';
     lines.push(padR(dStr, colW[0]) + padR(eStr, colW[1]+2) + kStr);
   });
 
-  // Slope berechnen wenn alle datiert
-  var dated = pts.filter(function(p){ return p.date && p.egfr; });
   var slopeStr = '';
-  if (dated.length >= 2) {
-    var n = dated.length;
-    var t0 = dated[0].date.getTime();
-    var xs = dated.map(function(p){ return (p.date.getTime()-t0)/(1000*60*60*24*365.25); });
-    var ys = dated.map(function(p){ return p.egfr; });
-    var xm = xs.reduce(function(a,b){return a+b;},0)/n;
-    var ym = ys.reduce(function(a,b){return a+b;},0)/n;
-    var num=0, den=0;
-    for(var i=0;i<n;i++){ num+=(xs[i]-xm)*(ys[i]-ym); den+=(xs[i]-xm)*(xs[i]-xm); }
-    var slope = den>0 ? Math.round(num/den*10)/10 : null;
-    if (slope !== null) {
-      var prog = slope < -5 ? 'Rapid progression' : slope < -3 ? 'Progression' : slope < 0 ? 'Stabil/langsam progredient' : 'Stabil';
-      slopeStr = '\nSlope: ' + (slope > 0 ? '+' : '') + slope + ' ml/min/Jahr  →  ' + prog + ' (KDIGO: Rapid progression >5 ml/min/Jahr)';
-    }
+  var s = verlaufSlope(pts);
+  if (s) {
+    var sl = Math.round(s.slope * 10) / 10;
+    slopeStr = '\nSlope: ' + (sl > 0 ? '+' : '') + sl + ' ml/min/Jahr  →  ' + verlaufProgLabel(s) + ' (KDIGO: Rapid progression >5 ml/min/Jahr)';
   }
 
   return '\neGFR-Verlauf:\n' + lines.join('\n') + slopeStr + '\n';
@@ -20405,39 +20387,92 @@ function switchToolTab(tabName) {
 // ============================================================
 
 var verlaufRows = [];
+var verlaufDrawTimer = null;
+var VERLAUF_DAY = 86400000;
+var VERLAUF_YEAR = 365.25 * VERLAUF_DAY;
 
-function verlaufEgfrFromKrea(krea) {
+// Zahl aus Freitext — Komma als Dezimaltrenner erlaubt ("1,4")
+function verlaufNum(v) {
+  if (v === null || v === undefined) return null;
+  var n = parseFloat(String(v).replace(',', '.'));
+  return (isFinite(n) && n > 0) ? n : null;
+}
+
+// Kreatinin in mg/dl. Werte > 20 sind nur als µmol/l plausibel und werden umgerechnet.
+function verlaufKreaMgdl(v) {
+  var n = verlaufNum(v);
+  if (!n) return null;
+  return n > 20 ? n / 88.42 : n;
+}
+
+// Alter zum Messzeitpunkt — bei alten Werten zählt das damalige Alter
+function verlaufAgeAt(date) {
   var age = parseFloat(document.getElementById('age').value);
+  if (!age || isNaN(age)) return null;
+  if (!date) return age;
+  var yrs = (Date.now() - date.getTime()) / VERLAUF_YEAR;
+  return yrs > 0 ? Math.max(18, age - yrs) : age;
+}
+
+function verlaufEgfrFromKrea(krea, date) {
   var sex = (document.querySelector('input[name="sex"]:checked') || {}).value;
-  if (!krea || !age || !sex) return null;
-  var kappa = sex === 'female' ? 0.7 : 0.9;
-  var alpha = sex === 'female' ? -0.241 : -0.302;
-  var sexMult = sex === 'female' ? 1.012 : 1.0;
-  var ratio = krea / kappa;
-  var egfr;
-  if (ratio <= 1) {
-    egfr = 142 * Math.pow(ratio, alpha) * Math.pow(0.9938, age) * sexMult;
-  } else {
-    egfr = 142 * Math.pow(ratio, -1.200) * Math.pow(0.9938, age) * sexMult;
-  }
-  return Math.round(egfr * 10) / 10;
+  var k = verlaufKreaMgdl(krea);
+  var age = verlaufAgeAt(date || null);
+  if (!k || !age || !sex) return null;
+  return egfrCreatinine(age, sex, k);
+}
+
+// Automatisch berechnete eGFR (row.auto) folgt Krea, Datum, Alter und Geschlecht.
+// Eine selbst eingetippte eGFR wird nie überschrieben.
+function verlaufRecalcRow(row) {
+  if (!row.auto && verlaufNum(row.egfr)) return;
+  var parsed = verlaufParseDateFull(row.date);
+  var calc = row.krea ? verlaufEgfrFromKrea(row.krea, parsed ? parsed.date : null) : null;
+  row.egfr = calc ? String(calc) : '';
+  row.auto = !!calc;
 }
 
 function verlaufAddRow(dateVal, kreaVal, egfrVal) {
-  verlaufRows.push({ date: dateVal || '', krea: kreaVal || '', egfr: egfrVal || '' });
+  verlaufRows.push({ date: dateVal || '', krea: kreaVal || '', egfr: egfrVal || '', auto: false });
   verlaufRenderTable();
   verlaufDraw();
 }
 
 function verlaufClear() {
-  verlaufRows = [];
+  verlaufRows = [{ date: '', krea: '', egfr: '', auto: false }, { date: '', krea: '', egfr: '', auto: false }, { date: '', krea: '', egfr: '', auto: false }];
   verlaufRenderTable();
   verlaufDraw();
 }
 
 function verlaufGetCurrentEgfr() {
-  // currentEGFR wird nach calculate() gesetzt
+  // currentEGFR wird in calculate() gesetzt
   return (typeof currentEGFR !== 'undefined' && currentEGFR !== null && currentEGFR > 0) ? currentEGFR : null;
+}
+
+// Nach Änderungen im CKD-Staging (Alter, Geschlecht, aktueller Wert)
+function verlaufRefresh() {
+  verlaufRows.forEach(verlaufRecalcRow);
+  verlaufRenderTable();
+  verlaufDraw();
+}
+
+function verlaufDateHint(s) {
+  if (!s || !s.trim()) return { html: '', bad: false };
+  var p = verlaufParseDateFull(s);
+  if (!p) return { html: '<span style="color:#c62828;">Datum nicht erkannt</span>', bad: true };
+  if (p.precision === 'day' && p.label === s.trim()) return { html: '', bad: false };
+  var txt = '→ ' + p.label + (p.precision === 'year' ? ' (Jahresmitte)' : p.precision === 'month' ? ' (Monatsmitte)' : '');
+  if (p.date.getTime() > Date.now() + VERLAUF_DAY) return { html: '<span style="color:#e65100;">' + txt + ' — liegt in der Zukunft</span>', bad: true };
+  return { html: '<span style="color:#90a4ae;">' + txt + '</span>', bad: false };
+}
+
+function verlaufEsc(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+}
+
+function verlaufEgfrInputStyle(auto) {
+  return 'border:1px solid #cfd8dc;border-radius:6px;padding:4px 6px;font-size:.8rem;width:100%;text-align:center;box-sizing:border-box;' +
+    (auto ? 'background:#f5f7fa;color:#607d8b;font-style:italic;' : '');
 }
 
 function verlaufRenderTable() {
@@ -20445,33 +20480,23 @@ function verlaufRenderTable() {
   if (!tbody) return;
   tbody.innerHTML = '';
 
-  // Fehlende eGFR-Werte aus Krea ergänzen, sobald Alter/Geschlecht
-  // verfügbar sind — sonst zeigt die Tabelle Leere, obwohl der Graph
-  // bereits Werte darstellen kann.
-  verlaufRows.forEach(function(row) {
-    if (row && row.krea && !row.egfr) {
-      var calc = verlaufEgfrFromKrea(parseFloat(row.krea));
-      if (calc) row.egfr = String(Math.round(calc * 10) / 10);
-    }
-  });
-
-  // Historische Zeilen
   verlaufRows.forEach(function(row, i) {
+    var hint = verlaufDateHint(row.date);
     var tr = document.createElement('tr');
     tr.style.borderBottom = '1px solid #f0f4f8';
     tr.innerHTML =
-      '<td style="padding:4px 6px;"><input type="text" value="' + row.date + '" placeholder="2023 / 06/2023 / 15.06.23" style="border:1px solid #cfd8dc;border-radius:6px;padding:4px 6px;font-size:.78rem;width:100%;" oninput="verlaufUpdate(' + i + ',\'date\',this.value)"></td>' +
-      '<td style="padding:4px 6px;"><input type="number" value="' + row.krea + '" placeholder="—" step="0.01" min="0" style="border:1px solid #cfd8dc;border-radius:6px;padding:4px 6px;font-size:.8rem;width:100%;text-align:center;" oninput="verlaufUpdate(' + i + ',\'krea\',this.value)"></td>' +
-      '<td style="padding:4px 6px;"><input type="number" value="' + row.egfr + '" placeholder="—" step="0.1" min="0" style="border:1px solid #cfd8dc;border-radius:6px;padding:4px 6px;font-size:.8rem;width:100%;text-align:center;" oninput="verlaufUpdate(' + i + ',\'egfr\',this.value)"></td>' +
-      '<td style="padding:4px 6px;text-align:center;"><button onclick="verlaufDeleteRow(' + i + ')" style="background:#ffebee;color:#b71c1c;border:none;border-radius:5px;padding:3px 8px;cursor:pointer;font-size:.8rem;">✕</button></td>';
+      '<td style="padding:4px 6px;vertical-align:top;"><input id="verlauf-d-' + i + '" type="text" value="' + verlaufEsc(row.date) + '" placeholder="15.06.2023 / 06/2023 / 2023" style="border:1px solid ' + (hint.bad ? '#e57373' : '#cfd8dc') + ';border-radius:6px;padding:4px 6px;font-size:.78rem;width:100%;box-sizing:border-box;" oninput="verlaufUpdate(' + i + ',\'date\',this.value)">' +
+        '<div id="verlauf-dh-' + i + '" style="font-size:.66rem;min-height:12px;margin-top:2px;">' + hint.html + '</div></td>' +
+      '<td style="padding:4px 6px;vertical-align:top;"><input id="verlauf-k-' + i + '" type="text" inputmode="decimal" value="' + verlaufEsc(row.krea) + '" placeholder="—" style="border:1px solid #cfd8dc;border-radius:6px;padding:4px 6px;font-size:.8rem;width:100%;text-align:center;box-sizing:border-box;" oninput="verlaufUpdate(' + i + ',\'krea\',this.value)"></td>' +
+      '<td style="padding:4px 6px;vertical-align:top;"><input id="verlauf-e-' + i + '" type="text" inputmode="decimal" value="' + verlaufEsc(row.egfr) + '" placeholder="—" title="' + (row.auto ? 'aus Kreatinin berechnet (CKD-EPI 2021, Alter zum Messzeitpunkt)' : '') + '" style="' + verlaufEgfrInputStyle(row.auto) + '" oninput="verlaufUpdate(' + i + ',\'egfr\',this.value)" onchange="verlaufEgfrCommit(' + i + ')"></td>' +
+      '<td style="padding:4px 6px;text-align:center;vertical-align:top;"><button onclick="verlaufDeleteRow(' + i + ')" style="background:#ffebee;color:#b71c1c;border:none;border-radius:5px;padding:3px 8px;cursor:pointer;font-size:.8rem;">✕</button></td>';
     tbody.appendChild(tr);
   });
 
   // Aktuelle Zeile (read-only, aus CKD-Tab)
   var curEgfr = verlaufGetCurrentEgfr();
   if (curEgfr !== null) {
-    var now = new Date();
-    var todayLabel = now.toLocaleDateString('de-DE', { month: '2-digit', year: 'numeric' });
+    var todayLabel = new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
     var tr = document.createElement('tr');
     tr.style.background = '#fff8e1';
     tr.style.borderTop = '2px solid #ffb74d';
@@ -20484,14 +20509,49 @@ function verlaufRenderTable() {
   }
 }
 
+// Kein Neuaufbau der Tabelle beim Tippen — sonst springt der Cursor aus dem Feld
 function verlaufUpdate(i, field, val) {
-  verlaufRows[i][field] = val;
-  // Krea eingegeben & noch kein eGFR → automatisch berechnen
-  if (field === 'krea' && val && !verlaufRows[i].egfr) {
-    var calc = verlaufEgfrFromKrea(parseFloat(val));
-    if (calc) { verlaufRows[i].egfr = calc; verlaufRenderTable(); }
+  var row = verlaufRows[i];
+  if (!row) return;
+  row[field] = val;
+
+  if (field === 'egfr') {
+    row.auto = false;
+    var eIn = document.getElementById('verlauf-e-' + i);
+    if (eIn) { eIn.style.cssText = verlaufEgfrInputStyle(false); eIn.title = ''; }
+  } else {
+    if (field === 'date') {
+      var hint = verlaufDateHint(val);
+      var dh = document.getElementById('verlauf-dh-' + i);
+      var dIn = document.getElementById('verlauf-d-' + i);
+      if (dh) dh.innerHTML = hint.html;
+      if (dIn) dIn.style.borderColor = hint.bad ? '#e57373' : '#cfd8dc';
+    }
+    var before = row.egfr;
+    verlaufRecalcRow(row);
+    var eEl = document.getElementById('verlauf-e-' + i);
+    if (eEl && row.egfr !== before) {
+      eEl.value = row.egfr;
+      eEl.style.cssText = verlaufEgfrInputStyle(row.auto);
+      eEl.title = row.auto ? 'aus Kreatinin berechnet (CKD-EPI 2021, Alter zum Messzeitpunkt)' : '';
+    }
   }
-  // Graph wird nur über Button "Graph erstellen" aktualisiert
+  verlaufScheduleDraw();
+}
+
+// eGFR-Feld geleert → wieder aus Kreatinin berechnen
+function verlaufEgfrCommit(i) {
+  var row = verlaufRows[i];
+  if (!row || verlaufNum(row.egfr)) return;
+  row.auto = true;
+  verlaufRecalcRow(row);
+  verlaufRenderTable();
+  verlaufDraw();
+}
+
+function verlaufScheduleDraw() {
+  clearTimeout(verlaufDrawTimer);
+  verlaufDrawTimer = setTimeout(verlaufDraw, 350);
 }
 
 function verlaufDeleteRow(i) {
@@ -20500,127 +20560,158 @@ function verlaufDeleteRow(i) {
   verlaufDraw();
 }
 
-// Liefert zusätzlich zur Date-Instanz die Eingabe-Präzision
-// ('year' | 'month' | 'day'), damit die Achsen-Beschriftung nicht mehr
-// auflöst als der User tatsächlich angegeben hat.
+// ---------- Datum ----------
+var VERLAUF_MONTHS = { jan: 1, feb: 2, mar: 3, 'mär': 3, mrz: 3, apr: 4, mai: 5, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, okt: 10, oct: 10, nov: 11, dez: 12, dec: 12 };
+
+function verlaufYear(y) {
+  y = parseInt(y, 10);
+  if (y >= 100) return y;
+  var thisYY = new Date().getFullYear() % 100;
+  return y <= thisYY + 1 ? 2000 + y : 1900 + y;
+}
+
+function verlaufMakeDate(y, m, d, precision) {
+  if (m < 1 || m > 12 || y < 1950 || y > new Date().getFullYear() + 1) return null;
+  var date = new Date(y, m - 1, d);
+  // 31.02. o. ä. nicht stillschweigend in den Folgemonat rollen lassen
+  if (date.getMonth() !== m - 1 || date.getDate() !== d) return null;
+  var p2 = function(n) { return (n < 10 ? '0' : '') + n; };
+  var label = precision === 'year' ? String(y) : precision === 'month' ? p2(m) + '/' + y : p2(d) + '.' + p2(m) + '.' + y;
+  return { date: date, precision: precision, label: label };
+}
+
+// Liefert { date, precision: 'year'|'month'|'day', label } oder null.
+// Nur Jahr → 1. Juli, nur Monat → 15. des Monats.
+function verlaufParseDateFull(s) {
+  if (!s || !String(s).trim()) return null;
+  s = String(s).trim().toLowerCase().replace(/\s+/g, ' ');
+  var m;
+
+  if ((m = s.match(/^(\d{4})$/)) || (m = s.match(/^(\d{2})$/)))
+    return verlaufMakeDate(verlaufYear(m[1]), 7, 1, 'year');
+
+  // ISO 2023-06-15
+  if ((m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/)))
+    return verlaufMakeDate(+m[1], +m[2], +m[3], 'day');
+
+  // TT.MM.JJJJ, TT/MM/JJ, TT-MM-JJJJ (deutsche Reihenfolge)
+  if ((m = s.match(/^(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4}|\d{2})$/)))
+    return verlaufMakeDate(verlaufYear(m[3]), +m[2], +m[1], 'day');
+
+  // 2023-06, 2023/06
+  if ((m = s.match(/^(\d{4})[-\/.](\d{1,2})$/)))
+    return verlaufMakeDate(+m[1], +m[2], 15, 'month');
+
+  // 06/2023, 6.2023, 06-23
+  if ((m = s.match(/^(\d{1,2})[.\/-](\d{4}|\d{2})$/)))
+    return verlaufMakeDate(verlaufYear(m[2]), +m[1], 15, 'month');
+
+  // Juni 2023, Jun. 23
+  if ((m = s.match(/^([a-zä]{3})[a-zä]*\.? ?(\d{4}|\d{2})$/)) && VERLAUF_MONTHS[m[1]])
+    return verlaufMakeDate(verlaufYear(m[2]), VERLAUF_MONTHS[m[1]], 15, 'month');
+
+  return null;
+}
+
 function verlaufParseDate(s) {
   var r = verlaufParseDateFull(s);
   return r ? r.date : null;
 }
-function verlaufParseDateFull(s) {
-  if (!s || !s.trim()) return null;
-  s = s.trim();
 
-  // Nur Jahr: "2023" oder "23"
-  if (/^\d{2,4}$/.test(s)) {
-    var y = parseInt(s);
-    if (y < 100) y += 2000;
-    return { date: new Date(y, 6, 1), precision: 'year' };
-  }
-
-  // MM/JJJJ oder MM.JJJJ oder MM-JJJJ
-  var m1 = s.match(/^(\d{1,2})[\/\.\-](\d{2,4})$/);
-  if (m1) {
-    var mo = parseInt(m1[1]) - 1;
-    var yr = parseInt(m1[2]);
-    if (yr < 100) yr += 2000;
-    return { date: new Date(yr, mo, 15), precision: 'month' };
-  }
-
-  // TT.MM.JJ oder TT.MM.JJJJ
-  var m2 = s.match(/^(\d{1,2})[\/\.\-](\d{1,2})[\/\.\-](\d{2,4})$/);
-  if (m2) {
-    var day = parseInt(m2[1]);
-    var mo2 = parseInt(m2[2]) - 1;
-    var yr2 = parseInt(m2[3]);
-    if (yr2 < 100) yr2 += 2000;
-    return { date: new Date(yr2, mo2, day), precision: 'day' };
-  }
-
-  // ISO "2023-06"
-  var m3 = s.match(/^(\d{4})-(\d{2})$/);
-  if (m3) return { date: new Date(parseInt(m3[1]), parseInt(m3[2])-1, 15), precision: 'month' };
-
-  // ISO "2023-06-15" oder Free-Form
-  var d = new Date(s);
-  return isNaN(d) ? null : { date: d, precision: 'day' };
-}
-
+// ---------- Punkte & Slope ----------
 function verlaufGetPoints() {
-  // Alle Zeilen mit mindestens einem eGFR-Wert sammeln (Datum optional)
-  var raw = [];
+  var raw = [], undated = 0, badDates = 0;
   verlaufRows.forEach(function(row) {
-    var egfr = parseFloat(row.egfr);
-    var krea = parseFloat(row.krea);
-    if (!egfr && krea) egfr = verlaufEgfrFromKrea(krea);
-    if (!egfr) return;
     var parsed = verlaufParseDateFull(row.date);
-    raw.push({ date: parsed ? parsed.date : null, precision: parsed ? parsed.precision : null, egfr: egfr });
+    var egfr = verlaufNum(row.egfr) || (row.krea ? verlaufEgfrFromKrea(row.krea, parsed ? parsed.date : null) : null);
+    if (!egfr) return;
+    if (!parsed) { if (row.date && row.date.trim()) badDates++; else undated++; }
+    raw.push({ date: parsed ? parsed.date : null, precision: parsed ? parsed.precision : null, label: parsed ? parsed.label : '',
+               egfr: egfr, krea: verlaufKreaMgdl(row.krea) });
   });
 
-  // Aktuellen eGFR aus CKD-Tab anhängen
+  // Aktuellen eGFR aus CKD-Tab anhängen — außer derselbe Wert steht schon aus den letzten 31 Tagen drin
   var curEgfr = verlaufGetCurrentEgfr();
   if (curEgfr !== null) {
-    var today = new Date(); today.setHours(0,0,0,0);
-    // Nicht doppelt hinzufügen wenn bereits heute-Datum in Tabelle
-    var exists = raw.some(function(p) { return p.date && p.date.toDateString() === today.toDateString(); });
-    if (!exists) raw.push({ date: today, precision: 'day', egfr: curEgfr, current: true });
+    var today = new Date(); today.setHours(0, 0, 0, 0);
+    var dup = raw.some(function(p) {
+      return p.date && Math.abs(today - p.date) <= 31 * VERLAUF_DAY && Math.abs(p.egfr - curEgfr) < 0.5;
+    });
+    if (!dup) raw.push({ date: today, precision: 'day', label: today.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }), egfr: curEgfr, krea: null, current: true });
   }
 
-  if (raw.length === 0) return { pts: [], dateMode: false };
-
-  // Prüfen ob alle Punkte ein Datum haben
-  var allHaveDates = raw.every(function(p) { return p.date instanceof Date && !isNaN(p.date); });
-
-  if (allHaveDates) {
-    // Datum-Modus: sortieren nach Datum
-    raw.sort(function(a,b){ return a.date - b.date; });
-    return { pts: raw, dateMode: true };
-  } else {
-    // Sequenz-Modus: Index als x-Position, Datum nur als Label wenn vorhanden
-    // Punkte mit Datum zuerst, restliche in Eingabe-Reihenfolge
-    return { pts: raw, dateMode: false };
-  }
+  var allHaveDates = raw.length > 0 && raw.every(function(p) { return p.date; });
+  if (allHaveDates) raw.sort(function(a, b) { return a.date - b.date; });
+  // Sequenz-Modus: Eingabe-Reihenfolge, aktueller Wert zuletzt
+  return { pts: raw, dateMode: allHaveDates, undated: undated, badDates: badDates };
 }
 
+// Lineare Regression über datierte Punkte; years = abgedeckter Zeitraum
+function verlaufSlope(pts) {
+  var dated = pts.filter(function(p) { return p.date && p.egfr; });
+  if (dated.length < 2) return null;
+  var n = dated.length, t0 = dated[0].date.getTime();
+  var xs = dated.map(function(p) { return (p.date.getTime() - t0) / VERLAUF_YEAR; });
+  var ys = dated.map(function(p) { return p.egfr; });
+  var xm = xs.reduce(function(a, b) { return a + b; }, 0) / n;
+  var ym = ys.reduce(function(a, b) { return a + b; }, 0) / n;
+  var num = 0, den = 0;
+  for (var i = 0; i < n; i++) { num += (xs[i] - xm) * (ys[i] - ym); den += (xs[i] - xm) * (xs[i] - xm); }
+  if (!(den > 0)) return null;
+  var years = Math.max.apply(null, xs) - Math.min.apply(null, xs);
+  var slope = num / den;
+  return { slope: slope, intercept: ym - slope * xm, t0: t0, years: years, reliable: years >= 0.25 };
+}
+
+function verlaufProgLabel(s) {
+  if (!s.reliable) return 'Zeitraum < 3 Monate — nicht bewertbar';
+  return s.slope < -5 ? 'Rapid progression' : s.slope < -3 ? 'Progression' : s.slope < 0 ? 'Stabil / langsam' : 'Stabil / Verbesserung';
+}
+
+// ---------- Graph ----------
 function verlaufDraw() {
+  clearTimeout(verlaufDrawTimer);
   var canvas = document.getElementById('verlauf-canvas');
   if (!canvas) return;
-
-  // Warnung: Kreatinin eingegeben aber Alter/Geschlecht fehlen?
-  var warnEl = document.getElementById('verlauf-warn');
-  var age = parseFloat(document.getElementById('age').value);
-  var sex = (document.querySelector('input[name="sex"]:checked') || {}).value;
-  var hasKrea = verlaufRows.some(function(r){ return r.krea && parseFloat(r.krea) > 0; });
-  var hasDirectEgfr = verlaufRows.some(function(r){ return r.egfr && parseFloat(r.egfr) > 0; });
-  var missingAge = !age || isNaN(age);
-  var missingSex = !sex;
-
-  if (warnEl) {
-    if (hasKrea && !hasDirectEgfr && (missingAge || missingSex)) {
-      var missing = [];
-      if (missingAge) missing.push('Alter');
-      if (missingSex) missing.push('Geschlecht');
-      warnEl.innerHTML = '⚠️ Für die eGFR-Berechnung aus Kreatinin bitte noch <strong>' + missing.join(' und ') + '</strong> im CKD-Staging-Bereich oben eintragen.';
-      warnEl.style.display = 'block';
-    } else {
-      warnEl.style.display = 'none';
-    }
-  }
 
   var ctx = canvas.getContext('2d');
   var result = verlaufGetPoints();
   var pts = result.pts;
   var dateMode = result.dateMode;
 
-  canvas.width = (canvas.offsetWidth || 400) * (window.devicePixelRatio || 1);
-  canvas.height = 280 * (window.devicePixelRatio || 1);
-  ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
-  var W = canvas.offsetWidth || 400;
+  // Hinweise
+  var warnEl = document.getElementById('verlauf-warn');
+  if (warnEl) {
+    var warns = [];
+    var age = parseFloat(document.getElementById('age').value);
+    var sex = (document.querySelector('input[name="sex"]:checked') || {}).value;
+    var kreaOnly = verlaufRows.some(function(r) { return verlaufNum(r.krea) && !verlaufNum(r.egfr); });
+    if (kreaOnly && (!age || isNaN(age) || !sex)) {
+      var missing = [];
+      if (!age || isNaN(age)) missing.push('Alter');
+      if (!sex) missing.push('Geschlecht');
+      warns.push('⚠️ Für die eGFR-Berechnung aus Kreatinin bitte noch <strong>' + missing.join(' und ') + '</strong> im CKD-Staging-Bereich oben eintragen.');
+    }
+    if (result.badDates) warns.push('⚠️ ' + result.badDates + ' Datum' + (result.badDates > 1 ? 'sangaben' : 'sangabe') + ' nicht erkannt (rot markiert).');
+    if (!dateMode && pts.length > 1 && pts.some(function(p) { return p.date; }))
+      warns.push('Nicht alle Werte haben ein gültiges Datum — Graph in Eingabe-Reihenfolge, ohne Slope.');
+    if (verlaufRows.some(function(r) { var k = verlaufNum(r.krea); return k && k > 20; }))
+      warns.push('Kreatinin-Werte &gt; 20 wurden als µmol/l gewertet und in mg/dl umgerechnet.');
+    warnEl.innerHTML = warns.join('<br>');
+    warnEl.style.display = warns.length ? 'block' : 'none';
+  }
+
+  var dpr = window.devicePixelRatio || 1;
+  var W = canvas.clientWidth;
+  if (!W) return; // Tab verborgen — der ResizeObserver zeichnet nach, sobald er sichtbar ist
   var H = 280;
-  var pad = { top: 24, right: 24, bottom: 44, left: 48 };
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  var pad = { top: 24, right: 30, bottom: 44, left: 48 };
   var gW = W - pad.left - pad.right;
   var gH = H - pad.top - pad.bottom;
+  var inset = 14; // Punkte nicht direkt auf den Rand setzen
 
   ctx.clearRect(0, 0, W, H);
   ctx.fillStyle = '#fafafa';
@@ -20630,32 +20721,33 @@ function verlaufDraw() {
     ctx.fillStyle = '#b0bec5';
     ctx.font = '13px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('Bitte eGFR oder Kreatinin eingeben', W/2, H/2);
-    verlaufStats([], false, false);
+    ctx.fillText('Bitte eGFR oder Kreatinin eingeben', W / 2, H / 2);
+    verlaufStats([], null, false);
     return;
   }
 
   // Y-Achse
-  var allEgfr = pts.map(function(p){ return p.egfr; });
+  var allEgfr = pts.map(function(p) { return p.egfr; });
   var minEgfr = Math.max(0, Math.min.apply(null, allEgfr) - 8);
-  var maxEgfr = Math.min(130, Math.max.apply(null, allEgfr) + 12);
+  var maxEgfr = Math.max(Math.max.apply(null, allEgfr) + 12, minEgfr + 25);
   function yPos(v) { return pad.top + gH - (v - minEgfr) / (maxEgfr - minEgfr) * gH; }
 
   // X-Achse: Datum- oder Sequenz-Modus
-  var xPos;
+  var xPos, xFromT = null, minT, maxT;
   if (dateMode && pts.length > 1) {
-    var minT = pts[0].date.getTime();
-    var maxT = pts[pts.length-1].date.getTime();
-    if (minT === maxT) maxT = minT + 86400000 * 30;
-    xPos = function(p, idx) { return pad.left + (p.date.getTime() - minT) / (maxT - minT) * gW; };
+    minT = pts[0].date.getTime();
+    maxT = pts[pts.length - 1].date.getTime();
+    if (maxT - minT < 30 * VERLAUF_DAY) { var mt = (minT + maxT) / 2; minT = mt - 15 * VERLAUF_DAY; maxT = mt + 15 * VERLAUF_DAY; }
+    xFromT = function(t) { return pad.left + inset + (t - minT) / (maxT - minT) * (gW - 2 * inset); };
+    xPos = function(p) { return xFromT(p.date.getTime()); };
   } else {
     var n = pts.length;
-    xPos = function(p, idx) { return n === 1 ? pad.left + gW/2 : pad.left + idx / (n - 1) * gW; };
+    xPos = function(p, idx) { return n === 1 ? pad.left + gW / 2 : pad.left + inset + idx / (n - 1) * (gW - 2 * inset); };
   }
 
   // CKD-Bänder
   var bands = [
-    { min: 90, max: 130, color: 'rgba(200,230,201,0.35)', label: 'G1' },
+    { min: 90, max: Infinity, color: 'rgba(200,230,201,0.35)', label: 'G1' },
     { min: 60, max: 90,  color: 'rgba(220,237,200,0.35)', label: 'G2' },
     { min: 45, max: 60,  color: 'rgba(255,249,196,0.4)',  label: 'G3a' },
     { min: 30, max: 45,  color: 'rgba(255,224,178,0.45)', label: 'G3b' },
@@ -20669,21 +20761,25 @@ function verlaufDraw() {
       ctx.fillStyle = b.color;
       ctx.fillRect(pad.left, y1, gW, y2 - y1);
       var midY = (y1 + y2) / 2;
-      if (midY > pad.top && midY < pad.top + gH) {
+      if (y2 - y1 > 10) {
         ctx.fillStyle = 'rgba(100,120,140,0.65)';
         ctx.font = '10px sans-serif';
-        ctx.textAlign = 'right';
-        ctx.fillText(b.label, pad.left + gW - 3, midY + 4);
+        ctx.textAlign = 'left';
+        ctx.fillText(b.label, pad.left + gW + 4, midY + 4);
       }
     }
   });
 
-  // Gitterlinien Y
-  ctx.strokeStyle = '#e0e0e0';
+  // Gitterlinien Y: Stadiengrenzen, bei engem Bereich zusätzlich 5er-/10er-Schritte
+  var yTicks = [15, 30, 45, 60, 90, 120].filter(function(v) { return v >= minEgfr && v <= maxEgfr; });
+  if (yTicks.length < 3) {
+    var step = (maxEgfr - minEgfr) > 30 ? 10 : 5;
+    for (var tv = Math.ceil(minEgfr / step) * step; tv <= maxEgfr; tv += step) if (yTicks.indexOf(tv) < 0) yTicks.push(tv);
+  }
   ctx.lineWidth = 1;
-  [15, 30, 45, 60, 90].forEach(function(v) {
-    if (v < minEgfr || v > maxEgfr) return;
+  yTicks.forEach(function(v) {
     var y = yPos(v);
+    ctx.strokeStyle = '#e0e0e0';
     ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + gW, y); ctx.stroke();
     ctx.fillStyle = '#90a4ae';
     ctx.font = '10px sans-serif';
@@ -20698,52 +20794,68 @@ function verlaufDraw() {
   ctx.save();
   ctx.translate(12, pad.top + gH / 2);
   ctx.rotate(-Math.PI / 2);
-  ctx.fillText('eGFR (ml/min/1,73 m\u00b2)', 0, 0);
+  ctx.fillText('eGFR (ml/min/1,73 m²)', 0, 0);
   ctx.restore();
 
-  // X-Achsen-Labels
-  ctx.fillStyle = '#90a4ae';
+  // X-Achse
   ctx.font = '10px sans-serif';
   ctx.textAlign = 'center';
-  pts.forEach(function(p, idx) {
-    var x = xPos(p, idx);
-    var label;
-    if (p.date && !isNaN(p.date)) {
-      if (p.precision === 'year') {
-        // Nur Jahr angegeben — Achsenlabel soll das widerspiegeln
-        label = String(p.date.getFullYear());
-      } else {
-        label = p.date.toLocaleDateString('de-DE', { month: '2-digit', year: '2-digit' });
+  var labelY = pad.top + gH + 15;
+  if (xFromT) {
+    // Kalender-Ticks statt eines Labels pro Punkt — sonst überlappen sie
+    var spanMonths = (maxT - minT) / (VERLAUF_YEAR / 12);
+    var maxTicks = Math.max(2, Math.floor(gW / 55));
+    var stepM = [1, 2, 3, 6, 12, 24, 60].filter(function(s) { return spanMonths / s <= maxTicks; })[0] || 120;
+    var d0 = new Date(minT), d1 = new Date(maxT);
+    var vLine = function(t) {
+      var x = xFromT(t);
+      ctx.strokeStyle = 'rgba(200,200,200,0.5)';
+      ctx.beginPath(); ctx.moveTo(x, pad.top); ctx.lineTo(x, pad.top + gH); ctx.stroke();
+    };
+    if (stepM >= 12) {
+      // Jahreszahl mittig unter das Jahr, Trennlinie am 1. Januar
+      var yStep = stepM / 12;
+      for (var yr = d0.getFullYear(); yr <= d1.getFullYear(); yr++) {
+        var jan = new Date(yr, 0, 1).getTime();
+        if (jan > minT && jan < maxT) vLine(jan);
+        if ((yr - d0.getFullYear()) % yStep !== 0) continue;
+        var mid = Math.min(Math.max(new Date(yr, 6, 1).getTime(), minT), maxT);
+        ctx.fillStyle = '#90a4ae';
+        ctx.fillText(String(yr), xFromT(mid), labelY);
       }
     } else {
-      label = 'M' + (idx + 1);
+      var cur = new Date(d0.getFullYear(), d0.getMonth() + (d0.getDate() > 1 ? 1 : 0), 1);
+      while (cur.getMonth() % stepM !== 0) cur.setMonth(cur.getMonth() + 1);
+      for (var guard = 0; cur.getTime() <= maxT && guard < 200; guard++) {
+        vLine(cur.getTime());
+        ctx.fillStyle = '#90a4ae';
+        ctx.fillText(cur.toLocaleDateString('de-DE', { month: '2-digit', year: '2-digit' }), xFromT(cur.getTime()), labelY);
+        cur.setMonth(cur.getMonth() + stepM);
+      }
     }
-    ctx.fillStyle = '#90a4ae';
-    ctx.fillText(label, x, pad.top + gH + 15);
-    ctx.strokeStyle = 'rgba(200,200,200,0.5)';
-    ctx.beginPath(); ctx.moveTo(x, pad.top); ctx.lineTo(x, pad.top + gH); ctx.stroke();
-  });
+  } else {
+    var lastLabelX = -Infinity;
+    pts.forEach(function(p, idx) {
+      var x = xPos(p, idx);
+      ctx.strokeStyle = 'rgba(200,200,200,0.5)';
+      ctx.beginPath(); ctx.moveTo(x, pad.top); ctx.lineTo(x, pad.top + gH); ctx.stroke();
+      if (x - lastLabelX < 46) return;
+      ctx.fillStyle = '#90a4ae';
+      ctx.fillText(p.current ? 'heute' : (p.label || 'M' + (idx + 1)), x, labelY);
+      lastLabelX = x;
+    });
+  }
 
-  // Trendlinie — nur im Datum-Modus mit ≥2 datierten Punkten sinnvoll
-  var slope = null;
-  if (dateMode && pts.length >= 2) {
-    var n = pts.length;
-    var t0 = pts[0].date.getTime();
-    var xs = pts.map(function(p){ return (p.date.getTime() - t0) / (1000*60*60*24*365.25); });
-    var ys = pts.map(function(p){ return p.egfr; });
-    var xm = xs.reduce(function(a,b){return a+b;},0)/n;
-    var ym = ys.reduce(function(a,b){return a+b;},0)/n;
-    var num = 0, den = 0;
-    for (var ii=0;ii<n;ii++){ num+=(xs[ii]-xm)*(ys[ii]-ym); den+=(xs[ii]-xm)*(xs[ii]-xm); }
-    slope = den > 0 ? num/den : 0;
-    var intercept = ym - slope * xm;
-    var y0t = yPos(intercept);
-    var xEnd = xs[xs.length-1];
-    var yNt = yPos(intercept + slope * xEnd);
+  // Trendlinie — nur im Datum-Modus, über den tatsächlich abgedeckten Zeitraum
+  var slope = dateMode ? verlaufSlope(pts) : null;
+  if (slope && xFromT) {
+    var tA = pts[0].date.getTime(), tB = pts[pts.length - 1].date.getTime();
+    var yA = slope.intercept + slope.slope * (tA - slope.t0) / VERLAUF_YEAR;
+    var yB = slope.intercept + slope.slope * (tB - slope.t0) / VERLAUF_YEAR;
     ctx.strokeStyle = 'rgba(183,28,28,0.5)';
     ctx.lineWidth = 1.5;
-    ctx.setLineDash([5,4]);
-    ctx.beginPath(); ctx.moveTo(pad.left, y0t); ctx.lineTo(pad.left + gW, yNt); ctx.stroke();
+    ctx.setLineDash([5, 4]);
+    ctx.beginPath(); ctx.moveTo(xFromT(tA), yPos(yA)); ctx.lineTo(xFromT(tB), yPos(yB)); ctx.stroke();
     ctx.setLineDash([]);
   }
 
@@ -20753,27 +20865,28 @@ function verlaufDraw() {
     ctx.lineWidth = 2.5;
     ctx.beginPath();
     ctx.moveTo(xPos(pts[0], 0), yPos(pts[0].egfr));
-    for (var j=1;j<pts.length;j++) {
-      ctx.lineTo(xPos(pts[j], j), yPos(pts[j].egfr));
-    }
+    for (var j = 1; j < pts.length; j++) ctx.lineTo(xPos(pts[j], j), yPos(pts[j].egfr));
     ctx.stroke();
   }
 
-  // Punkte zeichnen
+  // Punkte + Werte (Beschriftung auslassen, wenn sie die vorige überdecken würde)
+  var lastVal = null;
   pts.forEach(function(p, idx) {
     var x = xPos(p, idx);
     var y = yPos(p.egfr);
     ctx.beginPath();
-    ctx.arc(x, y, p.current ? 7 : 5, 0, 2*Math.PI);
+    ctx.arc(x, y, p.current ? 7 : 5, 0, 2 * Math.PI);
     ctx.fillStyle = p.current ? '#b71c1c' : '#1a237e';
     ctx.fill();
     ctx.strokeStyle = '#fff';
     ctx.lineWidth = 2;
     ctx.stroke();
+    if (lastVal && Math.abs(x - lastVal.x) < 22 && Math.abs(y - lastVal.y) < 14 && !p.current) return;
     ctx.fillStyle = p.current ? '#b71c1c' : '#1a237e';
     ctx.font = 'bold 10px sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText(Math.round(p.egfr), x, y - 10);
+    lastVal = { x: x, y: y };
   });
 
   verlaufStats(pts, slope, dateMode);
@@ -20784,127 +20897,123 @@ function verlaufStats(pts, slope, dateMode) {
   if (!el) return;
   if (pts.length < 2) { el.innerHTML = ''; return; }
 
-  var first = pts[0], last = pts[pts.length-1];
+  var first = pts[0], last = pts[pts.length - 1];
   var diffEgfr = last.egfr - first.egfr;
   var col = diffEgfr < -5 ? '#b71c1c' : diffEgfr < 0 ? '#e65100' : '#2e7d32';
 
   var slopeHTML = '';
-  if (dateMode && slope !== null) {
-    var slopeCol = slope < -5 ? '#b71c1c' : slope < -3 ? '#e65100' : '#2e7d32';
-    var prog = slope < -5 ? 'Rapid progression' : slope < -3 ? 'Progression' : slope < 0 ? 'Stabil / langsam' : 'Stabil / Verbesserung';
+  if (dateMode && slope) {
+    var s = slope.slope;
+    var slopeCol = !slope.reliable ? '#78909c' : s < -5 ? '#b71c1c' : s < -3 ? '#e65100' : '#2e7d32';
     slopeHTML =
       '<div style="background:#f5f5f5;border-radius:8px;padding:8px 10px;text-align:center;">' +
         '<div style="font-size:.68rem;color:#78909c;text-transform:uppercase;">Slope</div>' +
-        '<div style="font-size:1.1rem;font-weight:900;color:' + slopeCol + ';">' + (slope > 0 ? '+' : '') + Math.round(slope*10)/10 + '</div>' +
+        '<div style="font-size:1.1rem;font-weight:900;color:' + slopeCol + ';">' + (s > 0 ? '+' : '') + Math.round(s * 10) / 10 + '</div>' +
         '<div style="font-size:.68rem;color:#90a4ae;">ml/min / Jahr</div>' +
       '</div>' +
       '<div style="background:#f5f5f5;border-radius:8px;padding:8px 10px;text-align:center;">' +
         '<div style="font-size:.68rem;color:#78909c;text-transform:uppercase;">Bewertung</div>' +
-        '<div style="font-size:.78rem;font-weight:800;color:' + slopeCol + ';margin-top:4px;">' + prog + '</div>' +
+        '<div style="font-size:.78rem;font-weight:800;color:' + slopeCol + ';margin-top:4px;">' + verlaufProgLabel(slope) + '</div>' +
       '</div>';
   } else {
     slopeHTML = '<div style="background:#f5f5f5;border-radius:8px;padding:8px 10px;text-align:center;grid-column:span 2;">' +
-      '<div style="font-size:.72rem;color:#90a4ae;">Slope-Berechnung: Datum für alle Einträge angeben</div>' +
+      '<div style="font-size:.72rem;color:#90a4ae;">Slope-Berechnung: gültiges Datum für alle Einträge angeben</div>' +
     '</div>';
   }
+
+  var years = dateMode ? (last.date - first.date) / VERLAUF_YEAR : null;
+  var spanTxt = years === null ? '' : years >= 1 ? ' über ' + (Math.round(years * 10) / 10).toString().replace('.', ',') + ' J.' : ' über ' + Math.max(1, Math.round(years * 12)) + ' Mon.';
 
   el.innerHTML =
     '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">' +
       '<div style="background:#f5f5f5;border-radius:8px;padding:8px 10px;text-align:center;">' +
         '<div style="font-size:.68rem;color:#78909c;text-transform:uppercase;">eGFR gesamt</div>' +
-        '<div style="font-size:1.1rem;font-weight:900;color:' + col + ';">' + (diffEgfr > 0 ? '+' : '') + Math.round(diffEgfr*10)/10 + '</div>' +
-        '<div style="font-size:.68rem;color:#90a4ae;">ml/min</div>' +
+        '<div style="font-size:1.1rem;font-weight:900;color:' + col + ';">' + (diffEgfr > 0 ? '+' : '') + Math.round(diffEgfr * 10) / 10 + '</div>' +
+        '<div style="font-size:.68rem;color:#90a4ae;">ml/min' + spanTxt + '</div>' +
       '</div>' +
       slopeHTML +
     '</div>' +
     '<div style="font-size:.69rem;color:#90a4ae;margin-top:6px;">' +
-      (dateMode ? 'Rote Linie = lineare Trendlinie · ' : 'Kein Datum \u2192 Sequenz-Modus \u00b7 ') +
-      'Roter Punkt = aktueller eGFR \u00b7 KDIGO: Rapid progression &gt;5 ml/min/Jahr' +
+      (dateMode ? 'Rote Linie = lineare Trendlinie · ' : 'Kein Datum → Sequenz-Modus · ') +
+      'Roter Punkt = aktueller eGFR · Kursiv = aus Kreatinin berechnet (Alter zum Messzeitpunkt) · KDIGO: Rapid progression &gt;5 ml/min/Jahr' +
     '</div>';
 }
+
+// ---------- Einfügen ----------
+// Reihenfolge ist wichtig: spezifische Formate zuerst, sonst wird aus "2024-01-15" ein "01/2015"
+var VERLAUF_DATE_PATTERNS = [
+  /\b\d{4}-\d{1,2}-\d{1,2}\b/,
+  /\b\d{1,2}[.\/-]\d{1,2}[.\/-](?:\d{4}|\d{2})\b/,
+  /\b\d{4}[-\/]\d{1,2}\b/,
+  /\b\d{1,2}[.\/-]\d{4}\b/,
+  /\b\d{1,2}\/\d{2}\b/,
+  /\b(?:jan|feb|m[aä]r|mrz|apr|mai|may|jun|jul|aug|sep|okt|oct|nov|dez|dec)[a-zä]*\.? ?(?:\d{4}|\d{2})\b/i,
+  /\b(?:19|20)\d{2}\b/
+];
 
 function verlaufParsePaste() {
   var raw = document.getElementById('verlauf-paste').value;
   var fb  = document.getElementById('verlauf-paste-feedback');
   if (!raw.trim()) { fb.textContent = ''; return; }
 
-  var lines = raw.split('\n').map(function(l){ return l.trim(); }).filter(function(l){ return l.length > 0; });
-  var parsed = [];
+  var lines = raw.split('\n').map(function(l) { return l.trim(); }).filter(function(l) { return l.length > 0; });
+  var parsed = [], undatedLines = 0, umolCount = 0;
 
   lines.forEach(function(line) {
-    // Trennzeichen normalisieren: Semikolon/Tab → Leerzeichen, Doppelpunkt nach Schlüsselwort entfernen.
+    // Semikolon/Tab → Leerzeichen, Doppelpunkt nach Schlüsselwort entfernen.
     // Komma NICHT ersetzen — ist im Deutschen Dezimaltrennzeichen (1,5 = 1.5).
-    // Komma als Listen-Separator wird später durch den Zahlen-Regex implizit gehandhabt
-    // (er matcht "1,5" als Einzelzahl, aber bei "1.4, 48" sind es zwei Zahlen durch Leerzeichen getrennt).
-    var l = line.replace(/[;\t]/g, ' ').replace(/(\w)\s*:\s*/g, '$1 ').replace(/\s+/g, ' ');
+    var l = line.replace(/[;\t]/g, ' ').replace(/([A-Za-zäöü])\s*:\s*/g, '$1 ').replace(/\s+/g, ' ');
 
     var dateStr = '', krea = null, egfr = null;
 
-    // === Datum erkennen ===
-    // TT.MM.JJJJ oder TT.MM.JJ
-    var m;
-    m = l.match(/\b(\d{1,2})\.(\d{1,2})\.(\d{2,4})\b/);
-    if (m) { dateStr = m[1]+'.'+m[2]+'.'+m[3]; l = l.replace(m[0],''); }
-
-    if (!dateStr) {
-      // MM/JJJJ oder MM-JJJJ oder MM/JJ (2-stelliges Jahr → 20JJ)
-      m = l.match(/\b(\d{1,2})[\/\-](\d{2,4})\b/);
-      if (m) {
-        var yr = m[2];
-        if (yr.length === 2) yr = '20' + yr;
-        dateStr = m[1] + '/' + yr;
-        l = l.replace(m[0],'');
-      }
-    }
-    if (!dateStr) {
-      // JJJJ-MM (ISO month)
-      m = l.match(/\b(\d{4})-(\d{2})\b/);
-      if (m) { dateStr = m[2]+'/'+m[1]; l = l.replace(m[0],''); }
-    }
-    if (!dateStr) {
-      // Nur Jahr
-      m = l.match(/\b(20\d{2})\b/);
-      if (m) { dateStr = m[1]; l = l.replace(m[0],''); }
+    for (var pi = 0; pi < VERLAUF_DATE_PATTERNS.length && !dateStr; pi++) {
+      var dm = l.match(VERLAUF_DATE_PATTERNS[pi]);
+      if (!dm) continue;
+      var pd = verlaufParseDateFull(dm[0]);
+      if (pd) { dateStr = pd.label; l = l.replace(dm[0], ' '); }
     }
 
-    l = l.replace(/\s+/g,' ').trim();
+    l = l.replace(/\s+/g, ' ').trim();
 
-    // === Schlüsselwort-basiert ===
-    // eGFR: suche nach "egfr", "gfr", "GFR" gefolgt von Zahl
-    var egfrM = l.match(/[Ee][Gg]?[Ff][Rr]\D{0,3}(\d+(?:[.,]\d+)?)/);
-    if (egfrM) { egfr = parseFloat(egfrM[1].replace(',','.')); l = l.replace(egfrM[0],''); }
+    // eGFR: "egfr", "gfr" gefolgt von Zahl
+    var egfrM = l.match(/[Ee]?[Gg][Ff][Rr]\D{0,3}(\d+(?:[.,]\d+)?)/);
+    if (egfrM) { egfr = parseFloat(egfrM[1].replace(',', '.')); l = l.replace(egfrM[0], ' '); }
 
-    // Krea: suche nach "krea", "creat", "cr" gefolgt von Zahl
+    // Krea: "krea", "kreatinin", "creat", "cr" gefolgt von Zahl
     var kreaM = l.match(/[Kk]rea(?:tinin)?\D{0,3}(\d+(?:[.,]\d+)?)|[Cc]reat(?:inine)?\D{0,3}(\d+(?:[.,]\d+)?)|(?:^|\s)[Cc][Rr]\D{0,2}(\d+(?:[.,]\d+)?)/);
     if (kreaM) {
       var kv = kreaM[1] || kreaM[2] || kreaM[3];
-      krea = parseFloat(kv.replace(',','.'));
-      l = l.replace(kreaM[0],'');
+      krea = parseFloat(kv.replace(',', '.'));
+      l = l.replace(kreaM[0], ' ');
     }
 
-    // === Positions-basiert: übrige Zahlen ===
-    // Wenn noch kein Wert gefunden — übrige Zahlen der Reihe nach zuweisen
+    // Übrige Zahlen der Reihe nach: Krea typisch 0,4–15, eGFR typisch 5–150
     var remaining = l.match(/\d+(?:[.,]\d+)?/g) || [];
     remaining.forEach(function(numStr) {
-      var v = parseFloat(numStr.replace(',','.'));
+      var v = parseFloat(numStr.replace(',', '.'));
       if (isNaN(v)) return;
-      // Krea typisch 0.5–15, eGFR typisch 5–130
       if (!krea && !egfr) {
-        if (v >= 0.4 && v <= 15)   krea = v;
-        else if (v >= 5 && v <= 130) egfr = v;
-      } else if (!egfr && v >= 5 && v <= 130 && v !== krea) {
+        if (v >= 0.4 && v <= 15) krea = v;
+        else if (v > 15 && v <= 150) egfr = v;
+      } else if (!egfr && v >= 5 && v <= 150 && v !== krea) {
         egfr = v;
       } else if (!krea && v >= 0.4 && v <= 15 && v !== egfr) {
         krea = v;
       }
     });
 
+    if (krea && krea > 20) { krea = krea / 88.42; umolCount++; }
+
     if (krea || egfr) {
-      parsed.push({
+      if (!dateStr) undatedLines++;
+      var row = {
         date: dateStr,
-        krea: krea ? String(Math.round(krea*100)/100) : '',
-        egfr: egfr ? String(Math.round(egfr*10)/10) : ''
-      });
+        krea: krea ? String(Math.round(krea * 100) / 100) : '',
+        egfr: egfr ? String(Math.round(egfr * 10) / 10) : '',
+        auto: false
+      };
+      if (!row.egfr) verlaufRecalcRow(row);
+      parsed.push(row);
     }
   });
 
@@ -20914,35 +21023,49 @@ function verlaufParsePaste() {
     return;
   }
 
-  // Einfügen: leere Zeilen ersetzen, dann anhängen
-  var emptyIdx = verlaufRows.findIndex(function(r){ return !r.krea && !r.egfr; });
-  parsed.forEach(function(p) {
-    var ei = verlaufRows.findIndex(function(r){ return !r.krea && !r.egfr; });
-    if (ei >= 0) {
-      verlaufRows[ei] = p;
-    } else {
-      verlaufRows.push(p);
-    }
+  // Leere Zeilen verwerfen, neue Werte anhängen, chronologisch sortieren (ohne Datum ans Ende)
+  verlaufRows = verlaufRows.filter(function(r) { return r.krea || r.egfr || (r.date && r.date.trim()); }).concat(parsed);
+  verlaufRows.sort(function(a, b) {
+    var da = verlaufParseDate(a.date), db = verlaufParseDate(b.date);
+    if (da && db) return da - db;
+    return da ? -1 : db ? 1 : 0;
   });
+  verlaufRows.push({ date: '', krea: '', egfr: '', auto: false });
 
   verlaufRenderTable();
   verlaufDraw();
   document.getElementById('verlauf-paste').value = '';
-  fb.style.color = '#2e7d32';
-  fb.textContent = '✓ ' + parsed.length + ' Wert' + (parsed.length > 1 ? 'e' : '') + ' eingelesen.';
-  setTimeout(function(){ fb.textContent = ''; }, 3000);
+  var msg = '✓ ' + parsed.length + ' Wert' + (parsed.length > 1 ? 'e' : '') + ' eingelesen.';
+  if (umolCount) msg += ' ' + umolCount + '× Kreatinin von µmol/l umgerechnet.';
+  if (undatedLines) msg += ' ' + undatedLines + '× ohne Datum — bitte ergänzen.';
+  fb.style.color = undatedLines ? '#e65100' : '#2e7d32';
+  fb.textContent = msg;
+  if (!undatedLines) setTimeout(function() { fb.textContent = ''; }, 4000);
 }
 
 window.verlaufParsePaste = verlaufParsePaste;
 window.verlaufAddRow    = verlaufAddRow;
 window.verlaufClear     = verlaufClear;
 window.verlaufUpdate    = verlaufUpdate;
+window.verlaufEgfrCommit = verlaufEgfrCommit;
 window.verlaufDeleteRow = verlaufDeleteRow;
 window.verlaufDraw      = verlaufDraw;
 window.verlaufRenderTable = verlaufRenderTable;
+window.verlaufRefresh   = verlaufRefresh;
+
+// Bei jeder Größenänderung (auch Tab-Wechsel) neu zeichnen, sonst wird das Bild verzerrt gestreckt
+(function() {
+  var c = document.getElementById('verlauf-canvas');
+  if (!c || typeof ResizeObserver === 'undefined') return;
+  var lastW = 0;
+  new ResizeObserver(function() {
+    if (!c.clientWidth) { lastW = 0; return; } // verborgen: beim Wiedereinblenden sicher neu zeichnen
+    if (c.clientWidth !== lastW) { lastW = c.clientWidth; verlaufDraw(); }
+  }).observe(c);
+})();
 
 // Initial: 3 leere Zeilen
-verlaufAddRow(); verlaufAddRow(); verlaufAddRow();
+verlaufClear();
 
 </script>
 
