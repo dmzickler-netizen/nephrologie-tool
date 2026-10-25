@@ -1929,6 +1929,9 @@ window.goHome = function(e){
             <input type="checkbox" value="hypertensiv"> Hypertensive Nephropathie
           </label>
           <label class="checkbox-item" onclick="toggleCheck(this)">
+            <input type="checkbox" value="nephrosklerose"> Nephrosklerose
+          </label>
+          <label class="checkbox-item" onclick="toggleCheck(this)">
             <input type="checkbox" value="igan"> IgA-Nephropathie
           </label>
           <label class="checkbox-item" onclick="toggleCheck(this)">
@@ -1936,6 +1939,9 @@ window.goHome = function(e){
           </label>
           <label class="checkbox-item" onclick="toggleCheck(this)">
             <input type="checkbox" value="mgn"> Membranöse Nephropathie
+          </label>
+          <label class="checkbox-item" onclick="toggleCheck(this)">
+            <input type="checkbox" value="mcd"> Minimal Change Disease
           </label>
           <label class="checkbox-item" onclick="toggleCheck(this)">
             <input type="checkbox" value="adpkd"> ADPKD
@@ -2194,7 +2200,7 @@ window.goHome = function(e){
             <div class="vd-icon">📋</div>
             <div style="flex:1;">
               <div class="vd-title">Vordiagnosen einfügen — Text oder Bild</div>
-              <div class="vd-sub">Klick → Strg+V für Bild/Text · oder Drag-and-Drop / Button unten. Erkennt Grunderkrankungen (Diabet./Hypertens. Nephropathie, IgA, FSGS, MGN, ADPKD, Lupus, Vaskulitis, TX).</div>
+              <div class="vd-sub">Klick → Strg+V für Bild/Text · oder Drag-and-Drop / Button unten. Erkennt Grunderkrankungen (Diabet./Hypertens. Nephropathie, Nephrosklerose, IgA, FSGS, MGN, MCD, ADPKD, Lupus, Vaskulitis, TX).</div>
             </div>
             <button onclick="event.stopPropagation(); document.getElementById('vd-ocr-file').click();" style="padding:6px 12px; background:#6a1b9a; color:#fff; border:none; border-radius:8px; font-size:.75rem; font-weight:600; cursor:pointer; white-space:nowrap;">📁 Bild</button>
           </div>
@@ -4294,10 +4300,12 @@ window.vdSortByCategory = function() {
 
 var VD_PATTERNS = [
   { key:'diabetisch',  label:'Diabetische Nephropathie',  regex:/(diab[a-zäöü]*\s+nephropath|diab[a-zäöü]*\s+nieren|nephropathia\s+diabet)/i },
-  { key:'hypertensiv', label:'Hypertensive Nephropathie', regex:/(hyperton[a-zäöü]*\s+nephropath|hypertens[a-zäöü]*\s+nephropath|hypertens[a-zäöü]*\s+nieren|nephrosklerose)/i },
+  { key:'hypertensiv', label:'Hypertensive Nephropathie', regex:/(hyperton[a-zäöü]*\s+nephropath|hypertens[a-zäöü]*\s+nephropath|hypertens[a-zäöü]*\s+nieren)/i },
+  { key:'nephrosklerose', label:'Nephrosklerose',         regex:/(nephroskleros|arterio[a-zäöü]*\s*nephroskleros)/i },
   { key:'igan',        label:'IgA-Nephropathie',          regex:/(iga[\s-]?nephr|\bigan\b|morbus\s+berger)/i },
   { key:'fsgs',        label:'FSGS',                       regex:/(\bfsgs\b|fokal[a-zäöü]*\s+segmental)/i },
   { key:'mgn',         label:'Membranöse Nephropathie',   regex:/(membran[a-zäöü]*\s+nephropath|membran[a-zäöü]*\s+glomerul|\bmgn\b)/i },
+  { key:'mcd',         label:'Minimal Change Disease',     regex:/(minimal[\s-]?change|\bmcd\b|\bmcgn\b)/i },
   { key:'adpkd',       label:'ADPKD',                      regex:/(\badpkd\b|polyzyst|zystenniere)/i },
   { key:'lupus',       label:'Lupusnephritis',             regex:/(lupus[-\s]?nephr|lupusnephritis)/i },
   { key:'vaskulitis',  label:'ANCA-Vaskulitis',            regex:/(\banca\b|vaskulit|wegener|mikroskop[a-zäöü]*\s*polyangiit|granulomat[a-zäöü]*\s*polyangiit|churg[-\s]?strauss|\bgpa\b|\bmpa\b|\begpa\b)/i },
@@ -18267,9 +18275,11 @@ function diseaseLabel(d) {
   const map = {
     diabetisch:  'Diabetische Nephropathie',
     hypertensiv: 'Hypertensive Nephropathie',
+    nephrosklerose: 'Nephrosklerose',
     igan:        'IgA-Nephropathie',
     fsgs:        'Fokal-segmentale Glomerulosklerose (FSGS)',
     mgn:         'Membranöse Nephropathie',
+    mcd:         'Minimal Change Disease (MCD)',
     adpkd:       'Autosomal-dominante polyzystische Nierenerkrankung (ADPKD)',
     lupus:       'Lupusnephritis',
     vaskulitis:  'ANCA-assoziierte Vaskulitis',
@@ -18284,9 +18294,11 @@ function diseaseLabelDativ(d) {
   const map = {
     diabetisch:  'diabetischer Nephropathie',
     hypertensiv: 'hypertensiver Nephropathie',
+    nephrosklerose: 'Nephrosklerose',
     igan:        'IgA-Nephropathie',
     fsgs:        'fokal-segmentaler Glomerulosklerose (FSGS)',
     mgn:         'membranöser Nephropathie',
+    mcd:         'Minimal Change Disease (MCD)',
     adpkd:       'autosomal-dominanter polyzystischer Nierenerkrankung (ADPKD)',
     lupus:       'Lupusnephritis',
     vaskulitis:  'ANCA-assoziierter Vaskulitis',
@@ -18525,7 +18537,7 @@ function generateTexts(age, sex, scr, cys, uacr, bpSys, bpDia, extraInfo,
     // ── MEDIKATION (nephroprotektiv) ────────────────────────────────────
     if (uacr && uacr >= 30) {
       recAdd('medikation', 'RAS-Blockade: ACE-Hemmer oder AT1-Antagonist in maximal tolerierter Dosis (Ziel-ACR-Reduktion ≥ 30%) — Kontrolle Krea/K⁺ nach 1–2 Wochen');
-    } else if (diseases.includes('diabetisch') || diseases.includes('hypertensiv')) {
+    } else if (diseases.includes('diabetisch') || diseases.includes('hypertensiv') || diseases.includes('nephrosklerose')) {
       recAdd('medikation', 'RAS-Blockade erwägen (ACE-Hemmer oder AT1-Antagonist) bei Hypertonie / Diabetes — Kontrolle Krea/K⁺ nach 1–2 Wochen');
     }
 
@@ -18640,6 +18652,16 @@ function generateTexts(age, sex, scr, cys, uacr, bpSys, bpDia, extraInfo,
     recAdd('krankheit', '[FSGS] Differenzierung primär vs. sekundär/genetisch entscheidend für Therapiestrategie');
     recAdd('krankheit', '[FSGS] Primäre FSGS: Prednisolon 1 mg/kg/d × 4–16 Wochen, ggf. CNI (Tacrolimus/Cyclosporin) bei Steroidresistenz');
   }
+  if (diseases.includes('nephrosklerose')) {
+    recAdd('krankheit', '[Nephrosklerose] Strikte Blutdruckeinstellung und vaskuläre Risikofaktoren (Statin, Nikotinkarenz) als Basis');
+    recAdd('krankheit', '[Nephrosklerose] Nierenarterienstenose als Differenzialdiagnose bei Seitendifferenz der Nierengröße oder Krea-Anstieg unter RAS-Blockade');
+  }
+  if (diseases.includes('mcd')) {
+    recAdd('krankheit', '[MCD] Prednison 1 mg/kg/d (max. 80 mg/d) bis zur Remission, mind. 4 Wo., max. 16 Wo.; danach Ausschleichen über insgesamt ≥ 6 Monate (KDIGO 2021)');
+    recAdd('krankheit', '[MCD] Sekundäre Ursachen ausschließen: Hodgkin-Lymphom, NSAR, Lithium');
+    recAdd('krankheit', '[MCD] Häufige Rezidive / Steroidabhängigkeit: Rituximab, Cyclophosphamid oder CNI; Steroidresistenz → Rebiopsie (FSGS?)');
+    recAdd('krankheit', '[MCD] Thromboseprophylaxe bei Albumin < 25 g/l erwägen');
+  }
   if (diseases.includes('mgn')) {
     recAdd('krankheit', '[MGN] Anti-PLA2R-AK-Verlauf als Therapiemonitor; spontane Remission möglich');
     recAdd('krankheit', '[MGN] Immunsuppression bei persistierendem nephrotischem Syndrom > 6 Monate: Rituximab (MENTOR)');
@@ -18706,7 +18728,7 @@ function buildTherapyPanel(gfrStage, albStage, egfr, uacr, diseases, riskInfo) {
   if (!gfrStage) return;
 
   const isDiabetic   = diseases.includes('diabetisch');
-  const isHypertensiv = diseases.includes('hypertensiv');
+  const isHypertensiv = diseases.includes('hypertensiv') || diseases.includes('nephrosklerose');
   const isAdvanced   = ['G3a','G3b','G4','G5'].includes(gfrStage.stage);
   const isG3bPlus    = ['G3b','G4','G5'].includes(gfrStage.stage);
 
@@ -18853,6 +18875,17 @@ function buildTherapyPanel(gfrStage, albStage, egfr, uacr, diseases, riskInfo) {
         <li>Primäre FSGS: <span class="drug-tag primary">Prednison</span> 1 mg/kg/d × 4–16 Wochen (cave Steroidresistenz)</li>
         <li>Steroidresistente FSGS: <span class="drug-tag">Cyclosporin A</span>, <span class="drug-tag">Tacrolimus</span></li>
         <li>Sekundäre FSGS: Ursache behandeln (z.B. Adipositas, HIV, Heroin)</li>
+      </ul></div>`;
+  }
+
+  if (diseases.includes('mcd')) {
+    html += `<div class="therapy-block" style="border-color:#ff9800;">
+      <h3>🟠 Minimal Change Disease — spezifische Therapie</h3>
+      <ul>
+        <li><span class="drug-tag primary">Prednison</span> 1 mg/kg/d (max. 80 mg/d) bis zur Remission, mind. 4, max. 16 Wochen; Ausschleichen über ≥ 6 Monate</li>
+        <li>Rezidiv / Steroidabhängigkeit: <span class="drug-tag">Rituximab</span>, <span class="drug-tag">Cyclophosphamid</span> oder <span class="drug-tag">Tacrolimus</span></li>
+        <li>Steroidresistenz: Rebiopsie (FSGS übersehen?), genetische Diagnostik</li>
+        <li>Sekundäre MCD ausschließen: Hodgkin-Lymphom, NSAR, Lithium</li>
       </ul></div>`;
   }
 
